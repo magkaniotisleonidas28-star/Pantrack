@@ -1,0 +1,21 @@
+import {text,integer,sqliteTable,primaryKey} from 'drizzle-orm/sqlite-core';
+export const products=sqliteTable('products',{owner:text('owner').notNull(),id:text('id').notNull(),data:text('data').notNull()},t=>[primaryKey({columns:[t.owner,t.id]})]);
+export const orders=sqliteTable('orders',{owner:text('owner').notNull(),id:text('id').notNull(),data:text('data').notNull(),created:text('created').notNull()},t=>[primaryKey({columns:[t.owner,t.id]})]);
+export const companies=sqliteTable('companies',{id:text('id').primaryKey(),name:text('name').notNull(),created:text('created').notNull()});
+export const memberships=sqliteTable('memberships',{userId:text('user_id').notNull(),companyId:text('company_id').notNull().references(()=>companies.id),role:text('role').notNull()},t=>[primaryKey({columns:[t.userId,t.companyId]})]);
+export const removedOrders=sqliteTable('removed_orders',{companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),removedBy:text('removed_by').notNull(),removedAt:text('removed_at').notNull()},t=>[primaryKey({columns:[t.companyId,t.orderId]})]);
+export const paymentCustomers=sqliteTable('payment_customers',{companyId:text('company_id').notNull(),providerScope:text('provider_scope').notNull(),customerId:text('customer_id').notNull()},t=>[primaryKey({columns:[t.companyId,t.providerScope]})]);
+export const inventory=sqliteTable('inventory',{companyId:text('company_id').notNull(),productId:text('product_id').notNull(),data:text('data').notNull(),version:integer('version').notNull()},t=>[primaryKey({columns:[t.companyId,t.productId]})]);
+export const inventoryEvents=sqliteTable('inventory_events',{companyId:text('company_id').notNull(),id:text('id').notNull(),productId:text('product_id').notNull(),data:text('data').notNull(),created:text('created').notNull()},t=>[primaryKey({columns:[t.companyId,t.id]})]);
+export const recipes=sqliteTable('recipes',{companyId:text('company_id').notNull(),id:text('id').notNull(),data:text('data').notNull()},t=>[primaryKey({columns:[t.companyId,t.id]})]);
+export const salesImports=sqliteTable('sales_imports',{companyId:text('company_id').notNull(),reference:text('reference').notNull(),data:text('data').notNull(),created:text('created').notNull()},t=>[primaryKey({columns:[t.companyId,t.reference]})]);
+export const vendorConnections=sqliteTable('vendor_connections',{companyId:text('company_id').notNull(),id:text('id').notNull(),data:text('data').notNull(),secret:text('secret').notNull().default('')},t=>[primaryKey({columns:[t.companyId,t.id]})]);
+export const automationSettings=sqliteTable('automation_settings',{companyId:text('company_id').primaryKey(),data:text('data').notNull(),lastRun:text('last_run'),schedulerHash:text('scheduler_hash'),leaseUntil:text('lease_until')});
+export const purchasingJobs=sqliteTable('purchasing_jobs',{companyId:text('company_id').notNull(),id:text('id').notNull(),fingerprint:text('fingerprint').notNull(),status:text('status').notNull(),spendDay:text('spend_day'),amount:integer('amount').notNull(),data:text('data').notNull(),created:text('created').notNull()},t=>[primaryKey({columns:[t.companyId,t.fingerprint]})]);
+
+export const registerMappings=sqliteTable('register_mappings',{companyId:text('company_id').notNull(),externalKey:text('external_key').notNull(),data:text('data').notNull()},t=>[primaryKey({columns:[t.companyId,t.externalKey]})]);
+
+export const cloverConnections=sqliteTable('clover_connections',{companyId:text('company_id').primaryKey(),merchantId:text('merchant_id').notNull(),environment:text('environment').notNull(),secret:text('secret').notNull(),connected:text('connected').notNull(),lastChecked:text('last_checked'),leaseUntil:integer('lease_until').notNull().default(0)});
+export const cloverOauthStates=sqliteTable('clover_oauth_states',{stateHash:text('state_hash').primaryKey(),companyId:text('company_id').notNull(),userId:text('user_id').notNull(),environment:text('environment').notNull(),expires:integer('expires').notNull()});
+
+export const registerSettings=sqliteTable('register_settings',{companyId:text('company_id').primaryKey(),data:text('data').notNull(),tokenHash:text('token_hash'),lastReceived:text('last_received')});
