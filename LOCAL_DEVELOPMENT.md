@@ -56,6 +56,12 @@ and Clover defaults to sandbox. Wrangler uses `.dev.vars` for Worker bindings.
 Only configure sandbox credentials when the corresponding milestone is ready.
 Purchases and automatic mode are blocked pending supplier and pilot validation.
 
+For Supabase Auth testing, set `SUPABASE_URL` to the project URL and
+`SUPABASE_PUBLISHABLE_KEY` to the project's **publishable** key in `.dev.vars`.
+Set `PANTRACK_APP_URL=http://127.0.0.1:5173` when testing email links locally.
+Never use a Supabase service-role key in Pantrack. `PANTRACK_LOCAL_AUTH=1` exists
+only for the loopback Vite fixture; do not configure it in Cloudflare.
+
 Stop the dev server before resetting fictional local data:
 
 ```text

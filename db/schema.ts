@@ -19,3 +19,6 @@ export const cloverConnections=sqliteTable('clover_connections',{companyId:text(
 export const cloverOauthStates=sqliteTable('clover_oauth_states',{stateHash:text('state_hash').primaryKey(),companyId:text('company_id').notNull(),userId:text('user_id').notNull(),environment:text('environment').notNull(),expires:integer('expires').notNull()});
 
 export const registerSettings=sqliteTable('register_settings',{companyId:text('company_id').primaryKey(),data:text('data').notNull(),tokenHash:text('token_hash'),lastReceived:text('last_received')});
+
+export const companyInvitations=sqliteTable('company_invitations',{id:text('id').primaryKey(),companyId:text('company_id').notNull().references(()=>companies.id),email:text('email').notNull(),role:text('role').notNull(),tokenHash:text('token_hash').notNull().unique(),invitedBy:text('invited_by').notNull(),created:text('created').notNull(),expires:text('expires').notNull(),acceptedAt:text('accepted_at'),acceptedBy:text('accepted_by')});
+export const auditLog=sqliteTable('audit_log',{companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),actorId:text('actor_id').notNull(),action:text('action').notNull(),targetId:text('target_id'),data:text('data').notNull(),created:text('created').notNull()},t=>[primaryKey({columns:[t.companyId,t.id]})]);

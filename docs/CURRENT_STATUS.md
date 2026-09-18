@@ -39,6 +39,12 @@ Complete and merged into `main` in commits `141fb31` and `703e5e4`.
 - Contributor guidance and the pull-request template are in
   [CONTRIBUTING.md](../CONTRIBUTING.md) and [the PR template](../.github/pull_request_template.md).
 
+## M2 implementation in progress
+
+The active `milestone/m2-supabase-auth` branch now contains Supabase email/password sign-in, confirmation, password recovery, server-side token verification, and company invitation/audit database migration work. It has not been merged or deployed yet.
+
+The supplied project URL is `https://qiknfqnjpwhsrarporvg.supabase.co/`. The intended Worker name is `pantrack`, which will use `https://pantrack.magkaniotisleonidas28.workers.dev` after deployment. Configure that address as the Supabase Site URL and allow `/auth/confirm` and `/auth/reset` after the branch passes checks and is deployed.
+
 ## Existing prototype features
 
 These features exist in the imported code and have local or mocked tests. They

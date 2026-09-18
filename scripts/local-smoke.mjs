@@ -5,6 +5,8 @@ import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
 
 process.chdir(fileURLToPath(new URL('../', import.meta.url)));
+const setup = spawnSync(process.execPath, ['scripts/local-setup.mjs'], { stdio: 'inherit' });
+if (setup.status !== 0) throw new Error('Unable to prepare local development variables.');
 const portProbe = createServer();
 portProbe.listen(0, '127.0.0.1');
 await once(portProbe, 'listening');
