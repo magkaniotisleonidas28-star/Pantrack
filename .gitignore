@@ -30,6 +30,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+.dev.vars*
+!.dev.vars.example
 
 # vercel
 .vercel
@@ -46,3 +49,7 @@ next-env.d.ts
 /work/
 
 *.tsbuildinfo
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db

@@ -3,7 +3,7 @@ import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
 import {state,runCheck,submit,reconcile} from '@/lib/purchasing-engine';
 import {encrypt,decrypt,digest,adapter,publicEndpoint} from '@/lib/vendor-adapter';
-import {defaultPolicy,type Vendor} from '@/lib/automation-types';
+import {defaultPolicy,purchasingBlockReason,type Vendor} from '@/lib/automation-types';
 import {z} from 'zod';
 const vendorSchema=z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(100),website:z.union([z.literal(''),z.string().url().refine(v=>/^https?:/.test(v))]),endpoint:z.string().max(1000).refine(v=>{if(!v)return true;try{publicEndpoint(v);return true;}catch{return false;}}),account:z.string().max(200),deliveryAddress:z.string().max(1000),notes:z.string().max(1000),enabled:z.boolean()});
 const policySchema=z.object({mode:z.enum(['paused','review','automatic']),intervalHours:z.number().int().min(1).max(168),maxOrder:z.number().int().min(1).max(10000000),dailyLimit:z.number().int().min(1).max(10000000),priceTolerance:z.number().min(0).max(50),allowedProducts:z.array(z.string()).max(500)});
@@ -27,16 +27,12 @@ export async function POST(req:Request){
  const previous=await db.prepare('SELECT secret FROM vendor_connections WHERE company_id=? AND id=?').bind(b.companyId,b.vendor.id).first<{secret:string}>();
  const secret=b.clearToken?'':b.token?await encrypt(b.token,b.companyId+':'+b.vendor.id):previous?.secret||'';
  await db.prepare('INSERT INTO vendor_connections(company_id,id,data,secret) VALUES (?,?,?,?) ON CONFLICT(company_id,id) DO UPDATE SET data=excluded.data,secret=excluded.secret').bind(b.companyId,b.vendor.id,JSON.stringify({...b.vendor,verified:false}),secret).run();
- return Response.json({message:'Vendor saved. Test the connector again before live ordering.'});
+ return Response.json({message:'Vendor saved. Connector testing is available; supplier order submission remains disabled.'});
  }
  if(b.action==='policy'){
  if(!b.policy)throw new Error('Automation rules required.');
  if(b.policy.maxOrder>b.policy.dailyLimit)throw new Error('Per-order limit cannot exceed the daily limit.');
- if(b.policy.mode==='automatic'){
- const data=await state(b.companyId);
- if(!data.vendors.some((v:Vendor)=>v.enabled&&v.verified))throw new Error('Test and enable at least one compatible connector first.');
- if(!b.policy.allowedProducts.length)throw new Error('Allow at least one real product first.');
- }
+ if(b.policy.mode==='automatic')throw new Error(purchasingBlockReason);
  await db.prepare('INSERT INTO automation_settings(company_id,data) VALUES (?,?) ON CONFLICT(company_id) DO UPDATE SET data=excluded.data').bind(b.companyId,JSON.stringify(b.policy)).run();
  return Response.json({message:'Automation rules saved.'});
  }

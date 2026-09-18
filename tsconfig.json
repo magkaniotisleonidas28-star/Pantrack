@@ -42,6 +42,8 @@
   ],
   "exclude": [
     "node_modules",
+    ".sites-runtime",
+    "dist",
     "examples"
   ]
 }

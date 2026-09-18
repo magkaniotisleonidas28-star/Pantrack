@@ -1,17 +1,25 @@
 import {database} from '@/db/raw';
 import {recommendation,type InventoryRecord} from '@/lib/inventory';
 import type {Product} from '@/lib/pantry';
-import {defaultPolicy,type Policy,type Vendor,type Job} from './automation-types';
+import {defaultPolicy,purchasingBlockReason,type Policy,type Vendor,type Job} from './automation-types';
 import {adapter,decrypt,digest} from './vendor-adapter';
 import {z} from 'zod';
-const active=['review','sending','unknown','accepted'];
 export async function state(companyId:string){
  const db=database();const [v,s,j]=await Promise.all([db.prepare('SELECT data,secret FROM vendor_connections WHERE company_id=?').bind(companyId).all<{data:string;secret:string}>(),db.prepare('SELECT data,last_run,scheduler_hash,lease_until FROM automation_settings WHERE company_id=?').bind(companyId).first<{data:string;last_run:string|null;scheduler_hash:string|null;lease_until:string|null}>(),db.prepare('SELECT data,status,amount FROM purchasing_jobs WHERE company_id=? ORDER BY created DESC LIMIT 100').bind(companyId).all<{data:string;status:string;amount:number}>()]);
- return {vendors:v.results.map(r=>({...JSON.parse(r.data),hasToken:!!r.secret})),policy:s?JSON.parse(s.data) as Policy:defaultPolicy,lastRun:s?.last_run,schedulerConfigured:!!s?.scheduler_hash,jobs:j.results.map(r=>({...JSON.parse(r.data),status:r.status,amount:r.amount}))};
+ const savedPolicy=s?JSON.parse(s.data) as Policy:defaultPolicy;
+ // Old or directly written automatic settings must remain safe to load and run.
+ const policy:Policy={...savedPolicy,mode:savedPolicy.mode==='paused'?'paused':'review'};
+ return {vendors:v.results.map(r=>({...JSON.parse(r.data),hasToken:!!r.secret})),policy,purchasingEnabled:false,purchasingBlockReason,lastRun:s?.last_run,schedulerConfigured:!!s?.scheduler_hash,jobs:j.results.map(r=>({...JSON.parse(r.data),status:r.status,amount:r.amount}))};
 }
 async function loadJob(companyId:string,id:string){const row=await database().prepare('SELECT data,status,amount FROM purchasing_jobs WHERE company_id=? AND id=?').bind(companyId,id).first<{data:string;status:string;amount:number}>();if(!row)throw new Error('Order attempt not found.');return {...JSON.parse(row.data),status:row.status,amount:row.amount} as Job;}
 async function saveJob(companyId:string,job:Job){await database().prepare('UPDATE purchasing_jobs SET data=?,status=?,amount=? WHERE company_id=? AND id=?').bind(JSON.stringify(job),job.status,job.amount,companyId,job.id).run();}
+function requireAuthorizedPilot():void{
+ // Intentionally unconditional: neither connector verification, approval, nor an
+ // environment flag constitutes the real supplier and pilot evidence required.
+ throw new Error(purchasingBlockReason);
+}
 export async function submit(companyId:string,id:string){
+ requireAuthorizedPilot();
  const db=database(),job=await loadJob(companyId,id);
  if(job.status!=='review')throw new Error('Only an unsent review proposal can be submitted.');
  const config=await state(companyId),policy=config.policy;
@@ -63,7 +71,7 @@ export async function runCheck(companyId:string,force=false){
  const fingerprint=await digest(vendor.id+':'+items.map(p=>p.id+':'+p.quantity+':'+records.find(r=>r.productId===p.id)!.version).sort().join('|'));
  const job:Job={id:crypto.randomUUID(),fingerprint,vendorId:vendor.id,vendorName:vendor.name,status:'review',amount:items.reduce((a,p)=>a+p.price*p.quantity,0),created:now.toISOString(),message:'Prepared by replenishment rules. Nothing sent.',items};
  const inserted=await db.prepare('INSERT OR IGNORE INTO purchasing_jobs(company_id,id,fingerprint,status,amount,data,created) VALUES (?,?,?,?,?,?,?)').bind(companyId,job.id,fingerprint,job.status,job.amount,JSON.stringify(job),job.created).run();
- if(inserted.meta.changes){created++;if(policy.mode==='automatic')try{await submit(companyId,job.id);}catch(e){const current=await loadJob(companyId,job.id);current.message=e instanceof Error?e.message:'Needs review';if(current.status==='sending')current.status='unknown';await saveJob(companyId,current);}}
+ if(inserted.meta.changes)created++;
  }
  await db.prepare('UPDATE automation_settings SET last_run=? WHERE company_id=?').bind(now.toISOString(),companyId).run();
  return {message:created?created+' proposal(s) created.':'No new eligible replenishment proposals.',created};

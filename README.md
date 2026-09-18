@@ -7,7 +7,7 @@ ChatGPT sign-in, company-scoped catalog and history, sample catalog, product edi
 Orders are prepared only: no supplier submissions, payments, verified inventory or AI forecasting. Fictional suppliers and prices are labeled in the app. New custom products remain price-unverified. Sample minimums are guidance, not live supplier rules. Unsaved order quantities are temporary; saved orders and products use D1.
 
 ## Development
-Use the package manager declared in package.json. Generate migrations with the db:generate script. Sites tooling builds and deploys the Worker and applies D1 migrations. The logical DB binding is declared in .openai/hosting.json. Local migrations and preview instructions are available in the Sites plugin's starter documentation.
+Follow [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for the pinned Node/pnpm versions, local D1 setup, development sign-in, reset commands, and verification. No production credentials are needed. Generate new migrations with `pnpm db:generate`; apply them locally with `pnpm db:migrate:local`. The logical DB binding is declared in `.openai/hosting.json`.
 
 ## Next integration milestone
 1. Obtain approved catalog and order API documentation for one pilot supplier.
@@ -53,7 +53,7 @@ Regression checks passed with SQLite for recipe depletion, duplicate sales, opti
 ## Editable vendors and automation
 Suppliers & automation now owns editable vendor website, exact catalog supplier name, customer account, delivery address, notes, connector endpoint and an optional encrypted bearer token. The connector must implement public/vendor-connector-guide.md. Arbitrary vendor websites are not supported checkout integrations. Connections start unverified; editing clears verification, and unresolved proposals/orders block connection edits.
 
-Policy modes are paused (default), review and automatic. Rules include allowed products, interval, per-order and UTC-day spend limits, and maximum delivered price increase. Review mode creates unsent proposals. Automatic mode submits only through verified enabled connectors with real allowed products and current inventory checks. Sample products are never submitted.
+Available policy modes are paused (default) and review. Rules include allowed products, interval, per-order and UTC-day spend limits, and maximum delivered price increase. Review mode creates unsent proposals. Supplier submission and automatic mode are blocked on the server until the real supplier and reviewed pilot milestones are validated. Previously saved automatic policies run as review-only. A successful connector capability check does not authorize purchases.
 
 A quote is validated against exact SKU/unit/quantity, expiry, per-line price, total including fees, and current spend limits. Budget is reserved atomically before the external order action. Every submission uses a stable idempotency reference. Uncertain outcomes stay held and are never automatically retried. The connector's status action reconciles them. Accepted orders close only after receiving evidence with the proposal reference exists in Inventory. Purchases and logs appear in Suppliers & automation → Proposals & orders.
 

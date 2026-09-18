@@ -19,5 +19,5 @@ const cli = new URL(managedLinux
   ? "../node_modules/vite/bin/vite.js"
   : "../node_modules/vinext/dist/cli.js", import.meta.url);
 process.argv = [process.execPath, fileURLToPath(cli), command,
-  ...(!managedLinux && command === "dev" ? ["--port", "5173"] : []), ...args];
+  ...(!managedLinux && command === "dev" && !args.some(arg => arg === "--port" || arg === "-p" || arg.startsWith("--port=")) ? ["--port", "5173"] : []), ...args];
 await import(cli.href);

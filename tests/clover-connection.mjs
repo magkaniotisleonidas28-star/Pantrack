@@ -1,4 +1,4 @@
-import {build} from '../node_modules/.pnpm/esbuild@0.28.0/node_modules/esbuild/lib/main.js';
+import {build} from 'esbuild';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync,readdirSync,mkdirSync} from 'node:fs';
 import assert from 'node:assert/strict';
