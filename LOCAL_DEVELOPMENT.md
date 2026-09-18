@@ -71,6 +71,7 @@ Dependencies, tool caches, local databases and secrets are ignored by Git.
 ```text
 pnpm typecheck
 pnpm test
+pnpm db:check
 pnpm test:focused inventory-sales register-bridge
 pnpm build
 pnpm test:local
@@ -82,6 +83,10 @@ test starts and stops its own server, checks the home page, rejects forged
 identity headers and anonymous requests, creates a fictional company, and checks
 company isolation. Run `db:migrate:local` first. It leaves the fictional company
 in local D1. Browser visual and accessibility acceptance is a separate task.
+
+`pnpm db:check` checks migration history and schema drift in a temporary directory,
+then applies all migrations to fresh SQLite. It does not change your local data.
+Pull requests run the same checks on Windows and Ubuntu; see CONTRIBUTING.md.
 
 `pnpm build` creates `dist/`. `pnpm start` previews that Worker locally, but it
 does not include the development sign-in fixture; use `pnpm dev` for local work.

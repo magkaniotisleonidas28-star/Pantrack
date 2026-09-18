@@ -153,21 +153,23 @@ Implementation evidence (2026-09-18): local M0 acceptance passed on Windows with
 
 ### Tasks
 
-- [ ] Add clear scripts for type checking, focused tests, complete tests, build, and migration generation/checking.
-- [ ] Add a CI workflow for pull requests using the locked Node and pnpm versions.
-- [ ] Cache dependencies safely without caching secrets or local databases.
-- [ ] Run type checking, meaningful tests, and production build in CI.
-- [ ] Detect uncommitted generated migrations or schema/migration mismatch.
-- [ ] Add a pull-request template containing scope, schema changes, security impact, tests, screenshots when relevant, and rollback notes.
-- [ ] Add `CONTRIBUTING.md` with branch, commit, migration, and review conventions.
+- [x] Add clear scripts for type checking, focused tests, complete tests, build, and migration generation/checking.
+- [x] Add a CI workflow for pull requests using the locked Node and pnpm versions.
+- [x] Cache dependencies safely without caching secrets or local databases.
+- [x] Run type checking, meaningful tests, and production build in CI.
+- [x] Detect uncommitted generated migrations or schema/migration mismatch.
+- [x] Add a pull-request template containing scope, schema changes, security impact, tests, screenshots when relevant, and rollback notes.
+- [x] Add `CONTRIBUTING.md` with branch, commit, migration, and review conventions.
 
 ### Acceptance criteria
 
 - [ ] CI passes on the baseline main branch.
-- [ ] A deliberate type error fails CI.
-- [ ] A deliberately failing test fails CI.
-- [ ] A schema change without its generated migration fails or is clearly detected.
-- [ ] CI does not require production secrets.
+- [x] A deliberate type error fails CI.
+- [x] A deliberately failing test fails CI.
+- [x] A schema change without its generated migration fails or is clearly detected.
+- [x] CI does not require production secrets.
+
+Implementation evidence (2026-09-18): all six local suites, type checks, migration checks, and production build passed. Deliberate type/test/schema failures were detected. Hosted/main-branch acceptance remains pending; see docs/M1_CI_EVIDENCE.md. Branch: milestone/m1-repository-ci.
 
 ### Codex prompt
 

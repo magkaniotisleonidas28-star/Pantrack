@@ -18,6 +18,7 @@
     "local:setup": "node scripts/local-setup.mjs",
     "db:migrate:local": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 migrations apply DB --local --config wrangler.local.jsonc --persist-to .wrangler/state",
     "db:reset:local": "node scripts/reset-local-db.mjs",
+    "db:check": "node scripts/check-migrations.mjs",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
