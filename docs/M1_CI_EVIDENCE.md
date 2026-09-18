@@ -36,10 +36,15 @@ path and requires explicit successful completion so that error cannot pass CI.
 
 ## Hosted acceptance and rollback
 
-Hosted workflow results are pending the M1 pull request. The criterion "CI passes
+Hosted PR checks passed on both Ubuntu and Windows for commit 141fb31:
+https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35356413026
+Both clean runners installed the lockfile, type-checked, ran all six test suites,
+verified/applied migrations, built production output and passed the real local
+HTTP smoke test. M1 review: https://github.com/magkaniotisleonidas28-star/Pantrack/pull/2.
+
+The criterion "CI passes
 on the baseline main branch" remains open until the reviewed branches are merged
-and an actual main-branch run succeeds. Local success is not claimed as hosted
-CI evidence. Ubuntu execution is also pending that workflow run.
+and an actual main-branch run succeeds. No main-branch success is claimed before that run occurs.
 
 No schema or application behavior changes are made in M1. Revert its commit to
 remove the CI/checking changes. Neither rollback nor merging authorizes deployment,

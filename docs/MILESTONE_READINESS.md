@@ -2,14 +2,14 @@
 
 Assessment date: 2026-09-18. This report distinguishes existing prototype code from demonstrated acceptance. It does not mark a milestone complete. No production, merchant, supplier, payment, or pilot access was performed for this assessment.
 
-M0 local acceptance passed (commit 0a6986e; draft PR #1). M1 code and all local checks passed; hosted CI and main-branch acceptance remain pending. M2 product decisions are pending. Later milestones retain their prerequisites in `PANTRACK_MILESTONES.md`, including the requirement to complete M11 before M12.
+M0 local acceptance passed (commit 0a6986e; draft PR #1). M1 code, local checks and hosted Ubuntu/Windows PR CI passed (run 35356413026; draft PR #2). Main-branch acceptance remains pending review/merge. M2 product decisions are pending. Later milestones retain their prerequisites in `PANTRACK_MILESTONES.md`, including the requirement to complete M11 before M12.
 
 ## Status and completion evidence
 
 | Milestone | Current status | Blocking work or prerequisite | Evidence needed to mark complete |
 | --- | --- | --- | --- |
 | M0: Local baseline | Local acceptance passed | Review draft PR #1 before merging; see M0_LOCAL_EVIDENCE.md. | Clean local database initialization; documented reset/run commands; home page and company creation; successful type, test, and build commands; secret/ignore review. |
-| M1: Quality and CI | Implemented; local checks passed | Hosted CI and main-branch run pending review/merge; see M1_CI_EVIDENCE.md. | Passing local pipeline and hosted PR CI; demonstrated failure on type errors, failing tests, and missing migrations; PR/commit reference. |
+| M1: Quality and CI | Implemented; local and hosted PR checks passed | Main-branch run pending review/merge; see M1_CI_EVIDENCE.md. | Passing local pipeline and hosted PR CI; demonstrated failure on type errors, failing tests, and missing migrations; PR/commit reference. |
 | M2: Authentication and permissions | Blocked on decisions | M0-M1; approve host, authentication provider, membership policy, and permission matrix. Implement verified sessions, invitations, account recovery, ownership rules, and security audit records. | Anonymous, cross-company, every-role/API-family, CSRF, session-expiration, invitation replay/expiration, logout, and last-owner tests; approved authentication decision record. |
 | M3: Inventory and recipes | Partial prototype; prerequisite blocked | M1-M2; explicit units/decimal policy, immutable recipe versions and modifiers, sale/count cutoff, reconciliation history, and safe unit changes. | Tests for recipe history, fractional pack boundaries, modifiers, pre-count sales, concurrent duplicates, count variance, incompatible units, and target/incoming/capacity/shelf-life/zero-target/stale-count examples. |
 | M4: POS ingestion | Partial prototype; prerequisite blocked | M2-M3; provider-neutral event identity, separate durable receipt/application, held queue, replay/dismiss/correction workflow, and consumption policy. | Duplicate/concurrent receipt and crash/retry tests; unknown item/modifier holds with no partial deduction; safe replay after mapping; preparation-aware refund/cancellation tests; payload redaction and authorization tests. |
@@ -75,6 +75,6 @@ Sources inspected include `CODEX_HANDOFF.md`, `PANTRACK_MILESTONES.md`, `db/sche
 ## Verification record
 
 - M0: all local criteria passed; commit 0a6986e and draft PR https://github.com/magkaniotisleonidas28-star/Pantrack/pull/1. See M0_LOCAL_EVIDENCE.md.
-- M1: all six local suites, typecheck, migration check and build passed. Deliberate type/test/migration failures detected. Hosted CI remains pending; see M1_CI_EVIDENCE.md.
+- M1: all six local suites, typecheck, migration check and build passed. Deliberate type/test/migration failures detected. Hosted Ubuntu/Windows CI passed: https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35356413026. Main-branch run remains pending; see M1_CI_EVIDENCE.md.
 - M2: provider/host and product-policy choices requested; acceptance pending.
 - M3-M12: no completion claim. Later sandbox, purchase, deployment, and pilot evidence must be attached to the relevant milestone when actually obtained.

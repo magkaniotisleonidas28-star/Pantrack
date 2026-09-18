@@ -169,7 +169,7 @@ Implementation evidence (2026-09-18): local M0 acceptance passed on Windows with
 - [x] A schema change without its generated migration fails or is clearly detected.
 - [x] CI does not require production secrets.
 
-Implementation evidence (2026-09-18): all six local suites, type checks, migration checks, and production build passed. Deliberate type/test/schema failures were detected. Hosted/main-branch acceptance remains pending; see docs/M1_CI_EVIDENCE.md. Branch: milestone/m1-repository-ci.
+Implementation evidence (2026-09-18): all six local suites, type checks, migration checks, and production build passed. Deliberate type/test/schema failures were detected. Hosted PR CI passed on Ubuntu and Windows (run 35356413026). Main-branch acceptance remains pending review/merge; see docs/M1_CI_EVIDENCE.md and PR #2. Branch: milestone/m1-repository-ci.
 
 ### Codex prompt
 
