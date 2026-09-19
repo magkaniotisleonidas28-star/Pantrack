@@ -153,6 +153,8 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  ];
  for(const [draft,code] of invalid){const h=harness();await thrownCode(()=>h.service.receive(nativeContext(),draft),code);assert.equal(h.store.snapshot().events.length,0);}
  const oversized=harness();await thrownCode(()=>oversized.service.receive(nativeContext({sourceByteLimit:30}),baseDraft({sourcePayload:{padding:'é'.repeat(30)}})),'payload_too_large');assert.equal(oversized.store.snapshot().events.length,0);
+ const retained=harness(),largeLines=Array.from({length:100},(_,lineIndex)=>({externalLineId:`line-${lineIndex}`,externalItemId:`item-${lineIndex}`.padEnd(190,'i'),quantity:'1',modifiers:Array.from({length:10},(_,modifierIndex)=>({externalModifierLineId:`modifier-line-${modifierIndex}`.padEnd(190,String(modifierIndex%10)),externalModifierId:`modifier-${modifierIndex}`.padEnd(190,'m'),quantity:'1'}))}));
+ await thrownCode(()=>retained.service.receive(nativeContext({sourceByteLimit:10_000_000}),baseDraft({lines:largeLines})),'retained_fragment_too_large');assert.equal(retained.store.snapshot().events.length,0);
  const authCases=[
   [nativeContext({actor:null}),'unauthenticated'],
   [nativeContext({actor:{...machine,companyId:'company-b'}}),'wrong_company'],
@@ -218,6 +220,14 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  const mixed=await h.service.receive(nativeContext(),baseDraft({externalEventId:'event-4',revision:4,eventType:'revision',lines:[{...baseDraft().lines[0],quantity:'2'}]}));await h.service.process(mixed.eventKey);assert.equal(h.store.state(mixed.eventKey),'held');assert.deepEqual(lastAttempt(h.store).heldReasons,['correction_required']);
  const modifierOnly=await h.service.receive(nativeContext(),baseDraft({externalEventId:'event-5',revision:5,eventType:'revision',lines:[...baseDraft().lines,{externalLineId:'line-2',externalItemId:'latte-item',externalVariationId:'large',quantity:'1',modifiers:[{externalModifierLineId:'new-mod',externalModifierId:'shot-item',quantity:'1'}]}]}));await h.service.process(modifierOnly.eventKey);assert.equal(h.store.state(modifierOnly.eventKey),'held');assert.deepEqual(lastAttempt(h.store).heldReasons,['correction_required']);
 }
+{
+ const h=harness();
+ const first=await h.service.receive(nativeContext(),baseDraft());await h.service.process(first.eventKey);const afterFirst=h.inventory.getBalance('company-a','milk').onHandMinor;
+ const canceled=await h.service.receive(nativeContext(),baseDraft({externalEventId:'cancel-after',revision:2,eventType:'cancellation',orderStatus:'canceled'}));await h.service.process(canceled.eventKey);assert.equal(lastAttempt(h.store).outcome,'noop');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,afterFirst);
+ const refunded=await h.service.receive(nativeContext(),baseDraft({externalEventId:'refund-after',revision:3,eventType:'refund',orderStatus:'refunded'}));await h.service.process(refunded.eventKey);assert.equal(lastAttempt(h.store).outcome,'noop');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,afterFirst);
+ const remake=await h.service.receive(nativeContext(),baseDraft({externalEventId:'remake',revision:4,eventType:'remake',lines:[...baseDraft().lines,{externalLineId:'remake-line',externalItemId:'latte-item',externalVariationId:'large',quantity:'1',modifiers:[]}]}));await h.service.process(remake.eventKey);assert.equal(h.store.state(remake.eventKey),'applied');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'180000000');
+ const firstObservedCancellation=harness();const cancellation=await firstObservedCancellation.service.receive(nativeContext(),baseDraft({externalEventId:'prepared-cancel',externalOrderId:'prepared-cancel',eventType:'cancellation',orderStatus:'canceled'}));await firstObservedCancellation.service.process(cancellation.eventKey);assert.equal(firstObservedCancellation.store.state(cancellation.eventKey),'applied');assert.equal(firstObservedCancellation.inventory.getBalance('company-a','milk').onHandMinor,'190000000');
+}
 
 // Revision ordering, supersession, claim serialization, terminal applied history, and restart snapshot.
 {
@@ -227,6 +237,9 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  assert.equal(h.store.state(one.eventKey),'superseded');assert.equal(h.store.state(two.eventKey),'received');
  const stale=await h.service.receive(nativeContext(),baseDraft({externalEventId:'event-stale',revision:1,sourcePayload:{stale:true}}));assert.equal(stale.kind,'conflict');
  const reloaded=new InMemorySalesEventStore(h.store.snapshot());assert.equal(reloaded.state(one.eventKey),'superseded');assert.equal(reloaded.event(two.eventKey).event.external.revision,2);
+}
+{
+ const h=harness();const high=await h.service.receive(nativeContext(),baseDraft({externalEventId:'high',externalOrderId:'stale-order',revision:3}));const stale=await h.service.receive(nativeContext(),baseDraft({externalEventId:'low',externalOrderId:'stale-order',revision:2}));assert.equal(high.state,'received');assert.equal(stale.kind,'created');assert.equal(stale.state,'superseded');assert.equal(h.store.snapshot().attempts.length,0);
 }
 {
  const h=harness();const one=await h.service.receive(nativeContext(),baseDraft());
