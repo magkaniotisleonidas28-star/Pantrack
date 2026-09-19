@@ -257,7 +257,7 @@ For every numbered item, the assigned person follows the same delivery loop:
   receipt/application states, held reasons, payload retention/redaction, and the
   cancellation/refund/remake/reopened-order consumption policy. Review inventory
   assumptions with Person A. **Output:** accepted M4 design and state machine.
-- [ ] **B2 — Build M4 against a fake consumption port.** Add contract tests for
+- [x] **B2 — Build M4 against a fake consumption port.** Add contract tests for
   duplicate and concurrent delivery, crash/retry, unknown items/modifiers,
   replay, dismissal/correction, authorization, and payload redaction. Implement
   validation and durable receipt/hold behavior without writing inventory.

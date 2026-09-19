@@ -24,8 +24,10 @@ The focused [`sales-ingestion-contract.mjs`](../tests/sales-ingestion-contract.m
 - RFC 3339, revision, identity, whole-number quantity, uniqueness, line-count, source-size, and 65,536-byte retained-fragment validation;
 - canonical SHA-256 event/source/application identities, stable line/modifier ordering, a 30-day expiry, allowlisted audit retention, and exclusion of tested customer, payment, header, token, cookie, and note data;
 - exact and concurrent duplicate receipt, identity conflicts, supersession, stale revisions, serialized lineage claims, applied-event immutability, and snapshot/reload history;
+- immutable identity-conflict receipts with owner/manager-only, reason-required dismissal recorded as a separate resolution and linked audit entry;
 - unknown item/variation/modifier and all exercised A2 configuration/version/cutoff holds without partial application;
 - preparation, inferred-time, cancellation, refund, remake, reopen, unchanged, positive-delta, restorative/mixed-delta, and modifier-only-delta policies;
+- consumption snapshots survive applied cancellation/refund no-ops, while a prepared reopen after a first-observed pre-preparation cancellation still consumes the complete revision;
 - A2 applied, replayed, held, rejected, idempotency-conflict, integration-defect, and unavailable outcomes;
 - expired-lease interruption, explicit retry, repeated unresolved replay, dismissal, pending correction authorization/audit, sanitized employee reads, and crash-after-A2-apply recovery with one inventory deduction.
 
@@ -59,8 +61,8 @@ Results:
 
 ## Boundaries, rollback, and handoff
 
-B2 does not establish real persistence, provider sandbox behavior, pilot behavior, or M4 acceptance. M4 remains blocked on B3's persistent event storage, B4's real inventory/UI integration, accepted M2–M3 prerequisites, and B5 evidence. No roadmap or status checkbox was updated.
+B2 is locally complete and its workstream checkbox is recorded in the roadmap. It does not establish real persistence, provider sandbox behavior, pilot behavior, or M4 acceptance. M4 remains blocked on B3's persistent event storage, B4's real inventory/UI integration, accepted M2–M3 prerequisites, and B5 evidence. No milestone-completion checkbox was updated.
 
-Rollback is code-only: revert commits `405433b`, `9cca202`, and `7660b90`. There is no database rollback because B2 added no migration or schema change. The bridge limit can be rolled back independently by reverting `9cca202`, although that would restore the unsafe JavaScript-code-unit approximation.
+Rollback is code-only: revert commits `0dd2bec`, `405433b`, `9cca202`, and `7660b90`. There is no database rollback because B2 added no migration or schema change. The bridge limit can be rolled back independently by reverting `9cca202`, although that would restore the unsafe JavaScript-code-unit approximation.
 
 The next unblocked workstream-B item is B3: implement the same store contract with additive D1 event, processing, held/replay, and audit structures through the migration merge queue. B3 must preserve the identities, state rules, immutable history, authorization boundary, and fake-vs-persistent evidence distinction recorded in the [accepted M4 decision](decisions/0003-m4-sales-ingestion.md).
