@@ -1,5 +1,5 @@
 import {withCompanyRoute} from '@/lib/authorization';
-import {getChatGPTUser} from '@/app/chatgpt-auth';
+import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {database} from '@/db/raw';
 import {companyAccess} from '@/lib/company-access';
 import {samples} from '@/lib/pantry';

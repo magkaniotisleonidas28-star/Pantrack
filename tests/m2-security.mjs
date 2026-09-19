@@ -11,7 +11,7 @@ globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
 const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick'].map(n=>[n,'app/api/'+n+'/route.ts']),['authlib','lib/auth.ts'],['authorization','lib/authorization.ts']]){
+for(const [name,path] of [...['companies','workspace','inventory','sales','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts']]){
  const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));

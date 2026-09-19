@@ -130,7 +130,7 @@ export function checkMigrations({ projectRoot = toolRoot, log = console.log } = 
     // on Windows as well as Unix.
     // Drizzle 0.31 prepends cwd when reading snapshots, even for absolute out
     // paths. Run inside the temporary directory with a relative output path.
-    writeFileSync(config, `module.exports = ${JSON.stringify({ dialect: "sqlite", schema: join(projectRoot, "db", "schema.ts").replaceAll("\\", "/"), out: "./drizzle" })};\n`);
+    writeFileSync(config, `module.exports = ${JSON.stringify({ dialect: "sqlite", schema: join(projectRoot, "src", "db", "schema.ts").replaceAll("\\", "/"), out: "./drizzle" })};\n`);
     const generated = spawnSync(process.execPath, [join(toolRoot, "node_modules", "drizzle-kit", "bin.cjs"), "generate", "--config", config], { cwd: temporary, encoding: "utf8", timeout: 90_000, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
     if (generated.error) throw generated.error;
     assert.equal(generated.status, 0, `Drizzle generation failed.\n${generated.stdout}\n${generated.stderr}`);

@@ -1,4 +1,4 @@
-import {getChatGPTUser} from '@/app/chatgpt-auth';
+import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {csrf} from '@/lib/auth';
 import {database} from '@/db/raw';

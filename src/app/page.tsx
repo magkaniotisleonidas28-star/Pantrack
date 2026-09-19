@@ -1,5 +1,5 @@
-import {getChatGPTUser,chatGPTSignInPath} from './chatgpt-auth';
-import CompanyPortal from './company-portal';
+import {getChatGPTUser,chatGPTSignInPath} from '@/lib/chatgpt-auth';
+import CompanyPortal from '@/components/workspace/company-portal';
 import {Package,Building2,ShieldCheck} from 'lucide-react';
 export const dynamic='force-dynamic';
 export default async function Page(){

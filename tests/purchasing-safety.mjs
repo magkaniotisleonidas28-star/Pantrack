@@ -34,11 +34,11 @@ const plugin={name:'purchasing-safety-mocks',setup(builder){
   :args.path.includes('cloudflare:')?'export const env=globalThis.testEnv':'export function database(){return globalThis.testDB}'}));
 }};
 for(const [name,path] of [
- ['api','app/api/automation/route.ts'],
- ['tick','app/api/automation/tick/route.ts'],
- ['engine','lib/purchasing-engine.ts'],
- ['types','lib/automation-types.ts'],
- ['inventory','lib/inventory.ts']
+ ['api','src/app/api/automation/route.ts'],
+ ['tick','src/app/api/automation/tick/route.ts'],
+ ['engine','src/lib/purchasing-engine.ts'],
+ ['types','src/lib/automation-types.ts'],
+ ['inventory','src/lib/inventory.ts']
 ]){
  await build({entryPoints:[path],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/purchasing-safety-'+name+'.mjs',plugins:[plugin]});
 }

@@ -11,8 +11,8 @@ sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-a','A','now');
 sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('owner-a','company-a','owner');
 for(const id of ['milk','cup'])sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a',id,JSON.stringify({id,name:id}));
 const plugin={name:'mocks',setup(b){b.onResolve({filter:/chatgpt-auth|db\/raw|^cloudflare:workers$/},a=>({path:a.path,namespace:'mock'}));b.onLoad({filter:/.*/,namespace:'mock'},a=>({contents:a.path.includes('cloudflare:')?'export const env={}':a.path.includes('chatgpt-auth')?'export async function getChatGPTUser(){return globalThis.testUser}':'export function database(){return globalThis.testDB}'}));}};
-for(const name of ['inventory','sales'])await build({entryPoints:['app/api/'+name+'/route.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/test-'+name+'.mjs',plugins:[plugin]});
-await build({entryPoints:['lib/inventory.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/inventory-math.mjs'});
+for(const name of ['inventory','sales'])await build({entryPoints:['src/app/api/'+name+'/route.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/test-'+name+'.mjs',plugins:[plugin]});
+await build({entryPoints:['src/lib/inventory.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/inventory-math.mjs'});
 const inv=await import('../.sites-runtime/test-inventory.mjs'),sales=await import('../.sites-runtime/test-sales.mjs'),{recommendation,defaultSettings}=await import('../.sites-runtime/inventory-math.mjs');
 const send=(api,b)=>api.POST(new Request('https://test/api',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://test'},body:JSON.stringify({companyId:'company-a',...b})}));
 const read=()=>inv.GET(new Request('https://test/api?companyId=company-a'));
@@ -77,8 +77,8 @@ assert.equal((await send(sales,{action:'removeMapping',mappingKey:key})).status,
 assert.equal((await send(sales,{...mappedSale,reference:'mapped-day-2'})).status,400);
 console.log('PASS: saved mapping CRUD, recipe ownership validation, exact mapping resolution, unmapped-sale blocking, recipe deductions, replay protection, and company isolation.');
 
-for(const [name,path] of [['register-settings','app/api/register/route.ts'],['register-ingest','app/api/register/ingest/route.ts']])await build({entryPoints:[path],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/'+name+'.mjs',plugins:[plugin]});
-await build({entryPoints:['lib/register-csv.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/register-csv.mjs'});
+for(const [name,path] of [['register-settings','src/app/api/register/route.ts'],['register-ingest','src/app/api/register/ingest/route.ts']])await build({entryPoints:[path],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/'+name+'.mjs',plugins:[plugin]});
+await build({entryPoints:['src/lib/register-csv.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/register-csv.mjs'});
 const register=await import('../.sites-runtime/register-settings.mjs'),ingest=await import('../.sites-runtime/register-ingest.mjs'),{parseRegisterCsv}=await import('../.sites-runtime/register-csv.mjs');
 assert.equal((await send(register,{action:'save',settings:{provider:'square',customName:'',location:'store-1'}})).status,200);
 const regGet=()=>register.GET(new Request('https://test/api?companyId=company-a'));

@@ -14,7 +14,7 @@ function fixture(action) {
   const directory = mkdtempSync(join(runtime, "ci-migrations-"));
   try {
     cpSync(join(root, "drizzle"), join(directory, "drizzle"), { recursive: true });
-    cpSync(join(root, "db"), join(directory, "db"), { recursive: true });
+    cpSync(join(root, "src", "db"), join(directory, "src", "db"), { recursive: true });
     action(directory);
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -37,7 +37,7 @@ fixture((directory) => {
 });
 
 fixture((directory) => {
-  const path = join(directory, "db", "schema.ts");
+  const path = join(directory, "src", "db", "schema.ts");
   writeFileSync(path, `${readFileSync(path, "utf8")}\nexport const missingCiMigration = sqliteTable('missing_ci_migration', { id: text('id').primaryKey() });\n`);
   const originalJournal = readFileSync(join(directory, "drizzle", "meta", "_journal.json"), "utf8");
   assert.throws(() => checkMigrations({ projectRoot: directory }), /Schema drift detected/);
