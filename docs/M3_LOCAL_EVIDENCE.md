@@ -1,0 +1,95 @@
+# M3 local implementation evidence
+
+Updated: 2026-09-19. Workstream A. M3 is not accepted.
+
+## A4 task packet: exact quantity and target calculations
+
+Objective: implement the pure quantity behavior from
+[A1's accepted decision](decisions/0002-m3-quantity-and-recipe-model.md), with
+acceptance examples suitable for the later inventory service.
+
+Context: A2's consumption contract and A3's additive data structures exist in
+the working tree. Their focused tests pass. The
+[current status](CURRENT_STATUS.md) still records pending M2 acceptance, and
+Person B's A2 review has not been recorded. The roadmap's wave 0 allows pure
+quantity logic and fixtures while those prerequisites are open.
+
+Constraints: work directly on main per the owner's instruction; preserve the
+existing A1-A3 changes; stay in A-owned calculation/test files; leave API/UI
+integration and shared-contract changes for their reviewed handoffs. No new
+migration, external provider call, or deployment is part of this slice.
+
+Completion criteria: exact parsing/conversion and target examples pass focused
+tests, the full test suite and type checks; document calculation semantics and
+remaining integration work.
+
+## Implemented behavior
+
+- [inventory-quantities.ts](../src/lib/inventory-quantities.ts) accepts decimal
+  strings, uses bigint arithmetic, and emits canonical integer strings. Mass and
+  volume have six decimal places; counts accept integer text only. Unsupported
+  syntax, negative zero, excessive precision, and signed 64-bit overflow fail.
+- Curated unit IDs resolve to frozen exact rational definitions. US customary
+  volume units derive from A1's exact gallon, and mass ounces from its pound.
+  Conversion rounds once, half away from zero. Fractional each results fail.
+- Custom definitions retain company, product, ID, and version. Conversion
+  verifies company/product scope and an optional expected dimension. A new
+  definition does not mutate the old one. Persistent version sequencing and
+  safe configuration changes are still service responsibilities.
+- Target examples subtract on-hand and incoming quantities exactly, round
+  shortfall up to whole purchase packs, and round capacity/shelf limits down.
+  A shelf limit is an already-reviewed maximum total usable stock quantity;
+  forecasting it and the remaining M7 proposal policies are outside this module.
+- An opening count is required before suggesting packs. A stale count retains
+  the arithmetic with a `stale_count` review reason. Consumers must honor review
+  reasons before accepting a recommendation. This pure function grants no
+  permission to order and does not replace the current UI's calculator.
+- The A2 fake's lower bound now includes `-9223372036854775808`, matching A1's
+  signed 64-bit range. Its regression test checks atomic rejection of a further
+  deduction. The A2 request/result contract is unchanged.
+
+## Local verification
+
+[inventory-quantities.mjs](../tests/inventory-quantities.mjs) checks A1's pound,
+gallon, and case examples; malformed values; signed rounding; bounds; scoped
+custom units; cross-dimensional rejection; incoming stock; zero target; whole
+packs; capacity/shelf caps; missing/stale counts; and arithmetic above
+JavaScript's safe integer range.
+
+Checks run in this worktree (using the bundled Node/pnpm runtime):
+
+- PASS: `node scripts/test.mjs inventory-consumption-contract m3-data-foundations`
+  before implementation.
+- PASS: `node scripts/test.mjs inventory-quantities` after implementation.
+- PASS: `node scripts/test.mjs` (10 suites, including migration drift/fresh
+  application, legacy compatibility, and the signed-minimum regression).
+- PASS: `pnpm typecheck` and focused ESLint for both changed TypeScript modules.
+- PASS: `pnpm build`.
+- PASS: diff/whitespace review and relative documentation link checks.
+- NOT RUN: local D1 migration and HTTP smoke test for this calculation-only
+  slice; it adds no schema, endpoint, UI, or runtime integration.
+
+The existing A2/A3 suites cover consumption behavior through a fake and migration
+compatibility through SQLite. They do not prove a persistent M3 service exists.
+No real provider acceptance or deployed behavior is claimed.
+
+## Remaining A4 work and gates
+
+1. Record M2 acceptance and Person B's review of the A2 contract. Obtain migration
+   review of A3 before integration; passing compatibility tests is local evidence.
+2. Implement the persistent company-scoped inventory service: atomic writes,
+   safe configuration changes, immutable recipe/modifier activation, historical
+   version selection, count cutoff/variance history, and durable idempotency.
+3. Route inventory and manual sales writes through that service with explicit
+   occurrence times, preserving the legacy projection during cutover. Reconcile
+   legacy records changed after A3's one-time backfill before authority switches.
+4. Add manager UI for classification, versioned recipes/modifiers, count timing
+   and reconciliation, plus anonymous/wrong-company/forbidden-role and concurrency
+   tests. Connect exact target explanations and reviewed limits.
+5. Run the full local pipeline and A5 acceptance handoff. Leave A4/M3 unchecked
+   until the complete behavior and required evidence exist.
+
+Rollback for this slice: the calculation module has no runtime caller and makes
+no database writes. Reverting its integration-free source/tests does not alter
+inventory or history. A3 remains additive; any later deployed schema repair must
+be a new migration.
