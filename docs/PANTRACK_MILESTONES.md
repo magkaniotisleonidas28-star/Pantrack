@@ -169,7 +169,7 @@ Implementation evidence (2026-09-18): local M0 acceptance passed on Windows with
 - [x] A schema change without its generated migration fails or is clearly detected.
 - [x] CI does not require production secrets.
 
-Implementation evidence: all six original suites, type checks, migration checks, and production build passed. Deliberate type/test/schema failures were detected. Hosted pull-request CI passed on Ubuntu and Windows (run 35356413026), and current main CI passed on both systems (run 35425367875). See [M1 evidence](M1_CI_EVIDENCE.md). The milestone branch was consolidated into `main`.
+Implementation evidence: all six original suites, type checks, migration checks, and production build passed. Deliberate type/test/schema failures were detected. Hosted pull-request CI passed on Ubuntu and Windows (run 35356413026), and documentation-repair commit `333dbbd` passed main CI on both systems (run 35426054567). See [M1 evidence](M1_CI_EVIDENCE.md). The milestone branch was consolidated into `main`.
 
 ### Codex prompt
 

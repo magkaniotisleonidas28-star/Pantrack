@@ -34,8 +34,9 @@ Complete and merged into `main` in commits `141fb31` and `703e5e4`.
   the HTTP smoke test.
 - CI correctly fails for a deliberate type error, a deliberately failing test,
   schema drift, missing migration entries, and SQL/schema mismatch.
-- The current main-branch CI run passed on both operating systems:
-  <https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35425367875>.
+- The documentation-repair commit `333dbbd` passed main-branch CI on both
+  operating systems:
+  <https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567>.
 - Contributor guidance and the pull-request template are in
   [CONTRIBUTING.md](../CONTRIBUTING.md) and [the PR template](../.github/pull_request_template.md).
 
@@ -62,8 +63,9 @@ The approved Supabase/Cloudflare design is implemented on `main`. Seven-day sing
 
 ## Deployment health
 
-Repository CI is green on the current `main` commit ([run 35425367875](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35425367875)). The separate
-[Cloudflare Workers build](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/105850398079)
+Repository CI is green for documentation-repair commit `333dbbd`
+([run 35426054567](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567)). The separate
+[Cloudflare Workers build](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/105852072919)
 for that commit failed, so there is no successful deployment claim.
 The Supabase Preview check passed, but that check does not prove that Pantrack's
 email templates, callback URLs, runtime variables, or authentication walkthrough

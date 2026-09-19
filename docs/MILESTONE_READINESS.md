@@ -75,6 +75,6 @@ Sources inspected include [the milestone roadmap](PANTRACK_MILESTONES.md), `src/
 ## Verification record
 
 - M0: all local criteria passed; commit 0a6986e and draft PR https://github.com/magkaniotisleonidas28-star/Pantrack/pull/1. See M0_LOCAL_EVIDENCE.md.
-- M1: all six original suites, typecheck, migration check and build passed. Deliberate type/test/migration failures were detected. Hosted pull-request CI passed, and current main CI passes on Ubuntu and Windows: https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35425367875. See [M1 evidence](M1_CI_EVIDENCE.md).
+- M1: all six original suites, typecheck, migration check and build passed. Deliberate type/test/migration failures were detected. Hosted pull-request CI passed, and documentation-repair commit `333dbbd` passed main CI on Ubuntu and Windows: https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567. See [M1 evidence](M1_CI_EVIDENCE.md).
 - M2: choices approved; implementation is on `main`; seven suites, typecheck, migration checks, local build and current main CI passed. Real-provider verification, Cloudflare deployment build and review remain pending; see [M2 evidence](M2_LOCAL_EVIDENCE.md).
 - M3-M12: no completion claim. Later sandbox, purchase, deployment, and pilot evidence must be attached to the relevant milestone when actually obtained.

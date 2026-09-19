@@ -42,9 +42,10 @@ Both clean runners installed the lockfile, type-checked, ran all six test suites
 verified/applied migrations, built production output and passed the real local
 HTTP smoke test. M1 review: https://github.com/magkaniotisleonidas28-star/Pantrack/pull/2.
 
-Update, 2026-09-19: the milestone branches are consolidated into `main`, and the
-current main-branch workflow passed on Ubuntu and Windows:
-https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35425367875.
+Update, 2026-09-19: the milestone branches are consolidated into `main`, and
+documentation-repair commit `333dbbd` passed the main-branch workflow on Ubuntu
+and Windows:
+https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567.
 The baseline-main acceptance criterion is now satisfied. A separate Cloudflare
 Workers deployment build failed and remains deployment work; it does not change
 the repository CI result.
