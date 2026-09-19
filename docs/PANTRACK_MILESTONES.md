@@ -1,6 +1,7 @@
 # Pantrack Development Milestones
 
-Version: 1.0
+Version: 1.1
+Updated: 2026-09-19
 Purpose: Working specification for developing Pantrack with Codex in VS Code
 Product goal: Estimate ingredient inventory from completed menu-item sales, calculate replenishment to manager-defined target levels, and safely submit supplier orders with minimal manual work.
 
@@ -55,7 +56,13 @@ Treat every external integration as unverified until it passes its sandbox and p
 
 ## 3. Non-negotiable engineering rules
 
-- Work on `main` with focused commits per milestone; create a branch or pull request only when explicitly requested by the repository owner.
+- Keep `main` releasable. When one person is working, use focused commits directly
+  on `main` if that remains the repository owner's preference. When two or more
+  people are working concurrently, each person must use a separate checkout or
+  worktree and a short-lived workstream branch; merge reviewed, green changes
+  into `main` and delete the branch afterward. This is the concurrent-work
+  exception to the earlier main-only workflow; `main` remains the only
+  long-lived branch.
 - Do not combine unrelated UI redesigns with integration or data-model work.
 - Run locally and in sandbox environments before using live accounts.
 - Never place API keys, OAuth secrets, access tokens, customer data, or payment details in source control, prompts, screenshots, logs, or browser code.
@@ -109,6 +116,270 @@ flowchart TD
 | M10 | Payments and financial controls | M2, M8 | Payment responsibilities and limits are secure and explicitly defined |
 | M11 | Pilot validation and controlled automation | M0–M10 | One business completes a measured sale-to-delivery pilot |
 | M12 | Multi-company production readiness | M11 | The system can onboard additional businesses safely and supportably |
+
+---
+
+## 5.1 Three-person parallel delivery plan
+
+The milestone dependencies above are **acceptance gates**, not a requirement for
+everyone to wait before doing design, fixtures, pure logic, adapter shells, or
+tests. A downstream milestone cannot be marked complete or enabled against a
+real service until its prerequisites are accepted, but preparatory work may be
+developed against versioned internal contracts and fakes.
+
+Use these three long-lived areas of responsibility. “Person A/B/C” identifies a
+role, not a specific individual; record the actual names at the start of a work
+cycle.
+
+| Workstream | Primary ownership | Milestones/slices | First work that can start now |
+|---|---|---|---|
+| **A — Inventory and replenishment domain** | Units, conversions, recipe versions, counts, inventory events, proposal calculations and frozen proposal inputs | M3 and M7; inventory accuracy and proposal evidence in M11; data-lifecycle portions of M12 | Write the M3 unit/precision and recipe-version design, acceptance fixtures, pure conversion/calculation code, and additive migration plan. After the M3 contract is stable, build M7 calculation/snapshot logic in review-only mode while POS inputs are represented by fixtures. |
+| **B — Sales ingestion and POS adapters** | Provider-neutral sales events, held/replay workflow, Clover, the selected second POS, and integration health | M4–M6; sales completeness and held-event evidence in M11; ingestion isolation/rate-limit portions of M12 | Define the M4 event/state-machine contract and contract tests using a fake inventory-consumption port. Implement durable receipt and exception handling that does not depend on a real Clover account. Integrate with A's inventory service only after its consumption contract is published. |
+| **C — Platform, supplier, and operations** | M2 acceptance/deployment repair, supplier ordering, scheduling/alerts, payment controls, and release operations | Remaining M2 acceptance, M8–M10; order/alert/pause evidence in M11; operations/security/release portions of M12 | Diagnose the Cloudflare build and complete the real Supabase/review checklist. In parallel, collect the external M5/M6/M8–M10 decisions, define supplier and scheduler interfaces, and build timeout/budget/lease tests against fakes. Do not submit an order or enable a schedule. |
+
+This assignment deliberately gives one person end-to-end ownership of each
+high-risk boundary. A owns quantity truth, B owns sales-event truth, and C owns
+external purchasing side effects. Code should cross those boundaries only
+through the contracts below.
+
+### Contract handoffs
+
+1. **A → B: inventory consumption.** A publishes the exact unit/decimal policy,
+   recipe-version lookup rules, opening-count cutoff behavior, and an atomic,
+   idempotent consumption request/result contract. B may receive, validate, and
+   hold events before this is ready, but must not write inventory directly.
+2. **B → A: sales readiness.** B publishes the provider-neutral event identity,
+   application status, held reason, event time, mapped recipe/modifier identity,
+   and connection-health contract. A may test proposal math with fixtures before
+   this handoff; final M7 acceptance waits for M5's reliable inputs.
+3. **A → C: purchasing proposal.** A publishes an immutable proposal snapshot
+   with versions, quantities, supplier SKU/pack data, limits, warnings, and an
+   explanation. C owns state beginning with external quote/submission and must
+   never recalculate A's inventory shortfall inside a supplier adapter.
+4. **B/C → operations.** B exposes idempotent sync/reconciliation jobs and C
+   exposes idempotent supplier/proposal jobs. C owns scheduling, leases, retry
+   policy, alerts, and operational status; scheduled code calls the same service
+   entry points used by manual actions.
+
+Put shared TypeScript contract types in small, dependency-light modules. Add
+contract tests before integrating the implementations. A contract change that
+affects another workstream requires review from that workstream's owner.
+
+### Parallel execution waves
+
+| Wave | Person A | Person B | Person C | Exit/checkpoint |
+|---|---|---|---|---|
+| **0 — unblock and specify** | M3 design, fixtures, tests, pure quantity logic | M4 event contract, state machine, fixtures, fake consumption port | M2 provider/deployment acceptance; external-service decisions and fake adapter contracts | M2 is accepted; A/B consumption contract is reviewed; no production or purchase action occurred. |
+| **1 — build independent cores** | Complete M3, then build M7 calculator and snapshot behind review mode | Build M4 receipt/hold/replay; then integrate the published M3 consumption port | Build supplier timeout/idempotency, job/lease, alert, and budget components against fakes | M3 then M4 accepted in order; shared contracts have versioned tests. |
+| **2 — integrate real sandboxes** | Finish M7 integration once M5 inputs are reliable | Complete M5 Clover evidence, then the selected M6 adapter | Complete M8, then M9 and M10 as their gates become available | M5 precedes final M7 acceptance; M7 precedes real M8; no automatic purchasing. |
+| **3 — pilot and release** | Own inventory/proposal measurements | Own POS completeness and held-event recovery | Own orders, alerts, pause controls, and evidence coordination | All three execute M11 together. Split M12 as listed below only after M11 exit evidence is accepted. |
+
+Work may move forward within a row, but milestone completion claims must still
+follow the dependency table. If an external account is unavailable, continue
+with local contract/failure tests and clearly leave sandbox acceptance blocked.
+
+### Step-by-step checklist for each person
+
+At the start of the project, replace the blanks below with names and keep the
+role assignment stable through M11 unless the handoff is recorded in this file:
+
+```text
+Person A — Inventory and replenishment: ____________________
+Person B — Sales ingestion and POS:     ____________________
+Person C — Platform and purchasing:     ____________________
+Current merge owner:                    ____________________
+```
+
+For every numbered item, the assigned person follows the same delivery loop:
+
+1. Update from `main`, confirm the prerequisite and acceptance gate, and create
+   the short-lived workstream branch/worktree.
+2. Re-read the affected milestone, contract handoff, and current-status entry.
+   List shared files, migrations, external access, and another person's review
+   that the slice needs.
+3. Add or update the contract and focused acceptance tests before connecting a
+   real provider or changing user-visible behavior.
+4. Implement only that numbered slice. Keep incomplete external behavior behind
+   review-only or disabled gates.
+5. Run focused tests plus typecheck, migration check when applicable, and build.
+   Rebase before finalizing any schema-bearing change.
+6. Request the named cross-workstream review, merge only when CI is green, and
+   give the next person the contract, test, migration, and rollback notes.
+7. Update the checklist and milestone evidence. A locally completed slice may be
+   checked here while its milestone acceptance remains explicitly blocked on a
+   later sandbox, external action, or prerequisite.
+
+#### Person A — Inventory and replenishment sequence
+
+- [ ] **A1 — Specify M3.** Write the unit/precision, conversion, recipe-version,
+  modifier, opening-count cutoff, and physical-count reconciliation decisions.
+  Identify how existing inventory and recipe data migrates without rewriting
+  history. **Output:** accepted design note and migration plan.
+- [ ] **A2 — Publish the A → B consumption contract.** Define the atomic,
+  idempotent consumption request/result, recipe-version selection, decimal/unit
+  errors, and pre-opening-count result. Review it with Person B. **Output:** small
+  shared type module, fake, and contract tests; this unblocks B's M4 application
+  work.
+- [ ] **A3 — Add M3 data foundations.** Through the migration queue, add the
+  additive unit, conversion, recipe-version/modifier, count-cutoff, and
+  reconciliation structures. Add compatibility tests for existing records.
+  **Gate:** M2 must be accepted before M3 can be marked complete.
+- [ ] **A4 — Complete M3 behavior.** Implement safe unit changes, immutable
+  recipe history, modifiers, sale-time recipe selection, cutoff enforcement,
+  count variance/history, and decimal-safe target examples. Add the required
+  manager UI and authorization/company-isolation tests.
+- [ ] **A5 — Accept M3 and hand off to B.** Run the full definition of done,
+  record evidence for every M3 criterion, and have Person B verify M4 can consume
+  the published interface without inventory-specific workarounds. **Milestone:**
+  M3 complete only after M2 and all M3 evidence pass.
+- [ ] **A6 — Build the independent M7 core.** Version replenishment settings;
+  implement pure shortfall, incoming, whole-pack, capacity, shelf-life, stale
+  count, and limit calculations; freeze explainable proposal snapshots. Use B's
+  sales-health fixtures and keep everything review-only.
+- [ ] **A7 — Complete M7 lifecycle and A → C handoff.** Add proposal lifecycle,
+  invalidation, edit reasons, audit history, and atomic unresolved-quantity
+  reservations. Publish the immutable proposal contract to Person C and test it
+  against C's fake supplier consumer.
+- [ ] **A8 — Accept M7.** After B supplies accepted M5 inputs, run concurrency
+  and end-to-end proposal tests and record M7 evidence. **Milestone:** M7 complete
+  only after M3–M5; this handoff unblocks real M8 implementation.
+- [ ] **A9 — Execute A's M11 slice.** Configure approved pilot units, recipes,
+  counts, targets, and pack conversions; measure inventory variance and proposal
+  accuracy through two reviewed count-to-delivery cycles. Investigate variance
+  through audited configuration changes.
+- [ ] **A10 — Execute A's M12 slice.** Only after M11 acceptance, complete domain
+  onboarding, export/deletion data behavior, and backup/restore validation. Give
+  the merge owner evidence for the combined M12 release report.
+
+#### Person B — Sales ingestion and POS sequence
+
+- [ ] **B1 — Specify M4.** Define provider-neutral event identity and schema,
+  receipt/application states, held reasons, payload retention/redaction, and the
+  cancellation/refund/remake/reopened-order consumption policy. Review inventory
+  assumptions with Person A. **Output:** accepted M4 design and state machine.
+- [ ] **B2 — Build M4 against a fake consumption port.** Add contract tests for
+  duplicate and concurrent delivery, crash/retry, unknown items/modifiers,
+  replay, dismissal/correction, authorization, and payload redaction. Implement
+  validation and durable receipt/hold behavior without writing inventory.
+- [ ] **B3 — Add M4 data foundations.** Through the migration queue, add event,
+  processing, held/replay, and audit structures. Keep CSV and bridge fixtures in
+  the same provider-neutral contract. **Gate:** do not apply events until A2 is
+  reviewed and merged.
+- [ ] **B4 — Integrate A's consumption contract.** Apply mapped events exactly
+  once, preserve all-or-nothing ingredient deduction, enforce the opening-count
+  cutoff, and implement resolve/replay/dismiss/correction UI and audit behavior.
+- [ ] **B5 — Accept M4.** After M3 acceptance, run M4 concurrency, recovery,
+  authorization, and compatibility evidence. **Milestone:** M4 complete only
+  after M2–M3 and all M4 evidence pass.
+- [ ] **B6 — Complete M5 locally.** Finish the Clover adapter, merchant/location
+  binding, menu/modifier mapping, cursor/checkpoint reconciliation, token
+  lifecycle, disconnect behavior, health, and sync-now path using the M4 service.
+- [ ] **B7 — Accept M5 in Clover sandbox.** With explicitly approved sandbox
+  access, record normal, duplicate, modifier, refund/cancellation, refresh,
+  disconnect, and missed-event recovery cases, including expected versus actual
+  ingredient use. **Milestone:** M5 remains incomplete until this evidence exists.
+- [ ] **B8 — Implement and accept M6.** After the product owner selects a real
+  second POS, extract the stable adapter interface from accepted Clover behavior,
+  add truthful capability/status states, implement the adapter, and run the same
+  contract and sandbox tests. Keep CSV and bridge fallbacks supported.
+- [ ] **B9 — Execute B's M11 slice.** Operate the approved pilot POS connection;
+  measure completeness, lag, duplicates, held/replayed events, and recovery.
+  Supply the sale-to-inventory event trail for both reviewed cycles.
+- [ ] **B10 — Execute B's M12 slice.** Only after M11 acceptance, complete
+  integration onboarding/status, webhook and ingestion abuse controls, and
+  cross-company adapter-isolation tests. Give evidence to the merge owner.
+
+#### Person C — Platform, supplier, and operations sequence
+
+- [ ] **C1 — Accept M2.** Diagnose and resolve the Cloudflare Worker build,
+  review the additive authentication migration and flow, configure a development
+  Supabase project without exposing secrets, and perform the real confirmation,
+  login, invitation/roles, ownership, recovery, expiration, and logout walkthrough.
+- [ ] **C2 — Record M2 evidence and unblock the team.** Run the complete checks,
+  document deployment limitations, and update current status only when every M2
+  acceptance item has evidence. Notify A and B that M2's gate is open.
+- [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
+  sandbox and second-POS selection needed by B. Record the first supplier,
+  ordering channel, account/location/SKUs/terms, scheduler/queue, notification
+  owners, retry policy, payment responsibility, limits, and alert ownership.
+  Missing decisions stay explicit blockers rather than guessed defaults.
+- [ ] **C4 — Build safe platform components against fakes.** Define supplier,
+  scheduler/job, alert, and budget-reservation contracts. Test sending-before-call,
+  idempotency, ambiguous timeout/unknown status, reconciliation, leases, bounded
+  retry, terminal failure, and concurrent budgets. Do not submit or schedule real
+  work; review A's proposed snapshot contract before consuming it.
+- [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
+  proposal without recalculating quantities; implement the selected supplier's
+  quote, validation, submission, status, incoming-stock, and delivery behavior.
+  Pass sandbox/failure tests before one separately approved low-risk real order.
+- [ ] **C6 — Implement and accept M9.** After M5–M8, provision the selected
+  scheduler/queue and notification channel; connect B's sync jobs and C's supplier
+  jobs through their idempotent service entry points. Prove duplicate delivery,
+  retry, terminal failure, alert delivery, status, and recovery with the browser
+  closed.
+- [ ] **C7 — Implement and accept M10.** After M8 and the payment model decision,
+  finish hosted/tokenized setup where needed, owner authorization/reauthentication,
+  allowlists, per-order/day/month limits, unknown-order budget reservations, and
+  financial audit/reconciliation. Keep automatic purchasing disabled.
+- [ ] **C8 — Coordinate M11 and execute C's slice.** Prepare the runbook and
+  evidence report; operate reviewed supplier submissions, delivery reconciliation,
+  alerts, and tested pause/recovery. Collect written manager sign-off before each
+  stage and combine A/B/C evidence for both reviewed cycles.
+- [ ] **C9 — Execute C's M12 slice and release coordination.** Only after M11
+  acceptance, complete monitoring, incident/support procedures, security review,
+  operational recovery, and release documentation. As merge owner or coordinator,
+  combine all M12 evidence; do not mark M12 complete from C's slice alone.
+
+### File and merge ownership
+
+The following boundaries reduce day-to-day merge conflicts. They are defaults,
+not permission to bypass cross-workstream review.
+
+| Area | Default editor |
+|---|---|
+| `src/lib/inventory.ts`, `src/lib/pantry.ts`, inventory/recipe/proposal domain modules, `src/components/workspace/inventory-panel.tsx`, and focused M3/M7 tests | A |
+| `src/lib/import-sales.ts`, `src/lib/register-*`, `src/lib/clover.ts`, register/sales/Clover routes and components, and focused M4–M6 tests | B |
+| Authentication acceptance fixes; `src/lib/purchasing-engine.ts`, `src/lib/vendor-adapter.ts`, `src/lib/stripe-payments.ts`, automation/payment routes and components, and focused M8–M10 tests | C |
+| `src/db/schema.ts`, migration journal/snapshots, shared workspace shells, package/CI scripts, and roadmap/status documents | Merge owner for the current integration window, with review from every affected workstream |
+
+- Prefer adding workstream-specific modules and test files over repeatedly
+  editing a shared large file. Do not perform unrelated renames or formatting.
+- Only one schema-bearing change enters the merge queue at a time. Rebase it on
+  current `main`, generate the next additive migration, run `pnpm db:check`, and
+  merge it before the next schema-bearing change is finalized. Never reserve
+  migration numbers or hand-merge generated snapshots.
+- Name branches by workstream and milestone, for example `workstream-a/m3-units`,
+  `workstream-b/m4-events`, and `workstream-c/m2-acceptance`. Keep each branch to
+  one reviewable contract or behavior change.
+- Nominate a rotating merge owner for each integration window. The merge owner
+  resolves shared-file conflicts, runs the complete pipeline, and updates status
+  documents; this is coordination duty, not ownership of all three designs.
+- Merge contract-first changes early. Rebase dependent branches immediately
+  after a contract or migration lands. Feature flags/review-only gates must keep
+  incomplete downstream behavior unreachable.
+- Every handoff must include the contract, focused tests, migration/rollback
+  notes, and which acceptance criteria remain blocked. A verbal handoff or a
+  passing mocked test is not external acceptance evidence.
+
+### Shared M11 and M12 split
+
+M11 is a single coordinated pilot, not three independent pilots. A owns count,
+recipe, variance, and proposal-accuracy evidence; B owns sale completeness,
+duplicates, held/replayed events, and POS recovery; C owns supplier order and
+delivery evidence, alerts, pause/recovery, and the combined evidence report.
+All three review the audit trail and manager sign-offs before advancing a stage.
+
+After M11 passes, divide M12 without changing the architecture boundaries:
+
+- A: onboarding for products/units/recipes/counts, export/deletion data rules,
+  and backup/restore data validation.
+- B: integration onboarding/status, webhook and ingestion abuse controls, and
+  cross-company adapter isolation tests.
+- C: production monitoring, incident/support procedures, security review,
+  operational recovery, and release-readiness coordination.
+
+The merge owner runs the full tenant-isolation and release pipeline after all
+three M12 slices land. No slice alone is sufficient to mark M12 complete.
 
 ---
 
@@ -585,24 +856,45 @@ A milestone is complete only when:
 
 ## 7. How to use this file with Codex
 
-1. Keep this roadmap at `docs/PANTRACK_MILESTONES.md`.
-2. Read [CURRENT_STATUS.md](CURRENT_STATUS.md) and begin with the first incomplete prerequisite milestone.
-3. Work on one milestone at a time; do not ask Codex to implement the whole roadmap in one session.
-4. Work on `main`; keep the milestone changes in focused commits.
-5. Paste the milestone's Codex prompt into the Codex sidebar.
-6. Ask Codex to inspect before editing and to identify any assumption that conflicts with the repository.
-7. Keep normal workspace permissions enabled. Approve only commands you understand and that are necessary for the milestone.
-8. Review the proposed schema and external-service changes before Codex applies them.
-9. Require Codex to run the milestone checks and show the final diff.
-10. Update the checkboxes and add a short implementation note with the commit or pull-request link.
-11. Record acceptance criteria as complete only when supported by evidence.
-12. Begin the next milestone in a new Codex session on `main` with the updated file.
+1. Read the root [`AGENTS.md`](../AGENTS.md) and
+   [AI-driven development playbook](AI_DEVELOPMENT.md); keep this roadmap at
+   `docs/PANTRACK_MILESTONES.md`.
+2. Read [CURRENT_STATUS.md](CURRENT_STATUS.md), then choose the next slice from
+   the assigned workstream in [the three-person plan](#51-three-person-parallel-delivery-plan).
+3. Create the playbook's task packet. Each person works on one checklist item
+   and one reviewable outcome at a time; do not ask one Codex session to
+   implement the whole roadmap or another person's workstream.
+4. For concurrent work, use a separate checkout/worktree and short-lived
+   workstream branch. Start each slice from current `main` and keep commits
+   focused. A solo maintainer may use `main` directly if the repository owner
+   still prefers that workflow.
+5. Read the required contract handoff before coding against another workstream.
+   Use its fake or fixture while the implementation is pending; do not copy its
+   business logic.
+6. Paste the milestone's Codex prompt into the Codex sidebar and state the
+   workstream and exact slice being implemented.
+7. Ask Codex to inspect before editing and identify assumptions, shared files,
+   schema work, and contract changes that affect another workstream.
+8. Keep normal workspace permissions enabled. Approve only commands you
+   understand and that are necessary for the milestone.
+9. Review proposed schema and external-service changes before Codex applies
+   them. Send schema-bearing changes through the single migration merge queue.
+10. Require Codex to run focused checks and show the final diff. The merge owner
+    runs the complete pipeline after shared-contract and integration merges.
+11. Update checkboxes and add an implementation note with the commit or
+    pull-request link. Record acceptance criteria as complete only with evidence.
+12. Rebase dependent work promptly after a handoff lands, and start the next
+    slice in a new Codex session with the updated roadmap.
 
 ## 8. Reusable Codex session prompt
 
 ```text
-Read docs/CURRENT_STATUS.md and docs/PANTRACK_MILESTONES.md, then inspect the current repository.
+Read AGENTS.md, docs/CURRENT_STATUS.md, docs/AI_DEVELOPMENT.md, and the relevant
+part of docs/PANTRACK_MILESTONES.md, then inspect the current repository.
 
+Assigned workstream: [PERSON A, B, OR C]
+Checklist step: [FOR EXAMPLE A2 OR C4]
+Session type: [EXPLORE/DESIGN, IMPLEMENT, REVIEW, INTEGRATE, SANDBOX ACCEPTANCE, OR PILOT]
 Work only on milestone [MILESTONE ID AND NAME]. Do not implement later milestones or redesign unrelated screens.
 
 Before editing:
@@ -652,8 +944,17 @@ Create `docs/decisions/NNNN-title.md` when a choice affects architecture, securi
 
 ## 10. First recommended session
 
-Begin with **M2 acceptance**, specifically the real Supabase walkthrough,
-Cloudflare build diagnosis, and authentication/migration review. After M2 is
-accepted, proceed to **M3 — Inventory, units, and recipe integrity**. Do not begin
-live Clover sales or supplier integration until their prerequisite milestones
-are complete and reviewed.
+Start the three workstreams together:
+
+- **Person A:** begin the M3 unit/decimal and recipe-version design, fixtures,
+  pure logic, and migration plan.
+- **Person B:** begin the M4 provider-neutral event/state-machine contract and
+  contract tests against a fake inventory-consumption port.
+- **Person C:** complete M2 acceptance, specifically the real Supabase
+  walkthrough, Cloudflare build diagnosis, and authentication/migration review;
+  also collect the external decisions needed by later adapters.
+
+Person B must not apply events to inventory until A's consumption contract is
+reviewed, and neither B nor C may begin live Clover sales, supplier submission,
+or provisioned scheduling until the prerequisite milestone and explicit external
+authorization are complete. Follow the waves in section 5.1 for the next work.

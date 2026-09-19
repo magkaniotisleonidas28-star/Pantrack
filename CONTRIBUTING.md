@@ -1,6 +1,6 @@
 # Contributing to Pantrack
 
-Read the [current status](docs/CURRENT_STATUS.md), [milestone roadmap](docs/PANTRACK_MILESTONES.md), and [local development guide](docs/LOCAL_DEVELOPMENT.md) before changing the application. Prototype code is not evidence of working live integrations. Local development and CI use synthetic data and require no production secrets.
+Read the [current status](docs/CURRENT_STATUS.md), [milestone roadmap](docs/PANTRACK_MILESTONES.md), [AI-driven development playbook](docs/AI_DEVELOPMENT.md), and [local development guide](docs/LOCAL_DEVELOPMENT.md) before changing the application. AI-assisted work also follows the root [agent instructions](AGENTS.md). Prototype code is not evidence of working live integrations. Local development and CI use synthetic data and require no production secrets.
 
 ## Setup and checks
 
@@ -23,7 +23,14 @@ The GitHub workflow runs these checks on Ubuntu and Windows. It caches only the 
 
 ## Branches, commits, and review
 
-- Work directly on `main`, as requested by the repository owner. Keep each milestone in focused commits; do not create milestone branches unless explicitly requested.
+- Keep `main` as the only long-lived branch. A solo contributor may work there
+  directly if that remains the repository owner's preference. When two or more
+  contributors or AI sessions work concurrently, use separate worktrees and
+  short-lived workstream branches, then merge reviewed green changes and delete
+  those branches. Follow the file ownership and migration queue in the roadmap.
+- Scope each AI session to one A/B/C checklist item and one reviewable outcome.
+  Record objective, context, constraints, completion conditions, verification,
+  and handoff using the AI development playbook.
 - Keep commits focused and use an imperative summary such as `Add migration drift checks`.
 - Keep unrelated design changes separate from authentication, integration, and schema work.
 - Record scope, schema and security impact, verification evidence, and rollback notes in the commit or accompanying documentation. Use the pull-request template if a pull request is explicitly requested.

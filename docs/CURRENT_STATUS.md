@@ -76,7 +76,7 @@ public release, and keep production data and real users out of this environment.
 
 | Service | Reported status | Still needed |
 | --- | --- | --- |
-| GitHub | Repository connected; milestone branches consolidated into `main`; current Ubuntu and Windows CI passed. | Keep `main` as the only working branch and preserve the required checks. |
+| GitHub | Repository connected; milestone branches consolidated into `main`; current Ubuntu and Windows CI passed. | Keep `main` as the only long-lived branch. Use isolated, short-lived workstream branches/worktrees only while multiple contributors are active, then merge and delete them. Preserve the required checks. |
 | Supabase | The GitHub Supabase Preview check passes, which indicates an app connection but does not establish working Pantrack authentication. | Confirm the development project settings, Email provider, templates, callback URLs, and real confirmation/login/recovery walkthrough. |
 | Cloudflare | Repository integration is active and attempted a Worker build for current `main`; that build failed. | Diagnose the failed build before deployment. Do not configure production data or users while M2 acceptance remains open. |
 | Custom domain | None required yet. | A free temporary URL will be `https://WORKER-NAME.magkaniotisleonidas28.workers.dev`. Buy/add a custom domain before a real café pilot. |
@@ -104,6 +104,13 @@ supplier credentials, or payment details into chat or source control.
 5. Do not migrate remote D1, configure production secrets, or invite real users
    yet. M2 now implements verified Supabase sessions and company role checks;
    complete the setup and provider walkthrough in [M2_SETUP.md](M2_SETUP.md).
+
+While the M2 acceptance owner performs those steps, the other two workstreams
+may begin local-only M3 design/fixtures and the M4 event contract against fakes.
+They must follow the individual checklists in
+[the milestone roadmap](PANTRACK_MILESTONES.md#step-by-step-checklist-for-each-person)
+and the [AI development playbook](AI_DEVELOPMENT.md). This parallel preparation
+does not make M3 or M4 complete before their prerequisite evidence exists.
 
 ## Remaining roadmap
 

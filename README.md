@@ -9,13 +9,19 @@ Orders are prepared only: there are no supplier submissions, charges, verified l
 ## Development
 Follow [the local development guide](docs/LOCAL_DEVELOPMENT.md) for the pinned Node/pnpm versions, local D1 setup, development sign-in, reset commands, and verification. No production credentials are needed. Generate new migrations with `pnpm db:generate`; apply them locally with `pnpm db:migrate:local`. The logical DB binding is declared in `.openai/hosting.json`.
 
+AI-assisted contributors must follow the root [agent instructions](AGENTS.md)
+and [AI-driven development playbook](docs/AI_DEVELOPMENT.md). Work is divided
+into three parallel streams with individual checklists in the
+[milestone roadmap](docs/PANTRACK_MILESTONES.md#51-three-person-parallel-delivery-plan).
+
 ## Next milestone
 
-Complete the [M2 Supabase setup and review](docs/M2_SETUP.md), including the
-real email walkthrough and Cloudflare build diagnosis. Then begin M3 inventory
-and recipe integrity work from the [milestone roadmap](docs/PANTRACK_MILESTONES.md).
-Real POS, supplier, scheduler, payment, and pilot work remains gated by the
-prerequisites recorded there.
+Run the first three workstream tasks in parallel: Person A starts M3's unit and
+recipe design, Person B starts M4's provider-neutral event contract against a
+fake consumption port, and Person C completes the
+[M2 Supabase setup and review](docs/M2_SETUP.md), including the real email
+walkthrough and Cloudflare build diagnosis. Real POS, supplier, scheduler,
+payment, and pilot work remains gated by the roadmap prerequisites.
 
 ## Verification
 TypeScript and production build passed. An isolated API harness using SQLite verified sample initialization, server totals, preparation status, duplicate retry protection, negative-quantity rejection, owner isolation and missing-auth rejection. Live supplier and payment integrations are absent. Browser UI QA and WebMCP runtime validation were not performed in this session.

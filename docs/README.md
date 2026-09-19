@@ -7,7 +7,10 @@ Start with these documents:
 - [Local development](LOCAL_DEVELOPMENT.md) — installation, local D1, fixture
   authentication, verification, reset, and recovery.
 - [Milestone roadmap](PANTRACK_MILESTONES.md) — M0–M12 dependencies, scope, and
-  acceptance criteria.
+  acceptance criteria, including the three-person work split and individual
+  checklists.
+- [AI-driven development](AI_DEVELOPMENT.md) — task packets, session types,
+  verification levels, concurrent-agent rules, review prompts, and handoffs.
 - [Milestone readiness](MILESTONE_READINESS.md) — detailed evidence and known
   technical gaps.
 - [M2 setup and review](M2_SETUP.md) — Supabase configuration and the remaining
