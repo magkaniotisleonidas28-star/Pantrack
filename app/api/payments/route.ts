@@ -1,9 +1,10 @@
+import {withCompanyRoute} from '@/lib/authorization';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
 import {paymentConfig,stripe,PaymentError} from '@/lib/stripe-payments';
 import {z} from 'zod';
-const origin='https://pantry-pilot-ordering.magkaniotisleonidas2.chatgpt.site';
+import {appOrigin} from '@/lib/auth';
 type Card={id:string;customer:string|null;type:string;card?:{brand:string;last4:string;exp_month:number;exp_year:number};billing_details?:{name:string|null}};
 async function context(companyId:string){
  const account=await stripe<{id:string}>('account');
@@ -19,7 +20,7 @@ async function ensureCustomer(companyId:string,scope:string,existing?:string){
  return row!.customer_id;
 }
 function failure(e:unknown){return Response.json({error:e instanceof PaymentError?e.message:e instanceof z.ZodError?'Invalid payment request.':'Payment methods are temporarily unavailable. Please retry.'},{status:e instanceof PaymentError?e.status:e instanceof z.ZodError?400:503});}
-export async function GET(req:Request){
+async function handleGET(req:Request){
  const user=await getChatGPTUser();if(!user)return Response.json({error:'Please sign in.'},{status:401});
  try{
  const companyId=z.string().min(1).max(200).parse(new URL(req.url).searchParams.get('companyId'));
@@ -32,7 +33,7 @@ export async function GET(req:Request){
  return Response.json({configured:true,testMode:config.testMode,cards:list.data.map(p=>({id:p.id,brand:p.card?.brand,last4:p.card?.last4,month:p.card?.exp_month,year:p.card?.exp_year,name:p.billing_details?.name||''})),defaultId:details.invoice_settings?.default_payment_method||null},{headers:{'Cache-Control':'no-store'}});
  }catch(e){return failure(e);}
 }
-export async function POST(req:Request){
+async function handlePOST(req:Request){
  const user=await getChatGPTUser();if(!user)return Response.json({error:'Please sign in.'},{status:401});
  if(req.headers.get('sec-fetch-site')==='cross-site')return Response.json({error:'Invalid request origin'},{status:403});
  if(!req.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'JSON required'},{status:415});
@@ -45,6 +46,7 @@ export async function POST(req:Request){
  if(b.action==='setup'){
  if(!b.requestId)throw new PaymentError('Missing setup reference.',400);
  const customer=await ensureCustomer(b.companyId,scope,existing);
+ const origin=appOrigin();
  const query='company='+encodeURIComponent(b.companyId);
  const session=await stripe<{url:string}>('checkout/sessions',{mode:'setup',customer,currency:'usd','payment_method_types[0]':'card',success_url:origin+'/?'+query+'&payment_setup=success&session_id={CHECKOUT_SESSION_ID}',cancel_url:origin+'/?'+query+'&payment_setup=canceled','metadata[company_id]':b.companyId,'setup_intent_data[metadata][company_id]':b.companyId},'pantry-setup:'+scope+':'+b.companyId+':'+b.requestId);
  if(!session.url||new URL(session.url).origin!=='https://checkout.stripe.com')throw new PaymentError('Secure card setup could not be opened.');
@@ -70,3 +72,5 @@ export async function POST(req:Request){
  return Response.json({ok:true});
  }catch(e){return failure(e);}
 }
+export const GET=withCompanyRoute('payments',handleGET);
+export const POST=withCompanyRoute('payments',handlePOST);

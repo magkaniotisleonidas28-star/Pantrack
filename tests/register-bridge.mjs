@@ -14,7 +14,7 @@ const plugin={name:'mocks',setup(b){b.onResolve({filter:/chatgpt-auth|db\/raw|^c
 for(const name of ['inventory','sales'])await build({entryPoints:['app/api/'+name+'/route.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/test-'+name+'.mjs',plugins:[plugin]});
 await build({entryPoints:['lib/inventory.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/inventory-math.mjs'});
 const inv=await import('../.sites-runtime/test-inventory.mjs'),sales=await import('../.sites-runtime/test-sales.mjs'),{recommendation,defaultSettings}=await import('../.sites-runtime/inventory-math.mjs');
-const send=(api,b)=>api.POST(new Request('https://test/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:'company-a',...b})}));
+const send=(api,b)=>api.POST(new Request('https://test/api',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://test'},body:JSON.stringify({companyId:'company-a',...b})}));
 const read=()=>inv.GET(new Request('https://test/api?companyId=company-a'));
 async function mutation(productId,action,version,extra={}){const r=await send(inv,{id:crypto.randomUUID(),productId,action,version,...extra});assert.equal(r.status,200,JSON.stringify(await r.json()));}
 for(const productId of ['milk','cup']){
@@ -88,7 +88,7 @@ const tokenData=await(await send(register,{action:'token'})).json();assert.ok(to
 assert.ok(!JSON.stringify(await(await regGet()).json()).includes(tokenData.token));
 assert.equal((await send(sales,{action:'mapping',mapping})).status,200);
 const payload={reference:'bridge-order-1',lines:[{provider:mapping.provider,location:mapping.location,itemId:mapping.itemId,quantity:1}]};
-const push=(data,token=tokenData.token,company='company-a')=>ingest.POST(new Request('https://test/api/register/ingest?companyId='+company,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(data)}));
+const push=(data,token=tokenData.token,company='company-a')=>ingest.POST(new Request('https://test/api/register/ingest?companyId='+company,{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://test',Authorization:'Bearer '+token},body:JSON.stringify(data)}));
 const stock=()=>sql.prepare("SELECT data FROM inventory WHERE company_id='company-a' AND product_id='milk'").get();
 const initial=JSON.parse(stock().data).onHand;
 assert.equal((await push(payload,'wrong')).status,401);assert.equal((await push(payload,tokenData.token,'other-company')).status,401);

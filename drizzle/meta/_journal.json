@@ -57,6 +57,13 @@
       "when": 1789355231409,
       "tag": "0007_wonderful_mentallo",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789788120200,
+      "tag": "0008_m2_auth_memberships",
+      "breakpoints": true
     }
   ]
 }

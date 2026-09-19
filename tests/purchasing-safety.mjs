@@ -73,7 +73,7 @@ const review=seed('review-company','review');
 seed('legacy-company','automatic');
 seed('other-company','review');
 const post=(body,companyId='review-company')=>api.POST(new Request('https://test/api/automation',{
- method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,...body})
+ method:'POST',headers:{'Content-Type':'application/json','Origin':'https://test'},body:JSON.stringify({companyId,...body})
 }));
 const get=(companyId='review-company')=>api.GET(new Request('https://test/api/automation?companyId='+companyId));
 const scheduled=(companyId,token)=>tick.POST(new Request('https://test/api/automation/tick?companyId='+companyId,{
@@ -146,7 +146,7 @@ for(const role of ['manager','employee']){
  sql.prepare('INSERT INTO memberships(user_id,company_id,role) VALUES (?,?,?)').run(role,'review-company',role);
  globalThis.testUser={userId:role};
  assert.equal((await post({action:'policy',policy:{...review.policy,mode:'automatic'}})).status,403);
- assert.equal((await post({action:'approve',id:proposal.id})).status,403);
+ assert.equal((await post({action:'approve',id:proposal.id})).status,role==='manager'?400:403);
 }
 sql.prepare('INSERT INTO memberships(user_id,company_id,role) VALUES (?,?,?)').run('single-company-owner','other-company','owner');
 globalThis.testUser={userId:'single-company-owner'};

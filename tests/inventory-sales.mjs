@@ -10,11 +10,11 @@ globalThis.testUser={userId:'owner-a',email:'a@example.test'};
 sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-a','A','now');
 sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('owner-a','company-a','owner');
 for(const id of ['milk','cup'])sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a',id,JSON.stringify({id,name:id}));
-const plugin={name:'mocks',setup(b){b.onResolve({filter:/chatgpt-auth|db\/raw/},a=>({path:a.path,namespace:'mock'}));b.onLoad({filter:/.*/,namespace:'mock'},a=>({contents:a.path.includes('chatgpt-auth')?'export async function getChatGPTUser(){return globalThis.testUser}':'export function database(){return globalThis.testDB}'}));}};
+const plugin={name:'mocks',setup(b){b.onResolve({filter:/chatgpt-auth|db\/raw|^cloudflare:workers$/},a=>({path:a.path,namespace:'mock'}));b.onLoad({filter:/.*/,namespace:'mock'},a=>({contents:a.path.includes('chatgpt-auth')?'export async function getChatGPTUser(){return globalThis.testUser}':a.path.includes('cloudflare:')?'export const env={}':'export function database(){return globalThis.testDB}'}));}};
 for(const name of ['inventory','sales'])await build({entryPoints:['app/api/'+name+'/route.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/test-'+name+'.mjs',plugins:[plugin]});
 await build({entryPoints:['lib/inventory.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/inventory-math.mjs'});
 const inv=await import('../.sites-runtime/test-inventory.mjs'),sales=await import('../.sites-runtime/test-sales.mjs'),{recommendation,defaultSettings}=await import('../.sites-runtime/inventory-math.mjs');
-const send=(api,b)=>api.POST(new Request('https://test/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId:'company-a',...b})}));
+const send=(api,b)=>api.POST(new Request('https://test/api',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://test'},body:JSON.stringify({companyId:'company-a',...b})}));
 const read=()=>inv.GET(new Request('https://test/api?companyId=company-a'));
 async function mutation(productId,action,version,extra={}){const r=await send(inv,{id:crypto.randomUUID(),productId,action,version,...extra});assert.equal(r.status,200,JSON.stringify(await r.json()));}
 for(const productId of ['milk','cup']){

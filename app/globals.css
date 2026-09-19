@@ -2,6 +2,12 @@
 @import "tw-animate-css";
 @import "../vendor/shadcn-tailwind-4.13.0.css";
 
+.membership-details { display:block; padding:16px 5%; background:#eaf0ec; border-bottom:1px solid #d5dfd8; }
+.membership-details > summary { cursor:pointer; font-weight:600; }
+.membership-details > section { max-width:850px; padding:20px 0; }
+.membership-details .company-actions { flex-wrap:wrap; justify-content:flex-start; }
+.membership-details select { background:white; padding:8px; border:1px solid #d5dfd8; border-radius:5px; }
+
 @utility scrollbar-thin {
   scrollbar-width: thin;
 }

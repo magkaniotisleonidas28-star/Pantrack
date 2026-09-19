@@ -181,32 +181,34 @@ Implementation evidence (2026-09-18): all six local suites, type checks, migrati
 
 **Objective:** Replace hosting-specific identity assumptions with secure authentication suitable for the chosen deployment platform.
 
-### Product decisions required
+Implementation and local acceptance checks are recorded in `docs/M2_LOCAL_EVIDENCE.md`. Real Supabase email/login/recovery verification, hosted CI and migration/authentication review remain pending; these checked items describe local implementation evidence, not production acceptance.
 
-- [ ] Choose the production authentication provider and deployment host.
-- [ ] Decide whether a person can belong to multiple companies.
-- [ ] Confirm roles: owner, manager, and employee.
-- [ ] Define who can invite/remove users, connect integrations, approve orders, enable automation, and view financial settings.
+### Product decisions approved
+
+- [x] Choose the production authentication provider and deployment host.
+- [x] Decide whether a person can belong to multiple companies.
+- [x] Confirm roles: owner, manager, and employee.
+- [x] Define who can invite/remove users, connect integrations, approve orders, enable automation, and view financial settings.
 
 ### Tasks
 
-- [ ] Implement verified server-side sessions.
-- [ ] Link authenticated users to memberships; do not trust client-provided company IDs or roles.
-- [ ] Add company invitations with expiration, single use, and role assignment.
-- [ ] Add membership management and safe ownership transfer rules.
-- [ ] Create a centralized authorization helper and apply it to every API route.
-- [ ] Add CSRF protection where cookie-based mutations require it.
-- [ ] Add session expiration, logout, and account-recovery behavior.
-- [ ] Record security-relevant membership and integration-setting changes in an audit log.
+- [x] Implement verified server-side sessions.
+- [x] Link authenticated users to memberships; do not trust client-provided company IDs or roles.
+- [x] Add company invitations with expiration, single use, and role assignment.
+- [x] Add membership management and safe ownership transfer rules.
+- [x] Create a centralized authorization helper and apply it to every API route.
+- [x] Add CSRF protection where cookie-based mutations require it.
+- [x] Add session expiration, logout, and account-recovery behavior.
+- [x] Record security-relevant membership and integration-setting changes in an audit log.
 
 ### Acceptance criteria
 
-- [ ] Anonymous requests cannot read or modify company data.
-- [ ] A member of Company A cannot access Company B by changing URL or request fields.
-- [ ] Employees cannot connect POS/vendor accounts, change automation, or view payment controls unless explicitly authorized.
-- [ ] Managers can perform only the actions listed in the permissions matrix.
-- [ ] Invitation replay and expired invitations are rejected.
-- [ ] Authorization tests cover every API family.
+- [x] Anonymous requests cannot read or modify company data.
+- [x] A member of Company A cannot access Company B by changing URL or request fields.
+- [x] Employees cannot connect POS/vendor accounts, change automation, or view payment controls unless explicitly authorized.
+- [x] Managers can perform only the actions listed in the permissions matrix.
+- [x] Invitation replay and expired invitations are rejected.
+- [x] Authorization tests cover every API family.
 
 ### Codex prompt
 

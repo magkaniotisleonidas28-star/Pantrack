@@ -4,6 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Pantrack | Purchasing workspace",
   description: "Prepare café orders across suppliers, manage products, and track purchasing history.",
+  referrer: "no-referrer",
   other: {
     "codex-preview": "development",
   },

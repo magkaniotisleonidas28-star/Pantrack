@@ -1,15 +1,16 @@
+import {withCompanyRoute} from '@/lib/authorization';
 import {importSales} from '@/lib/import-sales';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
 import {type InventoryRecord} from '@/lib/inventory';
 import {z} from 'zod';
-export async function GET(req:Request){
+async function handleGET(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  try{const companyId=new URL(req.url).searchParams.get('companyId');if(!await companyAccess(u.userId,companyId))return Response.json({error:'Company access denied.'},{status:403});const db=database();const [r,i,m]=await Promise.all([db.prepare('SELECT data FROM recipes WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM sales_imports WHERE company_id=? ORDER BY created DESC LIMIT 30').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM register_mappings WHERE company_id=?').bind(companyId).all<{data:string}>()]);return Response.json({mappings:m.results.map(x=>JSON.parse(x.data)),recipes:r.results.map(x=>JSON.parse(x.data)),imports:i.results.map(x=>JSON.parse(x.data))},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load recipes and sales.'},{status:503});}
 }
 type Recipe={id:string;name:string;ingredients:{productId:string;quantity:number;unit:string}[]};
-export async function POST(req:Request){
+async function handlePOST(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  if(req.headers.get('sec-fetch-site')==='cross-site'||!req.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'Invalid request.'},{status:403});
  try{
@@ -36,3 +37,5 @@ export async function POST(req:Request){
  return Response.json(await importSales(b.companyId,b.reference,b.lines,u.email));
  }catch(e){return Response.json({error:e instanceof z.ZodError?'Check recipes and sales quantities.':e instanceof Error?e.message:'Could not save sales.'},{status:400});}
 }
+export const GET=withCompanyRoute('sales',handleGET);
+export const POST=withCompanyRoute('sales',handlePOST);

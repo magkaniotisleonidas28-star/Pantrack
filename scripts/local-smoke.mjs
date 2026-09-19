@@ -31,6 +31,9 @@ try {
     await new Promise(resolve => setTimeout(resolve, 500));
   }
   assert.ok(ready, 'Home page must load locally');
+  for(const path of ['/auth','/auth/callback','/auth/signout','/invite']){
+    assert.equal((await fetch(origin+path)).status,200,'M2 page '+path);
+  }
   assert.equal((await fetch(`${origin}/api/companies`)).status, 401, 'Anonymous access');
   assert.equal((await fetch(`${origin}/api/companies`, { headers: {
     'oai-authenticated-user-id': 'forged', 'oai-authenticated-user-email': 'forged@example.test',
@@ -50,6 +53,8 @@ try {
   const catalog = await fetch(`${origin}/api/workspace?companyId=${companyId}`, { headers: { cookie } });
   assert.equal(catalog.status, 200, 'New local company catalog');
   assert.equal((await fetch(`${origin}/api/workspace?companyId=${crypto.randomUUID()}`, { headers: { cookie } })).status, 403, 'Wrong-company access');
+  assert.equal((await fetch(`${origin}/api/companies`,{method:'POST',headers:{cookie,origin:'https://evil.example','content-type':'application/json'},body:JSON.stringify({action:'create',id:crypto.randomUUID(),name:'CSRF rejected'})})).status,403,'HTTP CSRF rejection');
+  assert.equal((await fetch(`${origin}/api/members?companyId=${companyId}`,{headers:{cookie}})).status,200,'Owner membership screen data');
   const signOut = await fetch(`${origin}/signout-with-chatgpt?return_to=/`, { headers: { cookie }, redirect: 'manual' });
   assert.equal(signOut.status, 302);
   assert.match(signOut.headers.get('set-cookie'), /Max-Age=0/);

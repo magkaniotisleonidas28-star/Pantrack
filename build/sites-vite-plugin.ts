@@ -3,6 +3,7 @@
 import { access, cp, mkdir, rm } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { resolve } from "node:path";
+import {createHmac,randomBytes} from 'node:crypto';
 import type { Plugin } from "vite";
 
 const localUserId = "local_seedy";
@@ -30,11 +31,13 @@ async function exists(path: string): Promise<boolean> {
 }
 
 export function sites({ mockAuth = true } = {}): Plugin {
+  const localKey=randomBytes(32).toString('hex');
   let root = process.cwd();
   let command: "build" | "serve" = "build";
 
   return {
     name: "sites",
+    config(_config,context){return {define:{__PANTRACK_LOCAL_AUTH_KEY__:JSON.stringify(mockAuth&&context.command==='serve'?localKey:'')}};},
     configResolved(config) {
       root = config.root;
       command = config.command;
@@ -46,7 +49,7 @@ export function sites({ mockAuth = true } = {}): Plugin {
       server.config.logger.info(`Sites local sign-in: ${localEmail}`);
       server.middlewares.use((request, response, next) => {
         for (const name of Object.keys(request.headers)) {
-          if (name.startsWith("oai-authenticated-user-")) {
+          if (name.startsWith("oai-authenticated-user-") || name.startsWith('x-pantrack-local-')) {
             removeHeader(request, name);
           }
         }
@@ -106,6 +109,9 @@ export function sites({ mockAuth = true } = {}): Plugin {
         const signOut = url.pathname === "/signout-with-chatgpt";
         if (!signIn && !signOut) {
           if (signInCookies.length === 1 && signInCookies[0] === "1") {
+            const stamp=String(Date.now());
+            setHeader(request,'x-pantrack-local-stamp',stamp);
+            setHeader(request,'x-pantrack-local-signature',createHmac('sha256',localKey).update(stamp).digest('hex'));
             setHeader(request, "oai-authenticated-user-id", localUserId);
             setHeader(request, "oai-authenticated-user-email", localEmail);
             setHeader(

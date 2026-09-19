@@ -52,9 +52,13 @@ are not proof of live production integration.
   connection framework, and scheduled-check endpoint.
 - Clover OAuth authorization/menu loading and hosted Stripe payment-method setup.
 
-The following remain deliberately unavailable or unverified: independent login,
+The following remain unverified against real services: Supabase login/email delivery,
 live Clover sales sync, a second POS, a real supplier adapter, live payments,
 provisioned background jobs, and automatic purchases.
+
+## M2 implementation
+
+The approved Supabase/Cloudflare design is implemented locally. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history now have automated coverage. Provider tests use mocked responses; real project/email verification and review remain pending. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md) and [local evidence](M2_LOCAL_EVIDENCE.md).
 
 ## Your setup status
 
@@ -62,7 +66,7 @@ provisioned background jobs, and automatic purchases.
 | --- | --- | --- |
 | GitHub | Repository connected; M0 and M1 merged into `main`. | Nothing now. Keep `main` as the production branch once deployment is ready. |
 | Supabase | Supabase account created. | Create a project if you have not already; enable Email sign-in and email confirmation. Keep local callback URLs. |
-| Cloudflare | Cloudflare account created; GitHub repository linked; account subdomain is `magkaniotisleonidas28.workers.dev`. | Keep public deployment paused until M2 code is ready. A real Worker URL will be chosen/deployed later. |
+| Cloudflare | Cloudflare account created; GitHub repository linked; account subdomain is `magkaniotisleonidas28.workers.dev`. | Keep public deployment paused pending M2 authentication/migration review. A real Worker URL will be chosen/deployed later. |
 | Custom domain | None required yet. | A free temporary URL will be `https://WORKER-NAME.magkaniotisleonidas28.workers.dev`. Buy/add a custom domain before a real café pilot. |
 
 Never send, commit, or paste Supabase keys, Cloudflare API tokens, OAuth secrets,
@@ -87,14 +91,14 @@ supplier credentials, or payment details into chat or source control.
    `https://project-ref.supabase.co`) and the Worker name you want, such as
    `pantrack`. Those are identifiers, not secrets.
 5. Do not deploy remote D1, configure production secrets, or invite real users
-   yet. M2 will first replace the hosting-specific login code with verified
-   Supabase sessions and company role checks.
+   yet. M2 now implements verified Supabase sessions and company role checks;
+   complete the setup and provider walkthrough in [M2_SETUP.md](M2_SETUP.md).
 
 ## Remaining roadmap
 
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
-| M2 — authentication and RBAC | Next implementation milestone | Supabase session verification, authorization helper, invitations, membership management, ownership transfer, account recovery, CSRF/session tests, and audit records. |
+| M2 — authentication and RBAC | Implemented locally; acceptance pending | Local tests/build/migration passed. Configure the Supabase development project, verify real email/login/recovery, run hosted CI, and review the authentication flow and migration. See [M2 evidence](M2_LOCAL_EVIDENCE.md). |
 | M3 — inventory and recipes | Prototype exists; not complete | Decimal/unit policy, immutable recipe versions, modifiers, opening-count cutoff, reconciliation history, and tests. |
 | M4 — POS ingestion | Prototype exists; not complete | Provider-neutral event model, held-event queue, safe replay/dismiss/correction, event identity, and refund/cancellation policy. |
 | M5 — Clover | OAuth/menu prototype only | Sandbox merchant, completed-order sync, modifiers, cursors, reconciliation, health, and sandbox evidence. |

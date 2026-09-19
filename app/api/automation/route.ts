@@ -1,3 +1,5 @@
+import {permitted} from '@/lib/authorization';
+import {withCompanyRoute} from '@/lib/authorization';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
@@ -7,17 +9,18 @@ import {defaultPolicy,purchasingBlockReason,type Vendor} from '@/lib/automation-
 import {z} from 'zod';
 const vendorSchema=z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(100),website:z.union([z.literal(''),z.string().url().refine(v=>/^https?:/.test(v))]),endpoint:z.string().max(1000).refine(v=>{if(!v)return true;try{publicEndpoint(v);return true;}catch{return false;}}),account:z.string().max(200),deliveryAddress:z.string().max(1000),notes:z.string().max(1000),enabled:z.boolean()});
 const policySchema=z.object({mode:z.enum(['paused','review','automatic']),intervalHours:z.number().int().min(1).max(168),maxOrder:z.number().int().min(1).max(10000000),dailyLimit:z.number().int().min(1).max(10000000),priceTolerance:z.number().min(0).max(50),allowedProducts:z.array(z.string()).max(500)});
-export async function GET(req:Request){
+async function handleGET(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
- try{const id=new URL(req.url).searchParams.get('companyId');if((await companyAccess(u.userId,id))?.role!=='owner')return Response.json({error:'Company owner access required.'},{status:403});return Response.json(await state(id!),{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load vendor automation.'},{status:503});}
+ try{const id=new URL(req.url).searchParams.get('companyId');const role=(await companyAccess(u.userId,id))?.role;if(!role||!permitted(role,'operate'))return Response.json({error:'Company owner access required.'},{status:403});const data=await state(id!);return Response.json(role==='owner'?data:{jobs:data.jobs,lastRun:data.lastRun,mode:data.policy.mode},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load vendor automation.'},{status:503});}
 }
-export async function POST(req:Request){
+async function handlePOST(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  if(req.headers.get('sec-fetch-site')==='cross-site'||!req.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'Invalid request.'},{status:403});
  try{
- const b=z.object({companyId:z.string().min(1).max(200),action:z.enum(['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler']),vendor:vendorSchema.optional(),token:z.string().max(4000).optional(),clearToken:z.boolean().optional(),policy:policySchema.optional(),id:z.string().uuid().optional()}).parse(await req.json());
- if((await companyAccess(u.userId,b.companyId))?.role!=='owner')return Response.json({error:'Company owner access required.'},{status:403});
+ const b=z.object({companyId:z.string().min(1).max(200),action:z.enum(['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause']),vendor:vendorSchema.optional(),token:z.string().max(4000).optional(),clearToken:z.boolean().optional(),policy:policySchema.optional(),id:z.string().uuid().optional()}).parse(await req.json());
+ if(!await companyAccess(u.userId,b.companyId))return Response.json({error:'Company owner access required.'},{status:403});
  const db=database();
+ if(b.action==='pause'){await db.prepare("INSERT INTO automation_settings(company_id,data) VALUES (?,?) ON CONFLICT(company_id) DO UPDATE SET data=json_set(automation_settings.data,'$.mode','paused')").bind(b.companyId,JSON.stringify({...defaultPolicy,mode:'paused'})).run();return Response.json({message:'Company automation paused.'});}
  if(b.action==='vendor'){
  if(!b.vendor)throw new Error('Vendor details required.');
  const all=await db.prepare('SELECT data FROM vendor_connections WHERE company_id=?').bind(b.companyId).all<{data:string}>();
@@ -62,6 +65,8 @@ export async function POST(req:Request){
  // A scheduler key authorizes only due checks for this company, never settings changes.
  const token=crypto.randomUUID()+crypto.randomUUID(),hash=await digest(token);
  await db.prepare('INSERT INTO automation_settings(company_id,data,scheduler_hash) VALUES (?,?,?) ON CONFLICT(company_id) DO UPDATE SET scheduler_hash=excluded.scheduler_hash').bind(b.companyId,JSON.stringify(defaultPolicy),hash).run();
- return Response.json({schedulerToken:token,schedulerUrl:'https://pantry-pilot-ordering.magkaniotisleonidas2.chatgpt.site/api/automation/tick?companyId='+encodeURIComponent(b.companyId),message:'Scheduler key created. Copy it now; generating another invalidates the previous key.'},{headers:{'Cache-Control':'no-store'}});
+ return Response.json({schedulerToken:token,schedulerUrl:new URL(req.url).origin+'/api/automation/tick?companyId='+encodeURIComponent(b.companyId),message:'Scheduler key created. Copy it now; generating another invalidates the previous key.'},{headers:{'Cache-Control':'no-store'}});
  }catch(e){return Response.json({error:e instanceof z.ZodError?'Check vendor details and rule limits.':e instanceof Error?e.message:'Could not update automation.'},{status:400});}
 }
+export const GET=withCompanyRoute('automation',handleGET);
+export const POST=withCompanyRoute('automation',handlePOST);

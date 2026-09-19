@@ -6,6 +6,9 @@ mkdirSync('.sites-runtime', { recursive: true });
 await build({ entryPoints: ['build/sites-vite-plugin.ts'], bundle: true, platform: 'node', format: 'esm', outfile: '.sites-runtime/test-local-auth.mjs' });
 const { sites } = await import('../.sites-runtime/test-local-auth.mjs');
 const plugin = sites();
+assert.equal(plugin.config({}, {command:'build'}).define.__PANTRACK_LOCAL_AUTH_KEY__, '""', 'Production builds contain no fixture key');
+assert.notEqual(plugin.config({}, {command:'serve'}).define.__PANTRACK_LOCAL_AUTH_KEY__, '""');
+assert.equal(sites({mockAuth:false}).config({}, {command:'serve'}).define.__PANTRACK_LOCAL_AUTH_KEY__, '""');
 let middleware;
 plugin.configureServer({ config: { server: {}, logger: { info() {} } }, middlewares: { use(handler) { middleware = handler; } } });
 function request({ path = '/', host = '127.0.0.1:5173', remoteAddress = '127.0.0.1', headers = {}, method = 'GET' } = {}) {

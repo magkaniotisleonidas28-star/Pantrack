@@ -27,7 +27,7 @@ pnpm db:migrate:local
 pnpm dev
 ```
 
-Open <http://127.0.0.1:5173>. Select **Sign in with ChatGPT** to use the
+Open <http://127.0.0.1:5173/signin-with-chatgpt> to use the
 existing local fixture `seedy@sites.test`; this does not contact ChatGPT.
 Create a company in the dialog. The catalog contains clearly marked fictional
 products. No production database, Cloudflare login, POS account, payment account,
@@ -39,8 +39,8 @@ a loopback Host. Its cookie is HttpOnly and SameSite=Lax. The fixture runs only
 inside Vite's development server and is absent from production Worker output.
 Keep this server bound to `127.0.0.1`; never use the fixture with live data.
 
-Production authentication still depends on trusted Sites hosting headers. An
-independent deployment must complete M2 with verified server sessions before it
+Production authentication now requires verified Supabase sessions. An
+independent deployment must complete the M2 real-provider verification and review in `docs/M2_SETUP.md` before it
 is exposed to users. Building locally does not make that deployment ready.
 
 ## Local data and variables
@@ -102,3 +102,7 @@ Revert the milestone commit to roll back application changes; preserve any local
 database you need before applying migrations from a different branch.
 
 Reference: [Cloudflare D1 local development](https://developers.cloudflare.com/d1/best-practices/local-development/).
+
+## M2 authentication
+
+Use `/auth` for Supabase email sign-in after configuring the ignored local variables and email templates in [M2_SETUP.md](docs/M2_SETUP.md). The loopback fixture remains accessible at `/signin-with-chatgpt`; it now signs a short-lived dev assertion, and production builds contain no fixture key. The ordinary UI signs out through `/auth/signout`; fixture users can explicitly clear their dev cookie at `/signout-with-chatgpt`. Existing hosted identities are not automatically linked to Supabase users.

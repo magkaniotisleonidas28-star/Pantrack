@@ -1,0 +1,65 @@
+# M2 setup and review
+
+Implementation is available locally. Public deployment remains paused for review of the authentication flow and migration. Do not use production company data to test this change.
+
+## Local prerequisites
+
+Run the usual locked dependency install, `pnpm local:setup`, and `pnpm db:migrate:local`. The setup command creates ignored variable files and a local random authentication-encryption key if `.dev.vars` does not exist. It never replaces existing configuration. The loopback fixture is still available at `/signin-with-chatgpt`; ordinary `/auth` uses Supabase.
+
+For real authentication testing, configure these variables in ignored `.dev.vars`:
+
+| Variable | Value |
+| --- | --- |
+| `APP_ORIGIN` | `http://127.0.0.1:5173` (use this exact host in the browser) |
+| `SUPABASE_URL` | Your development project's `https://PROJECT.supabase.co` URL |
+| `SUPABASE_PUBLISHABLE_KEY` | Its publishable key, or legacy anon key; never a service-role key |
+| `AUTH_ENCRYPTION_KEY` | An independent random 32-byte key, encoded as 64 hex characters |
+
+Keep the encryption key stable to retain current sessions. Replacing it invalidates existing sessions. `pnpm local:setup` generates a suitable local key for a new setup. Store production variables using the eventual Worker's secrets/configuration, after review. No production credentials are required for automated tests.
+
+## Supabase dashboard configuration
+
+1. Enable Email/password authentication and email confirmation in a development project. Disable anonymous sign-in. Use a password minimum of at least 12 characters.
+2. Set Site URL to `http://127.0.0.1:5173`. Allow the exact local `/auth/callback` URL. Add the localhost variant only if testing that origin, with a matching `APP_ORIGIN`.
+3. In the confirmation email template, use:
+
+   ```html
+   <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=signup">Confirm email</a>
+   ```
+
+4. In the recovery email template, use:
+
+   ```html
+   <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=recovery">Reset password</a>
+   ```
+
+These templates are required: the application expects server-side token-hash verification, not access tokens in the callback fragment. The callback page asks the user to continue before consuming the link. Single-use links are verified by Supabase. Real email delivery is governed by your project's mail configuration and rate limits.
+
+## Review checklist with a configured development project
+
+- Create two real test accounts; confirm emails; verify unconfirmed login is rejected.
+- Sign in, create a company, sign out, and verify replay of the old cookie fails.
+- Have the owner invite the second account as employee. Open the link, sign in in another tab with the matching verified email, then accept in the invitation tab. Verify expiry, revocation, replacement, wrong-email rejection and replay.
+- Change the second member to manager; verify operations are available and integration/financial controls remain forbidden. Switch among two companies with different roles.
+- Confirm both users' passwords and transfer ownership; verify the previous owner becomes manager immediately. Test a canceled offer and an expired offer.
+- Request recovery, follow the email, change password, and confirm other Pantrack sessions are revoked. Verify an expired session requires signing in again.
+- Review security history as owner and confirm secrets are absent.
+
+The automated suite covers these security rules with mocked Supabase responses and a real local SQLite engine. This dashboard/email walkthrough remains required evidence; it has not been performed in this workspace.
+
+## Migration review
+
+Inspect `0008_m2_auth_memberships.sql`, its snapshot and journal, especially invitation and ownership triggers. It is additive, preserves existing company data and prevents removing the last owner. Review the identity-mapping requirement in `decisions/0001-m2-authentication.md` before moving any existing hosted data. App rollback alone does not undo D1 migration state.
+
+## Commands
+
+```sh
+pnpm typecheck
+pnpm test
+pnpm db:check
+pnpm build
+pnpm db:migrate:local
+pnpm test:local
+```
+
+`tests/m2-security.mjs` is the focused security suite. The dev HTTP smoke uses fictional company data and the signed local fixture. CI automatically discovers the new suite through `scripts/test.mjs`. Hosted CI for this change still requires pushing a reviewed branch.

@@ -10,7 +10,7 @@ Runtime declared in package.json: Node >=22.13.0, pnpm 11.25.0. Keep pnpm-lock.y
 ## Architecture and portability
 React/TypeScript using Vinext, Vite and Cloudflare Workers. D1 binding DB stores company data. Existing migrations define the schema. A local database must be initialized using the project's supported configuration. Production records are not included. Do not point experiments at production.
 
-Authentication currently trusts identity headers supplied by the Sites hosting layer. Those headers are NOT independently secure authentication on another host. For independent hosting, implement verified sessions/authentication and preserve membership/owner checks. Do not solve local login by exposing a production auth bypass or trusting arbitrary client-supplied identity headers.
+M2 now verifies Supabase identity on the server and enforces company roles, invitations and ownership rules. The compatibility module `app/chatgpt-auth.ts` no longer trusts the old Sites identity headers. See `docs/M2_SETUP.md`, `docs/M2_LOCAL_EVIDENCE.md` and the authentication decision record. Real-project/email verification and deployment review remain pending. The loopback fixture uses a dev-only signed assertion whose key is absent from production builds.
 
 .env.example lists required integration variables, but contains no live secrets. Runtime secrets, OAuth tokens, encryption keys and customer data are not exported. Preserve the deployed encryption key if migrating existing encrypted records; a new key will not decrypt them. Existing Clover and Stripe return URLs reference the Sites domain and need deliberate configuration if the host changes.
 

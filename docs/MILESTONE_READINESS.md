@@ -2,7 +2,7 @@
 
 Assessment date: 2026-09-18. This report distinguishes existing prototype code from demonstrated acceptance. It does not mark a milestone complete. No production, merchant, supplier, payment, or pilot access was performed for this assessment.
 
-M0 local acceptance passed (commit 0a6986e; draft PR #1). M1 code, local checks and hosted Ubuntu/Windows PR CI passed (run 35356413026; draft PR #2). Main-branch acceptance remains pending review/merge. M2 product decisions are pending. Later milestones retain their prerequisites in `PANTRACK_MILESTONES.md`, including the requirement to complete M11 before M12.
+M0 local acceptance passed (commit 0a6986e; draft PR #1). M1 code, local checks and hosted Ubuntu/Windows PR CI passed (run 35356413026; draft PR #2). Main-branch acceptance remains pending review/merge. M2 product decisions are approved; local implementation and security checks passed. Real-provider acceptance and migration/authentication review remain pending. Later milestones retain their prerequisites in `PANTRACK_MILESTONES.md`, including the requirement to complete M11 before M12.
 
 ## Status and completion evidence
 
@@ -10,7 +10,7 @@ M0 local acceptance passed (commit 0a6986e; draft PR #1). M1 code, local checks 
 | --- | --- | --- | --- |
 | M0: Local baseline | Local acceptance passed | Review draft PR #1 before merging; see M0_LOCAL_EVIDENCE.md. | Clean local database initialization; documented reset/run commands; home page and company creation; successful type, test, and build commands; secret/ignore review. |
 | M1: Quality and CI | Implemented; local and hosted PR checks passed | Main-branch run pending review/merge; see M1_CI_EVIDENCE.md. | Passing local pipeline and hosted PR CI; demonstrated failure on type errors, failing tests, and missing migrations; PR/commit reference. |
-| M2: Authentication and permissions | Blocked on decisions | M0-M1; approve host, authentication provider, membership policy, and permission matrix. Implement verified sessions, invitations, account recovery, ownership rules, and security audit records. | Anonymous, cross-company, every-role/API-family, CSRF, session-expiration, invitation replay/expiration, logout, and last-owner tests; approved authentication decision record. |
+| M2: Authentication and permissions | Implemented locally; acceptance pending | Supabase development setup, real email/login/recovery verification, hosted CI, and migration/authentication review. See M2_LOCAL_EVIDENCE.md and M2_SETUP.md. | Anonymous, cross-company, every-role/API-family, CSRF, session-expiration, invitation replay/expiration, logout, and last-owner tests; approved authentication decision record. |
 | M3: Inventory and recipes | Partial prototype; prerequisite blocked | M1-M2; explicit units/decimal policy, immutable recipe versions and modifiers, sale/count cutoff, reconciliation history, and safe unit changes. | Tests for recipe history, fractional pack boundaries, modifiers, pre-count sales, concurrent duplicates, count variance, incompatible units, and target/incoming/capacity/shelf-life/zero-target/stale-count examples. |
 | M4: POS ingestion | Partial prototype; prerequisite blocked | M2-M3; provider-neutral event identity, separate durable receipt/application, held queue, replay/dismiss/correction workflow, and consumption policy. | Duplicate/concurrent receipt and crash/retry tests; unknown item/modifier holds with no partial deduction; safe replay after mapping; preparation-aware refund/cancellation tests; payload redaction and authorization tests. |
 | M5: Clover | OAuth/menu prototype; sandbox and pilot unverified | M4; approved sandbox app and company merchant mapping; completed order sync, modifiers, token rotation, cursors, reconciliation, and connection health. | Official-contract tests plus sandbox report with event IDs and expected/actual ingredient usage; refresh/replay, disconnect, missed-event recovery, void/refund, and unknown-modifier results. Mocks alone do not establish sandbox or pilot acceptance. |
@@ -28,7 +28,7 @@ Every completion claim also needs the common definition of done: relevant checks
 
 | Owner | Required decision or action | Unblocks |
 | --- | --- | --- |
-| Product owner | Choose production deployment host and authentication provider. Confirm callback origins, session/account-recovery model, multiple-company membership, roles, invitations, and ownership transfer rules. Approve the proposed matrix below. | M2 and dependents |
+| Product owner | Supabase/Cloudflare, multi-company membership, the matrix, seven-day invitations and protected ownership transfer are approved. Review the implemented authentication flow and migration before deployment. | M2 acceptance and dependents |
 | Hosting/authentication account owner | Provision a development/sandbox application and configure its allowed callback/logout URLs for the chosen host. Store credentials through ignored local variables or the host's secret store; do not paste secrets into chat or commit them. | M2 verification |
 | Cafe owner/manager | Identify the pilot company, location, actual POS, supplier, and stable product subset. Give explicit permission for sandbox/pilot data and, separately, reviewed test purchases. Confirm recipes/modifiers, units, pack conversions, targets, count frequency, inventory tolerance, and alert owner. | M5-M8 and M11 |
 | Clover developer/merchant account owner | Register/configure the sandbox app, approved redirect URL, minimum read permissions, test merchant/location/catalog, and webhook configuration if used. Install/authorize the app against the intended sandbox merchant. Run and record authorized sandbox sale cases; pilot authorization is separate. | M5 |
@@ -40,9 +40,9 @@ Every completion claim also needs the common definition of done: relevant checks
 | Pilot manager | Sign off after shadow inventory, recommendation-only, and reviewed-submission stages; complete two reviewed count-to-delivery cycles. Authorize any limited-automation stage with named products, conservative limits, alert owner, observation period, and pause/rollback procedure. | M11 |
 | Product/operations owner | After M11 evidence is accepted, approve production deployment, service/support ownership, retention/export/deletion rules, privacy terms, recovery objectives, monitoring, and incident response. Complete a separate deliberate release review. | M12 |
 
-## Proposed M2 permissions: acceptance pending
+## Approved M2 permissions
 
-This is a proposal, not the current permission implementation or an approved business policy. Users may belong to multiple companies with a separate role per company; the existing membership schema supports this. All access must derive from verified server sessions and company membership. Anonymous users have no company access.
+Approved by the product owner in the implementation conversation on 2026-09-18. Implemented for existing API families; future held-event, export/offboarding and automation-release features retain their milestone gates. Users may belong to multiple companies with a separate role per company; the existing membership schema supports this. All access must derive from verified server sessions and company membership. Anonymous users have no company access.
 
 | Action | Owner | Manager | Employee |
 | --- | --- | --- | --- |
@@ -76,5 +76,5 @@ Sources inspected include `CODEX_HANDOFF.md`, `PANTRACK_MILESTONES.md`, `db/sche
 
 - M0: all local criteria passed; commit 0a6986e and draft PR https://github.com/magkaniotisleonidas28-star/Pantrack/pull/1. See M0_LOCAL_EVIDENCE.md.
 - M1: all six local suites, typecheck, migration check and build passed. Deliberate type/test/migration failures detected. Hosted Ubuntu/Windows CI passed: https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35356413026. Main-branch run remains pending; see M1_CI_EVIDENCE.md.
-- M2: provider/host and product-policy choices requested; acceptance pending.
+- M2: choices approved; local implementation, seven suites, typecheck, migration checks and build passed. Real-provider verification, hosted CI and review remain pending; see M2_LOCAL_EVIDENCE.md.
 - M3-M12: no completion claim. Later sandbox, purchase, deployment, and pilot evidence must be attached to the relevant milestone when actually obtained.

@@ -1,3 +1,4 @@
+import {withCompanyRoute} from '@/lib/authorization';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
@@ -5,14 +6,14 @@ import {defaultSettings,type InventoryRecord} from '@/lib/inventory';
 import {z} from 'zod';
 const amount=z.number().finite().min(0).max(10000000).multipleOf(.001);
 const settings=z.object({targetStock:amount.nullable().optional().default(null),variancePct:z.number().min(0).max(100),unit:z.string().trim().min(1).max(40),unitsPerPack:z.number().finite().positive().max(1000000),dailyUse:amount,leadDays:z.number().int().min(0).max(365),safety:amount,reviewDays:z.number().int().min(1).max(365),countEveryDays:z.number().int().min(1).max(365),location:z.string().trim().min(1).max(100),capacity:amount.nullable(),shelfDays:z.number().int().min(1).max(3650).nullable(),expiry:z.string().refine(v=>v===''||(/^\d{4}-\d{2}-\d{2}$/.test(v)&&!isNaN(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v))});
-export async function GET(req:Request){
+async function handleGET(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  try{const companyId=new URL(req.url).searchParams.get('companyId');if(!(await companyAccess(u.userId,companyId)))return Response.json({error:'Company access denied.'},{status:403});
  const db=database();const [r,e]=await Promise.all([db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM inventory_events WHERE company_id=? ORDER BY created DESC LIMIT 100').bind(companyId).all<{data:string}>()]);
  return Response.json({records:r.results.map(x=>JSON.parse(x.data)),events:e.results.map(x=>JSON.parse(x.data))},{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load inventory. Please retry.'},{status:503});}
 }
-export async function POST(req:Request){
+async function handlePOST(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  if(req.headers.get('sec-fetch-site')==='cross-site')return Response.json({error:'Invalid origin'},{status:403});
  if(!req.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'JSON required'},{status:415});
@@ -51,3 +52,5 @@ export async function POST(req:Request){
  return Response.json({ok:true});
  }catch(e){return Response.json({error:e instanceof z.ZodError?'Check quantities, dates, and required settings.':'Could not save inventory. Please retry.'},{status:e instanceof z.ZodError?400:503});}
 }
+export const GET=withCompanyRoute('inventory',handleGET);
+export const POST=withCompanyRoute('inventory',handlePOST);

@@ -2,8 +2,9 @@ import {env} from 'cloudflare:workers';
 import {database} from '@/db/raw';
 import {encrypt,decrypt} from '@/lib/vendor-adapter';
 import {z} from 'zod';
-export const cloverOrigin='https://pantry-pilot-ordering.magkaniotisleonidas2.chatgpt.site';
-export const callbackUrl=cloverOrigin+'/api/clover/callback';
+import {appOrigin} from '@/lib/auth';
+export const cloverOrigin=appOrigin;
+export const callbackUrl=()=>cloverOrigin()+'/api/clover/callback';
 export function cloverConfig(){const e=env as unknown as Record<string,string|undefined>;const environment=e.CLOVER_ENVIRONMENT||'sandbox';if(!['sandbox','production'].includes(environment))throw new Error('Invalid Clover environment.');return {environment,clientId:e.CLOVER_CLIENT_ID||'',clientSecret:e.CLOVER_CLIENT_SECRET||'',ready:!!(e.CLOVER_CLIENT_ID&&e.CLOVER_CLIENT_SECRET&&e.VENDOR_ENCRYPTION_KEY),api:environment==='production'?'https://api.clover.com':'https://apisandbox.dev.clover.com',auth:environment==='production'?'https://www.clover.com':'https://sandbox.dev.clover.com'};}
 const tokens=z.object({access_token:z.string().min(1).max(20000),refresh_token:z.string().min(1).max(20000),access_token_expiration:z.number().positive(),refresh_token_expiration:z.number().positive()});
 export async function cloverJson(url:string,init:RequestInit={}){const r=await fetch(url,{...init,redirect:'error',headers:{'User-Agent':'Pantrack/1.0',...init.headers},signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error(r.status===401?'Clover authorization expired. Reconnect your account.':r.status===403?'Clover permissions are missing. Check the app permissions and reconnect.':r.status===429?'Clover is busy. Wait a moment and try again.':'Clover could not complete this request. Try again.');const text=await r.text();if(text.length>2000000)throw new Error('Clover response is too large.');return JSON.parse(text) as unknown;}

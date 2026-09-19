@@ -15,14 +15,14 @@ Follow [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for the pinned Node/pnpm ver
 3. Refresh price, availability, case size, delivery cutoff and minimum spend before approval.
 4. Add queued submission and reconciliation with supplier order IDs. Never retry ambiguous submissions without reconciliation.
 5. Distinguish prepared, submitting, accepted, rejected and needs-review per supplier; add cancellation only when supported.
-6. Add owner-managed staff invitations and role management before a shared multi-staff pilot.
+6. Complete the [M2 Supabase setup and review](docs/M2_SETUP.md) before a shared multi-staff pilot.
 7. Add invoice parsing with human SKU approval once an AI provider is configured.
 
 ## Verification
 TypeScript and production build passed. An isolated API harness using SQLite verified sample initialization, server totals, preparation status, duplicate retry protection, negative-quantity rejection, owner isolation and missing-auth rejection. Live supplier and payment integrations are absent. Browser UI QA and WebMCP runtime validation were not performed in this session.
 
 ## Company accounts and order removal
-The public entry page offers Sign in with ChatGPT; all data APIs reject anonymous requests. Company creation grants the signed-in creator owner membership. Company membership is checked server-side before reading or changing a catalog or order. Owners can create, rename, and switch among their companies. A local preference remembers the selected company; it is never used as authorization. Staff invitation workflows and independent email/password accounts are not implemented.
+The entry page offers verified email sign-in through Supabase; all data APIs reject anonymous requests. Company creation grants the signed-in creator owner membership. Company membership is checked server-side before reading or changing a catalog or order. Owners can create, rename, and switch among their companies. A local preference remembers the selected company; it is never used as authorization. M2 now implements Supabase email/password sessions, invitations and membership management; real-provider acceptance and deployment review remain pending. See [M2 setup](docs/M2_SETUP.md) and [local evidence](docs/M2_LOCAL_EVIDENCE.md).
 
 Prior user-scoped data remains in its original storage scope, represented as the existing owner's first company on their next visit. The legacy owner columns now hold a membership-verified company scope. Additive migration 0001 creates companies, memberships and removal tombstones; migration 0000 is unchanged.
 
