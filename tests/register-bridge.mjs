@@ -89,12 +89,24 @@ assert.ok(!JSON.stringify(await(await regGet()).json()).includes(tokenData.token
 assert.equal((await send(sales,{action:'mapping',mapping})).status,200);
 const payload={reference:'bridge-order-1',lines:[{provider:mapping.provider,location:mapping.location,itemId:mapping.itemId,quantity:1}]};
 const push=(data,token=tokenData.token,company='company-a')=>ingest.POST(new Request('https://test/api/register/ingest?companyId='+company,{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://test',Authorization:'Bearer '+token},body:JSON.stringify(data)}));
+const pushRaw=(body,token=tokenData.token)=>ingest.POST(new Request('https://test/api/register/ingest?companyId=company-a',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://test',Authorization:'Bearer '+token},body}));
+const sizedBody=(bytes,multibyte,reference)=>{
+ const base={...payload,reference,padding:''},empty=JSON.stringify(base),remaining=bytes-new TextEncoder().encode(empty).byteLength;
+ assert.ok(remaining>=0);
+ base.padding=multibyte?'é'.repeat(Math.floor(remaining/2))+'a'.repeat(remaining%2):'a'.repeat(remaining);
+ const body=JSON.stringify(base);assert.equal(new TextEncoder().encode(body).byteLength,bytes);return body;
+};
 const stock=()=>sql.prepare("SELECT data FROM inventory WHERE company_id='company-a' AND product_id='milk'").get();
 const initial=JSON.parse(stock().data).onHand;
 assert.equal((await push(payload,'wrong')).status,401);assert.equal((await push(payload,tokenData.token,'other-company')).status,401);
 assert.equal((await push({...payload,lines:[{...payload.lines[0],itemId:'unknown'}]})).status,422);assert.equal(JSON.parse(stock().data).onHand,initial);
-assert.equal((await push(payload)).status,200);assert.equal(JSON.parse(stock().data).onHand,initial-10);
-assert.equal((await(await push(payload)).json()).replayed,true);assert.equal(JSON.parse(stock().data).onHand,initial-10);
+assert.equal((await pushRaw(sizedBody(50000,false,'ascii-boundary'))).status,200);
+assert.equal((await pushRaw(sizedBody(50001,false,'ascii-over'))).status,413);
+assert.equal((await pushRaw(sizedBody(50000,true,'utf8-boundary'))).status,200);
+assert.equal((await pushRaw(sizedBody(50001,true,'utf8-over'))).status,413);
+assert.equal(JSON.parse(stock().data).onHand,initial-20);
+assert.equal((await push(payload)).status,200);assert.equal(JSON.parse(stock().data).onHand,initial-30);
+assert.equal((await(await push(payload)).json()).replayed,true);assert.equal(JSON.parse(stock().data).onHand,initial-30);
 assert.ok((await(await regGet()).json()).lastReceived);
 const renewed=await(await send(register,{action:'token'})).json();assert.equal((await push(payload)).status,401);assert.equal((await push(payload,renewed.token)).status,200);
 assert.equal((await send(register,{action:'revoke'})).status,200);assert.equal((await push(payload,renewed.token)).status,401);
@@ -103,4 +115,4 @@ assert.deepEqual(parseRegisterCsv('provider,location,item_id,quantity\nTest POS,
 assert.throws(()=>parseRegisterCsv('provider,location,item_id,quantity\nOther,store-1,latte-small,2',new Set([key])));
 assert.throws(()=>parseRegisterCsv('provider,location,item_id,quantity\nTest POS,store-1,latte-small,-1',new Set([key])));
 const quotedKey=JSON.stringify(['Test, POS','store-1','latte-small']);assert.deepEqual(parseRegisterCsv('provider,location,item_id,quantity\n"Test, POS",store-1,latte-small,2',new Set([quotedKey])),{[quotedKey]:2});
-console.log('PASS: per-company provider settings, endpoint token masking/rotation/revocation, tenant isolation, mapped deductions, unmapped blocking, replay protection, standard CSV parsing and validation.');
+console.log('PASS: per-company provider settings, endpoint token masking/rotation/revocation, tenant isolation, mapped deductions, unmapped blocking, replay protection, byte-bounded ASCII/multibyte bridge bodies, standard CSV parsing and validation.');
