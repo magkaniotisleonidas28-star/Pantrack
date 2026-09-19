@@ -129,6 +129,23 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  assert.equal(orderConflict.kind,'conflict');assert.equal(h.store.snapshot().conflicts.length,2);
 }
 
+// Conflict receipts remain immutable and require an audited owner/manager dismissal.
+{
+ const h=harness();
+ await h.service.receive(nativeContext(),baseDraft());
+ const conflict=await h.service.receive(nativeContext(),baseDraft({sourcePayload:{changed:true}}));
+ assert.equal(conflict.kind,'conflict');
+ for(const actor of [null,employee,outsider,machine])assert.throws(()=>h.service.dismissConflict(conflict.conflictId,actor,'Reviewed mismatch'),error=>['unauthenticated','forbidden_role','wrong_company'].includes(error.code));
+ assert.throws(()=>h.service.dismissConflict(conflict.conflictId,owner,'  '),error=>error.code==='reason_required');
+ assert.equal(h.store.snapshot().conflictResolutions.length,0);
+ const resolution=h.service.dismissConflict(conflict.conflictId,manager,'Provider sent a corrupt revision');
+ assert.equal(resolution.kind,'dismiss');assert.equal(resolution.conflictId,conflict.conflictId);
+ const snapshot=h.store.snapshot();assert.equal(snapshot.conflicts.length,1);assert.equal(snapshot.conflictResolutions.length,1);
+ assert.ok(snapshot.audits.some(audit=>audit.action==='conflict_dismissed'&&audit.conflictId===conflict.conflictId&&audit.reason==='Provider sent a corrupt revision'));
+ const reloaded=new InMemorySalesEventStore(snapshot);assert.equal(reloaded.conflict(conflict.conflictId).reason,'identity_conflict');assert.equal(reloaded.snapshot().conflictResolutions.length,1);
+ assert.throws(()=>h.service.dismissConflict(conflict.conflictId,owner,'Second review'),error=>error.code==='invalid_state');
+}
+
 {
  const h=harness();
  const first=baseDraft({lines:[
@@ -227,6 +244,15 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  const refunded=await h.service.receive(nativeContext(),baseDraft({externalEventId:'refund-after',revision:3,eventType:'refund',orderStatus:'refunded'}));await h.service.process(refunded.eventKey);assert.equal(lastAttempt(h.store).outcome,'noop');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,afterFirst);
  const remake=await h.service.receive(nativeContext(),baseDraft({externalEventId:'remake',revision:4,eventType:'remake',lines:[...baseDraft().lines,{externalLineId:'remake-line',externalItemId:'latte-item',externalVariationId:'large',quantity:'1',modifiers:[]}]}));await h.service.process(remake.eventKey);assert.equal(h.store.state(remake.eventKey),'applied');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'180000000');
  const firstObservedCancellation=harness();const cancellation=await firstObservedCancellation.service.receive(nativeContext(),baseDraft({externalEventId:'prepared-cancel',externalOrderId:'prepared-cancel',eventType:'cancellation',orderStatus:'canceled'}));await firstObservedCancellation.service.process(cancellation.eventKey);assert.equal(firstObservedCancellation.store.state(cancellation.eventKey),'applied');assert.equal(firstObservedCancellation.inventory.getBalance('company-a','milk').onHandMinor,'190000000');
+}
+// Applied no-ops do not become consumption snapshots; they preserve the last actually consumed complete revision.
+{
+ const h=harness();
+ const canceled=await h.service.receive(nativeContext(),baseDraft({externalEventId:'cancel-v1',externalOrderId:'noop-lineage',eventType:'cancellation',orderStatus:'canceled',preparationStatus:'not_started'}));await h.service.process(canceled.eventKey);assert.equal(lastAttempt(h.store).outcome,'noop');
+ const reopened=await h.service.receive(nativeContext(),baseDraft({externalEventId:'reopen-v2',externalOrderId:'noop-lineage',revision:2,eventType:'reopen'}));await h.service.process(reopened.eventKey);assert.equal(lastAttempt(h.store).outcome,'applied');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'190000000');
+ const refunded=await h.service.receive(nativeContext(),baseDraft({externalEventId:'refund-v3',externalOrderId:'noop-lineage',revision:3,eventType:'refund',orderStatus:'refunded'}));await h.service.process(refunded.eventKey);assert.equal(lastAttempt(h.store).outcome,'noop');
+ const unchangedReopen=await h.service.receive(nativeContext(),baseDraft({externalEventId:'reopen-v4',externalOrderId:'noop-lineage',revision:4,eventType:'reopen'}));await h.service.process(unchangedReopen.eventKey);assert.equal(lastAttempt(h.store).outcome,'noop');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'190000000');
+ const addition=await h.service.receive(nativeContext(),baseDraft({externalEventId:'reopen-v5',externalOrderId:'noop-lineage',revision:5,eventType:'reopen',lines:[...baseDraft().lines,{externalLineId:'line-2',externalItemId:'latte-item',externalVariationId:'large',quantity:'1',modifiers:[]}]}));await h.service.process(addition.eventKey);assert.equal(lastAttempt(h.store).outcome,'applied');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'180000000');
 }
 
 // Revision ordering, supersession, claim serialization, terminal applied history, and restart snapshot.

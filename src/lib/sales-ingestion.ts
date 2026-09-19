@@ -124,10 +124,11 @@ export type SalesTransition = {
 export type SalesAuditEntry = {
   auditId: string;
   eventKey: string;
-  action: 'received' | 'retry' | 'replay' | 'dismiss' | 'correction_requested' | 'lease_expired' | 'superseded';
+  action: 'received' | 'retry' | 'replay' | 'dismiss' | 'conflict_dismissed' | 'correction_requested' | 'lease_expired' | 'superseded';
   actor: string;
   at: string;
   reason?: string;
+  conflictId?: string;
 };
 
 export type SalesAttempt = {
@@ -163,6 +164,16 @@ export type SalesResolution = {
   at: string;
 };
 
+export type SalesConflictResolution = {
+  resolutionId: string;
+  conflictId: string;
+  canonicalEventKey: string;
+  kind: 'dismiss';
+  actor: string;
+  reason: string;
+  at: string;
+};
+
 export type SalesCorrectionRequest = {
   correctionId: string;
   eventKey: string;
@@ -185,6 +196,7 @@ export type SalesStoreSnapshot = {
   transitions: SalesTransition[];
   attempts: SalesAttempt[];
   conflicts: SalesConflictReceipt[];
+  conflictResolutions: SalesConflictResolution[];
   resolutions: SalesResolution[];
   audits: SalesAuditEntry[];
   corrections: SalesCorrectionRequest[];
@@ -222,7 +234,9 @@ export interface SalesEventStore {
   appendCorrection(value: SalesCorrectionRequest): void;
   state(eventKey: string): SalesEventState | null;
   event(eventKey: string): SalesEventRecord | null;
-  latestApplied(lineageKey: string, beforeRevision: number): SalesEventRecord | null;
+  conflict(conflictId: string): SalesConflictReceipt | null;
+  dismissConflict(value: SalesConflictResolution): void;
+  latestAppliedConsumption(lineageKey: string, beforeRevision: number): SalesEventRecord | null;
   processingInLineage(lineageKey: string, exceptEventKey?: string): boolean;
   recoverExpired(now: string): string[];
   snapshot(): SalesStoreSnapshot;
@@ -411,6 +425,7 @@ export class InMemorySalesEventStore implements SalesEventStore {
   private readonly transitions: SalesTransition[] = [];
   private readonly attempts: SalesAttempt[] = [];
   private readonly conflicts: SalesConflictReceipt[] = [];
+  private readonly conflictResolutions: SalesConflictResolution[] = [];
   private readonly resolutions: SalesResolution[] = [];
   private readonly audits: SalesAuditEntry[] = [];
   private readonly corrections: SalesCorrectionRequest[] = [];
@@ -423,6 +438,7 @@ export class InMemorySalesEventStore implements SalesEventStore {
     this.transitions.push(...clone(snapshot.transitions));
     this.attempts.push(...clone(snapshot.attempts));
     this.conflicts.push(...clone(snapshot.conflicts));
+    this.conflictResolutions.push(...clone(snapshot.conflictResolutions));
     this.resolutions.push(...clone(snapshot.resolutions));
     this.audits.push(...clone(snapshot.audits));
     this.corrections.push(...clone(snapshot.corrections));
@@ -435,6 +451,11 @@ export class InMemorySalesEventStore implements SalesEventStore {
 
   event(eventKey: string) {
     const value = this.events.get(eventKey);
+    return value ? clone(value) : null;
+  }
+
+  conflict(conflictId: string) {
+    const value = this.conflicts.find(item => item.conflictId === conflictId);
     return value ? clone(value) : null;
   }
 
@@ -524,9 +545,22 @@ export class InMemorySalesEventStore implements SalesEventStore {
     this.transitionRecord(eventKey, from, to, at, reason, linkedEventKey);
   }
 
-  latestApplied(lineageKey: string, beforeRevision: number) {
+  dismissConflict(value: SalesConflictResolution) {
+    if (!this.conflicts.some(item => item.conflictId === value.conflictId && item.canonicalEventKey === value.canonicalEventKey)) {
+      throw new SalesIngestionError('not_found', 'Identity-conflict receipt was not found.');
+    }
+    if (this.conflictResolutions.some(item => item.conflictId === value.conflictId)) {
+      throw new SalesIngestionError('invalid_state', 'Identity-conflict receipt is already resolved.');
+    }
+    this.conflictResolutions.push(clone(value));
+  }
+
+  latestAppliedConsumption(lineageKey: string, beforeRevision: number) {
+    const consumedEventKeys = new Set(this.attempts
+      .filter(attempt => attempt.completedAt && attempt.outcome === 'applied')
+      .map(attempt => attempt.eventKey));
     const match = [...this.events.values()]
-      .filter(record => record.lineageKey === lineageKey && record.event.external.revision < beforeRevision && this.state(record.event.external.eventIdempotencyKey) === 'applied')
+      .filter(record => record.lineageKey === lineageKey && record.event.external.revision < beforeRevision && this.state(record.event.external.eventIdempotencyKey) === 'applied' && consumedEventKeys.has(record.event.external.eventIdempotencyKey))
       .sort((a, b) => b.event.external.revision - a.event.external.revision)[0];
     return match ? clone(match) : null;
   }
@@ -551,7 +585,7 @@ export class InMemorySalesEventStore implements SalesEventStore {
   }
 
   snapshot(): SalesStoreSnapshot {
-    return clone({events: [...this.events.values()], transitions: this.transitions, attempts: this.attempts, conflicts: this.conflicts, resolutions: this.resolutions, audits: this.audits, corrections: this.corrections});
+    return clone({events: [...this.events.values()], transitions: this.transitions, attempts: this.attempts, conflicts: this.conflicts, conflictResolutions: this.conflictResolutions, resolutions: this.resolutions, audits: this.audits, corrections: this.corrections});
   }
 }
 
@@ -684,7 +718,7 @@ export class SalesIngestionService {
 
   private policy(record: SalesEventRecord) {
     const event = record.event;
-    const previous = this.store.latestApplied(record.lineageKey, event.external.revision)?.event ?? null;
+    const previous = this.store.latestAppliedConsumption(record.lineageKey, event.external.revision)?.event ?? null;
     if (event.timeQuality === 'inferred') return {held: ['ambiguous_occurrence_time'] as HeldReason[], lines: [] as SalesEventV1['lines']};
     const prepared = event.preparationStatus === 'prepared' || event.preparationStatus === 'fulfilled';
     if (event.eventType === 'refund' && !previous && !prepared) return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines']};
@@ -799,6 +833,28 @@ export class SalesIngestionService {
     this.store.transition(eventKey, 'held', 'dismissed', at, clean);
     this.store.appendResolution({resolutionId: this.idFactory(), eventKey, kind: 'dismiss', actor: identity, reason: clean, at});
     this.store.appendAudit({auditId: this.idFactory(), eventKey, action: 'dismiss', actor: identity, at, reason: clean});
+  }
+
+  dismissConflict(conflictId: string, actor: SalesActor | null, reason: string) {
+    const conflict = this.store.conflict(conflictId);
+    if (!conflict) throw new SalesIngestionError('not_found', 'Identity-conflict receipt was not found.');
+    const record = this.requiredEvent(conflict.canonicalEventKey);
+    const identity = assertOperator(actor, record.event.companyId);
+    const clean = reason.trim();
+    if (!clean) throw new SalesIngestionError('reason_required', 'Conflict dismissal reason is required.');
+    const at = this.now();
+    const resolution: SalesConflictResolution = {
+      resolutionId: this.idFactory(),
+      conflictId,
+      canonicalEventKey: conflict.canonicalEventKey,
+      kind: 'dismiss',
+      actor: identity,
+      reason: clean,
+      at,
+    };
+    this.store.dismissConflict(resolution);
+    this.store.appendAudit({auditId: this.idFactory(), eventKey: conflict.canonicalEventKey, conflictId, action: 'conflict_dismissed', actor: identity, at, reason: clean});
+    return clone(resolution);
   }
 
   requestCorrection(eventKey: string, actor: SalesActor | null, reason: string) {
