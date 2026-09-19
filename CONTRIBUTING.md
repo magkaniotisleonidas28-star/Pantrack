@@ -23,12 +23,12 @@ The GitHub workflow runs these checks on Ubuntu and Windows. It caches only the 
 
 ## Branches, commits, and review
 
-- Use one branch and pull request per milestone, for example `milestone/m1-repository-quality`.
+- Work directly on `main`, as requested by the repository owner. Keep each milestone in focused commits; do not create milestone branches unless explicitly requested.
 - Keep commits focused and use an imperative summary such as `Add migration drift checks`.
 - Keep unrelated design changes separate from authentication, integration, and schema work.
-- Fill in the pull-request template with scope, schema and security impact, verification evidence, visual screenshots when relevant, and rollback notes.
+- Record scope, schema and security impact, verification evidence, and rollback notes in the commit or accompanying documentation. Use the pull-request template if a pull request is explicitly requested.
 - Change milestone checkboxes only when evidence supports completion. Record blocked external decisions, credentials, pilot activity, and service setup explicitly.
-- Require review before merging. Passing CI does not authorize deployment, production data changes, real supplier orders, or automatic purchasing.
+- Review the diff and run relevant checks before committing to `main`. Passing CI does not authorize deployment, production data changes, real supplier orders, or automatic purchasing.
 
 Record decisions affecting architecture, security, or data compatibility in `docs/decisions/NNNN-title.md` using the roadmap's decision template. Preserve existing work in the checkout.
 

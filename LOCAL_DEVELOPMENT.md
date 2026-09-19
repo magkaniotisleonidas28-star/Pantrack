@@ -50,8 +50,11 @@ explicitly uses `--local`; there is no remote migration or deployment script.
 Vite and Wrangler share `.wrangler/state`. SQL migrations in `drizzle/` are
 applied in filename order by Wrangler. Do not edit existing migrations.
 
-`pnpm local:setup` creates ignored `.env.local` and `.dev.vars` without replacing
-existing files. Values come from `.env.example`; integration secrets remain empty
+`pnpm local:setup` creates ignored `.env.local` and `.dev.vars`, preserving existing
+values. Rerunning it appends missing variables to `.dev.vars`, including a new
+authentication encryption key only when that variable is absent. Existing keys,
+including deliberately empty values, are never replaced. Variable names come
+from `.env.example`; integration secrets remain empty
 and Clover defaults to sandbox. Wrangler uses `.dev.vars` for Worker bindings.
 Only configure sandbox credentials when the corresponding milestone is ready.
 Purchases and automatic mode are blocked pending supplier and pilot validation.

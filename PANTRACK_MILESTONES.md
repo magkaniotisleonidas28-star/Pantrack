@@ -55,7 +55,7 @@ Treat every external integration as unverified until it passes its sandbox and p
 
 ## 3. Non-negotiable engineering rules
 
-- Complete one milestone per branch and pull request.
+- Work on `main` with focused commits per milestone; create a branch or pull request only when explicitly requested by the repository owner.
 - Do not combine unrelated UI redesigns with integration or data-model work.
 - Run locally and in sandbox environments before using live accounts.
 - Never place API keys, OAuth secrets, access tokens, customer data, or payment details in source control, prompts, screenshots, logs, or browser code.
@@ -588,15 +588,15 @@ A milestone is complete only when:
 1. Put this file at the repository root as `PANTRACK_MILESTONES.md`.
 2. Commit the current baseline before development begins.
 3. Start with M0. Do not ask Codex to implement the whole roadmap in one session.
-4. Create a branch such as `milestone/m0-local-baseline`.
+4. Work on `main`; keep the milestone changes in focused commits.
 5. Paste the milestone's Codex prompt into the Codex sidebar.
 6. Ask Codex to inspect before editing and to identify any assumption that conflicts with the repository.
 7. Keep normal workspace permissions enabled. Approve only commands you understand and that are necessary for the milestone.
 8. Review the proposed schema and external-service changes before Codex applies them.
 9. Require Codex to run the milestone checks and show the final diff.
 10. Update the checkboxes and add a short implementation note with the commit or pull-request link.
-11. Merge only after the acceptance criteria are supported by evidence.
-12. Begin the next milestone in a new Codex session or branch with the updated file.
+11. Record acceptance criteria as complete only when supported by evidence.
+12. Begin the next milestone in a new Codex session on `main` with the updated file.
 
 ## 8. Reusable Codex session prompt
 
