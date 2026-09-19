@@ -9,7 +9,8 @@ Date: 2026-09-18. Branch: `milestone/m0-local-baseline`.
 - Installed dependencies with the frozen lockfile. Added the existing locked
   esbuild version as a direct test dependency instead of importing pnpm internals.
 - Added local D1 migration/reset commands, empty local-variable setup, a sequential
-  test runner, HTTP smoke test, and exact setup instructions in LOCAL_DEVELOPMENT.md.
+  test runner, HTTP smoke test, and exact setup instructions in
+  [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md).
 - Kept the existing loopback-only development identity fixture and tested its
   host/socket checks, forged-header removal, cookies, origin guards and redirects.
 - Blocked supplier order submission and automatic policy activation until supplier
@@ -40,9 +41,10 @@ secrets. Pattern scanning is supporting evidence, not a complete security audit.
 
 ## Limits and rollback
 
-Production identity still relies on the original trusted hosting headers; M2 is
-required before independent hosting. Clover and supplier tests use mocks and do
-not satisfy sandbox/pilot milestones. Hosted CI and browser visual QA are separate.
+At the time of M0, production identity still relied on the original trusted
+hosting headers. M2 has since replaced that path on `main`; its real-provider
+acceptance remains open. Clover and supplier tests use mocks and do not satisfy
+sandbox/pilot milestones. Browser visual QA remains separate.
 
 This milestone adds no schema migration and changes no existing migration. Revert
 the milestone commit to undo source changes. Stop the dev server before the

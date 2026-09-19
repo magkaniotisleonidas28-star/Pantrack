@@ -1,12 +1,12 @@
 # M2: Supabase identity, Cloudflare application and company permissions
 
-Status: product decisions approved by the product owner in the implementation conversation on 2026-09-18. Implementation added locally; real-project acceptance and deployment review remain pending.
+Status: product decisions approved by the product owner on 2026-09-18. The implementation is on `main` and repository CI passes; real-provider acceptance, the failed Cloudflare build, and deployment review remain pending.
 
 ## Decision
 
 Supabase manages email/password credentials, email confirmation and recovery. Cloudflare Workers runs the application and D1 owns company membership, invitations, session revocation and security history. Supabase is not the company-data database. A user can join multiple companies, with a separate owner, manager or employee role in each.
 
-The approved action matrix is in `docs/MILESTONE_READINESS.md`. `lib/authorization.ts` enforces it for the existing company API families. The members service applies the same owner policy, with explicit exceptions for accepting one's own invitation or ownership offer. Clover's callback verifies its single-use state, signed-in user and current owner membership. Register ingestion and scheduler ticks use separate company-scoped bearer credentials; browser sessions do not authorize these machine routes.
+The approved action matrix is in [MILESTONE_READINESS.md](../MILESTONE_READINESS.md). `src/lib/authorization.ts` enforces it for the existing company API families. The members service applies the same owner policy, with explicit exceptions for accepting one's own invitation or ownership offer. Clover's callback verifies its single-use state, signed-in user and current owner membership. Register ingestion and scheduler ticks use separate company-scoped bearer credentials; browser sessions do not authorize these machine routes.
 
 ## Implementation details
 

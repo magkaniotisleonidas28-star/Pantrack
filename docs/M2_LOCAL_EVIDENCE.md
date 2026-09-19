@@ -15,4 +15,11 @@ Local validation:
 
 M2 suite exercises all current company API families, machine-route credential separation, exact-origin CSRF checks, per-company roles, employee order redaction, manager pause, owner-only integration/finance actions, token hashing/encryption, invitation expiration/revocation/replacement/incorrect email/replay/concurrent acceptance, ownership reauthentication/recipient acceptance/replay/last-owner guards, session rotation/expiration/logout/provider rejection and recovery isolation/revocation. Existing Clover tests cover OAuth state and replay. Existing purchasing tests continue proving that real supplier submission remains blocked.
 
-Pending external evidence: configured Supabase project and email templates, real confirmation/login/recovery walkthrough, hosted CI for this change, and product-owner review of migration/authentication flow. Legacy hosted identities require a separately reviewed mapping before migrating any existing hosted data. Therefore the local implementation is reviewable, but M2 is not yet marked fully accepted for independent deployment.
+Update, 2026-09-19: the implementation is on `main`, and current hosted Ubuntu
+and Windows repository CI passed. The separate Cloudflare Workers build failed.
+
+Pending external evidence: configured Supabase email templates and callback
+URLs, a real confirmation/login/recovery walkthrough, resolution of the
+Cloudflare build, and product-owner review of the migration/authentication flow.
+Legacy hosted identities require a separately reviewed mapping before migrating
+existing hosted data. M2 is therefore not yet accepted for independent deployment.

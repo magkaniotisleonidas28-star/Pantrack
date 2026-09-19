@@ -1,10 +1,13 @@
 # M2 setup and review
 
-Implementation is available locally. Public deployment remains paused for review of the authentication flow and migration. Do not use production company data to test this change.
+Implementation is on `main`. Repository CI passes, but the current Cloudflare
+Workers build failed. Public deployment remains blocked on that failure, real
+Supabase verification, and review of the authentication flow and migration. Do
+not use production company data to test this change.
 
 ## Local prerequisites
 
-Run the usual locked dependency install, `pnpm local:setup`, and `pnpm db:migrate:local`. The setup command creates ignored variable files and a local random authentication-encryption key if `.dev.vars` does not exist. It never replaces existing configuration. The loopback fixture is still available at `/signin-with-chatgpt`; ordinary `/auth` uses Supabase.
+Run the usual locked dependency install, `pnpm local:setup`, and `pnpm db:migrate:local`. The setup command creates ignored variable files, appends newly introduced variables to an existing `.dev.vars`, and generates a local authentication-encryption key only when that variable is absent. It never replaces an existing value. The loopback fixture is still available at `/signin-with-chatgpt`; ordinary `/auth` uses Supabase.
 
 For real authentication testing, configure these variables in ignored `.dev.vars`:
 
@@ -62,4 +65,4 @@ pnpm db:migrate:local
 pnpm test:local
 ```
 
-`tests/m2-security.mjs` is the focused security suite. The dev HTTP smoke uses fictional company data and the signed local fixture. CI automatically discovers the new suite through `scripts/test.mjs`. Hosted CI for this change still requires pushing a reviewed branch.
+`tests/m2-security.mjs` is the focused security suite. The dev HTTP smoke uses fictional company data and the signed local fixture. CI automatically discovers the suite through `scripts/test.mjs`; the current `main` workflow passed on Ubuntu and Windows.

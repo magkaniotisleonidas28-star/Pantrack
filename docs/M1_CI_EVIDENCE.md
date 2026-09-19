@@ -42,9 +42,12 @@ Both clean runners installed the lockfile, type-checked, ran all six test suites
 verified/applied migrations, built production output and passed the real local
 HTTP smoke test. M1 review: https://github.com/magkaniotisleonidas28-star/Pantrack/pull/2.
 
-The criterion "CI passes
-on the baseline main branch" remains open until the reviewed branches are merged
-and an actual main-branch run succeeds. No main-branch success is claimed before that run occurs.
+Update, 2026-09-19: the milestone branches are consolidated into `main`, and the
+current main-branch workflow passed on Ubuntu and Windows:
+https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35425367875.
+The baseline-main acceptance criterion is now satisfied. A separate Cloudflare
+Workers deployment build failed and remains deployment work; it does not change
+the repository CI result.
 
 No schema or application behavior changes are made in M1. Revert its commit to
 remove the CI/checking changes. Neither rollback nor merging authorizes deployment,

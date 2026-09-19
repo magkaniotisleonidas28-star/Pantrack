@@ -5,10 +5,12 @@ This release implements Clover North America OAuth v2 authorization, encrypted t
 ## One-time developer setup
 
 1. Create a Clover developer account and a sandbox web app for Pantrack. Use a server-side authorization-code integration (high-trust app). Configure read access to merchant information and inventory/menu items. Orders read access will also be needed for the upcoming sales integration; do not request payment creation or inventory write access for this flow.
-2. Set the app Site URL to:
-   https://pantry-pilot-ordering.magkaniotisleonidas2.chatgpt.site/
-3. Register/use this authorization redirect URL:
-   https://pantry-pilot-ordering.magkaniotisleonidas2.chatgpt.site/api/clover/callback
+2. Set the Clover app Site URL to the exact HTTPS origin configured as Pantrack's
+   `APP_ORIGIN`, with no trailing path. For local sandbox testing, use
+   `http://127.0.0.1:5173` only if Clover accepts an HTTP loopback callback.
+3. Register the exact callback shown in Pantrack's Clover setup panel. It is
+   `${APP_ORIGIN}/api/clover/callback`; do not reuse an old ChatGPT Site URL or a
+   preview URL that can change.
 4. Configure these server runtime values, never browser code or source control:
    - CLOVER_ENVIRONMENT: sandbox initially; production for North America live accounts.
    - CLOVER_CLIENT_ID: the matching Clover app ID.

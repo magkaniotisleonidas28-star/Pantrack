@@ -42,8 +42,8 @@ Configure an external scheduler to POST the displayed URL with Authorization: Be
 The scheduler is not provisioned by the app. Calls are due-gated by the company's saved interval. Use hourly calls for a 24-hour policy if desired. Keys authorize only due checks for that company, not settings edits. Rotate keys to revoke access.
 
 ## Safety and limits
-- Start paused or review-only, using real supplier sandbox facilities.
-- Test connector behavior against timeouts, duplicate calls and rejected orders before enabling automatic mode.
+- Start paused or review-only, using real supplier sandbox facilities. The current application blocks automatic mode and all supplier submissions until M8 supplier validation and M11 reviewed-pilot authorization are complete.
+- Test connector behavior against timeouts, duplicate calls and rejected orders before any future automatic mode is enabled.
 - Only allowed real products, fresh counts and verified vendors can submit.
 - USD integer cents; daily budgets use UTC. Pending/unknown outcomes retain spending reservations.
 - Open proposals and unresolved orders hold their products from new replenishment proposals.

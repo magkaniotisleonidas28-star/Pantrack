@@ -2,21 +2,20 @@
 Company-based café purchasing pilot built with React, TypeScript, Vinext and Cloudflare D1.
 
 ## Implemented
-ChatGPT sign-in, company-scoped catalog and history, sample catalog, product editing, quantity validation, grouped review, immutable order snapshots, server-computed estimated totals, idempotent preparation, supplier CSV export and reorder drafts.
+Supabase email sign-in, company-scoped catalog and history, sample catalog, product editing, quantity validation, grouped review, immutable order snapshots, server-computed estimated totals, idempotent preparation, supplier CSV export and reorder drafts.
 
-Orders are prepared only: no supplier submissions, payments, verified inventory or AI forecasting. Fictional suppliers and prices are labeled in the app. New custom products remain price-unverified. Sample minimums are guidance, not live supplier rules. Unsaved order quantities are temporary; saved orders and products use D1.
+Orders are prepared only: there are no supplier submissions, charges, verified live inventory, or AI forecasting. Stripe-hosted payment-method setup exists but is unverified and does not pay suppliers. Fictional suppliers and prices are labeled in the app. New custom products remain price-unverified. Sample minimums are guidance, not live supplier rules. Unsaved order quantities are temporary; saved orders and products use D1.
 
 ## Development
-Follow [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) for the pinned Node/pnpm versions, local D1 setup, development sign-in, reset commands, and verification. No production credentials are needed. Generate new migrations with `pnpm db:generate`; apply them locally with `pnpm db:migrate:local`. The logical DB binding is declared in `.openai/hosting.json`.
+Follow [the local development guide](docs/LOCAL_DEVELOPMENT.md) for the pinned Node/pnpm versions, local D1 setup, development sign-in, reset commands, and verification. No production credentials are needed. Generate new migrations with `pnpm db:generate`; apply them locally with `pnpm db:migrate:local`. The logical DB binding is declared in `.openai/hosting.json`.
 
-## Next integration milestone
-1. Obtain approved catalog and order API documentation for one pilot supplier.
-2. Add supplier account authorization via secret storage.
-3. Refresh price, availability, case size, delivery cutoff and minimum spend before approval.
-4. Add queued submission and reconciliation with supplier order IDs. Never retry ambiguous submissions without reconciliation.
-5. Distinguish prepared, submitting, accepted, rejected and needs-review per supplier; add cancellation only when supported.
-6. Complete the [M2 Supabase setup and review](docs/M2_SETUP.md) before a shared multi-staff pilot.
-7. Add invoice parsing with human SKU approval once an AI provider is configured.
+## Next milestone
+
+Complete the [M2 Supabase setup and review](docs/M2_SETUP.md), including the
+real email walkthrough and Cloudflare build diagnosis. Then begin M3 inventory
+and recipe integrity work from the [milestone roadmap](docs/PANTRACK_MILESTONES.md).
+Real POS, supplier, scheduler, payment, and pilot work remains gated by the
+prerequisites recorded there.
 
 ## Verification
 TypeScript and production build passed. An isolated API harness using SQLite verified sample initialization, server totals, preparation status, duplicate retry protection, negative-quantity rejection, owner isolation and missing-auth rejection. Live supplier and payment integrations are absent. Browser UI QA and WebMCP runtime validation were not performed in this session.
@@ -33,7 +32,7 @@ API regression checks passed for company catalog/order separation, ownership rej
 ## Payment methods
 The company Payment methods tab uses Stripe-hosted Checkout in setup mode. It does not collect PAN/CVC in Pantrack or create charges. The server stores only Stripe customer references, scoped to company, Stripe account and test/live mode. Masked card metadata is fetched from Stripe. Setup, confirmation, default selection and removal require owner membership; foreign customer/card/session references are rejected.
 
-Activation requires STRIPE_SECRET_KEY configured as a Sites runtime secret for the app operator's Stripe account. No key is currently configured. Use a test key first and validate hosted setup, cancellation, default and removal with Stripe test cards before enabling a live key. Installing a connector alone does not provision this application secret. The return origin is the current Pantrack Site URL in app/api/payments/route.ts; update it for a domain change. API version is pinned to 2024-06-20.
+Activation requires `STRIPE_SECRET_KEY` configured as a Worker runtime secret for the app operator's Stripe account. No configured key is established by this repository. Use a test key first and validate hosted setup, cancellation, default and removal with Stripe test cards before enabling a live key. The return origin comes from `APP_ORIGIN` and is used by `src/app/api/payments/route.ts`; update that runtime value for a domain change. API version is pinned to 2024-06-20.
 
 Saved Stripe payment methods cannot automatically pay arbitrary suppliers. Supplier-specific purchasing and payment integrations remain separate, and no charge endpoints are implemented. Staff billing permissions are not exposed; only company owners can manage cards.
 

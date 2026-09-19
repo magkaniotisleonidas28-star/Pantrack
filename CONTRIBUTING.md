@@ -1,6 +1,6 @@
 # Contributing to Pantrack
 
-Read [CODEX_HANDOFF.md](CODEX_HANDOFF.md), [PANTRACK_MILESTONES.md](PANTRACK_MILESTONES.md), and [LOCAL_DEVELOPMENT.md](LOCAL_DEVELOPMENT.md) before changing the application. The imported prototype is not evidence of working live integrations. Local development and CI use synthetic data and require no production secrets.
+Read the [current status](docs/CURRENT_STATUS.md), [milestone roadmap](docs/PANTRACK_MILESTONES.md), and [local development guide](docs/LOCAL_DEVELOPMENT.md) before changing the application. Prototype code is not evidence of working live integrations. Local development and CI use synthetic data and require no production secrets.
 
 ## Setup and checks
 
@@ -34,7 +34,7 @@ Record decisions affecting architecture, security, or data compatibility in `doc
 
 ## Migrations
 
-1. Change the schema in `db/schema.ts`.
+1. Change the schema in `src/db/schema.ts`.
 2. Run `pnpm db:generate`.
 3. Review the new SQL, snapshot, and `drizzle/meta/_journal.json` together. Include all three in the commit.
 4. Run `pnpm db:check`, the relevant tests, and the documented local migration command.

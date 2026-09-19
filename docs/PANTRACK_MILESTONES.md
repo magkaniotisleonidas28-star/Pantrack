@@ -41,7 +41,7 @@ The existing prototype already contains:
 
 The prototype does not yet prove:
 
-- Independent local authentication outside ChatGPT Sites hosting.
+- Real Supabase email confirmation, login, and recovery against a configured development project.
 - Live Clover order synchronization.
 - Complete modifier, cancellation, refund, and remake handling.
 - A native connection for every POS provider listed in the interface.
@@ -118,7 +118,7 @@ flowchart TD
 
 ### Tasks
 
-- [x] Read `CODEX_HANDOFF.md`, `package.json`, `.env.example`, authentication code, database access code, migrations, and test scripts.
+- [x] Read the original project handoff, `package.json`, `.env.example`, authentication code, database access code, migrations, and test scripts.
 - [x] Confirm the required Node and pnpm versions.
 - [x] Install dependencies from the lockfile.
 - [x] Configure a local Cloudflare-compatible D1 database or the supported local equivalent.
@@ -126,7 +126,7 @@ flowchart TD
 - [x] Create local-only development variables from `.env.example` using dummy or sandbox values.
 - [x] Document how local authentication works. If the current host headers cannot be reproduced securely, add a clearly isolated development-only identity fixture that cannot run in production.
 - [x] Run type checking, existing tests, and the production build.
-- [x] Add `LOCAL_DEVELOPMENT.md` with exact setup, reset, test, and run commands.
+- [x] Add `docs/LOCAL_DEVELOPMENT.md` with exact setup, reset, test, and run commands.
 - [x] Confirm `.env`, database state, generated secrets, and dependency folders are ignored by Git.
 
 ### Acceptance criteria
@@ -139,11 +139,11 @@ flowchart TD
 - [x] No real credentials or production records exist in the repository.
 
 
-Implementation evidence (2026-09-18): local M0 acceptance passed on Windows with Node 22.23.2 and pnpm 11.25.0. See docs/M0_LOCAL_EVIDENCE.md. Branch: milestone/m0-local-baseline. Production authentication and external integrations remain unverified.
+Implementation evidence (2026-09-18): local M0 acceptance passed on Windows with Node 22.23.2 and pnpm 11.25.0. See [M0 evidence](M0_LOCAL_EVIDENCE.md). The milestone branch was later consolidated into `main`. Production authentication and external integrations remain unverified.
 
 ### Codex prompt
 
-> Implement M0 from PANTRACK_MILESTONES.md. First inspect the repository and report the current local-development blockers. Then make the smallest changes required for a reproducible local setup. Do not access production services or weaken production authentication. Add LOCAL_DEVELOPMENT.md, run the relevant checks, and show me the final diff and commands before committing.
+> Implement M0 from `docs/PANTRACK_MILESTONES.md`. First inspect the repository and report the current local-development blockers. Then make the smallest changes required for a reproducible local setup. Do not access production services or weaken production authentication. Add `docs/LOCAL_DEVELOPMENT.md`, run the relevant checks, and show me the final diff and commands before committing.
 
 ---
 
@@ -163,13 +163,13 @@ Implementation evidence (2026-09-18): local M0 acceptance passed on Windows with
 
 ### Acceptance criteria
 
-- [ ] CI passes on the baseline main branch.
+- [x] CI passes on the baseline main branch.
 - [x] A deliberate type error fails CI.
 - [x] A deliberately failing test fails CI.
 - [x] A schema change without its generated migration fails or is clearly detected.
 - [x] CI does not require production secrets.
 
-Implementation evidence (2026-09-18): all six local suites, type checks, migration checks, and production build passed. Deliberate type/test/schema failures were detected. Hosted PR CI passed on Ubuntu and Windows (run 35356413026). Main-branch acceptance remains pending review/merge; see docs/M1_CI_EVIDENCE.md and PR #2. Branch: milestone/m1-repository-ci.
+Implementation evidence: all six original suites, type checks, migration checks, and production build passed. Deliberate type/test/schema failures were detected. Hosted pull-request CI passed on Ubuntu and Windows (run 35356413026), and current main CI passed on both systems (run 35425367875). See [M1 evidence](M1_CI_EVIDENCE.md). The milestone branch was consolidated into `main`.
 
 ### Codex prompt
 
@@ -181,7 +181,7 @@ Implementation evidence (2026-09-18): all six local suites, type checks, migrati
 
 **Objective:** Replace hosting-specific identity assumptions with secure authentication suitable for the chosen deployment platform.
 
-Implementation and local acceptance checks are recorded in `docs/M2_LOCAL_EVIDENCE.md`. Real Supabase email/login/recovery verification, hosted CI and migration/authentication review remain pending; these checked items describe local implementation evidence, not production acceptance.
+Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCAL_EVIDENCE.md). The implementation is on `main`, and hosted repository CI passes. Real Supabase email/login/recovery verification, the failed Cloudflare Worker build, and migration/authentication review remain pending; these checked items describe automated implementation evidence, not production acceptance.
 
 ### Product decisions approved
 
@@ -585,9 +585,9 @@ A milestone is complete only when:
 
 ## 7. How to use this file with Codex
 
-1. Put this file at the repository root as `PANTRACK_MILESTONES.md`.
-2. Commit the current baseline before development begins.
-3. Start with M0. Do not ask Codex to implement the whole roadmap in one session.
+1. Keep this roadmap at `docs/PANTRACK_MILESTONES.md`.
+2. Read [CURRENT_STATUS.md](CURRENT_STATUS.md) and begin with the first incomplete prerequisite milestone.
+3. Work on one milestone at a time; do not ask Codex to implement the whole roadmap in one session.
 4. Work on `main`; keep the milestone changes in focused commits.
 5. Paste the milestone's Codex prompt into the Codex sidebar.
 6. Ask Codex to inspect before editing and to identify any assumption that conflicts with the repository.
@@ -601,7 +601,7 @@ A milestone is complete only when:
 ## 8. Reusable Codex session prompt
 
 ```text
-Read CODEX_HANDOFF.md and PANTRACK_MILESTONES.md, then inspect the current repository.
+Read docs/CURRENT_STATUS.md and docs/PANTRACK_MILESTONES.md, then inspect the current repository.
 
 Work only on milestone [MILESTONE ID AND NAME]. Do not implement later milestones or redesign unrelated screens.
 
@@ -622,7 +622,7 @@ Before finishing:
 1. Run relevant type checks, tests, migration checks, and build.
 2. Review the diff for secrets, unrelated changes, missing authorization, and misleading “connected” states.
 3. Report each acceptance criterion as passed, failed, or blocked with evidence.
-4. Update PANTRACK_MILESTONES.md checkboxes only for criteria actually completed.
+4. Update docs/PANTRACK_MILESTONES.md checkboxes only for criteria actually completed.
 5. Suggest a commit message and list remaining blockers.
 ```
 
@@ -652,4 +652,8 @@ Create `docs/decisions/NNNN-title.md` when a choice affects architecture, securi
 
 ## 10. First recommended session
 
-Begin with **M0 — Local development baseline**. The current source originated from a hosted Sites environment, so a safe and reproducible local environment is required before authentication, POS, supplier, or scheduler work. Do not begin live Clover or supplier integration until M0–M4 are complete and reviewed.
+Begin with **M2 acceptance**, specifically the real Supabase walkthrough,
+Cloudflare build diagnosis, and authentication/migration review. After M2 is
+accepted, proceed to **M3 — Inventory, units, and recipe integrity**. Do not begin
+live Clover sales or supplier integration until their prerequisite milestones
+are complete and reviewed.
