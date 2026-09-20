@@ -261,7 +261,7 @@ For every numbered item, the assigned person follows the same delivery loop:
   duplicate and concurrent delivery, crash/retry, unknown items/modifiers,
   replay, dismissal/correction, authorization, and payload redaction. Implement
   validation and durable receipt/hold behavior without writing inventory.
-- [ ] **B3 — Add M4 data foundations.** Through the migration queue, add event,
+- [x] **B3 — Add M4 data foundations.** Through the migration queue, add event,
   processing, held/replay, and audit structures. Keep CSV and bridge fixtures in
   the same provider-neutral contract. **Gate:** do not apply events until A2 is
   reviewed and merged.

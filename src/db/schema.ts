@@ -1,3 +1,4 @@
+import {sql} from 'drizzle-orm';
 import {text,integer,sqliteTable,primaryKey,foreignKey,index,uniqueIndex} from 'drizzle-orm/sqlite-core';
 export const products=sqliteTable('products',{owner:text('owner').notNull(),id:text('id').notNull(),data:text('data').notNull()},t=>[primaryKey({columns:[t.owner,t.id]})]);
 export const orders=sqliteTable('orders',{owner:text('owner').notNull(),id:text('id').notNull(),data:text('data').notNull(),created:text('created').notNull()},t=>[primaryKey({columns:[t.owner,t.id]})]);
@@ -236,4 +237,182 @@ export const inventoryReconciliations=sqliteTable('inventory_reconciliations',{
  primaryKey({columns:[t.companyId,t.id]}),
  index('inventory_reconciliation_product_time').on(t.companyId,t.productId,t.effectiveAt),
  foreignKey({columns:[t.companyId,t.productId,t.configId],foreignColumns:[inventoryConfigVersions.companyId,inventoryConfigVersions.productId,inventoryConfigVersions.id]}),
+]);
+
+export const salesEvents=sqliteTable('sales_events',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ eventKey:text('event_key').notNull(),
+ lineageKey:text('lineage_key').notNull(),
+ applicationKey:text('application_key').notNull(),
+ provider:text('provider').notNull(),
+ environment:text('environment').notNull(),
+ merchantId:text('merchant_id').notNull(),
+ externalEventId:text('external_event_id').notNull(),
+ externalOrderId:text('external_order_id').notNull(),
+ revision:integer('revision').notNull(),
+ occurredAt:text('occurred_at').notNull(),
+ receivedAt:text('received_at').notNull(),
+ sourcePayloadSha256:text('source_payload_sha256').notNull(),
+ normalizedJson:text('normalized_json').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.eventKey]}),
+ uniqueIndex('sales_event_identity').on(t.companyId,t.provider,t.environment,t.merchantId,t.externalEventId,t.revision),
+ uniqueIndex('sales_event_lineage_revision').on(t.companyId,t.lineageKey,t.revision),
+ uniqueIndex('sales_event_application_key').on(t.companyId,t.applicationKey),
+ index('sales_event_lineage_lookup').on(t.companyId,t.lineageKey,t.revision),
+]);
+
+export const salesEventFragments=sqliteTable('sales_event_fragments',{
+ companyId:text('company_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ fragmentJson:text('fragment_json').notNull(),
+ expiresAt:text('expires_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.eventKey]}),
+ index('sales_event_fragment_expiry').on(t.companyId,t.expiresAt,t.eventKey),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventStates=sqliteTable('sales_event_states',{
+ companyId:text('company_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ lineageKey:text('lineage_key').notNull(),
+ revision:integer('revision').notNull(),
+ state:text('state').notNull(),
+ leaseAttemptId:text('lease_attempt_id'),
+ leaseExpiresAt:text('lease_expires_at'),
+ lastReason:text('last_reason'),
+ linkedEventKey:text('linked_event_key'),
+ transitionActor:text('transition_actor').notNull(),
+ updatedAt:text('updated_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.eventKey]}),
+ index('sales_event_claimable').on(t.companyId,t.state,t.updatedAt),
+ index('sales_event_active_leases').on(t.companyId,t.state,t.leaseExpiresAt),
+ index('sales_event_lineage_state').on(t.companyId,t.lineageKey,t.revision,t.state),
+ uniqueIndex('sales_event_one_processing_lineage').on(t.companyId,t.lineageKey).where(sql`state = 'processing'`),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+ foreignKey({columns:[t.companyId,t.linkedEventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventTransitions=sqliteTable('sales_event_transitions',{
+ companyId:text('company_id').notNull(),
+ transitionId:text('transition_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ fromState:text('from_state'),
+ toState:text('to_state').notNull(),
+ at:text('at').notNull(),
+ reason:text('reason'),
+ linkedEventKey:text('linked_event_key'),
+},t=>[
+ primaryKey({columns:[t.companyId,t.transitionId]}),
+ index('sales_event_transition_history').on(t.companyId,t.eventKey,t.at),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+ foreignKey({columns:[t.companyId,t.linkedEventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventAttempts=sqliteTable('sales_event_attempts',{
+ companyId:text('company_id').notNull(),
+ attemptId:text('attempt_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ startedAt:text('started_at').notNull(),
+ leaseExpiresAt:text('lease_expires_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.attemptId]}),
+ index('sales_event_attempt_history').on(t.companyId,t.eventKey,t.startedAt),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventAttemptResults=sqliteTable('sales_event_attempt_results',{
+ companyId:text('company_id').notNull(),
+ attemptId:text('attempt_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ completedAt:text('completed_at').notNull(),
+ outcome:text('outcome').notNull(),
+ heldReasonsJson:text('held_reasons_json'),
+ issuesJson:text('issues_json'),
+ inventoryResultJson:text('inventory_result_json'),
+ errorCode:text('error_code'),
+},t=>[
+ primaryKey({columns:[t.companyId,t.attemptId]}),
+ index('sales_event_attempt_result_history').on(t.companyId,t.eventKey,t.completedAt),
+ foreignKey({columns:[t.companyId,t.attemptId],foreignColumns:[salesEventAttempts.companyId,salesEventAttempts.attemptId]}),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventConflicts=sqliteTable('sales_event_conflicts',{
+ companyId:text('company_id').notNull(),
+ conflictId:text('conflict_id').notNull(),
+ canonicalEventKey:text('canonical_event_key').notNull(),
+ receivedAt:text('received_at').notNull(),
+ sourcePayloadSha256:text('source_payload_sha256').notNull(),
+ externalEventId:text('external_event_id').notNull(),
+ externalOrderId:text('external_order_id').notNull(),
+ revision:integer('revision').notNull(),
+ reason:text('reason').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.conflictId]}),
+ uniqueIndex('sales_event_conflict_receipt').on(t.companyId,t.canonicalEventKey,t.sourcePayloadSha256,t.externalEventId,t.externalOrderId,t.revision),
+ index('sales_event_conflict_reads').on(t.companyId,t.canonicalEventKey,t.receivedAt),
+ foreignKey({columns:[t.companyId,t.canonicalEventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventResolutions=sqliteTable('sales_event_resolutions',{
+ companyId:text('company_id').notNull(),
+ resolutionId:text('resolution_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ kind:text('kind').notNull(),
+ actor:text('actor').notNull(),
+ reason:text('reason').notNull(),
+ at:text('at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.resolutionId]}),
+ index('sales_event_resolution_history').on(t.companyId,t.eventKey,t.at),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventConflictResolutions=sqliteTable('sales_event_conflict_resolutions',{
+ companyId:text('company_id').notNull(),
+ resolutionId:text('resolution_id').notNull(),
+ conflictId:text('conflict_id').notNull(),
+ canonicalEventKey:text('canonical_event_key').notNull(),
+ kind:text('kind').notNull(),
+ actor:text('actor').notNull(),
+ reason:text('reason').notNull(),
+ at:text('at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.resolutionId]}),
+ uniqueIndex('sales_event_conflict_resolution').on(t.companyId,t.conflictId),
+ foreignKey({columns:[t.companyId,t.conflictId],foreignColumns:[salesEventConflicts.companyId,salesEventConflicts.conflictId]}),
+ foreignKey({columns:[t.companyId,t.canonicalEventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventAudits=sqliteTable('sales_event_audits',{
+ companyId:text('company_id').notNull(),
+ auditId:text('audit_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ action:text('action').notNull(),
+ actor:text('actor').notNull(),
+ at:text('at').notNull(),
+ reason:text('reason'),
+ conflictId:text('conflict_id'),
+},t=>[
+ primaryKey({columns:[t.companyId,t.auditId]}),
+ index('sales_event_audit_history').on(t.companyId,t.eventKey,t.at),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+ foreignKey({columns:[t.companyId,t.conflictId],foreignColumns:[salesEventConflicts.companyId,salesEventConflicts.conflictId]}),
+]);
+
+export const salesEventCorrections=sqliteTable('sales_event_corrections',{
+ companyId:text('company_id').notNull(),
+ correctionId:text('correction_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ status:text('status').notNull(),
+ actor:text('actor').notNull(),
+ reason:text('reason').notNull(),
+ requestedAt:text('requested_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.correctionId]}),
+ index('sales_event_pending_corrections').on(t.companyId,t.status,t.requestedAt),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
 ]);

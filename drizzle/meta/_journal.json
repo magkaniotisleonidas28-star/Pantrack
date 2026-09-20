@@ -71,6 +71,13 @@
       "when": 1789809165187,
       "tag": "0009_clammy_doctor_octopus",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1789873072501,
+      "tag": "0010_aromatic_the_initiative",
+      "breakpoints": true
     }
   ]
 }

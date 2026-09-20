@@ -145,6 +145,7 @@ limited automation.
 - [M0 local evidence](M0_LOCAL_EVIDENCE.md)
 - [M1 CI evidence](M1_CI_EVIDENCE.md)
 - [M4 B2 fake-backed local evidence](M4_B2_LOCAL_EVIDENCE.md)
+- [M4 B3 local D1 evidence](M4_B3_LOCAL_EVIDENCE.md)
 - [Detailed milestone readiness and decisions](MILESTONE_READINESS.md)
 - [Full milestone roadmap](PANTRACK_MILESTONES.md)
 - [Branch consolidation record](BRANCH_CONSOLIDATION.md)

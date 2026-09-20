@@ -3,7 +3,8 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 
 const journal=JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8'));
-assert.equal(journal.entries.length,10,'A3 compatibility harness expects migration 0009.');
+assert.ok(journal.entries.length>=10,'A3 compatibility harness expects migration 0009 or later.');
+assert.match(journal.entries[9].tag,/^0009_/,'A3 compatibility harness expects migration 0009 at index 9.');
 const sql=new DatabaseSync(':memory:');
 sql.exec('PRAGMA foreign_keys = ON');
 const plain=rows=>rows.map(row=>({...row}));

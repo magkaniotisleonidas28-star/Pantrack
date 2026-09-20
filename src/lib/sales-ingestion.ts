@@ -95,7 +95,7 @@ export type SalesEventV1 = {
   lines: SalesEventDraftV1['lines'];
   integrity: {
     sourcePayloadSha256: string;
-    payloadExpiresAt: string;
+    payloadExpiresAt: string | null;
     normalizedContractVersion: typeof SALES_EVENT_CONTRACT;
   };
 };
@@ -186,7 +186,7 @@ export type SalesCorrectionRequest = {
 
 export type SalesEventRecord = {
   event: SalesEventV1;
-  auditFragment: unknown;
+  auditFragment: unknown | null;
   applicationKey: string;
   lineageKey: string;
 };
@@ -225,21 +225,22 @@ export interface SalesMappingPort {
 }
 
 export interface SalesEventStore {
-  receive(record: SalesEventRecord, actor: string, at: string): SalesReceipt;
-  claim(eventKey: string, attempt: SalesAttempt, at: string): boolean;
-  completeAttempt(attempt: SalesAttempt, to: 'applied' | 'held' | 'failed', at: string, reason?: string): void;
-  transition(eventKey: string, from: SalesEventState, to: SalesEventState, at: string, reason?: string, linkedEventKey?: string): void;
-  appendResolution(value: SalesResolution): void;
-  appendAudit(value: SalesAuditEntry): void;
-  appendCorrection(value: SalesCorrectionRequest): void;
-  state(eventKey: string): SalesEventState | null;
-  event(eventKey: string): SalesEventRecord | null;
-  conflict(conflictId: string): SalesConflictReceipt | null;
-  dismissConflict(value: SalesConflictResolution): void;
-  latestAppliedConsumption(lineageKey: string, beforeRevision: number): SalesEventRecord | null;
-  processingInLineage(lineageKey: string, exceptEventKey?: string): boolean;
-  recoverExpired(now: string): string[];
-  snapshot(): SalesStoreSnapshot;
+  receive(companyId: string, record: SalesEventRecord, actor: string, at: string): Promise<SalesReceipt>;
+  claim(companyId: string, eventKey: string, attempt: SalesAttempt, at: string): Promise<boolean>;
+  completeAttempt(companyId: string, attempt: SalesAttempt, to: 'applied' | 'held' | 'failed', at: string, reason?: string): Promise<void>;
+  transition(companyId: string, eventKey: string, from: SalesEventState, to: SalesEventState, at: string, reason?: string, linkedEventKey?: string): Promise<void>;
+  resolve(companyId: string, eventKey: string, from: 'failed' | 'held', to: 'received' | 'dismissed', resolution: SalesResolution, audit: SalesAuditEntry): Promise<void>;
+  appendResolution(companyId: string, value: SalesResolution): Promise<void>;
+  appendAudit(companyId: string, value: SalesAuditEntry): Promise<void>;
+  appendCorrection(companyId: string, value: SalesCorrectionRequest, audit: SalesAuditEntry): Promise<void>;
+  state(companyId: string, eventKey: string): Promise<SalesEventState | null>;
+  event(companyId: string, eventKey: string): Promise<SalesEventRecord | null>;
+  conflict(companyId: string, conflictId: string): Promise<SalesConflictReceipt | null>;
+  dismissConflict(companyId: string, value: SalesConflictResolution, audit: SalesAuditEntry): Promise<void>;
+  latestAppliedConsumption(companyId: string, lineageKey: string, beforeRevision: number): Promise<SalesEventRecord | null>;
+  processingInLineage(companyId: string, lineageKey: string, exceptEventKey?: string): Promise<boolean>;
+  recoverExpired(companyId: string, now: string): Promise<string[]>;
+  purgeExpiredPayloadFragments(companyId: string, now: string, limit: number): Promise<number>;
 }
 
 function clone<T>(value: T): T {
@@ -396,7 +397,50 @@ function normalizeDraft(draft: SalesEventDraftV1, now: number): Omit<SalesEventV
   };
 }
 
-function auditFragment(event: SalesEventV1) {
+export function canonicalSalesEvent(event: SalesEventV1): SalesEventV1 {
+  return {
+    schemaVersion: event.schemaVersion,
+    companyId: event.companyId,
+    source: {
+      kind: event.source.kind,
+      provider: event.source.provider,
+      environment: event.source.environment,
+      connectionId: event.source.connectionId,
+      merchantId: event.source.merchantId,
+      locationId: event.source.locationId,
+    },
+    external: {
+      externalEventId: event.external.externalEventId,
+      externalOrderId: event.external.externalOrderId,
+      revision: event.external.revision,
+      eventIdempotencyKey: event.external.eventIdempotencyKey,
+    },
+    eventType: event.eventType,
+    orderStatus: event.orderStatus,
+    preparationStatus: event.preparationStatus,
+    occurredAt: event.occurredAt,
+    receivedAt: event.receivedAt,
+    timeQuality: event.timeQuality,
+    lines: event.lines.map(line => ({
+      externalLineId: line.externalLineId,
+      externalItemId: line.externalItemId,
+      ...(line.externalVariationId === undefined ? {} : {externalVariationId: line.externalVariationId}),
+      quantity: line.quantity,
+      modifiers: line.modifiers.map(modifier => ({
+        externalModifierLineId: modifier.externalModifierLineId,
+        externalModifierId: modifier.externalModifierId,
+        quantity: modifier.quantity,
+      })),
+    })),
+    integrity: {
+      sourcePayloadSha256: event.integrity.sourcePayloadSha256,
+      payloadExpiresAt: event.integrity.payloadExpiresAt,
+      normalizedContractVersion: event.integrity.normalizedContractVersion,
+    },
+  };
+}
+
+export function salesEventAuditFragment(event: SalesEventV1) {
   return {
     source: {
       kind: event.source.kind,
@@ -444,87 +488,108 @@ export class InMemorySalesEventStore implements SalesEventStore {
     this.corrections.push(...clone(snapshot.corrections));
   }
 
-  state(eventKey: string): SalesEventState | null {
+  private stateFor(companyId: string, eventKey: string): SalesEventState | null {
+    if (this.events.get(eventKey)?.event.companyId !== companyId) return null;
     const transitions = this.transitions.filter(item => item.eventKey === eventKey);
     return transitions.length ? transitions[transitions.length - 1].to : null;
   }
 
-  event(eventKey: string) {
+  async state(companyId: string, eventKey: string): Promise<SalesEventState | null> { return this.stateFor(companyId, eventKey); }
+
+  async event(companyId: string, eventKey: string) {
     const value = this.events.get(eventKey);
-    return value ? clone(value) : null;
+    return value?.event.companyId === companyId ? clone(value) : null;
   }
 
-  conflict(conflictId: string) {
+  async conflict(companyId: string, conflictId: string) {
     const value = this.conflicts.find(item => item.conflictId === conflictId);
-    return value ? clone(value) : null;
+    return value && this.events.get(value.canonicalEventKey)?.event.companyId === companyId ? clone(value) : null;
   }
 
   private transitionRecord(eventKey: string, from: SalesEventState | null, to: SalesEventState, at: string, reason?: string, linkedEventKey?: string) {
     this.transitions.push({transitionId: this.idFactory(), eventKey, from, to, at, ...(reason ? {reason} : {}), ...(linkedEventKey ? {linkedEventKey} : {})});
   }
 
-  receive(record: SalesEventRecord, actor: string, at: string): SalesReceipt {
-    const eventKey = record.event.external.eventIdempotencyKey;
+  async receive(companyId: string, record: SalesEventRecord, actor: string, at: string): Promise<SalesReceipt> {
+    if (record.event.companyId !== companyId) throw new SalesIngestionError('wrong_company', 'Event is not bound to this company.');
+    if (record.event.receivedAt !== at) throw new SalesIngestionError('invalid_time', 'Receipt time does not match the normalized event.');
+    const storedRecord: SalesEventRecord = {
+      event: canonicalSalesEvent(record.event),
+      auditFragment: record.auditFragment === null ? null : salesEventAuditFragment(record.event),
+      applicationKey: record.applicationKey,
+      lineageKey: record.lineageKey,
+    };
+    const eventKey = storedRecord.event.external.eventIdempotencyKey;
     const existing = this.events.get(eventKey);
     if (existing) {
-      const state = this.state(eventKey)!;
-      if (existing.event.integrity.sourcePayloadSha256 === record.event.integrity.sourcePayloadSha256) return {kind: 'duplicate', eventKey, state};
+      if (existing.event.companyId !== companyId) throw new SalesIngestionError('wrong_company', 'Event identity belongs to another company.');
+      const state = this.stateFor(companyId, eventKey)!;
+      if (existing.event.integrity.sourcePayloadSha256 === storedRecord.event.integrity.sourcePayloadSha256) return {kind: 'duplicate', eventKey, state};
+      const duplicateConflict = this.conflicts.find(item => item.canonicalEventKey === eventKey && item.sourcePayloadSha256 === storedRecord.event.integrity.sourcePayloadSha256 && item.externalEventId === storedRecord.event.external.externalEventId && item.externalOrderId === storedRecord.event.external.externalOrderId && item.revision === storedRecord.event.external.revision);
+      if (duplicateConflict) return {kind: 'conflict', eventKey, conflictId: duplicateConflict.conflictId, state};
       const conflict: SalesConflictReceipt = {
         conflictId: this.idFactory(), canonicalEventKey: eventKey, receivedAt: at,
-        sourcePayloadSha256: record.event.integrity.sourcePayloadSha256,
-        externalEventId: record.event.external.externalEventId,
-        externalOrderId: record.event.external.externalOrderId,
-        revision: record.event.external.revision,
+        sourcePayloadSha256: storedRecord.event.integrity.sourcePayloadSha256,
+        externalEventId: storedRecord.event.external.externalEventId,
+        externalOrderId: storedRecord.event.external.externalOrderId,
+        revision: storedRecord.event.external.revision,
         reason: 'identity_conflict',
       };
       this.conflicts.push(conflict);
       return {kind: 'conflict', eventKey, conflictId: conflict.conflictId, state};
     }
-    const sameRevision = [...this.events.values()].find(item => item.lineageKey === record.lineageKey && item.event.external.revision === record.event.external.revision);
+    const sameRevision = [...this.events.values()].find(item => item.event.companyId === companyId && item.lineageKey === storedRecord.lineageKey && item.event.external.revision === storedRecord.event.external.revision);
     if (sameRevision) {
       const canonicalKey = sameRevision.event.external.eventIdempotencyKey;
+      const duplicateConflict = this.conflicts.find(item => item.canonicalEventKey === canonicalKey && item.sourcePayloadSha256 === storedRecord.event.integrity.sourcePayloadSha256 && item.externalEventId === storedRecord.event.external.externalEventId && item.externalOrderId === storedRecord.event.external.externalOrderId && item.revision === storedRecord.event.external.revision);
+      if (duplicateConflict) return {kind: 'conflict', eventKey: canonicalKey, conflictId: duplicateConflict.conflictId, state: this.stateFor(companyId, canonicalKey)!};
       const conflict: SalesConflictReceipt = {
         conflictId: this.idFactory(), canonicalEventKey: canonicalKey, receivedAt: at,
-        sourcePayloadSha256: record.event.integrity.sourcePayloadSha256,
-        externalEventId: record.event.external.externalEventId,
-        externalOrderId: record.event.external.externalOrderId,
-        revision: record.event.external.revision,
+        sourcePayloadSha256: storedRecord.event.integrity.sourcePayloadSha256,
+        externalEventId: storedRecord.event.external.externalEventId,
+        externalOrderId: storedRecord.event.external.externalOrderId,
+        revision: storedRecord.event.external.revision,
         reason: 'identity_conflict',
       };
       this.conflicts.push(conflict);
-      return {kind: 'conflict', eventKey: canonicalKey, conflictId: conflict.conflictId, state: this.state(canonicalKey)!};
+      return {kind: 'conflict', eventKey: canonicalKey, conflictId: conflict.conflictId, state: this.stateFor(companyId, canonicalKey)!};
     }
 
-    this.events.set(eventKey, clone(record));
+    this.events.set(eventKey, clone(storedRecord));
     this.transitionRecord(eventKey, null, 'received', at);
     this.audits.push({auditId: this.idFactory(), eventKey, action: 'received', actor, at});
     const lineageEvents = [...this.events.values()]
-      .filter(item => item.lineageKey === record.lineageKey && item.event.external.eventIdempotencyKey !== eventKey);
-    const higher = lineageEvents.find(item => item.event.external.revision > record.event.external.revision);
+      .filter(item => item.lineageKey === storedRecord.lineageKey && item.event.external.eventIdempotencyKey !== eventKey);
+    const higher = lineageEvents.find(item => item.event.external.revision > storedRecord.event.external.revision);
     if (higher) this.transitionRecord(eventKey, 'received', 'superseded', at, 'stale_revision', higher.event.external.eventIdempotencyKey);
     else {
-      for (const older of lineageEvents.filter(item => item.event.external.revision < record.event.external.revision)) {
+      for (const older of lineageEvents.filter(item => item.event.external.revision < storedRecord.event.external.revision)) {
         const olderKey = older.event.external.eventIdempotencyKey;
-        const state = this.state(olderKey);
+        const state = this.stateFor(companyId, olderKey);
         if (state === 'received' || state === 'held' || state === 'failed') {
           this.transitionRecord(olderKey, state, 'superseded', at, 'newer_revision', eventKey);
           this.audits.push({auditId: this.idFactory(), eventKey: olderKey, action: 'superseded', actor, at, reason: `Superseded by ${eventKey}.`});
         }
       }
     }
-    return {kind: 'created', eventKey, state: this.state(eventKey)!};
+    return {kind: 'created', eventKey, state: this.stateFor(companyId, eventKey)!};
   }
 
-  processingInLineage(lineageKey: string, exceptEventKey?: string) {
-    return [...this.events.values()].some(record => record.lineageKey === lineageKey && record.event.external.eventIdempotencyKey !== exceptEventKey && this.state(record.event.external.eventIdempotencyKey) === 'processing');
+  private processingInLineageFor(companyId: string, lineageKey: string, exceptEventKey?: string) {
+    return [...this.events.values()].some(record => record.event.companyId === companyId && record.lineageKey === lineageKey && record.event.external.eventIdempotencyKey !== exceptEventKey && this.stateFor(companyId, record.event.external.eventIdempotencyKey) === 'processing');
   }
 
-  claim(eventKey: string, attempt: SalesAttempt, at: string) {
+  async processingInLineage(companyId: string, lineageKey: string, exceptEventKey?: string) {
+    return this.processingInLineageFor(companyId, lineageKey, exceptEventKey);
+  }
+
+  async claim(companyId: string, eventKey: string, attempt: SalesAttempt, at: string) {
     const record = this.events.get(eventKey);
-    if (!record || this.state(eventKey) !== 'received' || this.processingInLineage(record.lineageKey, eventKey)) return false;
+    if (attempt.eventKey !== eventKey || attempt.startedAt !== at || instant(at) === null || instant(attempt.leaseExpiresAt) === null || Date.parse(attempt.leaseExpiresAt) <= Date.parse(at) ||
+        !record || record.event.companyId !== companyId || this.stateFor(companyId, eventKey) !== 'received' || this.processingInLineageFor(companyId, record.lineageKey, eventKey)) return false;
     for (const older of [...this.events.values()].filter(item => item.lineageKey === record.lineageKey && item.event.external.revision < record.event.external.revision)) {
       const olderKey = older.event.external.eventIdempotencyKey;
-      const state = this.state(olderKey);
+      const state = this.stateFor(companyId, olderKey);
       if (state === 'held' || state === 'failed' || state === 'received') this.transitionRecord(olderKey, state, 'superseded', at, 'newer_revision', eventKey);
     }
     this.attempts.push(clone(attempt));
@@ -532,56 +597,88 @@ export class InMemorySalesEventStore implements SalesEventStore {
     return true;
   }
 
-  completeAttempt(attempt: SalesAttempt, to: 'applied' | 'held' | 'failed', at: string, reason?: string) {
-    if (this.state(attempt.eventKey) !== 'processing') throw new SalesIngestionError('invalid_state', 'Event is no longer processing.');
+  async completeAttempt(companyId: string, attempt: SalesAttempt, to: 'applied' | 'held' | 'failed', at: string, reason?: string) {
+    const matchingOutcome = (to === 'applied' && (attempt.outcome === 'applied' || attempt.outcome === 'noop')) || attempt.outcome === to;
+    if (!attempt.completedAt || attempt.completedAt !== at || !matchingOutcome) throw new SalesIngestionError('invalid_attempt', 'Attempt result does not match its terminal state.');
+    if (this.stateFor(companyId, attempt.eventKey) !== 'processing') throw new SalesIngestionError('invalid_state', 'Event is no longer processing.');
     const index = this.attempts.findIndex(item => item.attemptId === attempt.attemptId);
     if (index < 0 || this.attempts[index].completedAt) throw new SalesIngestionError('invalid_attempt', 'Attempt is missing or already complete.');
     this.attempts[index] = clone(attempt);
     this.transitionRecord(attempt.eventKey, 'processing', to, at, reason);
   }
 
-  transition(eventKey: string, from: SalesEventState, to: SalesEventState, at: string, reason?: string, linkedEventKey?: string) {
-    if (this.state(eventKey) !== from) throw new SalesIngestionError('invalid_state', `Expected ${from} state.`);
+  async transition(companyId: string, eventKey: string, from: SalesEventState, to: SalesEventState, at: string, reason?: string, linkedEventKey?: string) {
+    if (this.stateFor(companyId, eventKey) !== from) throw new SalesIngestionError('invalid_state', `Expected ${from} state.`);
     this.transitionRecord(eventKey, from, to, at, reason, linkedEventKey);
   }
 
-  dismissConflict(value: SalesConflictResolution) {
-    if (!this.conflicts.some(item => item.conflictId === value.conflictId && item.canonicalEventKey === value.canonicalEventKey)) {
+  async resolve(companyId: string, eventKey: string, from: 'failed' | 'held', to: 'received' | 'dismissed', resolution: SalesResolution, audit: SalesAuditEntry) {
+    const allowed = (from === 'failed' && to === 'received' && resolution.kind === 'retry' && audit.action === 'retry') ||
+      (from === 'held' && to === 'received' && resolution.kind === 'replay' && audit.action === 'replay') ||
+      (from === 'held' && to === 'dismissed' && resolution.kind === 'dismiss' && audit.action === 'dismiss');
+    if (!allowed || resolution.eventKey !== eventKey || audit.eventKey !== eventKey || resolution.at !== audit.at || this.stateFor(companyId, eventKey) !== from) throw new SalesIngestionError('invalid_state', `Expected ${from} state.`);
+    this.transitionRecord(eventKey, from, to, resolution.at, resolution.reason);
+    this.resolutions.push(clone(resolution));
+    this.audits.push(clone(audit));
+  }
+
+  async dismissConflict(companyId: string, value: SalesConflictResolution, audit: SalesAuditEntry) {
+    if (!this.conflicts.some(item => item.conflictId === value.conflictId && item.canonicalEventKey === value.canonicalEventKey && this.events.get(item.canonicalEventKey)?.event.companyId === companyId)) {
       throw new SalesIngestionError('not_found', 'Identity-conflict receipt was not found.');
     }
     if (this.conflictResolutions.some(item => item.conflictId === value.conflictId)) {
       throw new SalesIngestionError('invalid_state', 'Identity-conflict receipt is already resolved.');
     }
     this.conflictResolutions.push(clone(value));
+    this.audits.push(clone(audit));
   }
 
-  latestAppliedConsumption(lineageKey: string, beforeRevision: number) {
+  async latestAppliedConsumption(companyId: string, lineageKey: string, beforeRevision: number) {
     const consumedEventKeys = new Set(this.attempts
       .filter(attempt => attempt.completedAt && attempt.outcome === 'applied')
       .map(attempt => attempt.eventKey));
-    const match = [...this.events.values()]
-      .filter(record => record.lineageKey === lineageKey && record.event.external.revision < beforeRevision && this.state(record.event.external.eventIdempotencyKey) === 'applied' && consumedEventKeys.has(record.event.external.eventIdempotencyKey))
-      .sort((a, b) => b.event.external.revision - a.event.external.revision)[0];
+    let match: SalesEventRecord | undefined;
+    for (const record of [...this.events.values()].filter(record => record.event.companyId === companyId && record.lineageKey === lineageKey && record.event.external.revision < beforeRevision && consumedEventKeys.has(record.event.external.eventIdempotencyKey)).sort((a, b) => b.event.external.revision - a.event.external.revision)) {
+      if (this.stateFor(companyId, record.event.external.eventIdempotencyKey) === 'applied') { match = record; break; }
+    }
     return match ? clone(match) : null;
   }
 
-  appendResolution(value: SalesResolution) { this.resolutions.push(clone(value)); }
-  appendAudit(value: SalesAuditEntry) { this.audits.push(clone(value)); }
-  appendCorrection(value: SalesCorrectionRequest) { this.corrections.push(clone(value)); }
+  async appendResolution(companyId: string, value: SalesResolution) { if (!await this.event(companyId, value.eventKey)) throw new SalesIngestionError('not_found', 'Sales event was not found.'); this.resolutions.push(clone(value)); }
+  async appendAudit(companyId: string, value: SalesAuditEntry) { if (!await this.event(companyId, value.eventKey)) throw new SalesIngestionError('not_found', 'Sales event was not found.'); this.audits.push(clone(value)); }
+  async appendCorrection(companyId: string, value: SalesCorrectionRequest, audit: SalesAuditEntry) {
+    if (value.companyId !== companyId || audit.eventKey !== value.eventKey || !this.events.has(value.eventKey) || this.events.get(value.eventKey)?.event.companyId !== companyId) throw new SalesIngestionError('not_found', 'Sales event was not found.');
+    this.corrections.push(clone(value));
+    this.audits.push(clone(audit));
+  }
 
-  recoverExpired(now: string) {
+  async recoverExpired(companyId: string, now: string) {
     const nowMs = instant(now);
     if (nowMs === null) throw new SalesIngestionError('invalid_time', 'Recovery time is invalid.');
     const recovered: string[] = [];
     for (let index = 0; index < this.attempts.length; index++) {
       const attempt = this.attempts[index];
-      if (this.state(attempt.eventKey) === 'processing' && !attempt.completedAt && Date.parse(attempt.leaseExpiresAt) <= nowMs) {
+      if (this.events.get(attempt.eventKey)?.event.companyId === companyId && this.stateFor(companyId, attempt.eventKey) === 'processing' && !attempt.completedAt && Date.parse(attempt.leaseExpiresAt) <= nowMs) {
         this.attempts[index] = {...attempt, completedAt: now, outcome: 'failed', errorCode: 'interrupted'};
         this.transitionRecord(attempt.eventKey, 'processing', 'failed', now, 'interrupted');
+        this.audits.push({auditId: this.idFactory(), eventKey: attempt.eventKey, action: 'lease_expired', actor: 'system', at: now, reason: 'Processing lease expired; application is unknown.'});
         recovered.push(attempt.eventKey);
       }
     }
     return recovered;
+  }
+
+  async purgeExpiredPayloadFragments(companyId: string, now: string, limit: number) {
+    if (instant(now) === null || !Number.isSafeInteger(limit) || limit < 1) throw new SalesIngestionError('invalid_cleanup', 'Cleanup time and limit are invalid.');
+    const expired = [...this.events.values()]
+      .filter(record => record.event.companyId === companyId && record.auditFragment !== null && record.event.integrity.payloadExpiresAt !== null && record.event.integrity.payloadExpiresAt <= now)
+      .sort((a, b) => a.event.integrity.payloadExpiresAt!.localeCompare(b.event.integrity.payloadExpiresAt!))
+      .slice(0, limit);
+    for (const record of expired) {
+      record.auditFragment = null;
+      record.event.integrity.payloadExpiresAt = null;
+    }
+    return expired.length;
   }
 
   snapshot(): SalesStoreSnapshot {
@@ -656,9 +753,9 @@ export class SalesIngestionService {
       lines: normalized.lines,
       integrity: {sourcePayloadSha256: sourceHash, payloadExpiresAt: new Date(Date.parse(receivedAt) + RETENTION_MS).toISOString(), normalizedContractVersion: SALES_EVENT_CONTRACT},
     };
-    const fragment = auditFragment(event);
+    const fragment = salesEventAuditFragment(event);
     if (utf8Bytes(canonicalJson(fragment)) > MAX_RETAINED_BYTES) throw new SalesIngestionError('retained_fragment_too_large', 'Minimal retained fragment exceeds 65,536 UTF-8 bytes.');
-    return this.store.receive({event, auditFragment: fragment, applicationKey, lineageKey}, actorId(context.actor!), receivedAt);
+    return this.store.receive(context.companyId, {event, auditFragment: fragment, applicationKey, lineageKey}, actorId(context.actor!), receivedAt);
   }
 
   private async mappedLines(record: SalesEventRecord, lines: SalesEventV1['lines']) {
@@ -716,9 +813,9 @@ export class SalesIngestionService {
     return {lines: deltas, correction: false};
   }
 
-  private policy(record: SalesEventRecord) {
+  private async policy(record: SalesEventRecord) {
     const event = record.event;
-    const previous = this.store.latestAppliedConsumption(record.lineageKey, event.external.revision)?.event ?? null;
+    const previous = (await this.store.latestAppliedConsumption(event.companyId, record.lineageKey, event.external.revision))?.event ?? null;
     if (event.timeQuality === 'inferred') return {held: ['ambiguous_occurrence_time'] as HeldReason[], lines: [] as SalesEventV1['lines']};
     const prepared = event.preparationStatus === 'prepared' || event.preparationStatus === 'fulfilled';
     if (event.eventType === 'refund' && !previous && !prepared) return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines']};
@@ -731,28 +828,28 @@ export class SalesIngestionService {
     return {held: [] as HeldReason[], lines: delta.lines};
   }
 
-  async process(eventKey: string) {
-    const record = this.store.event(eventKey);
+  async process(companyId: string, eventKey: string) {
+    const record = await this.store.event(companyId, eventKey);
     if (!record) throw new SalesIngestionError('not_found', 'Sales event was not found.');
     const startedAt = this.now();
     const attempt: SalesAttempt = {attemptId: this.idFactory(), eventKey, startedAt, leaseExpiresAt: new Date(Date.parse(startedAt) + LEASE_MS).toISOString()};
-    if (!this.store.claim(eventKey, attempt, startedAt)) throw new SalesIngestionError('claim_conflict', 'Sales event is not claimable.');
-    const policy = this.policy(record);
+    if (!await this.store.claim(companyId, eventKey, attempt, startedAt)) throw new SalesIngestionError('claim_conflict', 'Sales event is not claimable.');
+    const policy = await this.policy(record);
     if (policy.held.length) {
       const complete = {...attempt, completedAt: this.now(), outcome: 'held' as const, heldReasons: policy.held};
-      this.store.completeAttempt(complete, 'held', complete.completedAt, policy.held.join(','));
-      return this.statusForWorker(eventKey);
+      await this.store.completeAttempt(companyId, complete, 'held', complete.completedAt, policy.held.join(','));
+      return this.statusForWorker(companyId, eventKey);
     }
     if (!policy.lines.length) {
       const complete = {...attempt, completedAt: this.now(), outcome: 'noop' as const};
-      this.store.completeAttempt(complete, 'applied', complete.completedAt, 'policy_noop');
-      return this.statusForWorker(eventKey);
+      await this.store.completeAttempt(companyId, complete, 'applied', complete.completedAt, 'policy_noop');
+      return this.statusForWorker(companyId, eventKey);
     }
     const mapping = await this.mappedLines(record, policy.lines);
     if (mapping.held.length) {
       const complete = {...attempt, completedAt: this.now(), outcome: 'held' as const, heldReasons: mapping.held};
-      this.store.completeAttempt(complete, 'held', complete.completedAt, mapping.held.join(','));
-      return this.statusForWorker(eventKey);
+      await this.store.completeAttempt(companyId, complete, 'held', complete.completedAt, mapping.held.join(','));
+      return this.statusForWorker(companyId, eventKey);
     }
     const request: InventoryConsumptionRequest = {
       contract: INVENTORY_CONSUMPTION_CONTRACT,
@@ -766,79 +863,83 @@ export class SalesIngestionService {
       result = await this.inventory.consume(request);
     } catch {
       const complete = {...attempt, completedAt: this.now(), outcome: 'failed' as const, errorCode: 'inventory_unavailable' as const};
-      this.store.completeAttempt(complete, 'failed', complete.completedAt, complete.errorCode);
-      return this.statusForWorker(eventKey);
+      await this.store.completeAttempt(companyId, complete, 'failed', complete.completedAt, complete.errorCode);
+      return this.statusForWorker(companyId, eventKey);
     }
     if (this.options.afterInventoryApply && result.status === 'applied') await this.options.afterInventoryApply(result);
     const completedAt = this.now();
     if (result.status === 'applied') {
       const complete = {...attempt, completedAt, outcome: 'applied' as const, inventoryResult: result};
-      this.store.completeAttempt(complete, 'applied', completedAt, result.replayed ? 'inventory_replayed' : 'inventory_applied');
+      await this.store.completeAttempt(companyId, complete, 'applied', completedAt, result.replayed ? 'inventory_replayed' : 'inventory_applied');
     } else if (result.status === 'held') {
       const reasons = result.issues.map(issue => issue.code as HeldReason);
       const complete = {...attempt, completedAt, outcome: 'held' as const, heldReasons: reasons, issues: result.issues, inventoryResult: result};
-      this.store.completeAttempt(complete, 'held', completedAt, reasons.join(','));
+      await this.store.completeAttempt(companyId, complete, 'held', completedAt, reasons.join(','));
     } else {
       const codes = result.issues.map(issue => issue.code);
       if (codes.some(code => code === 'invalid_quantity' || code === 'invalid_occurrence_time' || code === 'idempotency_conflict')) {
         const reasons = codes.map(code => code === 'idempotency_conflict' ? 'identity_conflict' : code) as HeldReason[];
         const complete = {...attempt, completedAt, outcome: 'held' as const, heldReasons: reasons, issues: result.issues, inventoryResult: result};
-        this.store.completeAttempt(complete, 'held', completedAt, reasons.join(','));
+        await this.store.completeAttempt(companyId, complete, 'held', completedAt, reasons.join(','));
       } else {
         const complete = {...attempt, completedAt, outcome: 'failed' as const, issues: result.issues, inventoryResult: result, errorCode: 'integration_defect' as const};
-        this.store.completeAttempt(complete, 'failed', completedAt, complete.errorCode);
+        await this.store.completeAttempt(companyId, complete, 'failed', completedAt, complete.errorCode);
       }
     }
-    return this.statusForWorker(eventKey);
+    return this.statusForWorker(companyId, eventKey);
   }
 
-  recoverExpiredLeases() {
+  async recoverExpiredLeases(companyId: string) {
     const at = this.now();
-    const recovered = this.store.recoverExpired(at);
-    for (const eventKey of recovered) this.store.appendAudit({auditId: this.idFactory(), eventKey, action: 'lease_expired', actor: 'system', at, reason: 'Processing lease expired; application is unknown.'});
-    return recovered;
+    return this.store.recoverExpired(companyId, at);
   }
 
-  retry(eventKey: string, actor: SalesActor | null, reason: string) {
-    const record = this.requiredEvent(eventKey);
+  async retry(companyId: string, eventKey: string, actor: SalesActor | null, reason: string) {
+    const record = await this.requiredEvent(companyId, eventKey);
     const identity = assertOperator(actor, record.event.companyId);
-    if (this.store.state(eventKey) !== 'failed') throw new SalesIngestionError('invalid_state', 'Only failed events may be retried.');
+    if (await this.store.state(companyId, eventKey) !== 'failed') throw new SalesIngestionError('invalid_state', 'Only failed events may be retried.');
     const clean = reason.trim();
     if (!clean) throw new SalesIngestionError('reason_required', 'Retry reason is required.');
     const at = this.now();
-    this.store.transition(eventKey, 'failed', 'received', at, clean);
-    this.store.appendResolution({resolutionId: this.idFactory(), eventKey, kind: 'retry', actor: identity, reason: clean, at});
-    this.store.appendAudit({auditId: this.idFactory(), eventKey, action: 'retry', actor: identity, at, reason: clean});
+    await this.store.resolve(
+      companyId,eventKey,'failed','received',
+      {resolutionId: this.idFactory(), eventKey, kind: 'retry', actor: identity, reason: clean, at},
+      {auditId: this.idFactory(), eventKey, action: 'retry', actor: identity, at, reason: clean},
+    );
   }
 
-  replay(eventKey: string, actor: SalesActor | null, reason: string) {
-    const record = this.requiredEvent(eventKey);
+  async replay(companyId: string, eventKey: string, actor: SalesActor | null, reason: string) {
+    const record = await this.requiredEvent(companyId, eventKey);
     const identity = assertOperator(actor, record.event.companyId);
-    if (this.store.state(eventKey) !== 'held') throw new SalesIngestionError('invalid_state', 'Only held events may be replayed.');
+    if (await this.store.state(companyId, eventKey) !== 'held') throw new SalesIngestionError('invalid_state', 'Only held events may be replayed.');
     const clean = reason.trim();
     if (!clean) throw new SalesIngestionError('reason_required', 'Replay reason is required.');
     const at = this.now();
-    this.store.transition(eventKey, 'held', 'received', at, clean);
-    this.store.appendResolution({resolutionId: this.idFactory(), eventKey, kind: 'replay', actor: identity, reason: clean, at});
-    this.store.appendAudit({auditId: this.idFactory(), eventKey, action: 'replay', actor: identity, at, reason: clean});
+    await this.store.resolve(
+      companyId,eventKey,'held','received',
+      {resolutionId: this.idFactory(), eventKey, kind: 'replay', actor: identity, reason: clean, at},
+      {auditId: this.idFactory(), eventKey, action: 'replay', actor: identity, at, reason: clean},
+    );
   }
 
-  dismiss(eventKey: string, actor: SalesActor | null, reason: string) {
-    const record = this.requiredEvent(eventKey);
+  async dismiss(companyId: string, eventKey: string, actor: SalesActor | null, reason: string) {
+    const record = await this.requiredEvent(companyId, eventKey);
     const identity = assertOperator(actor, record.event.companyId);
-    if (this.store.state(eventKey) !== 'held') throw new SalesIngestionError('invalid_state', 'Only held events may be dismissed.');
+    if (await this.store.state(companyId, eventKey) !== 'held') throw new SalesIngestionError('invalid_state', 'Only held events may be dismissed.');
     const clean = reason.trim();
     if (!clean) throw new SalesIngestionError('reason_required', 'Dismissal reason is required.');
     const at = this.now();
-    this.store.transition(eventKey, 'held', 'dismissed', at, clean);
-    this.store.appendResolution({resolutionId: this.idFactory(), eventKey, kind: 'dismiss', actor: identity, reason: clean, at});
-    this.store.appendAudit({auditId: this.idFactory(), eventKey, action: 'dismiss', actor: identity, at, reason: clean});
+    await this.store.resolve(
+      companyId,eventKey,'held','dismissed',
+      {resolutionId: this.idFactory(), eventKey, kind: 'dismiss', actor: identity, reason: clean, at},
+      {auditId: this.idFactory(), eventKey, action: 'dismiss', actor: identity, at, reason: clean},
+    );
   }
 
-  dismissConflict(conflictId: string, actor: SalesActor | null, reason: string) {
-    const conflict = this.store.conflict(conflictId);
+  async dismissConflict(companyId: string, conflictId: string, actor: SalesActor | null, reason: string) {
+    const conflict = await this.store.conflict(companyId, conflictId);
     if (!conflict) throw new SalesIngestionError('not_found', 'Identity-conflict receipt was not found.');
-    const record = this.requiredEvent(conflict.canonicalEventKey);
+    const record = await this.requiredEvent(companyId, conflict.canonicalEventKey);
     const identity = assertOperator(actor, record.event.companyId);
     const clean = reason.trim();
     if (!clean) throw new SalesIngestionError('reason_required', 'Conflict dismissal reason is required.');
@@ -852,31 +953,29 @@ export class SalesIngestionService {
       reason: clean,
       at,
     };
-    this.store.dismissConflict(resolution);
-    this.store.appendAudit({auditId: this.idFactory(), eventKey: conflict.canonicalEventKey, conflictId, action: 'conflict_dismissed', actor: identity, at, reason: clean});
+    await this.store.dismissConflict(companyId, resolution, {auditId: this.idFactory(), eventKey: conflict.canonicalEventKey, conflictId, action: 'conflict_dismissed', actor: identity, at, reason: clean});
     return clone(resolution);
   }
 
-  requestCorrection(eventKey: string, actor: SalesActor | null, reason: string) {
-    const record = this.requiredEvent(eventKey);
+  async requestCorrection(companyId: string, eventKey: string, actor: SalesActor | null, reason: string) {
+    const record = await this.requiredEvent(companyId, eventKey);
     const identity = assertOperator(actor, record.event.companyId);
-    if (this.store.state(eventKey) !== 'applied') throw new SalesIngestionError('invalid_state', 'Corrections may be requested only for applied events.');
+    if (await this.store.state(companyId, eventKey) !== 'applied') throw new SalesIngestionError('invalid_state', 'Corrections may be requested only for applied events.');
     const clean = reason.trim();
     if (!clean) throw new SalesIngestionError('reason_required', 'Correction reason is required.');
     const requestedAt = this.now();
     const correction: SalesCorrectionRequest = {correctionId: this.idFactory(), eventKey, companyId: record.event.companyId, status: 'pending', actor: identity, reason: clean, requestedAt};
-    this.store.appendCorrection(correction);
-    this.store.appendAudit({auditId: this.idFactory(), eventKey, action: 'correction_requested', actor: identity, at: requestedAt, reason: clean});
+    await this.store.appendCorrection(companyId, correction, {auditId: this.idFactory(), eventKey, action: 'correction_requested', actor: identity, at: requestedAt, reason: clean});
     return clone(correction);
   }
 
-  readStatus(eventKey: string, actor: SalesActor | null) {
-    const record = this.requiredEvent(eventKey);
+  async readStatus(companyId: string, eventKey: string, actor: SalesActor | null) {
+    const record = await this.requiredEvent(companyId, eventKey);
     assertReadable(actor, record.event.companyId);
     return {
       eventKey,
       companyId: record.event.companyId,
-      state: this.store.state(eventKey),
+      state: await this.store.state(companyId, eventKey),
       eventType: record.event.eventType,
       orderStatus: record.event.orderStatus,
       preparationStatus: record.event.preparationStatus,
@@ -886,13 +985,13 @@ export class SalesIngestionService {
     };
   }
 
-  private requiredEvent(eventKey: string) {
-    const record = this.store.event(eventKey);
+  private async requiredEvent(companyId: string, eventKey: string) {
+    const record = await this.store.event(companyId, eventKey);
     if (!record) throw new SalesIngestionError('not_found', 'Sales event was not found.');
     return record;
   }
 
-  private statusForWorker(eventKey: string) {
-    return {eventKey, state: this.store.state(eventKey)};
+  private async statusForWorker(companyId: string, eventKey: string) {
+    return {eventKey, state: await this.store.state(companyId, eventKey)};
   }
 }
