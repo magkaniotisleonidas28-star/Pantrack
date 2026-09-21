@@ -93,3 +93,38 @@ Rollback for this slice: the calculation module has no runtime caller and makes
 no database writes. Reverting its integration-free source/tests does not alter
 inventory or history. A3 remains additive; any later deployed schema repair must
 be a new migration.
+
+## A4 task packet: persistent inventory-consumption port
+
+The first A4 integration packet adds a D1-backed implementation of the published
+`pantrack.inventory-consumption.v1` port. It selects immutable recipe and modifier
+versions at the sale occurrence time, enforces the latest physical-count cutoff,
+and applies every product change plus its application/event history through one
+transactional D1 batch. A company-scoped application key permanently identifies
+the result, so exact retries return the stored result and changed input returns
+`idempotency_conflict`.
+
+The implementation also maintains an existing legacy inventory JSON projection
+from the exact balance during the compatibility window. It fails closed on
+invalid persisted quantities, activation intervals, conversions, or application
+results. Held and rejected requests write nothing.
+
+Focused local coverage proves sale-time version selection, modifiers, negative
+modifier holds, missing configuration and count holds, cutoff enforcement,
+cross-company isolation, concurrent duplicate safety, restart replay, legacy
+projection updates, injected transactional rollback, and corrupt-result denial.
+This module is not yet called by an HTTP route, so existing manual, CSV, bridge,
+and inventory behavior remains unchanged pending the remaining A4 management
+service/UI work and the B4 cutover.
+
+Checks run for this packet:
+
+- PASS: focused A2, D1 consumption, A3 migration, and B2 ingestion suites.
+- PASS: focused ESLint and `pnpm typecheck`.
+- PASS: `pnpm test` (14 suites), `pnpm db:check`, and `pnpm build`.
+- PASS: `pnpm db:migrate:local` (no pending migrations) and `pnpm test:local`.
+- PASS: `git diff --check`.
+
+Rollback for this packet removes the unused port and its tests; it has no route
+caller and added no migration. Any application written after a future cutover is
+immutable and would require a forward repair rather than history deletion.
