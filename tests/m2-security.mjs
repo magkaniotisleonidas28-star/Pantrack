@@ -47,7 +47,7 @@ sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(accounts.other.id,'com
 sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a','milk',JSON.stringify({id:'milk',name:'Milk'}));
 sql.prepare('INSERT INTO orders VALUES (?,?,?,?)').run('company-a','private-order',JSON.stringify({id:'private-order'}),'now');
 const families=['workspace','inventory','sales','register','clover','payments','automation','members'];
-const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
+const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
 for(const family of families){
  assert.equal((await call(family)).status,401,family+' anonymous read');
  assert.equal((await call(family,'POST',{companyId:'company-a'})).status,401,family+' anonymous write');
@@ -70,6 +70,16 @@ for(const role of ['owner','manager','employee']){
  for(const family of ['clover','payments'])assert.equal((await call(family,'GET',null,cookies[role])).status,role==='owner'?200:403,role+' reads '+family);
  assert.equal((await call('automation','GET',null,cookies[role])).status,role==='employee'?403:200);
 }
+assert.equal((await(await call('inventory','GET',null,cookies.owner)).json()).exactEnabled,false,'Exact inventory is dark by default.');
+globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
+const exactConfigure={companyId:'company-a',action:'configureExact',productId:'milk',operationId:'config-milk',stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'10',effectiveAt:'2026-01-01T00:00:00Z'};
+assert.equal((await call('inventory','POST',exactConfigure,cookies.employee)).status,403,'Employees cannot mutate exact inventory.');
+assert.equal((await call('inventory','POST',{...exactConfigure,companyId:'company-b'},cookies.manager)).status,403,'Managers cannot mutate another company.');
+assert.equal((await call('inventory','POST',exactConfigure,cookies.manager)).status,200,'Managers can classify company inventory when the preview is enabled.');
+assert.equal(sql.prepare("SELECT count(*) AS count FROM security_audit WHERE company_id='company-a' AND action='inventory.succeeded' AND target='configureExact'").get().count,1,'Exact inventory mutation is audited.');
+assert.equal((await(await call('inventory','GET',null,cookies.employee)).json()).exact.records.length,1,'Employees can read their company exact inventory.');
+assert.equal((await call('sales','POST',{companyId:'company-a',action:'import',reference:'blocked-during-preview',lines:[{recipeId:crypto.randomUUID(),quantity:1}]},cookies.manager)).status,409,'Legacy sales deductions pause during exact preview.');
+delete globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW;
 assert.deepEqual((await(await call('workspace','GET',null,cookies.employee)).json()).orders,[]);
 assert.equal((await(await call('workspace','GET',null,cookies.manager)).json()).orders.length,1);
 assert.equal((await call('automation','POST',{companyId:'company-a',action:'pause'},cookies.manager)).status,200);

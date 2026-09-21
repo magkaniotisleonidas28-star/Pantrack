@@ -224,7 +224,7 @@ For every numbered item, the assigned person follows the same delivery loop:
   additive unit, conversion, recipe-version/modifier, count-cutoff, and
   reconciliation structures. Add compatibility tests for existing records.
   **Gate:** M2 must be accepted before M3 can be marked complete.
-- [ ] **A4 — Complete M3 behavior.** Implement safe unit changes, immutable
+- [x] **A4 — Complete M3 behavior.** Implement safe unit changes, immutable
   recipe history, modifiers, sale-time recipe selection, cutoff enforcement,
   count variance/history, and decimal-safe target examples. Add the required
   manager UI and authorization/company-isolation tests.

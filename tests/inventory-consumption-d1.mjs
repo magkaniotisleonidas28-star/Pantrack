@@ -88,9 +88,10 @@ function fixture(){
  }
  const addRecipe=(recipeId,id,status,from,to,ingredients)=>{
   sql.prepare(`INSERT INTO recipe_versions(company_id,recipe_id,id,version,status,name,active_from,active_to,legacy,created_by,created_at)
-   VALUES (?,?,?,?,?,?,?,?,0,?,?)`).run('company-a',recipeId,id,id.endsWith('v2')?2:1,status,recipeId,from,to,'fixture',cutoff);
+   VALUES (?,?,?,?,'draft',?,NULL,NULL,0,?,?)`).run('company-a',recipeId,id,id.endsWith('v2')?2:1,recipeId,'fixture',cutoff);
   ingredients.forEach((ingredient,position)=>sql.prepare(`INSERT INTO recipe_version_ingredients(company_id,recipe_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id,legacy_unit_label)
    VALUES (?,?,?,?,?,'canonical',1,?,?,?,'canonical',NULL)`).run('company-a',recipeId,id,position,ingredient.productId,ingredient.dimension,ingredient.minor,ingredient.minor));
+  sql.prepare('UPDATE recipe_versions SET status=?,active_from=?,active_to=? WHERE company_id=? AND recipe_id=? AND id=?').run(status,from,to,'company-a',recipeId,id);
  };
  addRecipe('latte','latte-v1','archived','2026-01-01T00:00:00.000Z','2026-02-01T00:00:00.000Z',[{productId:'milk',dimension:'volume',minor:'10000000'},{productId:'cup',dimension:'count',minor:'1'}]);
  addRecipe('latte','latte-v2','active','2026-02-01T00:00:00.000Z',null,[{productId:'milk',dimension:'volume',minor:'12000000'},{productId:'cup',dimension:'count',minor:'1'}]);
@@ -105,9 +106,10 @@ function fixture(){
  ]){
   sql.prepare('INSERT INTO recipe_modifier_lineages(company_id,recipe_id,id,name,created_by,created_at) VALUES (?,?,?,?,?,?)').run('company-a','latte',modifierId,modifierId,'fixture',cutoff);
   sql.prepare(`INSERT INTO recipe_modifier_versions(company_id,recipe_id,modifier_id,id,version,status,active_from,active_to,created_by,created_at)
-   VALUES (?,?,?,?,1,'active',?,NULL,?,?)`).run('company-a','latte',modifierId,`${modifierId}-v1`,cutoff,'fixture',cutoff);
+   VALUES (?,?,?,?,1,'draft',NULL,NULL,?,?)`).run('company-a','latte',modifierId,`${modifierId}-v1`,'fixture',cutoff);
   deltas.forEach((delta,position)=>sql.prepare(`INSERT INTO recipe_modifier_deltas(company_id,recipe_id,modifier_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id)
    VALUES (?,?,?,?,?,?,'canonical',1,?,?,?,'canonical')`).run('company-a','latte',modifierId,`${modifierId}-v1`,position,delta.productId,delta.dimension,delta.minor,delta.minor));
+  sql.prepare("UPDATE recipe_modifier_versions SET status='active',active_from=? WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=?").run(cutoff,'company-a','latte',modifierId,`${modifierId}-v1`);
  }
  return {sql,database:new Database(sql)};
 }

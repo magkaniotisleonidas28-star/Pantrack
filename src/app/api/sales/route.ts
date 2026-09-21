@@ -4,6 +4,7 @@ import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
 import {type InventoryRecord} from '@/lib/inventory';
+import {exactInventoryPreviewEnabled} from '@/lib/exact-inventory-gate';
 import {z} from 'zod';
 async function handleGET(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
@@ -16,6 +17,7 @@ async function handlePOST(req:Request){
  try{
  const b=z.object({companyId:z.string().min(1),action:z.enum(['recipe','import','mapping','removeMapping']),mapping:z.object({provider:z.string().trim().min(1).max(60),location:z.string().trim().min(1).max(100),itemId:z.string().trim().min(1).max(150),name:z.string().trim().min(1).max(100),recipeId:z.string().uuid()}).optional(),mappingKey:z.string().min(1).max(500).optional(),recipe:z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(100),ingredients:z.array(z.object({productId:z.string().min(1),quantity:z.number().positive().max(100000),unit:z.string().min(1)})).min(1).max(20)}).optional(),reference:z.string().trim().min(1).max(100).optional(),lines:z.array(z.object({recipeId:z.string().uuid().optional(),mappingKey:z.string().min(1).max(500).optional(),quantity:z.number().int().min(1).max(10000)}).refine(v=>!!v.recipeId!==!!v.mappingKey,'Choose a recipe or register mapping')).min(1).max(20).optional()}).parse(await req.json());
  const member=await companyAccess(u.userId,b.companyId);if(!member||!['owner','manager'].includes(member.role))return Response.json({error:'Company access denied.'},{status:403});
+ if(exactInventoryPreviewEnabled()&&(b.action==='recipe'||b.action==='import'))return Response.json({error:'Exact inventory preview is enabled. Recipe changes use the versioned inventory editor, and sales deductions remain paused until the B4 cutover.'},{status:409});
  const db=database(),rows=await db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(b.companyId).all<{data:string}>(),records=rows.results.map(x=>JSON.parse(x.data) as InventoryRecord);
  if(b.action==='mapping'){
  if(!b.mapping)throw new Error('Enter register item details.');

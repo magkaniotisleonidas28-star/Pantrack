@@ -28,7 +28,7 @@ export function withCompanyRoute(family:Family,handler:(req:Request)=>Promise<Re
         const member=await companyAccess(user.userId,companyId);
         if(!member||!permitted(member.role,routePermission(family,req.method,body?.action)))return Response.json({error:'You do not have permission for this company action.'},{status:403});
       }
-      const logged=mutation&&['companies','register','clover','payments','automation'].includes(family);
+      const logged=mutation&&['companies','inventory','register','clover','payments','automation'].includes(family);
       const target=typeof body?.action==='string'?body.action.slice(0,80):'';
       if(logged)await audit(typeof companyId==='string'?companyId:null,user.userId,family+'.attempt',target).run();
       const response=await handler(req);

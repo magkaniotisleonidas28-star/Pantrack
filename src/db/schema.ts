@@ -63,6 +63,7 @@ export const inventoryConfigVersions=sqliteTable('inventory_config_versions',{
 },t=>[
  primaryKey({columns:[t.companyId,t.productId,t.id]}),
  uniqueIndex('inventory_config_company_product_version').on(t.companyId,t.productId,t.version),
+ uniqueIndex('inventory_config_one_active').on(t.companyId,t.productId).where(sql`status = 'active'`),
  index('inventory_config_effective_lookup').on(t.companyId,t.productId,t.effectiveFrom),
  foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
  foreignKey({columns:[t.companyId,t.productId,t.stockUnitId,t.stockUnitVersion],foreignColumns:[productUnitVersions.companyId,productUnitVersions.productId,productUnitVersions.unitId,productUnitVersions.version]}),
@@ -142,6 +143,7 @@ export const recipeVersions=sqliteTable('recipe_versions',{
 },t=>[
  primaryKey({columns:[t.companyId,t.recipeId,t.id]}),
  uniqueIndex('recipe_version_company_recipe_number').on(t.companyId,t.recipeId,t.version),
+ uniqueIndex('recipe_version_one_active').on(t.companyId,t.recipeId).where(sql`status = 'active'`),
  index('recipe_version_active_lookup').on(t.companyId,t.recipeId,t.activeFrom,t.activeTo),
  foreignKey({columns:[t.companyId,t.recipeId],foreignColumns:[recipeLineages.companyId,recipeLineages.id]}),
 ]);
@@ -192,6 +194,7 @@ export const recipeModifierVersions=sqliteTable('recipe_modifier_versions',{
 },t=>[
  primaryKey({columns:[t.companyId,t.recipeId,t.modifierId,t.id]}),
  uniqueIndex('modifier_version_company_recipe_modifier_number').on(t.companyId,t.recipeId,t.modifierId,t.version),
+ uniqueIndex('modifier_version_one_active').on(t.companyId,t.recipeId,t.modifierId).where(sql`status = 'active'`),
  index('modifier_version_active_lookup').on(t.companyId,t.recipeId,t.modifierId,t.activeFrom,t.activeTo),
  foreignKey({columns:[t.companyId,t.recipeId,t.modifierId],foreignColumns:[recipeModifierLineages.companyId,recipeModifierLineages.recipeId,recipeModifierLineages.id]}),
 ]);

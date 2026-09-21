@@ -3,7 +3,7 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 
 const journal=JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8'));
-assert.equal(journal.entries.length,11,'B3 compatibility harness expects generated migration 0010.');
+assert.ok(journal.entries.length>=11,'B3 compatibility harness expects generated migration 0010 or later.');
 assert.match(journal.entries[10].tag,/^0010_/,'B3 must use the generated 0010 tag.');
 const sql=new DatabaseSync(':memory:');
 sql.exec('PRAGMA foreign_keys = ON');

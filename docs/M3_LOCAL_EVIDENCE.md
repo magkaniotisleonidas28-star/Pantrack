@@ -73,7 +73,11 @@ The existing A2/A3 suites cover consumption behavior through a fake and migratio
 compatibility through SQLite. They do not prove a persistent M3 service exists.
 No real provider acceptance or deployed behavior is claimed.
 
-## Remaining A4 work and gates
+## Remaining work recorded after the calculation packet
+
+This list records what was still open at the end of that earlier packet. The
+A4 implementation items below are completed by the later completion packet;
+A5's external/prerequisite gates remain open.
 
 1. Record M2 acceptance and Person B's review of the A2 contract. Obtain migration
    review of A3 before integration; passing compatibility tests is local evidence.
@@ -86,8 +90,8 @@ No real provider acceptance or deployed behavior is claimed.
 4. Add manager UI for classification, versioned recipes/modifiers, count timing
    and reconciliation, plus anonymous/wrong-company/forbidden-role and concurrency
    tests. Connect exact target explanations and reviewed limits.
-5. Run the full local pipeline and A5 acceptance handoff. Leave A4/M3 unchecked
-   until the complete behavior and required evidence exist.
+5. Run the full local pipeline and A5 acceptance handoff. At this packet point,
+   A4 and M3 remained unchecked pending the complete behavior and evidence.
 
 Rollback for this slice: the calculation module has no runtime caller and makes
 no database writes. Reverting its integration-free source/tests does not alter
@@ -128,3 +132,87 @@ Checks run for this packet:
 Rollback for this packet removes the unused port and its tests; it has no route
 caller and added no migration. Any application written after a future cutover is
 immutable and would require a forward repair rather than history deletion.
+
+## A4 completion packet: persistent management behavior and gated UI
+
+Updated: 2026-09-20. A4 is implemented locally. A5 and M3 acceptance remain
+open because M2's external acceptance and the A-to-B handoff review have not
+been recorded.
+
+The D1 inventory management service now owns exact unit classification,
+versioned pack conversions, stock movements, physical counts, reconciliation
+history, recipe drafts/activation/archive, and modifier
+drafts/activation/archive. It uses company-scoped conditional writes and D1
+transactional batches. Repeated operation identities replay only identical
+input; changed input conflicts. A lost configuration or balance comparison
+rolls back instead of leaving an active projection or dead pending version.
+
+Same-dimension configuration changes preserve canonical balances. Initial
+classification and any otherwise-permitted dimension change require a fresh
+opening count. A dimension change is rejected after a count, movement, incoming
+stock, or recipe reference. Custom conversion changes create new immutable unit
+versions. Counts require an explicit non-future effective time later than every
+existing movement/count, preserve the pre-count estimate and signed variance,
+and reset accumulated estimated usage.
+
+Migration `0011_slimy_vargas.sql` adds one-active-version constraints and
+reviewed SQLite triggers that make activated recipe/modifier rows and their
+ingredient/delta children immutable while still permitting forward-only
+active-to-archived transitions. The upgrade fixture applies `0000` through
+`0010`, seeds existing exact data, applies `0011`, and proves all prior rows are
+byte-for-byte unchanged before exercising the new constraints. Fresh database,
+snapshot, journal, foreign-key, and integrity checks pass.
+
+The inventory route exposes the exact service only when
+`PANTRACK_EXACT_INVENTORY_PREVIEW` is exactly `enabled`; absence or any other
+value keeps the existing API and UI behavior. The preview gives owners and
+managers classification, movement/count, immutable recipe, modifier, and
+reconciliation controls, plus a compatibility planning tab that explains the
+canonical stock position alongside the existing reviewed target/pack result.
+Employees have read-only access. Every inventory
+mutation is recorded in the security audit. While the preview is enabled,
+legacy recipe writes and manual/CSV sales deductions are rejected with a clear
+B4-cutover message. Register mappings remain editable, and no bridge, Clover,
+manual, or CSV endpoint calls the new consumption port. This prevents old and
+new inventory authority from drifting before B4 switches sales ingestion and
+inventory consumption together.
+
+Legacy free-text recipes remain unchanged and appear as requiring a reviewed
+replacement. Activating a reviewed exact replacement atomically archives the
+legacy active version and updates the compatibility projection. Archiving an
+exact recipe without replacement removes that active projection while retaining
+all normalized history.
+
+### Local verification
+
+- PASS: `pnpm typecheck`.
+- PASS: focused ESLint for the exact route, UI, service, contract, gate, and
+  quantity module.
+- PASS: `pnpm test` (16 suites), including A2 fake and D1 consumption, A3/B3
+  migration compatibility, A4 management/migration coverage, legacy sales,
+  bridge, Clover, purchasing safety, and M2 security.
+- PASS: `pnpm db:check` (12 ordered migrations agree with schema and apply to a
+  fresh SQLite database).
+- PASS: `pnpm build`.
+- PASS: `pnpm db:migrate:local`; local-only migration `0011_slimy_vargas.sql`
+  applied successfully with 14 commands.
+- PASS: `pnpm test:local`; local home page, authentication fixture, company
+  creation, catalog, tenant isolation, and sign-out passed. Only fictional local
+  data was used.
+- PASS: `git diff --check`.
+
+The A4 contract suite separately proves exact/concurrent duplicate handling,
+operation-input conflicts, stale-write rejection, same-dimension preservation,
+dimension-change rejection, curated and custom units, count cutoffs/variance,
+recipe/modifier immutability, one activation winner, legacy replacement,
+archive-without-replacement, restart durability, compatibility projections,
+foreign keys, and company isolation. The M2 route suite proves anonymous,
+wrong-company, employee-write, CSRF, manager-write, employee-read, audit, dark
+gate, and legacy-sales-pause behavior.
+
+Rollback before B4 is to leave the preview variable unset and continue using
+the legacy inventory path. Migration `0011` is additive. If it is ever applied
+outside local/test environments, rollback remains forward-only: stop using the
+exact path and repair schema or data with a new migration; never rewrite or
+remove `0011`. No remote migration, deployment, live POS call, customer data,
+supplier action, or production credential was used.

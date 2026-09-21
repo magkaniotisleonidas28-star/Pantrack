@@ -10,15 +10,19 @@ import {Table,TableHeader,TableBody,TableRow,TableHead,TableCell} from '@/compon
 import {Package,RefreshCw,ArrowRight,Plus} from 'lucide-react';
 import {defaultSettings,recommendation,type InventoryRecord,type InventorySettings,type InventoryEvent} from '@/lib/inventory';
 import {type Product,money} from '@/lib/pantry';
+import type {InventoryManagementView} from '@/lib/inventory-management-contract';
+import ExactInventoryPanel from './exact-inventory-panel';
 type Recipe={id:string;name:string;ingredients:{productId:string;quantity:number;unit:string}[]};
 type Edit={productId:string;action:string;id:string;version:number;settings:InventorySettings};
-export default function InventoryPanel({companyId,products,hasDraft,onStage}:{companyId:string;products:Product[];hasDraft:boolean;onStage:(q:Record<string,number>)=>void}){
+export default function InventoryPanel({companyId,products,role,hasDraft,onStage}:{companyId:string;products:Product[];role:string;hasDraft:boolean;onStage:(q:Record<string,number>)=>void}){
 const [records,setRecords]=useState<InventoryRecord[]>([]),[events,setEvents]=useState<InventoryEvent[]>([]),[recipes,setRecipes]=useState<Recipe[]>([]),[imports,setImports]=useState<{reference:string;created:string}[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[edit,setEdit]=useState<Edit|null>(null),[amount,setAmount]=useState(0),[note,setNote]=useState(''),[fromIncoming,setFromIncoming]=useState(true),[busy,setBusy]=useState(false),[recipe,setRecipe]=useState<Recipe|null>(null),[sales,setSales]=useState<Record<string,number>>({}),[reference,setReference]=useState(''),[clock,setClock]=useState(Date.now());
+const [exactEnabled,setExactEnabled]=useState(false),[exact,setExact]=useState<InventoryManagementView|null>(null);
 const lock=useRef(false);
 const [onlyChecks,setOnlyChecks]=useState(false);
 async function call(path:string,body?:Record<string,unknown>){const r=await fetch('/api/'+path+'?companyId='+encodeURIComponent(companyId),body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})}:undefined);const d=await r.json() as any;if(!r.ok)throw new Error(d.error||'Request failed');return d;}
-async function load(){setLoading(true);try{const [i,s]=await Promise.all([call('inventory'),call('sales')]);setRecords(i.records);setEvents(i.events);setRecipes(s.recipes);setImports(s.imports);setClock(Date.now());}catch(e){setError((e as Error).message);}finally{setLoading(false);}}
+async function load(){setLoading(true);try{const [i,s]=await Promise.all([call('inventory'),call('sales')]);setRecords(i.records);setEvents(i.events);setRecipes(s.recipes);setImports(s.imports);setExactEnabled(i.exactEnabled===true);setExact(i.exact??null);setClock(Date.now());}catch(e){setError((e as Error).message);}finally{setLoading(false);}}
 useEffect(()=>{void load();const id=setInterval(()=>setClock(Date.now()),60000);return()=>clearInterval(id);},[]);
+if(exactEnabled&&exact)return <ExactInventoryPanel companyId={companyId} products={products} role={role} view={exact} legacyRecords={records} now={clock} hasDraft={hasDraft} onStage={onStage} loading={loading} onReload={load}/>;
 const lookup=(id:string)=>products.find(p=>p.id===id);
 const plans=records.map(r=>({r,plan:recommendation(r,clock)})),suggested=plans.filter(x=>x.plan.packs>0),exceptions=plans.filter(x=>x.plan.needsCheck||x.plan.expired||x.plan.limited);
 function open(p:Product,action:string){const r=records.find(x=>x.productId===p.id);setEdit({productId:p.id,action,id:crypto.randomUUID(),version:r?.version||0,settings:{...defaultSettings,...r?.settings}});setAmount(action==='count'?Math.max(0,r?.onHand||0):action==='incoming'?r?.incoming||0:0);setNote('');setError('');}

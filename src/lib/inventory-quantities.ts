@@ -7,6 +7,11 @@ const MILLION = BigInt(1000000);
 const MAX = BigInt('9223372036854775807');
 const MIN = -MAX - ONE;
 
+export const CURATED_UNIT_IDS = [
+  'each','mg','g','kg','oz_mass','lb','mL','L','tsp_us','tbsp_us','fl_oz_us','cup_us','pint_us','quart_us','gallon_us',
+] as const;
+export type CuratedUnitId = typeof CURATED_UNIT_IDS[number];
+
 type QuantityErrorCode = 'invalid_quantity' | 'invalid_unit' | 'unit_unclassified' | 'unit_incompatible';
 export class QuantityError extends Error {
   constructor(public readonly code: QuantityErrorCode, message: string) {

@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-19
+Updated: 2026-09-20
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -61,6 +61,21 @@ provisioned background jobs, and automatic purchases.
 
 The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The current Linux and Windows CI jobs pass. Provider tests still use mocked responses; real email confirmation/login/recovery and migration/authentication review remain pending. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md) and [local evidence](M2_LOCAL_EVIDENCE.md).
 
+## M3 local implementation
+
+A4's persistent exact inventory behavior is implemented and passes the complete
+local pipeline. It includes exact curated/custom unit classification, atomic
+stock movements and physical-count reconciliation, immutable recipe/modifier
+versions, the durable A-to-B consumption port, migration guardrails, and
+company/role authorization coverage. The manager UI and exact API are behind
+`PANTRACK_EXACT_INVENTORY_PREVIEW=enabled`; the gate is off by default. When it
+is enabled, legacy sales deductions are paused until B4 performs the coordinated
+sales/inventory cutover. See [M3 local evidence](M3_LOCAL_EVIDENCE.md).
+
+This does not accept M3. A5 still requires M2 acceptance and Person B's review
+that M4 can consume the published interface without inventory-specific
+workarounds. No remote migration or deployment has occurred.
+
 ## Deployment health
 
 Repository CI is green for documentation-repair commit `333dbbd`
@@ -117,7 +132,7 @@ does not make M3 or M4 complete before their prerequisite evidence exists.
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
 | M2 — authentication and RBAC | Implemented on `main`; acceptance pending | Local checks and hosted Linux/Windows CI passed. Configure and verify real Supabase email/login/recovery, resolve the Cloudflare build, and review the authentication flow and migration. See [M2 evidence](M2_LOCAL_EVIDENCE.md). |
-| M3 — inventory and recipes | Prototype exists; not complete | Decimal/unit policy, immutable recipe versions, modifiers, opening-count cutoff, reconciliation history, and tests. |
+| M3 — inventory and recipes | A4 implemented locally; acceptance pending | Complete A5 after M2 acceptance and Person B's consumption-contract handoff review. Keep the exact preview disabled until B4 switches sales and inventory together. |
 | M4 — POS ingestion | Prototype exists; not complete | Provider-neutral event model, held-event queue, safe replay/dismiss/correction, event identity, and refund/cancellation policy. |
 | M5 — Clover | OAuth/menu prototype only | Sandbox merchant, completed-order sync, modifiers, cursors, reconciliation, health, and sandbox evidence. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
