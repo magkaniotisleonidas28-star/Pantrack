@@ -11,22 +11,24 @@ globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
 const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts']]){
+for(const [name,path] of [...['companies','workspace','inventory','sales','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
  const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
-const tokens=new Map();let failProvider=false;
+const tokens=new Map(),providerRequests=new Map();let failProvider=false;
 globalThis.fetch=async(url,init={})=>{
  assert.ok(String(url).startsWith('https://test.supabase.co/auth/v1/'),'Only fake Supabase requests are allowed');
+ assert.equal(init.redirect,'manual','Supabase requests must not follow redirects in Workers');
  if(failProvider)return Response.json({error:'offline'},{status:503});
  const path=new URL(url).pathname,body=init.body?JSON.parse(init.body):{},token=init.headers?.Authorization?.slice(7);
+ providerRequests.set(path,(providerRequests.get(path)||0)+1);
  if(path.endsWith('/user')){
    if(!tokens.has(token))return Response.json({error:'expired'},{status:401});
    return Response.json(tokens.get(token));
  }
  if(path.endsWith('/token')){
    const user=Object.values(accounts).find(u=>u.email===body.email);
-   if(!user||body.password!=='correct-password')return Response.json({error:'bad'},{status:400});
+   if(!user||body.password!=='existingpassword')return Response.json({error:'bad'},{status:400});
    const access_token=crypto.randomUUID();tokens.set(access_token,user);return Response.json({access_token,expires_in:3600});
  }
  if(path.endsWith('/verify')){
@@ -38,8 +40,17 @@ globalThis.fetch=async(url,init={})=>{
 };
 function req(name,method='GET',body, cookie='',extra={}){const headers=new Headers({'Content-Type':'application/json',Origin:'https://test',...extra});if(cookie)headers.set('Cookie',cookie);globalThis.m2headers=headers;return new Request('https://test/api/'+name+(method==='GET'?'?companyId=company-a':''),{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{})});}
 async function call(name,method='GET',body,cookie='',extra={}){return modules[name][method](req(name,method,body,cookie,extra));}
-async function login(name){const r=await call('auth','POST',{action:'signin',email:accounts[name].email,password:'correct-password'});assert.equal(r.status,200,await r.clone().text());const cookie=r.headers.get('set-cookie');assert.match(cookie,/__Host-pantrack=[a-f0-9]{64}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=3600; Secure/);return cookie.split(';')[0];}
+async function login(name){const r=await call('auth','POST',{action:'signin',email:accounts[name].email,password:'existingpassword'});assert.equal(r.status,200,await r.clone().text());const cookie=r.headers.get('set-cookie');assert.match(cookie,/__Host-pantrack=[a-f0-9]{64}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=3600; Secure/);return cookie.split(';')[0];}
 const cookies={};for(const name of Object.keys(accounts))cookies[name]=await login(name);
+assert.equal(modules.passwordPolicy.isValidNewPassword('short!'),false,'New passwords require 12 characters.');
+assert.equal(modules.passwordPolicy.isValidNewPassword('longpasswordonly'),false,'New passwords require a special character.');
+assert.equal(modules.passwordPolicy.isValidNewPassword('longpässwordonly'),false,'Letters outside ASCII are not misclassified as special characters.');
+assert.equal(modules.passwordPolicy.isValidNewPassword('valid-password!'),true,'Compliant new passwords are accepted.');
+const signupRequests=providerRequests.get('/auth/v1/signup')||0;
+assert.equal((await call('auth','POST',{action:'signup',email:'signup@example.test',password:'short!'})).status,400,'Signup rejects a password shorter than 12 characters.');
+assert.equal((await call('auth','POST',{action:'signup',email:'signup@example.test',password:'longpasswordonly'})).status,400,'Signup rejects a missing special character before the provider.');
+assert.equal(providerRequests.get('/auth/v1/signup')||0,signupRequests,'Invalid signup does not call the provider.');
+assert.equal((await call('auth','POST',{action:'signup',email:'signup@example.test',password:'valid-password!'})).status,200,'Signup accepts a compliant new password.');
 assert.ok(!JSON.stringify(sql.prepare('SELECT * FROM auth_sessions').all()).includes([...tokens.keys()][0]),'Provider tokens encrypted at rest');
 sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-a','A','now');sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-b','B','now');
 for(const name of ['owner','manager','employee'])sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(accounts[name].id,'company-a',name);
@@ -116,7 +127,7 @@ assert.throws(()=>sql.prepare("UPDATE memberships SET role='employee' WHERE user
 const ownerHash=await modules.authlib.hash(cookies.owner.split('=')[1]);
 sql.prepare('UPDATE auth_sessions SET reauthenticated_at=? WHERE hash=?').run(Date.now()-301000,ownerHash);
 assert.equal((await call('members','POST',{action:'transfer',companyId:'company-a',userId:accounts.invitee.id},cookies.owner)).status,403,'Recent authentication required');
-const reauth=await call('auth','POST',{action:'reauthenticate',password:'correct-password'},cookies.owner);assert.equal(reauth.status,200);const oldCookie=cookies.owner;cookies.owner=reauth.headers.get('set-cookie').split(';')[0];assert.equal((await call('companies','GET',null,oldCookie)).status,401,'Reauthentication rotates sessions');
+const reauth=await call('auth','POST',{action:'reauthenticate',password:'existingpassword'},cookies.owner);assert.equal(reauth.status,200);const oldCookie=cookies.owner;cookies.owner=reauth.headers.get('set-cookie').split(';')[0];assert.equal((await call('companies','GET',null,oldCookie)).status,401,'Reauthentication rotates sessions');
 const offer=await(await call('members','POST',{action:'transfer',companyId:'company-a',userId:accounts.invitee.id},cookies.owner)).json();assert.ok(offer.id);
 const formerOwnerInvite=await invite(accounts.other.email);
 assert.equal((await call('members','POST',{action:'acceptTransfer',companyId:'company-a',id:offer.id},cookies.employee)).status,409);
@@ -147,13 +158,14 @@ cookies.owner=await login('owner');
 const recovery=await call('auth','POST',{action:'verify',type:'recovery',token_hash:'valid-recovery'});assert.equal(recovery.status,200);const recoveryCookie=recovery.headers.get('set-cookie').split(';')[0];
 assert.equal((await call('companies','GET',null,recoveryCookie)).status,401,'Recovery cannot access company data');
 assert.equal((await call('auth','POST',{action:'password',password:'replacement-password'},cookies.owner)).status,403,'Only recovery sessions reset passwords');
+assert.equal((await call('auth','POST',{action:'password',password:'longpasswordonly'},recoveryCookie)).status,400,'Recovery rejects a missing special character.');
 assert.equal((await call('auth','POST',{action:'password',password:'replacement-password'},recoveryCookie)).status,200);
 assert.equal((await call('companies','GET',null,cookies.owner)).status,401,'Recovery invalidates other sessions');
 assert.equal(sql.prepare('SELECT count(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,0);
 accounts.other.email_confirmed_at='';
-assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'correct-password'})).status,400,'Unconfirmed email rejected');
+assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'existingpassword'})).status,400,'Unconfirmed email rejected');
 accounts.other.email_confirmed_at=new Date().toISOString();accounts.other.is_anonymous=true;
-assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'correct-password'})).status,400,'Anonymous provider identity rejected');
+assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'existingpassword'})).status,400,'Anonymous provider identity rejected');
 delete accounts.other.is_anonymous;
 assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'wrong'})).status,400,'Wrong password rejected');
 assert.equal(sql.prepare('PRAGMA integrity_check').get().integrity_check,'ok');

@@ -23,3 +23,7 @@ URLs, a real confirmation/login/recovery walkthrough, resolution of the
 Cloudflare build, and product-owner review of the migration/authentication flow.
 Legacy hosted identities require a separately reviewed mapping before migrating
 existing hosted data. M2 is therefore not yet accepted for independent deployment.
+
+Later partial development-provider results are recorded separately in
+[M2 development auth evidence](M2_DEV_AUTH_EVIDENCE.md). The results do not
+change the local-only scope of the checks above or accept M2.

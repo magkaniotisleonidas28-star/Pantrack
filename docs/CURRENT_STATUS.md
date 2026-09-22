@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-20
+Updated: 2026-09-22
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -53,13 +53,13 @@ are not proof of live production integration.
   connection framework, and scheduled-check endpoint.
 - Clover OAuth authorization/menu loading and hosted Stripe payment-method setup.
 
-The following remain unverified against real services: Supabase login/email delivery,
-live Clover sales sync, a second POS, a real supplier adapter, live payments,
+The following remain unverified against real services: live Clover sales sync,
+a second POS, a real supplier adapter, live payments,
 provisioned background jobs, and automatic purchases.
 
 ## M2 implementation
 
-The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The current Linux and Windows CI jobs pass. Provider tests still use mocked responses; real email confirmation/login/recovery and migration/authentication review remain pending. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md) and [local evidence](M2_LOCAL_EVIDENCE.md).
+The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The current Linux and Windows CI jobs pass. Provider tests still use mocked responses. A contributor reported successful development Supabase email confirmation, login, fictional-company creation, sign-out, return to the same owner membership, basic password recovery, an employee invitation/read-only UI, manager operational access with a direct financial-access denial, and switching between manager and owner roles in different companies; this is partial real-provider evidence, not M2 acceptance. Concurrent-session revocation, remaining forbidden-role checks, and the rest of the C1 walkthrough, migration/authentication review, and deployment repair remain pending. The password-policy guidance and validation mismatch is fixed locally but still needs a development-provider retest. The membership panel still required a page refresh to show acceptance performed in another browser. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md), [local evidence](M2_LOCAL_EVIDENCE.md), and [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
 
 ## M3 local implementation
 
@@ -92,7 +92,7 @@ public release, and keep production data and real users out of this environment.
 | Service | Reported status | Still needed |
 | --- | --- | --- |
 | GitHub | Repository connected; milestone branches consolidated into `main`; current Ubuntu and Windows CI passed. | Keep `main` as the only long-lived branch. Use isolated, short-lived workstream branches/worktrees only while multiple contributors are active, then merge and delete them. Preserve the required checks. |
-| Supabase | The GitHub Supabase Preview check passes, which indicates an app connection but does not establish working Pantrack authentication. | Confirm the development project settings, Email provider, templates, callback URLs, and real confirmation/login/recovery walkthrough. |
+| Supabase | A contributor reported successful local development confirmation, login, basic recovery, and owner-workspace persistence using the new project and Resend. The password-policy mismatch is fixed locally. The Preview check alone remains insufficient evidence. | Re-test compliant and noncompliant signup/recovery passwords with the development provider, then complete the remaining real-provider walkthrough, including concurrent-session revocation. |
 | Cloudflare | Repository integration is active and attempted a Worker build for current `main`; that build failed. | Diagnose the failed build before deployment. Do not configure production data or users while M2 acceptance remains open. |
 | Custom domain | None required yet. | A free temporary URL will be `https://WORKER-NAME.magkaniotisleonidas28.workers.dev`. Buy/add a custom domain before a real café pilot. |
 
@@ -101,24 +101,18 @@ supplier credentials, or payment details into chat or source control.
 
 ## What you need to do next
 
-1. Diagnose the failed Cloudflare Workers build for the current `main` commit.
-2. In the Supabase project, open **Authentication → Providers**, enable **Email**, and
-   keep email confirmation enabled.
-3. In **Authentication → URL Configuration**, keep these local redirect URLs:
-
-   ```text
-   http://127.0.0.1:5173/auth/callback
-   http://localhost:5173/auth/callback
-   ```
-
-   Keep `http://127.0.0.1:5173` as the Site URL until Pantrack has an actual
-   deployed Worker URL. Do not add the wildcard `*-pantrack...workers.dev` as a
-   callback URL.
-4. Configure the development project's URL and publishable key through ignored
-   local variables. Never use or expose a service-role key.
+1. Keep manual development-provider acceptance focused on external seams and
+   happy paths. Use the M2 security suite for deterministic invitation,
+   authorization, ownership, replay, and expiry edge cases.
+2. Re-test the locally fixed signup and recovery password policy against the
+   development provider as recorded in [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
+3. Add regression coverage for the discovered development/runtime integration
+   failures before continuing the remaining provider and deployment smoke.
+4. Review the additive M2 migration and authentication flow, and resolve the
+   failed Cloudflare Workers build before deployment.
 5. Do not migrate remote D1, configure production secrets, or invite real users
-   yet. M2 now implements verified Supabase sessions and company role checks;
-   complete the setup and provider walkthrough in [M2_SETUP.md](M2_SETUP.md).
+   while M2 acceptance remains open. Keep `http://127.0.0.1:5173` as the
+   development Supabase Site URL until a reviewed hosted URL is available.
 
 While the M2 acceptance owner performs those steps, the other two workstreams
 may begin local-only M3 design/fixtures and the M4 event contract against fakes.

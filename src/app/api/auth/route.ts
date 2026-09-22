@@ -1,12 +1,14 @@
 import {appOrigin,audit,cookieValue,createSession,csrf,hash,sessionCookie,sessionFromHeaders,supabase,verifyToken} from '@/lib/auth';
 import {database} from '@/db/raw';
+import {isValidNewPassword,NEW_PASSWORD_MIN_LENGTH,NEW_PASSWORD_REQUIREMENT} from '@/lib/password-policy';
 import {z} from 'zod';
+const newPassword=z.string().min(NEW_PASSWORD_MIN_LENGTH).max(1024).refine(isValidNewPassword);
 const input=z.discriminatedUnion('action',[
   z.object({action:z.literal('signin'),email:z.string().email().max(254),password:z.string().min(1).max(1024)}),
-  z.object({action:z.literal('signup'),email:z.string().email().max(254),password:z.string().min(12).max(1024)}),
+  z.object({action:z.literal('signup'),email:z.string().email().max(254),password:newPassword}),
   z.object({action:z.literal('recover'),email:z.string().email().max(254)}),
   z.object({action:z.literal('verify'),token_hash:z.string().min(1).max(2000),type:z.enum(['signup','recovery'])}),
-  z.object({action:z.literal('password'),password:z.string().min(12).max(1024)}),
+  z.object({action:z.literal('password'),password:newPassword}),
   z.object({action:z.literal('reauthenticate'),password:z.string().min(1).max(1024)}),
   z.object({action:z.literal('signout')}),
 ]);
@@ -51,5 +53,5 @@ export async function POST(req:Request){
     const recovery=b.action==='verify'&&b.type==='recovery';
     const fresh=await createSession(result,recovery,session?.sessionHash);
     return reply({ok:true,recovery},sessionCookie(fresh.token,fresh.seconds));
-  }catch(e){return Response.json({error:e instanceof z.ZodError?'Check your email and password (new passwords need at least 12 characters).':e instanceof Error?e.message:'Authentication unavailable.'},{status:400,headers:{'Cache-Control':'no-store'}});}
+  }catch(e){return Response.json({error:e instanceof z.ZodError?'Check your email and password. '+NEW_PASSWORD_REQUIREMENT:e instanceof Error?e.message:'Authentication unavailable.'},{status:400,headers:{'Cache-Control':'no-store'}});}
 }
