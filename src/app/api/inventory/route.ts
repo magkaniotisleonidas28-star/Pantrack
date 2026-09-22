@@ -9,8 +9,8 @@ const settings=z.object({targetStock:amount.nullable().optional().default(null),
 async function handleGET(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  try{const companyId=new URL(req.url).searchParams.get('companyId');if(!(await companyAccess(u.userId,companyId)))return Response.json({error:'Company access denied.'},{status:403});
- const db=database();const [r,e]=await Promise.all([db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM inventory_events WHERE company_id=? ORDER BY created DESC LIMIT 100').bind(companyId).all<{data:string}>()]);
- return Response.json({records:r.results.map(x=>JSON.parse(x.data)),events:e.results.map(x=>JSON.parse(x.data))},{headers:{'Cache-Control':'no-store'}});
+ const db=database();const [r,e,exact]=await Promise.all([db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM inventory_events WHERE company_id=? ORDER BY created DESC LIMIT 100').bind(companyId).all<{data:string}>(),db.prepare("SELECT product_id FROM inventory_config_versions WHERE company_id=? AND status='active'").bind(companyId).all<{product_id:string}>()]);
+ return Response.json({records:r.results.map(x=>JSON.parse(x.data)),events:e.results.map(x=>JSON.parse(x.data)),exactProductIds:exact.results.map(x=>x.product_id)},{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load inventory. Please retry.'},{status:503});}
 }
 async function handlePOST(req:Request){
@@ -21,6 +21,7 @@ async function handlePOST(req:Request){
  const b=z.object({companyId:z.string().min(1).max(200),productId:z.string().min(1).max(100),id:z.string().uuid(),version:z.number().int().min(0),action:z.enum(['settings','count','receive','use','waste','incoming']),quantity:amount.optional(),settings:settings.optional(),note:z.string().trim().max(300).default(''),fromIncoming:z.boolean().optional()}).strict().parse(await req.json());
  const member=await companyAccess(u.userId,b.companyId);if(!member||!['owner','manager'].includes(member.role))return Response.json({error:'You cannot update this company’s inventory.'},{status:403});
  const db=database();if(!await db.prepare('SELECT id FROM products WHERE owner=? AND id=?').bind(b.companyId,b.productId).first())return Response.json({error:'Product not found.'},{status:404});
+ if(await db.prepare("SELECT id FROM inventory_config_versions WHERE company_id=? AND product_id=? AND status='active'").bind(b.companyId,b.productId).first())return Response.json({error:'This product uses exact stock. Open Exact stock preview.'},{status:409});
  const prior=await db.prepare('SELECT product_id FROM inventory_events WHERE company_id=? AND id=?').bind(b.companyId,b.id).first<{product_id:string}>();
  if(prior){if(prior.product_id!==b.productId)return Response.json({error:'Update reference already used.'},{status:409});return Response.json({ok:true,replayed:true});}
  const old=await db.prepare('SELECT data,version FROM inventory WHERE company_id=? AND product_id=?').bind(b.companyId,b.productId).first<{data:string;version:number}>();
@@ -45,8 +46,8 @@ async function handlePOST(req:Request){
  r.version=b.version+1;r.updated=now;
  const event={id:b.id,productId:b.productId,action:b.action,quantity:b.quantity??null,note:b.note,created:now,actor:u.email};
  await db.batch([
- db.prepare('INSERT OR IGNORE INTO inventory_events(company_id,id,product_id,data,created) SELECT ?,?,?,?,? WHERE COALESCE((SELECT version FROM inventory WHERE company_id=? AND product_id=?),0)=?').bind(b.companyId,b.id,b.productId,JSON.stringify(event),now,b.companyId,b.productId,b.version),
- db.prepare('INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE EXISTS (SELECT 1 FROM inventory_events WHERE company_id=? AND id=?) AND COALESCE((SELECT version FROM inventory WHERE company_id=? AND product_id=?),0)=? ON CONFLICT(company_id,product_id) DO UPDATE SET data=excluded.data,version=excluded.version WHERE inventory.version=?').bind(b.companyId,b.productId,JSON.stringify(r),r.version,b.companyId,b.id,b.companyId,b.productId,b.version,b.version)
+ db.prepare("INSERT OR IGNORE INTO inventory_events(company_id,id,product_id,data,created) SELECT ?,?,?,?,? WHERE COALESCE((SELECT version FROM inventory WHERE company_id=? AND product_id=?),0)=? AND NOT EXISTS (SELECT 1 FROM inventory_config_versions WHERE company_id=? AND product_id=? AND status='active')").bind(b.companyId,b.id,b.productId,JSON.stringify(event),now,b.companyId,b.productId,b.version,b.companyId,b.productId),
+ db.prepare("INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE EXISTS (SELECT 1 FROM inventory_events WHERE company_id=? AND id=?) AND COALESCE((SELECT version FROM inventory WHERE company_id=? AND product_id=?),0)=? AND NOT EXISTS (SELECT 1 FROM inventory_config_versions WHERE company_id=? AND product_id=? AND status='active') ON CONFLICT(company_id,product_id) DO UPDATE SET data=excluded.data,version=excluded.version WHERE inventory.version=?").bind(b.companyId,b.productId,JSON.stringify(r),r.version,b.companyId,b.id,b.companyId,b.productId,b.version,b.companyId,b.productId,b.version)
  ]);
  if(!await db.prepare('SELECT id FROM inventory_events WHERE company_id=? AND id=?').bind(b.companyId,b.id).first())return Response.json({error:'Inventory changed. Refresh and retry.'},{status:409});
  return Response.json({ok:true});

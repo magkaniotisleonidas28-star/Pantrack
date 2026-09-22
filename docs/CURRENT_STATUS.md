@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-19
+Updated: 2026-09-22 (A2/A4 local updates; other service evidence retains its recorded dates)
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -60,6 +60,25 @@ provisioned background jobs, and automatic purchases.
 ## M2 implementation
 
 The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The current Linux and Windows CI jobs pass. Provider tests still use mocked responses; real email confirmation/login/recovery and migration/authentication review remain pending. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md) and [local evidence](M2_LOCAL_EVIDENCE.md).
+
+## A2 inventory-to-sales handoff
+
+A2 is complete locally: the shared consumption contract/fake and B-side consumer
+repairs have local test evidence, an independent review with no blocking findings,
+and project-owner approval dated 2026-09-21. See the
+[A2 handoff review](A2_B_CONSUMER_REVIEW.md). The reviewed changes are not yet
+committed or pushed. A4 inventory behavior and B4 runtime integration remain
+incomplete; this does not accept M3/M4 or enable live sales processing.
+
+A4 now also has locally tested internal recipe and modifier services for drafts,
+activation and archival that preserve old versions and check manager permissions.
+See [recipe lifecycle evidence](M3_RECIPE_LOCAL_EVIDENCE.md) and
+[modifier lifecycle evidence](M3_MODIFIER_LOCAL_EVIDENCE.md). Internal stock
+configuration and physical-count writers now have
+[local evidence](M3_COUNT_CONFIGURATION_LOCAL_EVIDENCE.md). A gated
+[exact-stock manager preview](M3_EXACT_PREVIEW_LOCAL_EVIDENCE.md) now connects
+those services to a tested route for new products; it is off by default. Legacy
+reconciliation, the authority switch and B4 sales integration remain unfinished.
 
 ## Deployment health
 

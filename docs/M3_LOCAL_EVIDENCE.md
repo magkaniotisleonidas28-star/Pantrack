@@ -1,5 +1,19 @@
 # M3 local implementation evidence
 
+Latest A2 handoff status: [approved local handoff](A2_B_CONSUMER_REVIEW.md),
+2026-09-21. Independent review found no blocking issues and the project owner
+approved A2. Reviewed changes still need a commit; A4/M3 remain incomplete.
+Earlier sections below retain their historical status.
+
+Latest A4 slices: [recipe draft/activation service](M3_RECIPE_LOCAL_EVIDENCE.md)
+and [modifier draft/activation service](M3_MODIFIER_LOCAL_EVIDENCE.md) are
+locally tested, including immutable history, manager permissions and concurrent
+sales/activation. The later [configuration/count writers](M3_COUNT_CONFIGURATION_LOCAL_EVIDENCE.md)
+are also locally tested. Full runtime cutover remains unfinished.
+The later [gated exact-stock preview](M3_EXACT_PREVIEW_LOCAL_EVIDENCE.md)
+adds a manager route and screen for new products only. Migrated product cutover
+and B4 sales integration remain open.
+
 Updated: 2026-09-19. Workstream A. M3 is not accepted.
 
 ## A4 task packet: exact quantity and target calculations
@@ -93,3 +107,162 @@ Rollback for this slice: the calculation module has no runtime caller and makes
 no database writes. Reverting its integration-free source/tests does not alter
 inventory or history. A3 remains additive; any later deployed schema repair must
 be a new migration.
+
+## A4 follow-up: atomic inventory persistence (2026-09-21)
+
+Outcome: the internal saving layer is complete locally against a SQLite-backed
+D1 batch harness. A4 and M3 remain incomplete. This section supplements the
+earlier calculation evidence; it does not replace its historical results.
+
+### Task contract and implementation
+
+Objective: persist an already-resolved sale's ingredient deductions, application
+receipt and audit events together, with company isolation, duplicate protection
+and rejection of stale balance snapshots. Use existing A3 tables; add no schema,
+route, UI, external calls or changes to B's shared consumption contract.
+
+- [D1 inventory store](../src/lib/d1-inventory-consumption-store.ts) binds every
+  read/write to a server-selected company. A mismatched application is rejected.
+- A single batch saves the application, exact balances, estimated usage and
+  ingredient events. A failed ingredient update forces the entire batch to
+  roll back. A stale plan must be reloaded and recalculated as a whole.
+- Updates compare the original configuration, dimension, quantity, usage,
+  version and count cutoff. Concurrent duplicates return the original saved
+  result; a reused key with different canonical input reports a conflict.
+- All arithmetic uses integer text and bigint, including range checks. The
+  existing recipe-selection result is retained with the application for audit.
+- [Store tests](../tests/inventory-consumption-store.mjs) exercise two companies,
+  two ingredients, duplicate and conflicting concurrent calls, competing sales,
+  rollback after a later ingredient changes, count cutoff changes, malformed
+  arithmetic, injected database failure, large quantities, overflow, empty
+  deductions, and replay through a new store instance.
+
+### Boundaries and downstream handoff
+
+This is an internal repository, not an implementation of `InventoryConsumptionPort`
+and not a browser/API input boundary. It trusts the future server-side planner to
+resolve valid recipe/modifier versions and supply a canonical request fingerprint.
+The planner must check saved applications before recalculating a retry, enforce
+configuration classification and recipe eligibility, and handle concurrent
+recipe/configuration activation safely. Authentication and role checks belong
+before the store; there is no new endpoint in this slice. Existing authorization
+tests passed, but do not establish authorization for a future integration.
+
+No runtime route imports this store. Legacy balances are unchanged by this code.
+Before cutover, complete the A2 consumer and A3 migration reviews, implement the
+planner and safe configuration/count services, reconcile legacy writes since
+backfill, and test the actual D1 batch path. Then integrate authorized routes and
+manager screens. M2 acceptance remains required for M3 acceptance.
+
+### Verification in this worktree
+
+- PASS: `node scripts/test.mjs inventory-consumption-contract m3-data-foundations`
+  as the pre-change baseline, using the bundled Node runtime.
+- PASS: `node scripts/test.mjs inventory-consumption-store`; rerun after adding
+  the final large-number, conflict and zero-deduction cases.
+- PASS: `node scripts/test.mjs` (14 suites); the later test-only additions passed
+  the focused rerun above.
+- PASS: `pnpm typecheck` and
+  `eslint src/lib/d1-inventory-consumption-store.ts`.
+- PASS: `pnpm db:check` (11 migrations), `pnpm build`.
+- PASS: `pnpm db:migrate:local`; existing migrations 0008–0010 applied to the
+  local placeholder database. No new migration was created or remote DB touched.
+- FAIL: `pnpm test:local`: the Worker stops before serving requests with
+  `Compatibility flag specified multiple times: nodejs_compat`. The existing
+  `vite.config.ts` local override and `wrangler.jsonc` both specify this flag.
+  These files were not changed. Hand off startup configuration diagnosis to C1.
+- PASS: diff whitespace review and all relative links in this evidence file.
+
+The sandbox initially blocked compiler/Worker process startup with `EPERM`;
+approved local reruns produced the results above. The new persistence behavior
+was tested using SQLite transactions behind a D1-shaped adapter, not a live D1
+service. Local migration success does not prove the new store's actual D1 path.
+No hosted CI, external provider, pilot, deployment or production evidence is claimed.
+
+Rollback: remove the unused store and its test; no runtime data is affected.
+Do not reverse or edit existing migrations applied during local verification.
+Next A4 slice: implement the server-side consumption planner over persisted
+recipe/modifier versions and this store, with sale-time selection and retry tests.
+
+## A4 follow-up: persisted consumption planner (2026-09-21)
+
+Outcome: the internal consumption port now selects persisted recipes/modifiers,
+calculates deductions and commits through the preceding saving layer. Complete
+locally in the SQLite D1 harness; A4/M3 acceptance and API cutover remain open.
+
+### Task contract and implementation
+
+Objective: implement the existing A2 request/result interface over A3 data,
+selecting versions at sale time and preserving whole-sale atomicity and durable
+replay. Preserve all preceding uncommitted work. Stay in A-owned source/tests
+and this evidence file; no migrations, routes, UI or live service changes.
+
+- [Consumption port](../src/lib/d1-inventory-consumption.ts) binds company and
+  actor in its server-side constructor, validates requests, and reads saved
+  applications before loading current inventory. An identical retry returns
+  the original result even if recipes or physical counts have since changed.
+- [Shared engine](../src/lib/inventory-consumption-engine.ts) contains the rules
+  previously in the fake. The [fake module](../src/lib/inventory-consumption-fake.ts)
+  retains its published names through aliases; B's interface and tests remain
+  compatible. Runtime code does not import the fake. Extraction also adds
+  structural request checks and rejects invalid stored version statuses.
+- [Snapshot query](../src/lib/inventory-consumption-snapshot.ts) reads the
+  requested recipe lineages, their ingredients/modifiers and referenced stock
+  configurations/units/balances in one company-scoped SQL statement. Ordered
+  JSON is compared again inside the application insert transaction. Any change
+  invalidates the entire calculation, including a plan with zero deductions.
+- The store's optional snapshot guard preserves its existing callers. The new
+  port always supplies the guard. It retries a stale whole-sale plan up to three
+  attempts, then raises a retryable storage error without claiming the sale key.
+- Legacy recipes and drafts cannot serve as sale recipes. Unclassified units,
+  missing versions/counts, incompatible quantities and negative modifier totals
+  produce review holds; no partial deductions or claimed keys are saved.
+
+### Local proof and remaining boundaries
+
+[Service tests](../tests/inventory-consumption-service.mjs) prove delayed and
+boundary-time recipe selection, modifier totals, durable replay through another
+port instance, equivalent timestamp replay, conflict rejection, two-company
+isolation, simultaneous deliveries and distinct sales, held-then-repaired input,
+and snapshot invalidation during recipe/unit/count edits. They also cover zero
+deductions, negative substitutions, invalid dates/structure, corrupt version
+status and bounded retry exhaustion. Existing A2 and B tests still pass.
+
+The harness uses SQLite transactions with a D1-shaped adapter, not a Worker D1
+binding. No new HTTP endpoint exists, so anonymous and role denial at a future
+route are not proved here. The caller must authorize the company and actor;
+constructing this internal port is not authentication. Existing API security
+suites passed as regression evidence only.
+
+The snapshot intentionally includes all versions for requested recipe lineages.
+Unrelated edits within those lineages can cause conservative retries; actual D1
+execution limits and larger-history performance need verification before route
+integration. Corrupt version intervals/status fail closed as errors. Safe recipe
+activation, count/configuration writers and legacy reconciliation are still
+required, as are M2 acceptance and the A2/A3 handoff reviews.
+
+### Verification and handoff
+
+- PASS: `node scripts/test.mjs inventory-consumption-store inventory-consumption-contract`
+  before implementation (after approved rerun for sandbox compiler `EPERM`).
+- PASS: `node scripts/test.mjs inventory-consumption-service` during development
+  and again after the final invalid-status guard/test.
+- PASS: `node scripts/test.mjs` (15 suites), including fresh migrations and schema
+  validation. This full run preceded only the final invalid-status guard, which
+  passed the focused service rerun above.
+- PASS: `pnpm typecheck`, focused ESLint on all five touched inventory modules,
+  and `pnpm build` before that final guard.
+- PASS: final diff whitespace check and relative links in this evidence file.
+- NOT RERUN: local migration application (no schema changes) and HTTP smoke test.
+  The preceding slice's startup failure from duplicate `nodejs_compat` remains
+  unresolved and belongs to C1; no successful startup is claimed for this slice.
+
+No remote database, deployment, provider, production or pilot action occurred.
+Rollback: remove the unused port/snapshot guard and restore the preceding fake;
+the extraction and planner introduced no runtime writes or schema changes.
+The shared A2 contract is unchanged; B should review the preserved fake exports
+and new port before future B4 integration. The later
+[recipe lifecycle](M3_RECIPE_LOCAL_EVIDENCE.md) and
+[modifier lifecycle](M3_MODIFIER_LOCAL_EVIDENCE.md) slices now provide internal
+draft/activation services. Count reconciliation, authorized routes and manager
+screens remain later A4 work.

@@ -215,11 +215,15 @@ For every numbered item, the assigned person follows the same delivery loop:
   modifier, opening-count cutoff, and physical-count reconciliation decisions.
   Identify how existing inventory and recipe data migrates without rewriting
   history. **Output:** accepted design note and migration plan.
-- [ ] **A2 — Publish the A → B consumption contract.** Define the atomic,
+- [x] **A2 — Publish the A → B consumption contract.** Define the atomic,
   idempotent consumption request/result, recipe-version selection, decimal/unit
   errors, and pre-opening-count result. Review it with Person B. **Output:** small
   shared type module, fake, and contract tests; this unblocks B's M4 application
   work.
+  Local completion, independent review and project-owner approval on 2026-09-21
+  are recorded in [the A2 handoff review](A2_B_CONSUMER_REVIEW.md). The original
+  contract is committed; reviewed consumer repairs remain in the working tree.
+  This checkbox does not claim their commit/merge or B4 runtime integration.
 - [ ] **A3 — Add M3 data foundations.** Through the migration queue, add the
   additive unit, conversion, recipe-version/modifier, count-cutoff, and
   reconciliation structures. Add compatibility tests for existing records.

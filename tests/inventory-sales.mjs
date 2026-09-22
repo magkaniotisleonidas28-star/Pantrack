@@ -76,3 +76,13 @@ globalThis.testUser={userId:'owner-a',email:'a@example.test'};
 assert.equal((await send(sales,{action:'removeMapping',mappingKey:key})).status,200);
 assert.equal((await send(sales,{...mappedSale,reference:'mapped-day-2'})).status,400);
 console.log('PASS: saved mapping CRUD, recipe ownership validation, exact mapping resolution, unmapped-sale blocking, recipe deductions, replay protection, and company isolation.');
+sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a','exact-only','{}');
+sql.prepare(`INSERT INTO product_unit_versions(company_id,product_id,unit_id,version,kind,dimension,label,numerator,denominator,created_by,created_at)
+  VALUES ('company-a','exact-only','g',1,'curated','mass','g','1','1','owner','2026-01-01T00:00:00.000Z')`).run();
+sql.prepare(`INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,effective_from,created_by,created_at)
+  VALUES ('company-a','exact-only','exact-config',1,'active','g',1,'bag','2026-01-01T00:00:00.000Z','owner','2026-01-01T00:00:00.000Z')`).run();
+assert.ok((await (await read()).json()).exactProductIds.includes('exact-only'));
+assert.equal((await send(inv,{id:crypto.randomUUID(),productId:'exact-only',action:'settings',version:0,
+  settings:{...defaultSettings,unit:'g',unitsPerPack:10,dailyUse:1,safety:1}})).status,409);
+assert.equal(sql.prepare("SELECT count(*) AS n FROM inventory_events WHERE company_id='company-a' AND product_id='exact-only'").get().n,0);
+console.log('PASS: the legacy inventory route cannot write a product with active exact configuration.');
