@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-20
+Updated: 2026-09-22
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -68,13 +68,15 @@ local pipeline. It includes exact curated/custom unit classification, atomic
 stock movements and physical-count reconciliation, immutable recipe/modifier
 versions, the durable A-to-B consumption port, migration guardrails, and
 company/role authorization coverage. The manager UI and exact API are behind
-`PANTRACK_EXACT_INVENTORY_PREVIEW=enabled`; the gate is off by default. When it
-is enabled, legacy sales deductions are paused until B4 performs the coordinated
-sales/inventory cutover. See [M3 local evidence](M3_LOCAL_EVIDENCE.md).
+`PANTRACK_EXACT_INVENTORY_PREVIEW=enabled`; the gate is off by default. B4's
+local implementation now uses that same gate for the coordinated durable-sales
+and exact-inventory cutover. See [M3 local evidence](M3_LOCAL_EVIDENCE.md) and
+[B4 local evidence](M4_B4_LOCAL_EVIDENCE.md).
 
-This does not accept M3. A5 still requires M2 acceptance and Person B's review
-that M4 can consume the published interface without inventory-specific
-workarounds. No remote migration or deployment has occurred.
+This does not accept M3. Person B's compatibility review is recorded in the B4
+evidence and found no inventory-specific workaround; A5 still requires M2
+acceptance and Person A's completed M3 acceptance record. No remote migration
+or deployment has occurred.
 
 ## Deployment health
 
@@ -132,8 +134,8 @@ does not make M3 or M4 complete before their prerequisite evidence exists.
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
 | M2 — authentication and RBAC | Implemented on `main`; acceptance pending | Local checks and hosted Linux/Windows CI passed. Configure and verify real Supabase email/login/recovery, resolve the Cloudflare build, and review the authentication flow and migration. See [M2 evidence](M2_LOCAL_EVIDENCE.md). |
-| M3 — inventory and recipes | A4 implemented locally; acceptance pending | Complete A5 after M2 acceptance and Person B's consumption-contract handoff review. Keep the exact preview disabled until B4 switches sales and inventory together. |
-| M4 — POS ingestion | Prototype exists; not complete | Provider-neutral event model, held-event queue, safe replay/dismiss/correction, event identity, and refund/cancellation policy. |
+| M3 — inventory and recipes | A4 implemented locally; acceptance pending | Person B's compatibility review is recorded. Complete A5 after M2 acceptance and keep the exact preview disabled until the coordinated B4 review is complete. |
+| M4 — POS ingestion | B4 implemented locally; acceptance pending | Rerun the blocked HTTP/UI walkthrough, obtain prerequisite M2/M3 acceptance and review, then complete B5 evidence. Clover remains B6. |
 | M5 — Clover | OAuth/menu prototype only | Sandbox merchant, completed-order sync, modifiers, cursors, reconciliation, health, and sandbox evidence. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | Prototype exists; not complete | Frozen snapshots, explainable lifecycle, edits/audit, quantity reservation, and concurrency tests. |
@@ -161,6 +163,7 @@ limited automation.
 - [M1 CI evidence](M1_CI_EVIDENCE.md)
 - [M4 B2 fake-backed local evidence](M4_B2_LOCAL_EVIDENCE.md)
 - [M4 B3 local D1 evidence](M4_B3_LOCAL_EVIDENCE.md)
+- [M4 B4 local exact-sales evidence](M4_B4_LOCAL_EVIDENCE.md)
 - [Detailed milestone readiness and decisions](MILESTONE_READINESS.md)
 - [Full milestone roadmap](PANTRACK_MILESTONES.md)
 - [Branch consolidation record](BRANCH_CONSOLIDATION.md)

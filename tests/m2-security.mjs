@@ -11,7 +11,7 @@ globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
 const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts']]){
+for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts']]){
  const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
@@ -70,6 +70,11 @@ for(const role of ['owner','manager','employee']){
  for(const family of ['clover','payments'])assert.equal((await call(family,'GET',null,cookies[role])).status,role==='owner'?200:403,role+' reads '+family);
  assert.equal((await call('automation','GET',null,cookies[role])).status,role==='employee'?403:200);
 }
+assert.equal((await call('sales/events')).status,401,'Sales event review denies anonymous reads.');
+assert.equal((await call('sales/events','GET',null,cookies.other)).status,403,'Sales event review denies wrong-company reads.');
+assert.equal((await call('sales/events','POST',{companyId:'company-a',action:'dismiss',eventKey:'missing',reason:'reviewed'},cookies.employee)).status,403,'Employees cannot mutate sales events.');
+assert.equal((await call('sales/events','POST',{companyId:'company-b',action:'dismiss',eventKey:'missing',reason:'reviewed'},cookies.manager)).status,403,'Managers cannot mutate another company’s sales events.');
+assert.equal((await call('sales/events','GET',null,cookies.employee)).status,200,'Employees may read safe sales status while the gate is dark.');
 assert.equal((await(await call('inventory','GET',null,cookies.owner)).json()).exactEnabled,false,'Exact inventory is dark by default.');
 globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
 const exactConfigure={companyId:'company-a',action:'configureExact',productId:'milk',operationId:'config-milk',stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'10',effectiveAt:'2026-01-01T00:00:00Z'};
@@ -78,7 +83,18 @@ assert.equal((await call('inventory','POST',{...exactConfigure,companyId:'compan
 assert.equal((await call('inventory','POST',exactConfigure,cookies.manager)).status,200,'Managers can classify company inventory when the preview is enabled.');
 assert.equal(sql.prepare("SELECT count(*) AS count FROM security_audit WHERE company_id='company-a' AND action='inventory.succeeded' AND target='configureExact'").get().count,1,'Exact inventory mutation is audited.');
 assert.equal((await(await call('inventory','GET',null,cookies.employee)).json()).exact.records.length,1,'Employees can read their company exact inventory.');
-assert.equal((await call('sales','POST',{companyId:'company-a',action:'import',reference:'blocked-during-preview',lines:[{recipeId:crypto.randomUUID(),quantity:1}]},cookies.manager)).status,409,'Legacy sales deductions pause during exact preview.');
+assert.equal((await call('sales/events','GET',null,cookies.employee)).status,200,'Employees may read safe exact-sales status.');
+const exactRecipeId=crypto.randomUUID(),exactDraftId=crypto.randomUUID();
+assert.equal((await call('inventory','POST',{companyId:'company-a',action:'saveRecipeDraftExact',recipeId:exactRecipeId,draftId:exactDraftId,name:'Exact milk',ingredients:[{productId:'milk',amount:'1',unitId:'mL'}]},cookies.manager)).status,200,'Manager can save exact recipe draft.');
+assert.equal((await call('inventory','POST',{companyId:'company-a',action:'activateRecipeExact',recipeId:exactRecipeId,versionId:exactDraftId,expectedActiveVersionId:null},cookies.manager)).status,200,'Manager can activate exact recipe.');
+const confirmedSaleTime=new Date().toISOString();
+const exactSale=await call('sales','POST',{companyId:'company-a',action:'import',source:'manual',reference:'exact-manual-sale',occurredAt:confirmedSaleTime,lines:[{recipeId:exactRecipeId,quantity:1}]},cookies.manager);
+assert.equal(exactSale.status,200,await exactSale.clone().text());assert.equal((await exactSale.json()).state,'applied','Manual exact sale applies through B4.');
+assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor,'9000000','B4 route deducts exact inventory.');
+const exactEventKey=sql.prepare("SELECT event_key FROM sales_events WHERE company_id='company-a' AND external_order_id='exact-manual-sale'").get().event_key;
+assert.equal((await call('sales/events','POST',{companyId:'company-a',action:'requestCorrection',eventKey:exactEventKey,reason:'Manager review fixture'},cookies.manager)).status,200,'Manager can request a reviewed correction.');
+const employeeSales=await(await call('sales/events','GET',null,cookies.employee)).json();assert.equal(employeeSales.events.length,1);assert.ok(!JSON.stringify(employeeSales).includes('lines'),'Employee status omits event payload lines.');assert.ok(!JSON.stringify(employeeSales).includes('suggestedMinor'),'Employee correction status omits ingredient quantities.');
+assert.equal((await call('sales','POST',{companyId:'company-a',action:'import',reference:'missing-confirmed-time',lines:[{recipeId:crypto.randomUUID(),quantity:1}]},cookies.manager)).status,400,'Exact sales imports require a manager-confirmed occurrence time.');
 delete globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW;
 assert.deepEqual((await(await call('workspace','GET',null,cookies.employee)).json()).orders,[]);
 assert.equal((await(await call('workspace','GET',null,cookies.manager)).json()).orders.length,1);

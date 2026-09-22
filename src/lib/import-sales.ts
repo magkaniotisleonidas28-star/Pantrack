@@ -5,7 +5,8 @@ export type SalesLine={recipeId?:string;mappingKey?:string;quantity:number};
 export async function importSales(companyId:string,reference:string,lines:SalesLine[],actor:string){
  const db=database(),rows=await db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(companyId).all<{data:string}>(),records=rows.results.map(x=>JSON.parse(x.data) as InventoryRecord);
 
- if(await db.prepare('SELECT reference FROM sales_imports WHERE company_id=? AND reference=?').bind(companyId,reference).first())return {ok:true,replayed:true};
+ const eventReference=reference.startsWith('bridge:')?reference.slice(7):reference;
+ if(await db.prepare('SELECT reference FROM sales_imports WHERE company_id=? AND reference=?').bind(companyId,reference).first()||await db.prepare('SELECT event_key FROM sales_events WHERE company_id=? AND external_order_id=? LIMIT 1').bind(companyId,eventReference).first())return {ok:true,replayed:true};
  const mapped=await db.prepare('SELECT data FROM register_mappings WHERE company_id=?').bind(companyId).all<{data:string}>();
  const mappings=mapped.results.map(x=>JSON.parse(x.data) as {key:string;recipeId:string});
  const resolvedLines=lines.map(line=>{const recipeId=line.recipeId||mappings.find(m=>m.key===line.mappingKey)?.recipeId;if(!recipeId)throw new Error('Unmapped register item. Map every item before importing; no stock was deducted.');return {...line,recipeId};});

@@ -12,8 +12,11 @@ import {
   type SalesEventState,
   type SalesEventStore,
   type SalesEventV1,
+  type SalesHistoryEntry,
+  type SalesOccurrenceConfirmation,
   type SalesReceipt,
   type SalesResolution,
+  type SalesStatusSummary,
 } from '@/lib/sales-ingestion';
 
 type EventRow = {
@@ -340,6 +343,52 @@ export class D1SalesEventStore implements SalesEventStore {
         )`).bind(companyId,audit.auditId,audit.eventKey,audit.action,audit.actor,audit.at,audit.reason ?? null,companyId,value.correctionId),
     ]);
     if (results.some(result => changes(result) !== 1)) throw new SalesIngestionError('not_found', 'Sales event was not found.');
+  }
+
+  async confirmOccurrence(companyId: string, value: SalesOccurrenceConfirmation, audit: SalesAuditEntry) {
+    if (audit.action !== 'occurrence_confirmed' || audit.eventKey !== value.eventKey || audit.at !== value.confirmedAt) throw new SalesIngestionError('invalid_state', 'Occurrence confirmation linkage is invalid.');
+    const results=await this.db.batch([
+      this.db.prepare(`INSERT INTO sales_event_occurrence_confirmations(company_id,event_key,occurred_at,actor,reason,confirmed_at)
+        SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sales_event_states WHERE company_id=? AND event_key=? AND state='held')
+        AND NOT EXISTS(SELECT 1 FROM sales_event_occurrence_confirmations WHERE company_id=? AND event_key=?)`).bind(companyId,value.eventKey,value.occurredAt,value.actor,value.reason,value.confirmedAt,companyId,value.eventKey,companyId,value.eventKey),
+      this.db.prepare(`UPDATE sales_event_states SET state='received',last_reason=?,transition_actor=?,updated_at=?
+        WHERE company_id=? AND event_key=? AND state='held' AND EXISTS(
+          SELECT 1 FROM sales_event_occurrence_confirmations WHERE company_id=? AND event_key=?)`).bind(value.reason,value.actor,value.confirmedAt,companyId,value.eventKey,companyId,value.eventKey),
+      this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
+        SELECT ?,?,?,?,?,?,?,NULL WHERE EXISTS(SELECT 1 FROM sales_event_occurrence_confirmations WHERE company_id=? AND event_key=?)
+        AND NOT EXISTS(SELECT 1 FROM sales_event_audits WHERE company_id=? AND event_key=? AND action='occurrence_confirmed')`).bind(companyId,audit.auditId,audit.eventKey,audit.action,audit.actor,audit.at,audit.reason??null,companyId,value.eventKey,companyId,value.eventKey),
+    ]);
+    if(results.some(result=>changes(result)!==1))throw new SalesIngestionError('invalid_state','Occurrence time is missing, already confirmed, or no longer held.');
+  }
+
+  async occurrenceConfirmation(companyId: string,eventKey: string){
+    const row=await this.db.prepare(`SELECT event_key,occurred_at,actor,reason,confirmed_at FROM sales_event_occurrence_confirmations
+      WHERE company_id=? AND event_key=?`).bind(companyId,eventKey).first<{event_key:string;occurred_at:string;actor:string;reason:string;confirmed_at:string}>();
+    return row?{eventKey:row.event_key,occurredAt:row.occurred_at,actor:row.actor,reason:row.reason,confirmedAt:row.confirmed_at}:null;
+  }
+
+  async listStatus(companyId:string,limit:number):Promise<SalesStatusSummary[]>{
+    if(!Number.isSafeInteger(limit)||limit<1||limit>100)throw new SalesIngestionError('invalid_limit','List limit must be between 1 and 100.');
+    const rows=await this.db.prepare(`SELECT e.event_key,s.state,json_extract(e.normalized_json,'$.source.kind') AS source_kind,
+      e.provider,e.external_order_id,json_extract(e.normalized_json,'$.eventType') AS event_type,
+      COALESCE(c.occurred_at,e.occurred_at) AS occurred_at,e.received_at,
+      CASE WHEN c.event_key IS NULL THEN json_extract(e.normalized_json,'$.timeQuality') ELSE 'confirmed' END AS time_quality,
+      e.revision,s.last_reason FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key
+      LEFT JOIN sales_event_occurrence_confirmations c ON c.company_id=e.company_id AND c.event_key=e.event_key
+      WHERE e.company_id=? ORDER BY e.received_at DESC,e.event_key LIMIT ?`).bind(companyId,limit).all<{event_key:string;state:SalesStatusSummary['state'];source_kind:SalesStatusSummary['sourceKind'];provider:string;external_order_id:string;event_type:SalesStatusSummary['eventType'];occurred_at:string;received_at:string;time_quality:SalesStatusSummary['timeQuality'];revision:number;last_reason:string|null}>();
+    return rows.results.map(row=>({eventKey:row.event_key,state:row.state,sourceKind:row.source_kind,provider:row.provider,externalReference:row.external_order_id,eventType:row.event_type,occurredAt:row.occurred_at,receivedAt:row.received_at,timeQuality:row.time_quality,revision:row.revision,lastReason:row.last_reason}));
+  }
+
+  async history(companyId:string,eventKey:string,limit:number):Promise<SalesHistoryEntry[]>{
+    if(!Number.isSafeInteger(limit)||limit<1||limit>100)throw new SalesIngestionError('invalid_limit','History limit must be between 1 and 100.');
+    if(!await this.event(companyId,eventKey))throw new SalesIngestionError('not_found','Sales event was not found.');
+    const rows=await this.db.prepare(`SELECT kind,at,label,reason FROM (
+      SELECT 'transition' AS kind,at,COALESCE(from_state,'none')||':'||to_state AS label,reason FROM sales_event_transitions WHERE company_id=? AND event_key=?
+      UNION ALL SELECT 'attempt',r.completed_at,r.outcome,COALESCE(r.error_code,r.held_reasons_json) FROM sales_event_attempt_results r WHERE r.company_id=? AND r.event_key=?
+      UNION ALL SELECT 'resolution',at,kind,reason FROM sales_event_resolutions WHERE company_id=? AND event_key=?
+      UNION ALL SELECT 'audit',at,action,reason FROM sales_event_audits WHERE company_id=? AND event_key=?
+    ) ORDER BY at DESC LIMIT ?`).bind(companyId,eventKey,companyId,eventKey,companyId,eventKey,companyId,eventKey,limit).all<{kind:SalesHistoryEntry['kind'];at:string;label:string;reason:string|null}>();
+    return rows.results;
   }
 
   async state(companyId: string, eventKey: string) {

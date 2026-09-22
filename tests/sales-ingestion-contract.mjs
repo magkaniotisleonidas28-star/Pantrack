@@ -303,6 +303,12 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  await h.service.process('company-a',held.eventKey);assert.equal(await h.store.state('company-a',held.eventKey),'held');assert.equal(h.store.snapshot().attempts.length,2);
  await h.service.dismiss('company-a',held.eventKey,owner,'Cannot establish occurrence time');assert.equal(await h.store.state('company-a',held.eventKey),'dismissed');
 
+ const confirmable=await h.service.receive(nativeContext(),baseDraft({externalEventId:'confirmable',externalOrderId:'confirmable',timeQuality:'inferred'}));await h.service.process('company-a',confirmable.eventKey);
+ for(const actor of [null,employee,outsider,machine])await assert.rejects(()=>h.service.confirmOccurrence('company-a',confirmable.eventKey,actor,'2026-02-15T17:00:00Z','Register close reviewed'),error=>['unauthenticated','forbidden_role','wrong_company'].includes(error.code));
+ await assert.rejects(()=>h.service.confirmOccurrence('company-a',confirmable.eventKey,manager,'2026-04-01T00:00:00Z','Register close reviewed'),error=>error.code==='invalid_occurrence_time');
+ await h.service.confirmOccurrence('company-a',confirmable.eventKey,manager,'2026-02-15T17:00:00Z','Register close reviewed');assert.equal(await h.store.state('company-a',confirmable.eventKey),'received');
+ await h.service.process('company-a',confirmable.eventKey);assert.equal(await h.store.state('company-a',confirmable.eventKey),'applied');assert.equal((await h.service.readStatus('company-a',confirmable.eventKey,employee)).occurredAt,'2026-02-15T17:00:00.000Z');
+
  const applied=await h.service.receive(nativeContext(),baseDraft({externalEventId:'applied',externalOrderId:'applied'}));await h.service.process('company-a',applied.eventKey);
  await assert.rejects(()=>h.service.requestCorrection('company-a',applied.eventKey,employee,'mistake'),error=>error.code==='forbidden_role');
  const before=h.inventory.getBalance('company-a','milk');const correction=await h.service.requestCorrection('company-a',applied.eventKey,manager,'Wrong menu mapping');assert.equal(correction.status,'pending');assert.equal(await h.store.state('company-a',applied.eventKey),'applied');assert.deepEqual(h.inventory.getBalance('company-a','milk'),before);
