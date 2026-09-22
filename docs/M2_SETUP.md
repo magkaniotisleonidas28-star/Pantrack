@@ -22,7 +22,7 @@ Keep the encryption key stable to retain current sessions. Replacing it invalida
 
 ## Supabase dashboard configuration
 
-1. Enable Email/password authentication and email confirmation in a development project. Disable anonymous sign-in. Use a password minimum of at least 12 characters.
+1. Enable Email/password authentication and email confirmation in a development project. Disable anonymous sign-in. Require passwords of at least 12 characters with at least one special character, matching Pantrack's new-password validation.
 2. Set Site URL to `http://127.0.0.1:5173`. Allow the exact local `/auth/callback` URL. Add the localhost variant only if testing that origin, with a matching `APP_ORIGIN`.
 3. In the confirmation email template, use:
 
@@ -48,7 +48,7 @@ These templates are required: the application expects server-side token-hash ver
 - Request recovery, follow the email, change password, and confirm other Pantrack sessions are revoked. Verify an expired session requires signing in again.
 - Review security history as owner and confirm secrets are absent.
 
-The automated suite covers these security rules with mocked Supabase responses and a real local SQLite engine. This dashboard/email walkthrough remains required evidence; it has not been performed in this workspace.
+The automated suite covers these security rules with mocked Supabase responses and a real local SQLite engine. This dashboard/email walkthrough remains required evidence and is only partially complete; see [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
 
 ## Migration review
 

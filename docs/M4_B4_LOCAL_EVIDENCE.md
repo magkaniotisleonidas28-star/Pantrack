@@ -102,11 +102,10 @@ migration merge queue and obtain migration review.
   commands on the original run and reported no pending migrations on the
   2026-09-22 review run.
 - PASS — `git diff --check`.
-- FAIL — `pnpm test:local`, reconfirmed on 2026-09-22. The sandboxed attempt
-  could not bind to `127.0.0.1`; after granting narrow loopback permission, the
-  pre-existing local Vite/Workers configuration supplied `nodejs_compat` twice
-  and Miniflare exited before serving any page. No B4 request ran in that smoke
-  process.
+- PASS — `pnpm test:local` after merging C1's local runtime repair from `main`
+  on 2026-09-22. The served smoke test covered the home page,
+  anonymous/forged-header rejection, local fixture sign-in, company creation,
+  catalog, tenant isolation, and sign-out.
 - FAIL — the optional repository-wide `pnpm lint` exhausted Node's 4 GB heap
   while traversing the ignored, generated 1.5 GB `.sites-runtime` directory.
   Focused lint over all changed source files passed; the normal required local
@@ -128,15 +127,15 @@ Proved locally: the B4 domain, D1, route, authorization, migration, build, and
 gate behavior described above. No mocked provider result is represented as
 sandbox evidence.
 
-Still blocked: a served visual walkthrough; M2 acceptance; Person A's A5/M3
-acceptance record; hosted CI/review; and all external POS evidence. Diagnose the
-shared local/Cloudflare runtime configuration under C1, rerun
-`pnpm test:local`, complete UI QA, and only then consider B4's checklist
-evidence complete. B5 remains the next workstream-B acceptance item after those
-prerequisites; Clover stays in B6.
+Still blocked: the dedicated B4 visual walkthrough; M2 acceptance; Person A's
+A5/M3 acceptance record; hosted CI/review; and all external POS evidence. The
+shared local runtime now starts successfully, but C1's remaining provider and
+deployment acceptance work is still open. Complete B4 UI QA before considering
+the checklist evidence complete. B5 remains the next workstream-B acceptance
+item after those prerequisites; Clover stays in B6.
 
-After C1 is accepted, B5 must rerun the complete pipeline, exercise the manager
-and employee Sales & exceptions screens through served HTTP, verify the four
-included sales paths and correction review in the browser, obtain migration and
-cross-workstream review, and record hosted CI. Do not merge this schema-bearing
-branch or mark B4/M4 accepted before that evidence exists.
+Before B5, exercise the manager and employee Sales & exceptions screens through
+served HTTP, verify the four included sales paths and correction review in the
+browser, obtain migration and cross-workstream review, and record hosted CI. Do
+not merge this schema-bearing branch or mark B4/M4 accepted before that evidence
+exists.

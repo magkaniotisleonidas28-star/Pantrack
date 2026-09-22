@@ -452,7 +452,7 @@ Implementation evidence: all six original suites, type checks, migration checks,
 
 **Objective:** Replace hosting-specific identity assumptions with secure authentication suitable for the chosen deployment platform.
 
-Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCAL_EVIDENCE.md). The implementation is on `main`, and hosted repository CI passes. Real Supabase email/login/recovery verification, the failed Cloudflare Worker build, and migration/authentication review remain pending; these checked items describe automated implementation evidence, not production acceptance.
+Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCAL_EVIDENCE.md). The implementation is on `main`, and hosted repository CI passes. A contributor reported successful development Supabase confirmation/login, basic recovery, owner-workspace persistence, an employee invitation/read-only UI, manager operational access with a direct financial-access denial, and per-company manager/owner switching in [partial development auth evidence](M2_DEV_AUTH_EVIDENCE.md). Remaining provider/deployment smoke, the failed Cloudflare Worker build, and migration/authentication review remain pending; deterministic invitation, ownership, role, replay, and expiry edge cases are automated and should not require duplicate manual evidence. The checked items below describe automated implementation evidence, not production acceptance.
 
 ### Product decisions approved
 
