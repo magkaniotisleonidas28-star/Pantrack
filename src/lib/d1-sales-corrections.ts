@@ -18,7 +18,7 @@ function minor(value:string){
 }
 function factor(value:string){if(value.length>128||!/^[1-9]\d*$/.test(value))throw new SalesIngestionError('corrupt_store','Persisted stock conversion is invalid.');return BigInt(value);}
 function json<T>(value:string,label:string):T{try{return JSON.parse(value) as T;}catch{throw new SalesIngestionError('corrupt_store',`Persisted ${label} JSON is invalid.`);}}
-function changes(result:D1Result<unknown>|undefined){return Number(result?.meta?.changes??0);}
+function changes(result:D1Result<unknown>|undefined){return Number(result?.meta?.changes??result?.meta?.rows_written??0);}
 function legacyValue(minorValue:bigint,row:BalanceRow){
  const numerator=factor(row.numerator),denominator=factor(row.denominator);
  const scale=row.dimension==='count'?BigInt(1):MILLION,negative=minorValue<0,absolute=negative?-minorValue:minorValue;
@@ -50,8 +50,10 @@ export class D1SalesCorrectionService{
     SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sales_event_corrections WHERE company_id=? AND correction_id=?)`).bind(companyId,correctionId,change.productId,change.consumed.dimension,change.consumed.minor,change.consumed.minor,balance.version,companyId,correctionId));});
   statements.push(this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
     SELECT ?,?,?,'correction_requested',?,?,?,NULL WHERE EXISTS(SELECT 1 FROM sales_event_corrections WHERE company_id=? AND correction_id=?)`).bind(companyId,this.id(),eventKey,identity,requestedAt,clean,companyId,correctionId));
-  const result=await this.db.batch(statements);if(result.some(entry=>changes(entry)!==1))throw new SalesIngestionError('invalid_state','This sale already has a correction record.');
-  return (await this.get(companyId,correctionId))!;
+  await this.db.batch(statements);
+  const saved=await this.get(companyId,correctionId);
+  if(!saved||saved.items.length!==applied.changes.length)throw new SalesIngestionError('invalid_state','This sale already has a correction record.');
+  return saved;
  }
 
  async apply(companyId:string,correctionId:string,actor:Actor,approved:Array<{productId:string;minor:string}>):Promise<CorrectionView>{

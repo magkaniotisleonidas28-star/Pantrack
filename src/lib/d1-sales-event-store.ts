@@ -58,7 +58,12 @@ function parseJson<T>(value: string, label: string): T {
 }
 
 function changes(result: D1Result<unknown> | undefined) {
-  return Number(result?.meta?.changes ?? 0);
+  return Number(result?.meta?.changes ?? result?.meta?.rows_written ?? 0);
+}
+
+function selectedChange(result: D1Result<unknown> | undefined) {
+  const row = (result?.results as Array<{changed?: unknown}> | undefined)?.[0];
+  return Number(row?.changed ?? 0);
 }
 
 function assertTime(value: string, label: string) {
@@ -231,7 +236,7 @@ export class D1SalesEventStore implements SalesEventStore {
   async claim(companyId: string, eventKey: string, attempt: SalesAttempt, at: string) {
     if (attempt.eventKey !== eventKey || attempt.startedAt !== at || !Number.isFinite(Date.parse(at)) ||
         !Number.isFinite(Date.parse(attempt.leaseExpiresAt)) || Date.parse(attempt.leaseExpiresAt) <= Date.parse(at)) return false;
-    const results = await this.db.batch([
+    await this.db.batch([
       this.db.prepare(`UPDATE sales_event_states SET state='superseded',lease_attempt_id=NULL,lease_expires_at=NULL,
         last_reason='newer_revision',linked_event_key=?,transition_actor='worker',updated_at=?
         WHERE company_id=? AND lineage_key=(SELECT lineage_key FROM sales_event_states WHERE company_id=? AND event_key=?)
@@ -250,7 +255,11 @@ export class D1SalesEventStore implements SalesEventStore {
           attempt.attemptId,attempt.leaseExpiresAt,at,companyId,eventKey,companyId,attempt.attemptId,eventKey,
         ),
     ]);
-    return changes(results[1]) === 1 && changes(results[2]) === 1;
+    const claimed = await this.db.prepare(`SELECT 1 AS claimed FROM sales_event_states
+      WHERE company_id=? AND event_key=? AND state='processing' AND lease_attempt_id=? AND lease_expires_at=?`).bind(
+      companyId,eventKey,attempt.attemptId,attempt.leaseExpiresAt,
+    ).first<{claimed: number}>();
+    return claimed?.claimed === 1;
   }
 
   async completeAttempt(companyId: string, attempt: SalesAttempt, to: 'applied' | 'held' | 'failed', at: string, reason?: string) {
@@ -272,14 +281,16 @@ export class D1SalesEventStore implements SalesEventStore {
         attempt.errorCode ?? null,
         companyId,attempt.attemptId,attempt.eventKey,companyId,attempt.attemptId,
       ),
+      this.db.prepare('SELECT changes() AS changed'),
       this.db.prepare(`UPDATE sales_event_states SET state=?,lease_attempt_id=NULL,lease_expires_at=NULL,
         last_reason=?,linked_event_key=NULL,transition_actor='worker',updated_at=?
         WHERE company_id=? AND event_key=? AND state='processing' AND lease_attempt_id=?
           AND EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=?)`).bind(
           to,reason ?? null,at,companyId,attempt.eventKey,attempt.attemptId,companyId,attempt.attemptId,
         ),
+      this.db.prepare('SELECT changes() AS changed'),
     ]);
-    if (changes(results[0]) !== 1 || changes(results[1]) !== 1) throw new SalesIngestionError('invalid_attempt', 'Attempt is missing, complete, or no longer owns the lease.');
+    if (selectedChange(results[1]) !== 1 || selectedChange(results[3]) !== 1) throw new SalesIngestionError('invalid_attempt', 'Attempt is missing, complete, or no longer owns the lease.');
   }
 
   async transition(companyId: string, eventKey: string, from: SalesEventState, to: SalesEventState, at: string, reason?: string, linkedEventKey?: string) {

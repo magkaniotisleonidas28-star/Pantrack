@@ -67,6 +67,15 @@ confirmation and one audit entry. Two simultaneous confirmations of the same
 stock correction now both return the one permanent result while inventory and
 linked adjustments change once. Focused regression coverage proves both cases.
 
+The served walkthrough also exposed a local D1 compatibility defect: batched
+writes were committed, but the runtime did not return the per-statement
+`meta.changes` values used to acknowledge a processing lease and its terminal
+result. The store now verifies the persisted lease directly and uses
+transactional `SELECT changes()` checks for attempt completion. Correction
+requests verify their saved review record instead of relying on optional batch
+metadata. This prevents a successful deduction or correction request from
+being reported as failed while retaining exact-one claim/completion behavior.
+
 Conclusion: the B-side integration consumes A's published interface without an
 inventory-specific workaround. This supplies Person B's compatibility review
 for A5, but does not accept A5 or M3; Person A's milestone evidence and the M2
@@ -106,12 +115,25 @@ migration merge queue and obtain migration review.
   on 2026-09-22. The served smoke test covered the home page,
   anonymous/forged-header rejection, local fixture sign-in, company creation,
   catalog, tenant isolation, and sign-out.
+- PASS — dedicated Safari walkthrough against the local served app with the
+  preview switch enabled. A manual sale reduced exact stock once; an exact
+  duplicate displayed “inventory was unchanged”; and a separately reviewed
+  correction restored precisely the suggested amount and could not be applied
+  twice. Recipe CSV and mapped-register CSV uploads each displayed an applied
+  event in their distinct namespace and deducted their one fictional recipe
+  quantity. The owner UI displayed applied, held, and processing states plus
+  correction controls. A temporary local-only employee role displayed the
+  read-only catalog, recipe, and recent safe status list without sales-entry or
+  correction controls; owner access was restored and the temporary membership
+  was removed immediately afterward.
+- PASS — the authenticated bridge path, including old-message occurrence-time
+  holds and confirmed replay, remains covered by the local B4 route/contract
+  suite. No bridge token was created during the browser walkthrough and no live
+  POS was contacted.
 - FAIL — the optional repository-wide `pnpm lint` exhausted Node's 4 GB heap
   while traversing the ignored, generated 1.5 GB `.sites-runtime` directory.
   Focused lint over all changed source files passed; the normal required local
   pipeline does not include the full lint command.
-- NOT RUN — visual browser walkthrough, because the same local runtime failure
-  prevented the UI from being served.
 
 Focused B4 tests prove namespace separation, legacy and rollback deduplication,
 exact/concurrent duplicates, whole-event holds, old-bridge time confirmation,
@@ -127,15 +149,12 @@ Proved locally: the B4 domain, D1, route, authorization, migration, build, and
 gate behavior described above. No mocked provider result is represented as
 sandbox evidence.
 
-Still blocked: the dedicated B4 visual walkthrough; M2 acceptance; Person A's
-A5/M3 acceptance record; hosted CI/review; and all external POS evidence. The
-shared local runtime now starts successfully, but C1's remaining provider and
-deployment acceptance work is still open. Complete B4 UI QA before considering
-the checklist evidence complete. B5 remains the next workstream-B acceptance
-item after those prerequisites; Clover stays in B6.
+Still blocked: M2 acceptance; Person A's A5/M3 acceptance record; hosted
+CI/review; and all external POS evidence. The shared local runtime and B4's
+human-facing UI flows now pass locally, but C1's remaining provider and
+deployment acceptance work is still open. B5 remains the next workstream-B
+acceptance item after those prerequisites; Clover stays in B6.
 
-Before B5, exercise the manager and employee Sales & exceptions screens through
-served HTTP, verify the four included sales paths and correction review in the
-browser, obtain migration and cross-workstream review, and record hosted CI. Do
-not merge this schema-bearing branch or mark B4/M4 accepted before that evidence
-exists.
+Before B5, obtain migration and cross-workstream review, record hosted CI, and
+complete the outstanding M2/M3 acceptance evidence. Do not merge this
+schema-bearing branch or mark B4/M4 accepted before that evidence exists.
