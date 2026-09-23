@@ -24,6 +24,7 @@ import type {
   RecipeDraftInput,
   RecipeVersionView,
 } from './inventory-management-contract';
+import {legacyM3Review} from './legacy-m3-review';
 
 const ZERO = BigInt(0);
 const MILLION = BigInt(1_000_000);
@@ -476,6 +477,6 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const modifiers=await this.db.prepare(`SELECT v.recipe_id,v.modifier_id,v.id,v.version,v.status,v.active_from,v.active_to,l.name FROM recipe_modifier_versions v JOIN recipe_modifier_lineages l ON l.company_id=v.company_id AND l.recipe_id=v.recipe_id AND l.id=v.modifier_id WHERE v.company_id=? ORDER BY v.recipe_id,v.modifier_id,v.version DESC`).bind(companyId).all<ModifierRow>();
     const modifierViews:ModifierVersionView[]=[];
     for(const row of modifiers.results){const deltas=await this.db.prepare('SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_modifier_deltas WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=? ORDER BY position').bind(companyId,row.recipe_id,row.modifier_id,row.id).all<{product_id:string;entered_amount:string;entered_unit_id:string;dimension:UnitDimension;quantity_minor:string}>();modifierViews.push({recipeId:row.recipe_id,modifierId:row.modifier_id,versionId:row.id,version:row.version,status:row.status,name:row.name,activeFrom:row.active_from,activeTo:row.active_to,deltas:deltas.results.map(i=>({productId:i.product_id,amount:i.entered_amount,unitId:i.entered_unit_id,quantity:exact(i.dimension,i.quantity_minor)}))});}
-    return {records:balances.results.map(row=>this.record(row)),reconciliations:reconciliations.results.map(row=>({id:row.id,productId:row.product_id,measured:exact(row.dimension,row.measured_minor),estimateBefore:row.estimate_before_minor===null?null:exact(row.dimension,row.estimate_before_minor),variance:row.variance_minor===null?null:exact(row.dimension,row.variance_minor),effectiveAt:row.effective_at,recordedAt:row.recorded_at,actor:row.actor,note:row.note,opening:Boolean(row.opening)})),legacyRecipeIds:legacyRecipes.results.map(row=>row.recipe_id),recipes:recipeViews,modifiers:modifierViews};
+    return {records:balances.results.map(row=>this.record(row)),reconciliations:reconciliations.results.map(row=>({id:row.id,productId:row.product_id,measured:exact(row.dimension,row.measured_minor),estimateBefore:row.estimate_before_minor===null?null:exact(row.dimension,row.estimate_before_minor),variance:row.variance_minor===null?null:exact(row.dimension,row.variance_minor),effectiveAt:row.effective_at,recordedAt:row.recorded_at,actor:row.actor,note:row.note,opening:Boolean(row.opening)})),legacyRecipeIds:legacyRecipes.results.map(row=>row.recipe_id),recipes:recipeViews,modifiers:modifierViews,legacyReview:await legacyM3Review(this.db,companyId)};
   }
 }

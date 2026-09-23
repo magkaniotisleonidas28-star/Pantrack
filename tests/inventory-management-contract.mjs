@@ -59,6 +59,7 @@ const rejectsCode=async(promise,code)=>assert.rejects(promise,error=>error?.code
 const opened=await configure();
 assert.deepEqual(opened.onHand,{dimension:'volume',minor:'10000000'});
 assert.equal(opened.version,1);
+assert.equal((await service.read('company-a')).legacyReview.products.find(item=>item.productId==='milk').needsOpeningCount,false);
 assert.equal(sql.prepare("SELECT count(*) AS count FROM inventory_reconciliations WHERE company_id='company-a'").get().count,1);
 assert.equal((await configure()).version,1,'Identical configuration receipt is idempotent.');
 assert.equal(sql.prepare("SELECT version FROM inventory WHERE company_id='company-a' AND product_id='milk'").get().version,1);
@@ -101,6 +102,7 @@ assert.equal(sql.prepare("SELECT count(*) AS count FROM inventory_config_version
 const beans=await configure({productId:'beans',operationId:'config-beans',stockUnit:{kind:'custom',id:'scoop',label:'7 g scoop',dimension:'mass',numerator:'7',denominator:'1'},purchaseUnitLabel:'bag',purchaseAmount:'10',openingAmount:'2',effectiveAt:'2026-01-01T12:00:00Z'});
 assert.deepEqual(beans.onHand,{dimension:'mass',minor:'14000000'});
 
+sql.prepare('INSERT INTO recipes(company_id,id,data) VALUES (?,?,?)').run('company-a','legacy-latte',JSON.stringify({id:'legacy-latte',name:'Legacy latte',ingredients:[{productId:'milk',quantity:3,unit:'splash'}]}));
 sql.prepare('INSERT INTO recipe_lineages(company_id,id,created_by,created_at) VALUES (?,?,?,?)').run('company-a','legacy-latte','migration',now);
 sql.prepare(`INSERT INTO recipe_versions(company_id,recipe_id,id,version,status,name,active_from,active_to,legacy,created_by,created_at)
   VALUES (?,?,?,1,'draft',?,NULL,NULL,1,?,?)`).run('company-a','legacy-latte','legacy','Legacy latte','migration',now);
@@ -108,10 +110,12 @@ sql.prepare(`INSERT INTO recipe_version_ingredients(company_id,recipe_id,version
   VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,?,NULL,?)`).run('company-a','legacy-latte','legacy',0,'milk','3','splash');
 sql.prepare("UPDATE recipe_versions SET status='active',active_from=? WHERE company_id='company-a' AND recipe_id='legacy-latte' AND id='legacy'").run(now);
 assert.deepEqual((await service.read('company-a')).legacyRecipeIds,['legacy-latte']);
+assert.equal((await service.read('company-a')).legacyReview.recipes.find(item=>item.recipeId==='legacy-latte').needsReviewedVersion,true);
 await service.saveRecipeDraft({companyId:'company-a',recipeId:'legacy-latte',draftId:'legacy-latte-v2',actor:'manager-a',name:'Reviewed latte',ingredients:[{productId:'milk',amount:'100',unitId:'mL'}]});
 assert.equal((await service.activateRecipe({companyId:'company-a',recipeId:'legacy-latte',versionId:'legacy-latte-v2',actor:'manager-a',expectedActiveVersionId:null})).status,'active');
 assert.equal(sql.prepare("SELECT status FROM recipe_versions WHERE company_id='company-a' AND recipe_id='legacy-latte' AND id='legacy'").get().status,'archived','A reviewed replacement atomically archives the legacy active version.');
 assert.deepEqual((await service.read('company-a')).legacyRecipeIds,[]);
+assert.equal((await service.read('company-a')).legacyReview.recipes.find(item=>item.recipeId==='legacy-latte').needsReviewedVersion,false);
 
 const draft1=await service.saveRecipeDraft({companyId:'company-a',recipeId:'latte',draftId:'latte-v1',actor:'manager-a',name:'Latte',ingredients:[{productId:'milk',amount:'100',unitId:'mL'},{productId:'cups',amount:'1',unitId:'each'}]});
 assert.equal(draft1.status,'draft');
@@ -143,7 +147,7 @@ assert.equal(sql.prepare("SELECT count(*) AS count FROM recipes WHERE company_id
 assert.equal((await service.archiveModifier({companyId:'company-a',recipeId:'latte',modifierId:'less-milk',versionId:'less-milk-v1',actor:'manager-a'})).status,'archived');
 
 const companyB=new D1InventoryManagementService(database,{clock});
-assert.deepEqual(await companyB.read('company-b'),{records:[],reconciliations:[],legacyRecipeIds:[],recipes:[],modifiers:[]});
+assert.deepEqual(await companyB.read('company-b'),{records:[],reconciliations:[],legacyRecipeIds:[],recipes:[],modifiers:[],legacyReview:{products:[],recipes:[]}});
 const restarted=new D1InventoryManagementService(database,{clock});
 const view=await restarted.read('company-a');
 assert.equal(view.records.length,3);
