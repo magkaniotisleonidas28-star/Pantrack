@@ -35,7 +35,7 @@ async function unseal(value:string,scope:string){const data=Uint8Array.from(atob
 export async function supabase(path:string,body?:unknown,token?:string,method=body===undefined?'GET':'POST') {
   const e=settings(),url=e.SUPABASE_URL,key=e.SUPABASE_PUBLISHABLE_KEY;
   if(!url||!key||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url))throw new Error('Authentication is not configured.');
-  const response=await fetch(url+'/auth/v1'+path,{method,redirect:'error',signal:AbortSignal.timeout(10000),headers:{apikey:key,...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
+  const response=await fetch(url+'/auth/v1'+path,{method,redirect:'manual',signal:AbortSignal.timeout(10000),headers:{apikey:key,...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
   if(!response.ok)throw new Error(response.status===429?'Too many attempts. Please wait before retrying.':'Authentication failed. Check your credentials or request a new link.');
   return response.status===204?{}:await response.json();
 }
