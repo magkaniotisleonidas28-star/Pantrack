@@ -158,3 +158,20 @@ acceptance item after those prerequisites; Clover stays in B6.
 Before B5, obtain migration and cross-workstream review, record hosted CI, and
 complete the outstanding M2/M3 acceptance evidence. Do not merge this
 schema-bearing branch or mark B4/M4 accepted before that evidence exists.
+
+## Employee sales-status privacy follow-up — 2026-09-23
+
+The original employee list omitted normalized sale lines and correction amounts
+but still returned external references and free-text review reasons. The
+follow-up narrows each employee status row to state and occurrence time, returns
+no conflicts or corrections, and denies employee reads of individual event
+history. The employee workspace displays only those two fields. The legacy
+sales read used for recipes also omits imports and register mappings for
+employees; owners and managers retain their review data. The feature gate
+remains off by default, and no stored sale or inventory row is changed.
+
+The focused M2 security suite passed with fictional sensitive-looking
+references and reasons, employee/manager role comparisons, and the individual
+history denial. `pnpm typecheck`, the full 18-suite `pnpm test`, `pnpm db:check`,
+`pnpm build`, and focused ESLint passed. This is local evidence only, not B5 or
+M4 acceptance.
