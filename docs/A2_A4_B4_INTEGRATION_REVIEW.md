@@ -51,10 +51,10 @@ enable the production preview.
   A5 either adopts this report or proves an equivalent reconciliation before
   switching legacy authority. This is a distinct follow-up, not a reason to
   merge the duplicate services.
-- These older branches remain separate from the active tree. Retiring their
-  remote branch names is a GitHub change and is not part of this local review.
+- Neither older branch was merged into the active tree. Their commits remain
+  available through the archive tags below.
 
-## Local branch cleanup on 2026-09-23
+## Branch cleanup on 2026-09-23
 
 - The exact older A4 commit `1d8a887` is retained at the local annotated tag
   `archive/a4-parallel-20260922`. The exact older B1 commit `f656692` is retained
@@ -64,10 +64,11 @@ enable the production preview.
   The local M0, M1, and M2 milestone branch names were also removed after Git
   confirmed each was already contained in `main`. Active A2, A4, B4, and
   integration branch names remain available.
-- No GitHub branch or tag was changed by this local cleanup. The older remote
-  branch names still exist and should be retired only after both archive tags
-  are available remotely. The local overlap-review commits are not yet on
-  GitHub.
+- Both archive tags and the overlap-review commits were pushed to GitHub. Git
+  confirmed that each tag points to its original commit before the remote
+  `review/a4-local-overlap-20260922` and `workstream-b/b1-event-contract` branch
+  names were deleted. The active A2, A4, B4, integration, and `main` branches
+  were not deleted; `main` was not changed.
 
 ## Verification
 
