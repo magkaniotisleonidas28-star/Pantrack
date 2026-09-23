@@ -1,6 +1,12 @@
 # M2: Supabase identity, Cloudflare application and company permissions
 
-Status: product decisions approved by the product owner on 2026-09-18. The implementation is on `main` and repository CI passes; real-provider acceptance, the failed Cloudflare build, and deployment review remain pending.
+Status: product decisions approved by the product owner on 2026-09-18. The
+implementation is on `main` and repository CI passes. The owner accepted the
+development-provider walkthrough and a reported replacement Cloudflare build,
+then directed C1/M2 completion on 2026-09-23. The replacement build's run and
+commit are unavailable, and a separate owner authentication/migration review
+record is still missing. No independent security or production deployment
+approval is claimed.
 
 ## Decision
 

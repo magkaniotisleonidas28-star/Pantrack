@@ -14,15 +14,15 @@ class Statement {
  bind(...values){return new Statement(this.database,this.query,values);}
  async first(){return this.database.prepare(this.query).get(...this.values)??null;}
  async all(){return {success:true,results:this.database.prepare(this.query).all(...this.values),meta:{changes:0}};}
- runSync(){const result=this.database.prepare(this.query).run(...this.values);return {success:true,results:[],meta:{changes:Number(result.changes)}};}
+ runSync(){const statement=this.database.prepare(this.query);if(/^\s*SELECT\b/i.test(this.query))return {success:true,results:statement.all(...this.values),meta:{changes:0}};const result=statement.run(...this.values);return {success:true,results:[],meta:{changes:Number(result.changes)}};}
  async run(){return this.runSync();}
 }
 class Database {
- constructor(sql){this.sql=sql;}
+ constructor(sql){this.sql=sql;this.omitBatchChanges=false;}
  prepare(query){return new Statement(this.sql,query);}
  async batch(statements){
   this.sql.exec('BEGIN IMMEDIATE');
-  try{const results=statements.map(statement=>statement.runSync());this.sql.exec('COMMIT');return results;}
+  try{const results=statements.map(statement=>statement.runSync());this.sql.exec('COMMIT');return this.omitBatchChanges?results.map(result=>({...result,meta:{rows_written:result.meta.changes}})):results;}
   catch(error){this.sql.exec('ROLLBACK');throw error;}
  }
 }
@@ -187,6 +187,14 @@ assert.deepEqual(JSON.parse(appliedResultRow.inventory_result_json),appliedInven
 const heldResultRow=sql.prepare("SELECT issues_json,inventory_result_json FROM sales_event_attempt_results WHERE company_id='company-a' AND attempt_id='held-d1'").get();
 assert.equal(JSON.parse(heldResultRow.issues_json)[0].code,'recipe_version_not_found','D1 preserves A2 issue details');
 assert.equal(JSON.parse(heldResultRow.inventory_result_json).status,'held','D1 preserves held A2 result');
+database.omitBatchChanges=true;
+const metadataIndependent=record({eventKey:'metadata-independent',lineageKey:'metadata-independent',hash:'metadata-independent',externalEventId:'metadata-independent',externalOrderId:'metadata-independent-order'});
+await restarted.receive('company-a',metadataIndependent,'user:owner-a','2026-01-01T00:00:00.000Z');
+const metadataIndependentAttempt={attemptId:'metadata-independent-attempt',eventKey:'metadata-independent',startedAt:'2026-01-01T00:00:00.000Z',leaseExpiresAt:'2026-01-01T00:05:00.000Z'};
+assert.equal(await restarted.claim('company-a','metadata-independent',metadataIndependentAttempt,metadataIndependentAttempt.startedAt),true,'D1 verifies a claim from its persisted lease when batch metadata omits changes');
+await restarted.completeAttempt('company-a',{...metadataIndependentAttempt,completedAt:'2026-01-01T00:01:00.000Z',outcome:'noop'},'applied','2026-01-01T00:01:00.000Z','policy_noop');
+assert.equal(await restarted.state('company-a','metadata-independent'),'applied','D1 verifies completion with transactional SELECT changes when batch metadata omits changes');
+database.omitBatchChanges=false;
 assert.equal(sql.prepare("SELECT count(*) AS count FROM sales_event_audits WHERE action='lease_expired'").get().count,1,'D1 lease recovery audit is unique');
 assert.equal(sql.prepare("SELECT count(*) AS count FROM sales_event_corrections WHERE status='pending'").get().count,1,'D1 correction and audit linkage retained');
 assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[],'D1 foreign keys valid');

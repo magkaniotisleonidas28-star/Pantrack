@@ -5,19 +5,19 @@ import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
 import {type InventoryRecord} from '@/lib/inventory';
 import {exactInventoryPreviewEnabled} from '@/lib/exact-inventory-gate';
+import {ingestLocalSale,localUserActor} from '@/lib/d1-sales-runtime';
 import {z} from 'zod';
 async function handleGET(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
- try{const companyId=new URL(req.url).searchParams.get('companyId');if(!await companyAccess(u.userId,companyId))return Response.json({error:'Company access denied.'},{status:403});const db=database();const [r,i,m]=await Promise.all([db.prepare('SELECT data FROM recipes WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM sales_imports WHERE company_id=? ORDER BY created DESC LIMIT 30').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM register_mappings WHERE company_id=?').bind(companyId).all<{data:string}>()]);return Response.json({mappings:m.results.map(x=>JSON.parse(x.data)),recipes:r.results.map(x=>JSON.parse(x.data)),imports:i.results.map(x=>JSON.parse(x.data))},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load recipes and sales.'},{status:503});}
+ try{const companyId=new URL(req.url).searchParams.get('companyId');const member=await companyAccess(u.userId,companyId);if(!member)return Response.json({error:'Company access denied.'},{status:403});const db=database();if(member.role==='employee'){const recipes=await db.prepare('SELECT data FROM recipes WHERE company_id=?').bind(companyId).all<{data:string}>();return Response.json({mappings:[],recipes:recipes.results.map(x=>JSON.parse(x.data)),imports:[]},{headers:{'Cache-Control':'no-store'}});}const [r,i,m]=await Promise.all([db.prepare('SELECT data FROM recipes WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM sales_imports WHERE company_id=? ORDER BY created DESC LIMIT 30').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM register_mappings WHERE company_id=?').bind(companyId).all<{data:string}>()]);return Response.json({mappings:m.results.map(x=>JSON.parse(x.data)),recipes:r.results.map(x=>JSON.parse(x.data)),imports:i.results.map(x=>JSON.parse(x.data))},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load recipes and sales.'},{status:503});}
 }
-type Recipe={id:string;name:string;ingredients:{productId:string;quantity:number;unit:string}[]};
 async function handlePOST(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  if(req.headers.get('sec-fetch-site')==='cross-site'||!req.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'Invalid request.'},{status:403});
  try{
- const b=z.object({companyId:z.string().min(1),action:z.enum(['recipe','import','mapping','removeMapping']),mapping:z.object({provider:z.string().trim().min(1).max(60),location:z.string().trim().min(1).max(100),itemId:z.string().trim().min(1).max(150),name:z.string().trim().min(1).max(100),recipeId:z.string().uuid()}).optional(),mappingKey:z.string().min(1).max(500).optional(),recipe:z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(100),ingredients:z.array(z.object({productId:z.string().min(1),quantity:z.number().positive().max(100000),unit:z.string().min(1)})).min(1).max(20)}).optional(),reference:z.string().trim().min(1).max(100).optional(),lines:z.array(z.object({recipeId:z.string().uuid().optional(),mappingKey:z.string().min(1).max(500).optional(),quantity:z.number().int().min(1).max(10000)}).refine(v=>!!v.recipeId!==!!v.mappingKey,'Choose a recipe or register mapping')).min(1).max(20).optional()}).parse(await req.json());
+ const b=z.object({companyId:z.string().min(1),action:z.enum(['recipe','import','mapping','removeMapping']),mapping:z.object({provider:z.string().trim().min(1).max(60),location:z.string().trim().min(1).max(100),itemId:z.string().trim().min(1).max(150),name:z.string().trim().min(1).max(100),recipeId:z.string().uuid()}).optional(),mappingKey:z.string().min(1).max(500).optional(),recipe:z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(100),ingredients:z.array(z.object({productId:z.string().min(1),quantity:z.number().positive().max(100000),unit:z.string().min(1)})).min(1).max(20)}).optional(),reference:z.string().trim().min(1).max(100).optional(),occurredAt:z.string().min(20).max(35).optional(),source:z.enum(['manual','recipe_csv','mapped_csv']).optional(),lines:z.array(z.object({recipeId:z.string().uuid().optional(),mappingKey:z.string().min(1).max(500).optional(),quantity:z.number().int().min(1).max(10000)}).refine(v=>!!v.recipeId!==!!v.mappingKey,'Choose a recipe or register mapping')).min(1).max(20).optional()}).parse(await req.json());
  const member=await companyAccess(u.userId,b.companyId);if(!member||!['owner','manager'].includes(member.role))return Response.json({error:'Company access denied.'},{status:403});
- if(exactInventoryPreviewEnabled()&&(b.action==='recipe'||b.action==='import'))return Response.json({error:'Exact inventory preview is enabled. Recipe changes use the versioned inventory editor, and sales deductions remain paused until the B4 cutover.'},{status:409});
+ if(exactInventoryPreviewEnabled()&&b.action==='recipe')return Response.json({error:'Exact inventory preview is enabled. Recipe changes use the versioned inventory editor.'},{status:409});
  const db=database(),rows=await db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(b.companyId).all<{data:string}>(),records=rows.results.map(x=>JSON.parse(x.data) as InventoryRecord);
  if(b.action==='mapping'){
  if(!b.mapping)throw new Error('Enter register item details.');
@@ -36,6 +36,12 @@ async function handlePOST(req:Request){
  await db.prepare('INSERT INTO recipes(company_id,id,data) VALUES (?,?,?) ON CONFLICT(company_id,id) DO UPDATE SET data=excluded.data').bind(b.companyId,b.recipe.id,JSON.stringify(b.recipe)).run();return Response.json({ok:true});
  }
  if(!b.reference||!b.lines)throw new Error('Enter a unique sales reference and quantities.');
+ if(exactInventoryPreviewEnabled()){
+  if(!b.occurredAt)throw new Error('Confirm when these sales occurred before importing.');
+  const source=b.source??(b.lines.some(line=>line.mappingKey)?'mapped_csv':'manual');
+  if(source==='mapped_csv'&&b.lines.some(line=>!line.mappingKey)||source!=='mapped_csv'&&b.lines.some(line=>!line.recipeId))throw new Error('Sales source does not match its lines.');
+  return Response.json(await ingestLocalSale({db,companyId:b.companyId,source,reference:b.reference,occurredAt:b.occurredAt,lines:b.lines,actor:localUserActor(u,b.companyId,member.role)}));
+ }
  return Response.json(await importSales(b.companyId,b.reference,b.lines,u.email));
  }catch(e){return Response.json({error:e instanceof z.ZodError?'Check recipes and sales quantities.':e instanceof Error?e.message:'Could not save sales.'},{status:400});}
 }

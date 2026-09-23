@@ -1,9 +1,13 @@
 # M2 setup and review
 
-Implementation is on `main`. Repository CI passes, but the current Cloudflare
-Workers build failed. Public deployment remains blocked on that failure, real
-Supabase verification, and review of the authentication flow and migration. Do
-not use production company data to test this change.
+Implementation is on `main`. Repository CI passes. The older Cloudflare
+Workers build failed; the owner reports that another contributor replaced it
+with a working build and accepts that build step, without a run or commit
+record available here. This is not independent verification or deployment
+evidence. The development Supabase walkthrough was accepted by the owner, who
+directed C1/M2 to be treated as complete on 2026-09-23 despite the absence of
+a separate owner authentication/migration review record. Obtain that review
+before public release. Do not use production company data to test this change.
 
 ## Local prerequisites
 

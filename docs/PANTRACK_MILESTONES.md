@@ -291,10 +291,16 @@ For every numbered item, the assigned person follows the same delivery loop:
 
 #### Person C — Platform, supplier, and operations sequence
 
-- [ ] **C1 — Accept M2.** Diagnose and resolve the Cloudflare Worker build,
+- [x] **C1 — Accept M2.** Diagnose and resolve the Cloudflare Worker build,
   review the additive authentication migration and flow, configure a development
   Supabase project without exposing secrets, and perform the real confirmation,
   login, invitation/roles, ownership, recovery, expiration, and logout walkthrough.
+  **Owner acceptance on 2026-09-23:** the owner accepted the development-provider
+  walkthrough and a contributor's replacement Cloudflare build report, then
+  explicitly directed C1 to be treated as complete. No successful Cloudflare
+  run/commit or separate owner authentication/migration review record was
+  provided. The agent inspected the additive migration and auth flow and ran
+  local checks, but this is not independent security or production acceptance.
 - [ ] **C2 — Record M2 evidence and unblock the team.** Run the complete checks,
   document deployment limitations, and update current status only when every M2
   acceptance item has evidence. Notify A and B that M2's gate is open.
@@ -452,7 +458,7 @@ Implementation evidence: all six original suites, type checks, migration checks,
 
 **Objective:** Replace hosting-specific identity assumptions with secure authentication suitable for the chosen deployment platform.
 
-Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCAL_EVIDENCE.md). The implementation is on `main`, and hosted repository CI passes. A contributor reported successful development Supabase confirmation/login, basic recovery, owner-workspace persistence, an employee invitation/read-only UI, manager operational access with a direct financial-access denial, and per-company manager/owner switching in [partial development auth evidence](M2_DEV_AUTH_EVIDENCE.md). Remaining provider/deployment smoke, the failed Cloudflare Worker build, and migration/authentication review remain pending; deterministic invitation, ownership, role, replay, and expiry edge cases are automated and should not require duplicate manual evidence. The checked items below describe automated implementation evidence, not production acceptance.
+Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCAL_EVIDENCE.md). The implementation is on `main`, and hosted repository CI passes. The owner accepted the development Supabase walkthrough and directed C1/M2 to be treated as complete on 2026-09-23, including owner-attested acceptance of a replacement Cloudflare build. Its successful run/commit and a separate owner authentication/migration review record are unavailable; see [development auth evidence](M2_DEV_AUTH_EVIDENCE.md). Deterministic invitation, ownership, role, replay, and expiry cases are automated. This acceptance is not independent security verification, a deployment verification, or production approval.
 
 ### Product decisions approved
 

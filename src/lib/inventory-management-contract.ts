@@ -131,12 +131,18 @@ export type ModifierVersionView = {
   deltas: Array<RecipeAmountInput & {quantity: ExactQuantity}>;
 };
 
+export type LegacyM3Review = {
+  products: Array<{productId: string; changedSinceBackfill: boolean; needsOpeningCount: boolean}>;
+  recipes: Array<{recipeId: string; changedSinceBackfill: boolean; needsReviewedVersion: boolean}>;
+};
+
 export type InventoryManagementView = {
   records: ManagedInventoryRecord[];
   reconciliations: InventoryReconciliationView[];
   legacyRecipeIds: string[];
   recipes: RecipeVersionView[];
   modifiers: ModifierVersionView[];
+  legacyReview: LegacyM3Review;
 };
 
 export interface InventoryManagementService {

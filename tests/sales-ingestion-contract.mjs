@@ -279,9 +279,86 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  await h.service.receive(nativeContext(),baseDraft({externalEventId:'event-2',revision:2}));assert.equal(await h.store.state('company-a',one.eventKey),'applied');
 }
 
+// A2 requires unique mapped modifier IDs with total occurrence counts.
+{
+ const h=harness();
+ const draft=baseDraft({lines:[{...baseDraft().lines[0],quantity:'2',modifiers:[
+  {externalModifierLineId:'shot-one',externalModifierId:'shot-item',quantity:'1'},
+  {externalModifierLineId:'shot-two',externalModifierId:'shot-item',quantity:'2'},
+ ]}]});
+ const receipt=await h.service.receive(nativeContext(),draft);
+ await h.service.process('company-a',receipt.eventKey);
+ assert.equal(await h.store.state('company-a',receipt.eventKey),'applied','Repeated mapped extras must be combined before A2');
+ assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'177000000');
+ assert.deepEqual(lastAttempt(h.store).inventoryResult.selectedVersions[0].modifiers,[{modifierId:'extra-shot',modifierVersionId:'shot-v1',quantity:'3'}]);
+}
+{
+ const h=harness();
+ const draft=baseDraft({lines:[{...baseDraft().lines[0],modifiers:[
+  {externalModifierLineId:'first',externalModifierId:'shot-item',quantity:'9007199254740991'},
+  {externalModifierLineId:'second',externalModifierId:'shot-item',quantity:'1'},
+ ]}]});
+ const before=h.inventory.getBalance('company-a','milk');
+ const receipt=await h.service.receive(nativeContext(),draft);
+ await h.service.process('company-a',receipt.eventKey);
+ assert.equal(await h.store.state('company-a',receipt.eventKey),'held');
+ assert.ok(lastAttempt(h.store).heldReasons.includes('invalid_quantity'));
+ assert.deepEqual(h.inventory.getBalance('company-a','milk'),before);
+}
+
+// Never persist an A2 result belonging to a different company, sale, or contract.
+{
+ for(const field of ['companyId','idempotencyKey','contract','occurredAt']){
+  let callbackCalled=false;
+  const h=harness({inventory:{consume:async request=>({contract:inventoryContract,companyId:request.companyId,idempotencyKey:request.idempotencyKey,
+   status:'applied',replayed:false,occurredAt:request.occurredAt,selectedVersions:[],changes:[],[field]:'foreign-result'})},
+   afterInventoryApply:()=>{callbackCalled=true}});
+  const receipt=await h.service.receive(nativeContext(),baseDraft());
+  await h.service.process('company-a',receipt.eventKey);
+  assert.equal(await h.store.state('company-a',receipt.eventKey),'failed',field);
+  assert.equal(lastAttempt(h.store).errorCode,'integration_defect');
+  assert.equal(lastAttempt(h.store).inventoryResult,undefined);
+  assert.equal(callbackCalled,false);
+ }
+}
+
+// Independent review follow-up: malformed envelopes and foreign non-applied
+// replies fail closed without copying their contents into this company's audit.
+{
+ const cases=[
+  ['null',()=>null],
+  ['nonboolean-replay',result=>({...result,replayed:'false'})],
+  ['unknown-status',result=>({...result,status:'unknown'})],
+  ['missing-versions',result=>({...result,selectedVersions:undefined})],
+  ['missing-changes',result=>({...result,changes:undefined})],
+ ];
+ for(const status of ['held','rejected']){
+  const issue={code:status==='held'?'unit_unclassified':'invalid_quantity',message:'requires review'};
+  for(const field of ['companyId','idempotencyKey','contract']){
+   cases.push([`${status}-${field}`,result=>({...result,status,issues:[issue],[field]:'foreign-result'})]);
+  }
+  cases.push([`${status}-empty-issues`,result=>({...result,status,issues:[]})]);
+  cases.push([`${status}-missing-issues`,result=>({...result,status})]);
+  cases.push([`${status}-replayed`,result=>({...result,status,issues:[issue],replayed:true})]);
+ }
+ for(const [name,mutate] of cases){
+  let callbackCalled=false;
+  const h=harness({inventory:{consume:async request=>mutate({contract:inventoryContract,companyId:request.companyId,
+   idempotencyKey:request.idempotencyKey,status:'applied',replayed:false,occurredAt:request.occurredAt,selectedVersions:[],changes:[]})},
+   afterInventoryApply:()=>{callbackCalled=true}});
+  const receipt=await h.service.receive(nativeContext(),baseDraft());
+  await h.service.process('company-a',receipt.eventKey);
+  assert.equal(await h.store.state('company-a',receipt.eventKey),'failed',name);
+  assert.equal(lastAttempt(h.store).errorCode,'integration_defect',name);
+  assert.equal(lastAttempt(h.store).inventoryResult,undefined,name);
+  assert.equal(lastAttempt(h.store).issues,undefined,name);
+  assert.equal(callbackCalled,false,name);
+ }
+}
+
 // Exact A2 outcome mapping, retry/replay/dismiss/correction authorization, and sensitive read denial.
 {
- const portFor=result=>({consume:async request=>typeof result==='function'?result(request):structuredClone(result)});
+ const portFor=result=>({consume:async request=>typeof result==='function'?result(request):{...structuredClone(result),idempotencyKey:request.idempotencyKey}});
  const baseResult=(status,issues=[])=>({contract:inventoryContract,companyId:'company-a',idempotencyKey:'ignored',replayed:false,status,issues});
  const cases=[
   ['held',baseResult('held',[{code:'recipe_version_not_found',message:'missing'}]),'held','recipe_version_not_found'],
@@ -302,6 +379,12 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  // The immutable time-quality fact remains inferred, so replay safely holds again.
  await h.service.process('company-a',held.eventKey);assert.equal(await h.store.state('company-a',held.eventKey),'held');assert.equal(h.store.snapshot().attempts.length,2);
  await h.service.dismiss('company-a',held.eventKey,owner,'Cannot establish occurrence time');assert.equal(await h.store.state('company-a',held.eventKey),'dismissed');
+
+ const confirmable=await h.service.receive(nativeContext(),baseDraft({externalEventId:'confirmable',externalOrderId:'confirmable',timeQuality:'inferred'}));await h.service.process('company-a',confirmable.eventKey);
+ for(const actor of [null,employee,outsider,machine])await assert.rejects(()=>h.service.confirmOccurrence('company-a',confirmable.eventKey,actor,'2026-02-15T17:00:00Z','Register close reviewed'),error=>['unauthenticated','forbidden_role','wrong_company'].includes(error.code));
+ await assert.rejects(()=>h.service.confirmOccurrence('company-a',confirmable.eventKey,manager,'2026-04-01T00:00:00Z','Register close reviewed'),error=>error.code==='invalid_occurrence_time');
+ await h.service.confirmOccurrence('company-a',confirmable.eventKey,manager,'2026-02-15T17:00:00Z','Register close reviewed');assert.equal(await h.store.state('company-a',confirmable.eventKey),'received');
+ await h.service.process('company-a',confirmable.eventKey);assert.equal(await h.store.state('company-a',confirmable.eventKey),'applied');assert.equal((await h.service.readStatus('company-a',confirmable.eventKey,employee)).occurredAt,'2026-02-15T17:00:00.000Z');
 
  const applied=await h.service.receive(nativeContext(),baseDraft({externalEventId:'applied',externalOrderId:'applied'}));await h.service.process('company-a',applied.eventKey);
  await assert.rejects(()=>h.service.requestCorrection('company-a',applied.eventKey,employee,'mistake'),error=>error.code==='forbidden_role');

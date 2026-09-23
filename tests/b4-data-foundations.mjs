@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync} from 'node:fs';
+
+const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
+const journal=JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8'));
+for(const entry of journal.entries.filter(entry=>entry.idx<=11))sql.exec(readFileSync(`drizzle/${entry.tag}.sql`,'utf8'));
+sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-a','A','2026-01-01T00:00:00Z');
+sql.prepare('INSERT INTO sales_imports VALUES (?,?,?,?)').run('company-a','legacy-sale','{"kept":true}','2026-01-01T00:00:00Z');
+sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a','milk','{"id":"milk"}');
+sql.prepare('INSERT INTO inventory VALUES (?,?,?,?)').run('company-a','milk','{"onHand":10}',3);
+sql.prepare(`INSERT INTO sales_events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run('company-a','event-a','lineage-a','application-a','pantrack-manual','internal','company-a','sale-a','sale-a',1,'2026-01-02T00:00:00.000Z','2026-01-02T00:01:00.000Z','hash','{}');
+sql.prepare(`INSERT INTO sales_event_states VALUES (?,?,?,?, 'applied',NULL,NULL,'inventory_applied',NULL,'worker',?)`).run('company-a','event-a','lineage-a',1,'2026-01-02T00:02:00.000Z');
+const tables=['sales_imports','inventory','sales_events','sales_event_states'];
+const before=Object.fromEntries(tables.map(table=>[table,sql.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all()]));
+sql.exec(readFileSync('drizzle/0012_tough_rage.sql','utf8'));
+for(const table of tables)assert.deepEqual(sql.prepare(`SELECT * FROM ${table} ORDER BY rowid`).all(),before[table],`${table} changed during migration`);
+for(const table of ['sales_event_occurrence_confirmations','sales_event_correction_items','sales_event_correction_results','sales_event_correction_adjustments'])assert.equal(sql.prepare(`SELECT count(*) AS count FROM ${table}`).get().count,0,`${table} starts empty`);
+assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[]);assert.equal(sql.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
+sql.close();
+console.log('PASS: B4 migration is additive, preserves existing inventory, legacy sales, and durable event rows, and creates empty company-scoped correction/occurrence structures.');
