@@ -26,13 +26,33 @@ enable the production preview.
   occurrence and correction records; the existing compatibility test checks
   preservation of legacy and durable-event rows. No new migration was created
   during this integration.
-- The older `review/a4-local-overlap-20260922` branch is preserved as a separate
-  parallel implementation. It has conflicting versions of the exact screen,
-  inventory route, consumption service, and status notes. It must be reviewed
-  for unique behavior rather than merged wholesale. The older B1 branch adds
-  `0002-m4-sales-ingestion.md`, while main already has decision
-  `0002-m3-quantity-and-recipe-model.md`; its decision numbering must be
-  reconciled before publication.
+- The active integration tree has one exact inventory route, one D1 management
+  service, one D1 consumption port, and the published B1 decision at
+  `docs/decisions/0003-m4-sales-ingestion.md`. No alternate A4 implementation or
+  duplicate `0002` decision was added to the active tree.
+
+## Older-branch overlap audit
+
+- `origin/workstream-b/b1-event-contract` contains an earlier B1 decision at
+  `0002-m4-sales-ingestion.md`. The accepted `0003` decision on this branch
+  revises its A2 handoff: it uses the published port's actual request/results,
+  confirmed occurrence times, and current held-reason names. The older B1 file
+  is superseded and must not be copied into this branch.
+- `origin/review/a4-local-overlap-20260922` is a parallel A2/A4 implementation
+  based before the current A4 migrations and B4 sales cutover. It duplicates
+  configuration, count, recipe, modifier, consumption, route, and screen work
+  with different APIs and an older preview gate. The current A4 service and
+  contract tests cover those active behaviors, and B4 uses the current port.
+  Merging the older branch would create two competing inventory paths.
+- That parallel branch also has a read-only `legacyM3Review` report that compares
+  legacy stock and recipes with their backfilled copies. The current preview
+  identifies legacy recipes needing reviewed replacement but does not provide
+  the same changed-since-backfill report. Keep the older commit reachable until
+  A5 either adopts this report or proves an equivalent reconciliation before
+  switching legacy authority. This is a distinct follow-up, not a reason to
+  merge the duplicate services.
+- These older branches remain separate from the active tree. Retiring their
+  remote branch names is a GitHub change and is not part of this local review.
 
 ## Verification
 
@@ -48,6 +68,6 @@ enable the production preview.
 
 Rollback is to stop using this integration branch. The source branches and
 `main` remain available, and no migration was applied outside the local test
-database. Before a merge to `main`, review the two preserved overlap branches,
+database. Before a merge to `main`, resolve the legacy-backfill review gap,
 obtain the workstream owners' review, and verify hosted CI. M2 acceptance remains
 a separate gate for M3/M4 acceptance.
