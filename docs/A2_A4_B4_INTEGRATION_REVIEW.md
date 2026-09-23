@@ -115,3 +115,24 @@ a separate gate for M3/M4 acceptance.
   Ubuntu/Windows CI, and the Cloudflare build remain merge gates. No
   independent technical review, branch push, remote migration, or deployment
   is claimed by this follow-up.
+
+## Hosted branch follow-up — 2026-09-23
+
+- The owner confirmed that pushing the integration branch cannot auto-deploy.
+  The branch was pushed at `96d822f`; `main` remained at `2ed7802`.
+- [Repository checks #20](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35893672222)
+  passed on Ubuntu and Windows for `96d822f`. This was a manual workflow run,
+  because the workflow does not run automatically on an integration-branch
+  push. Its annotations warned about GitHub Actions' Node 20 deprecation and
+  a future Ubuntu runner change; neither job failed.
+- The separate fictional A5 report was opened locally with the hidden preview
+  enabled only against `.sites-runtime/a5-review-state`. The agent saw the
+  expected changed-stock and changed-recipe guidance and no stock-changing
+  control. A read-only after-check found stock and recipe unchanged. The owner
+  could not view the review tab, so the owner walkthrough is **BLOCKED**, not
+  accepted. See [A5 owner review](M3_A5_OWNER_REVIEW.md).
+- The full local pipeline, including `pnpm test:local`, passed after this
+  follow-up. No remote database was migrated, no deployment was made, and no
+  live POS or customer data was used. C1/M2, A5/M3, B5/M4, the owner-only
+  authentication/migration review, and the intended Cloudflare build remain
+  open. Do not merge this branch to `main` yet.
