@@ -150,3 +150,15 @@ a separate gate for M3/M4 acceptance.
   This owner-evidence update changes documentation only. A5/M3 is still not
   accepted, and C1/M2, the owner-only authentication/migration review, and
   the intended Cloudflare build remain gates before merging to `main`.
+
+## Cloudflare owner decision — 2026-09-23
+
+The owner reports that another contributor replaced the failed Cloudflare
+setup with a working build and instructs us to treat the build step as
+complete. No successful run link, branch, or commit was available. This is
+owner-accepted, unverified external evidence; it does not prove deployment or
+runtime behavior. Do not reuse the earlier failed build as the current setup's
+status. C1/M2 and the integration merge remain pending the owner-only
+authentication-flow and additive-migration review and their other acceptance
+requirements. No Cloudflare configuration, deployment, or remote database
+action was taken in this decision.

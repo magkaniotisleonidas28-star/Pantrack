@@ -87,9 +87,12 @@ improvement remains future work.
 
 ## Remaining C1 gate
 
-The owner chose to keep C1/M2 provisional until the intended Cloudflare Worker
-build succeeds and its evidence is recorded. Authentication-flow and additive
-migration review also remain to be recorded. Deterministic invitation replay,
+On 2026-09-23 the owner reported that another contributor replaced the failed
+Cloudflare setup with a working build and explicitly accepted the build step as
+complete. No successful run link, branch, or commit was available to record.
+This is owner-attested build acceptance, not an independently verified build or
+a deployment claim. Authentication-flow and additive migration review remain
+to be recorded before C1/M2 acceptance. Deterministic invitation replay,
 expiry, replacement, ownership edge cases, wrong-company access, and
 server-side role permissions are covered by the local automated suite rather
 than repeated manually. No hosted deployment or production acceptance is
