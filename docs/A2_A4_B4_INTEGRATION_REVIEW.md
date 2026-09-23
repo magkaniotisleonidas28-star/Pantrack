@@ -54,6 +54,21 @@ enable the production preview.
 - These older branches remain separate from the active tree. Retiring their
   remote branch names is a GitHub change and is not part of this local review.
 
+## Local branch cleanup on 2026-09-23
+
+- The exact older A4 commit `1d8a887` is retained at the local annotated tag
+  `archive/a4-parallel-20260922`. The exact older B1 commit `f656692` is retained
+  at `archive/b1-original-20260919`. Both tags were checked against their source
+  commits before removing any local branch name.
+- The obsolete local `review/a4-local-overlap-20260922` branch name was removed.
+  The local M0, M1, and M2 milestone branch names were also removed after Git
+  confirmed each was already contained in `main`. Active A2, A4, B4, and
+  integration branch names remain available.
+- No GitHub branch or tag was changed by this local cleanup. The older remote
+  branch names still exist and should be retired only after both archive tags
+  are available remotely. The local overlap-review commits are not yet on
+  GitHub.
+
 ## Verification
 
 - PASS: focused B4 sales/inventory, A2 ingestion contract, and A4 inventory
@@ -65,6 +80,11 @@ enable the production preview.
   sign-out. The exact preview itself was not visually exercised in this run.
 - PASS: integration diff whitespace check. No remote D1, hosted CI, sandbox
   provider, deployment, supplier, or production action occurred.
+- PASS on 2026-09-23 after the branch audit: `pnpm typecheck`, `pnpm test` (18
+  suites), `pnpm db:check` (13 migrations), `pnpm build`,
+  `pnpm db:migrate:local` (nothing pending), and `pnpm test:local`. The first
+  test run could not launch esbuild inside the Windows sandbox; the approved
+  rerun passed. The smoke test used only a fictional local company.
 
 Rollback is to stop using this integration branch. The source branches and
 `main` remain available, and no migration was applied outside the local test
