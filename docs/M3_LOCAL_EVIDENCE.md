@@ -240,4 +240,6 @@ another development server was already running; that process was left alone.
 
 This report prepares A5 review but does not accept M3, reconcile any real
 hosted data, or authorize a merge. The owner must review flagged records and
-the remaining M2/M3 gates separately.
+the remaining M2/M3 gates separately. The fictional-data owner walkthrough is
+prepared in [the A5 review checklist](M3_A5_OWNER_REVIEW.md); it remains
+pending until a separate local fixture and the owner's observations exist.
