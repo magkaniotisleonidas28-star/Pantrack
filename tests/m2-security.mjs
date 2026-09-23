@@ -57,6 +57,8 @@ for(const name of ['owner','manager','employee'])sql.prepare('INSERT INTO member
 sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(accounts.other.id,'company-b','owner');
 sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a','milk',JSON.stringify({id:'milk',name:'Milk'}));
 sql.prepare('INSERT INTO orders VALUES (?,?,?,?)').run('company-a','private-order',JSON.stringify({id:'private-order'}),'now');
+sql.prepare('INSERT INTO sales_imports(company_id,reference,data,created) VALUES (?,?,?,?)').run('company-a','fictional-legacy-reference',JSON.stringify({reference:'fictional-legacy-reference'}),'now');
+sql.prepare('INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?)').run('company-a','fictional-register-reference',JSON.stringify({key:'fictional-register-reference'}));
 const families=['workspace','inventory','sales','register','clover','payments','automation','members'];
 const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
 for(const family of families){
@@ -81,6 +83,12 @@ for(const role of ['owner','manager','employee']){
  for(const family of ['clover','payments'])assert.equal((await call(family,'GET',null,cookies[role])).status,role==='owner'?200:403,role+' reads '+family);
  assert.equal((await call('automation','GET',null,cookies[role])).status,role==='employee'?403:200);
 }
+const employeeRecipes=await(await call('sales','GET',null,cookies.employee)).json();
+assert.deepEqual(employeeRecipes.imports,[],'Employees cannot read legacy import references.');
+assert.deepEqual(employeeRecipes.mappings,[],'Employees cannot read register mapping identifiers.');
+const managerRecipes=await(await call('sales','GET',null,cookies.manager)).json();
+assert.equal(managerRecipes.imports[0].reference,'fictional-legacy-reference','Managers retain legacy import review data.');
+assert.equal(managerRecipes.mappings[0].key,'fictional-register-reference','Managers retain register mapping review data.');
 assert.equal((await call('sales/events')).status,401,'Sales event review denies anonymous reads.');
 assert.equal((await call('sales/events','GET',null,cookies.other)).status,403,'Sales event review denies wrong-company reads.');
 assert.equal((await call('sales/events','POST',{companyId:'company-a',action:'dismiss',eventKey:'missing',reason:'reviewed'},cookies.employee)).status,403,'Employees cannot mutate sales events.');
@@ -99,12 +107,22 @@ const exactRecipeId=crypto.randomUUID(),exactDraftId=crypto.randomUUID();
 assert.equal((await call('inventory','POST',{companyId:'company-a',action:'saveRecipeDraftExact',recipeId:exactRecipeId,draftId:exactDraftId,name:'Exact milk',ingredients:[{productId:'milk',amount:'1',unitId:'mL'}]},cookies.manager)).status,200,'Manager can save exact recipe draft.');
 assert.equal((await call('inventory','POST',{companyId:'company-a',action:'activateRecipeExact',recipeId:exactRecipeId,versionId:exactDraftId,expectedActiveVersionId:null},cookies.manager)).status,200,'Manager can activate exact recipe.');
 const confirmedSaleTime=new Date().toISOString();
-const exactSale=await call('sales','POST',{companyId:'company-a',action:'import',source:'manual',reference:'exact-manual-sale',occurredAt:confirmedSaleTime,lines:[{recipeId:exactRecipeId,quantity:1}]},cookies.manager);
+const privateReference='fictional-customer@example.test',privateReason='Fictional private note: redacted@example.test';
+const exactSale=await call('sales','POST',{companyId:'company-a',action:'import',source:'manual',reference:privateReference,occurredAt:confirmedSaleTime,lines:[{recipeId:exactRecipeId,quantity:1}]},cookies.manager);
 assert.equal(exactSale.status,200,await exactSale.clone().text());assert.equal((await exactSale.json()).state,'applied','Manual exact sale applies through B4.');
 assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor,'9000000','B4 route deducts exact inventory.');
-const exactEventKey=sql.prepare("SELECT event_key FROM sales_events WHERE company_id='company-a' AND external_order_id='exact-manual-sale'").get().event_key;
-assert.equal((await call('sales/events','POST',{companyId:'company-a',action:'requestCorrection',eventKey:exactEventKey,reason:'Manager review fixture'},cookies.manager)).status,200,'Manager can request a reviewed correction.');
-const employeeSales=await(await call('sales/events','GET',null,cookies.employee)).json();assert.equal(employeeSales.events.length,1);assert.ok(!JSON.stringify(employeeSales).includes('lines'),'Employee status omits event payload lines.');assert.ok(!JSON.stringify(employeeSales).includes('suggestedMinor'),'Employee correction status omits ingredient quantities.');
+const exactEventKey=sql.prepare("SELECT event_key FROM sales_events WHERE company_id='company-a' AND external_order_id=?").get(privateReference).event_key;
+assert.equal((await call('sales/events','POST',{companyId:'company-a',action:'requestCorrection',eventKey:exactEventKey,reason:privateReason},cookies.manager)).status,200,'Manager can request a reviewed correction.');
+sql.prepare('INSERT INTO sales_event_conflicts(company_id,conflict_id,canonical_event_key,received_at,source_payload_sha256,external_event_id,external_order_id,revision,reason) VALUES (?,?,?,?,?,?,?,?,?)').run('company-a',crypto.randomUUID(),exactEventKey,confirmedSaleTime,'a'.repeat(64),'fictional-event',privateReference,1,privateReason);
+const employeeSales=await(await call('sales/events','GET',null,cookies.employee)).json();
+assert.deepEqual(employeeSales,{enabled:true,events:[{state:'applied',occurredAt:confirmedSaleTime}],conflicts:[],corrections:[]},'Employees receive only state and time, with no identities, references, reasons, or correction details.');
+assert.ok(!JSON.stringify(employeeSales).includes(privateReference));assert.ok(!JSON.stringify(employeeSales).includes(privateReason));assert.ok(!JSON.stringify(employeeSales).includes(exactEventKey));
+const employeeDetailHeaders=new Headers({Cookie:cookies.employee});globalThis.m2headers=employeeDetailHeaders;
+assert.equal((await modules['sales/events'].GET(new Request('https://test/api/sales/events?companyId=company-a&eventKey='+encodeURIComponent(exactEventKey),{headers:employeeDetailHeaders}))).status,403,'Employees cannot read individual event history.');
+const managerSales=await(await call('sales/events','GET',null,cookies.manager)).json();
+assert.equal(managerSales.events[0].externalReference,privateReference,'Managers retain sale references for review.');
+assert.equal(managerSales.corrections[0].reason,privateReason,'Managers retain correction reasons for review.');
+assert.equal(managerSales.conflicts[0].reason,privateReason,'Managers retain conflict reasons for review.');
 assert.equal((await call('sales','POST',{companyId:'company-a',action:'import',reference:'missing-confirmed-time',lines:[{recipeId:crypto.randomUUID(),quantity:1}]},cookies.manager)).status,400,'Exact sales imports require a manager-confirmed occurrence time.');
 delete globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW;
 assert.deepEqual((await(await call('workspace','GET',null,cookies.employee)).json()).orders,[]);

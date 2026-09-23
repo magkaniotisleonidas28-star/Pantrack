@@ -25,7 +25,11 @@ async function handleGET(req:Request){
  if(!exactInventoryPreviewEnabled())return Response.json({enabled:false,events:[],conflicts:[],corrections:[]});
  const db=database(),actor=localUserActor(user,companyId!,member.role);
  const eventKey=url.searchParams.get('eventKey');
- if(eventKey){const service=d1SalesService(db),event=await service.readStatus(companyId!,eventKey,actor),history=await service.readHistory(companyId!,eventKey,actor,50);return Response.json({enabled:true,event,history:member.role==='employee'?history.map(item=>({...item,reason:null})):history},{headers:{'Cache-Control':'no-store'}});}
+ if(eventKey){if(member.role==='employee')return Response.json({error:'Owner or manager permission is required.'},{status:403});const service=d1SalesService(db),event=await service.readStatus(companyId!,eventKey,actor),history=await service.readHistory(companyId!,eventKey,actor,50);return Response.json({enabled:true,event,history},{headers:{'Cache-Control':'no-store'}});}
+ if(member.role==='employee'){
+  const events=await d1SalesService(db).listStatus(companyId!,actor,50);
+  return Response.json({enabled:true,events:events.map(({state,occurredAt})=>({state,occurredAt})),conflicts:[],corrections:[]},{headers:{'Cache-Control':'no-store'}});
+ }
  const [events,conflicts,corrections]=await Promise.all([
   d1SalesService(db).listStatus(companyId!,actor,50),
   db.prepare(`SELECT c.conflict_id,c.canonical_event_key,c.received_at,c.reason,
@@ -34,9 +38,7 @@ async function handleGET(req:Request){
     WHERE c.company_id=? ORDER BY c.received_at DESC LIMIT 50`).bind(companyId).all<{conflict_id:string;canonical_event_key:string;received_at:string;reason:string;resolved:number}>(),
   new D1SalesCorrectionService(db).list(companyId!,50),
  ]);
- const safeCorrections=corrections.map(correction=>member.role==='employee'
-  ?{correctionId:correction.correctionId,eventKey:correction.eventKey,status:correction.status,reason:'Manager correction review',items:[]}
-  :{...correction,requestedBy:undefined,result:correction.result?{...correction.result,confirmedBy:undefined}:null});
+ const safeCorrections=corrections.map(correction=>({...correction,requestedBy:undefined,result:correction.result?{...correction.result,confirmedBy:undefined}:null}));
  return Response.json({enabled:true,events,conflicts:conflicts.results.map(row=>({conflictId:row.conflict_id,eventKey:row.canonical_event_key,receivedAt:row.received_at,reason:row.reason,resolved:Boolean(row.resolved)})),corrections:safeCorrections},{headers:{'Cache-Control':'no-store'}});
 }
 
