@@ -92,3 +92,26 @@ Rollback is to stop using this integration branch. The source branches and
 database. Before a merge to `main`, resolve the legacy-backfill review gap,
 obtain the workstream owners' review, and verify hosted CI. M2 acceptance remains
 a separate gate for M3/M4 acceptance.
+
+## Merge-readiness follow-up — 2026-09-23
+
+- A5 commit `60f79b0` adds only a read-only, company-scoped older-data report
+  and manager screen. Its fictional pre-`0009` fixture proves unchanged and
+  changed stock/recipe flags, missing exact review, company isolation, and no
+  writes. An owner walkthrough of the screen remains pending; A5/M3 is not
+  accepted.
+- B4 follow-up commit `809b226` limits employee sales responses to state and
+  occurrence time, omits legacy import/register references, and denies
+  individual event history. Fictional secret-looking values in the route test
+  do not appear in employee responses; owner/manager review data remains.
+- The combined local branch passed `pnpm typecheck`, `pnpm test` (19 suites),
+  `pnpm db:check` (13 migrations), `pnpm build`, `pnpm db:migrate:local` (nothing
+  pending), `pnpm test:local`, and `git diff --check`. The smoke test left a
+  fictional company in local D1. Migration `0012` remains additive; its
+  compatibility test proves prior inventory, sales, and event rows unchanged.
+- The owner accepted the development-provider authentication walkthrough but
+  chose to keep C1/M2 provisional until the intended Cloudflare build passes.
+  An owner-only code/migration review, the A5 screen walkthrough, hosted
+  Ubuntu/Windows CI, and the Cloudflare build remain merge gates. No
+  independent technical review, branch push, remote migration, or deployment
+  is claimed by this follow-up.
