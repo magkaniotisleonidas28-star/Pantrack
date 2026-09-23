@@ -842,12 +842,13 @@ export class SalesIngestionService {
         held.add(mapping.status);
         continue;
       }
-      const modifiers: Array<{modifierId: string; quantity: string}> = [];
+      const modifierTotals = new Map<string, bigint>();
       for (const modifier of line.modifiers) {
         const result = await this.mappings.resolveModifier({companyId: record.event.companyId, source: record.event.source, externalItemId: line.externalItemId, ...(line.externalVariationId ? {externalVariationId: line.externalVariationId} : {}), externalModifierId: modifier.externalModifierId});
         if (result.status !== 'mapped') held.add(result.status);
-        else modifiers.push({modifierId: result.modifierId, quantity: modifier.quantity});
+        else modifierTotals.set(result.modifierId, (modifierTotals.get(result.modifierId) ?? BigInt(0)) + BigInt(modifier.quantity));
       }
+      const modifiers = [...modifierTotals].map(([modifierId, quantity]) => ({modifierId, quantity: String(quantity)}));
       mapped.push({lineId: line.externalLineId, recipeId: mapping.recipeId, quantity: line.quantity, modifiers});
     }
     return {held: [...held], mapped};
@@ -940,6 +941,18 @@ export class SalesIngestionService {
       result = await this.inventory.consume(request);
     } catch {
       const complete = {...attempt, completedAt: this.now(), outcome: 'failed' as const, errorCode: 'inventory_unavailable' as const};
+      await this.store.completeAttempt(companyId, complete, 'failed', complete.completedAt, complete.errorCode);
+      return this.statusForWorker(companyId, eventKey);
+    }
+    // Reject mismatched replies before callbacks, terminal state changes or
+    // storing their contents in this company's audit history.
+    if (!result || result.contract !== request.contract || result.companyId !== request.companyId ||
+      result.idempotencyKey !== request.idempotencyKey || typeof result.replayed !== 'boolean' ||
+      !['applied', 'held', 'rejected'].includes(result.status) ||
+      (result.status === 'applied' && (Date.parse(result.occurredAt) !== Date.parse(request.occurredAt) ||
+        !Array.isArray(result.selectedVersions) || !Array.isArray(result.changes))) ||
+      (result.status !== 'applied' && (result.replayed || !Array.isArray(result.issues) || !result.issues.length))) {
+      const complete = {...attempt, completedAt: this.now(), outcome: 'failed' as const, errorCode: 'integration_defect' as const};
       await this.store.completeAttempt(companyId, complete, 'failed', complete.completedAt, complete.errorCode);
       return this.statusForWorker(companyId, eventKey);
     }
