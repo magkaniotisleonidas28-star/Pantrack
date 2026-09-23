@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-22
+Updated: 2026-09-23
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -59,7 +59,7 @@ provisioned background jobs, and automatic purchases.
 
 ## M2 implementation
 
-The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The current Linux and Windows CI jobs pass. Provider tests still use mocked responses. A contributor reported successful development Supabase email confirmation, login, fictional-company creation, sign-out, return to the same owner membership, basic password recovery, an employee invitation/read-only UI, manager operational access with a direct financial-access denial, and switching between manager and owner roles in different companies; this is partial real-provider evidence, not M2 acceptance. Concurrent-session revocation, remaining forbidden-role checks, and the rest of the C1 walkthrough, migration/authentication review, and deployment repair remain pending. The password-policy guidance and validation mismatch is fixed locally but still needs a development-provider retest. The membership panel still required a page refresh to show acceptance performed in another browser. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md), [local evidence](M2_LOCAL_EVIDENCE.md), and [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
+The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The owner completed and accepted a development-provider walkthrough of password rules, confirmation, sign-in/out, fictional-company roles, invitation, ownership transfer, recovery, concurrent-session revocation, and security history. The membership panel still required a full page refresh after acceptance in another browser; the owner accepted that limitation for this walkthrough. This is user-observed development evidence, not independent security verification. C1/M2 remain provisional because the intended Cloudflare build has not passed and the authentication-flow/migration review has not been recorded. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md), [local evidence](M2_LOCAL_EVIDENCE.md), and [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
 
 ## M3 local implementation
 
@@ -74,8 +74,9 @@ and exact-inventory cutover. See [M3 local evidence](M3_LOCAL_EVIDENCE.md) and
 [B4 local evidence](M4_B4_LOCAL_EVIDENCE.md).
 
 This does not accept M3. Person B's compatibility review is recorded in the B4
-evidence and found no inventory-specific workaround; A5 still requires M2
-acceptance and Person A's completed M3 acceptance record. No remote migration
+evidence and found no inventory-specific workaround. A5 now includes a local
+read-only older-data report, but the owner's fictional-data review, M2 gate,
+and Person A's completed M3 acceptance record remain open. No remote migration
 or deployment has occurred.
 
 ## Deployment health
@@ -83,7 +84,8 @@ or deployment has occurred.
 Repository CI is green for documentation-repair commit `333dbbd`
 ([run 35426054567](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567)). The separate
 [Cloudflare Workers build](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/105852072919)
-for that commit failed, so there is no successful deployment claim.
+for that commit failed. The owner removed the misconfigured Worker and domain;
+there is still no successful build on the intended host or deployment claim.
 The Supabase Preview check passed, but that check does not prove that Pantrack's
 email templates, callback URLs, runtime variables, or authentication walkthrough
 are configured and working. Diagnose the Cloudflare build before attempting a
@@ -94,8 +96,8 @@ public release, and keep production data and real users out of this environment.
 | Service | Reported status | Still needed |
 | --- | --- | --- |
 | GitHub | Repository connected; milestone branches consolidated into `main`; current Ubuntu and Windows CI passed. | Keep `main` as the only long-lived branch. Use isolated, short-lived workstream branches/worktrees only while multiple contributors are active, then merge and delete them. Preserve the required checks. |
-| Supabase | A contributor reported successful local development confirmation, login, basic recovery, and owner-workspace persistence using the new project and Resend. The password-policy mismatch is fixed locally. The Preview check alone remains insufficient evidence. | Re-test compliant and noncompliant signup/recovery passwords with the development provider, then complete the remaining real-provider walkthrough, including concurrent-session revocation. |
-| Cloudflare | Repository integration is active and attempted a Worker build for current `main`; that build failed. | Diagnose the failed build before deployment. Do not configure production data or users while M2 acceptance remains open. |
+| Supabase | The owner accepted the development-provider manual walkthrough using fictional accounts. Automated provider tests remain separate. | Record the authentication-flow and migration review; do not treat the manual walkthrough as hosted or production security verification. |
+| Cloudflare | The owner removed the previously misconfigured Worker and domain. No intended-host build has passed. | Diagnose and pass the intended Cloudflare build before C1/M2 acceptance or merging the integration branch; obtain separate approval before any configuration or deployment action. |
 | Custom domain | None required yet. | A free temporary URL will be `https://WORKER-NAME.magkaniotisleonidas28.workers.dev`. Buy/add a custom domain before a real café pilot. |
 
 Never send, commit, or paste Supabase keys, Cloudflare API tokens, OAuth secrets,
@@ -103,17 +105,14 @@ supplier credentials, or payment details into chat or source control.
 
 ## What you need to do next
 
-1. Keep manual development-provider acceptance focused on external seams and
-   happy paths. Use the M2 security suite for deterministic invitation,
-   authorization, ownership, replay, and expiry edge cases.
-2. Re-test the locally fixed signup and recovery password policy against the
-   development provider as recorded in [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
-3. Add regression coverage for the discovered development/runtime integration
-   failures before continuing the remaining provider and deployment smoke.
-4. Review the additive M2 migration and authentication flow, and resolve the
-   failed Cloudflare Workers build before deployment.
-5. Do not migrate remote D1, configure production secrets, or invite real users
-   while M2 acceptance remains open. Keep `http://127.0.0.1:5173` as the
+1. Review the additive M2 migration and authentication flow, and record the
+   owner's findings without calling the review independent.
+2. Diagnose the intended Cloudflare build. Do not create/configure a Worker or
+   deploy without separate approval; keep C1/M2 provisional until it passes.
+3. Review the local A5 older-data report with fictional data, then complete
+   M3 acceptance evidence before B5/M4 acceptance.
+4. Do not migrate remote D1, configure production secrets, or invite real users
+   while these gates remain open. Keep `http://127.0.0.1:5173` as the
    development Supabase Site URL until a reviewed hosted URL is available.
 
 While the M2 acceptance owner performs those steps, the other two workstreams
@@ -127,8 +126,8 @@ does not make M3 or M4 complete before their prerequisite evidence exists.
 
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
-| M2 — authentication and RBAC | Implemented on `main`; acceptance pending | Local checks and hosted Linux/Windows CI passed. Configure and verify real Supabase email/login/recovery, resolve the Cloudflare build, and review the authentication flow and migration. See [M2 evidence](M2_LOCAL_EVIDENCE.md). |
-| M3 — inventory and recipes | A4 implemented locally; acceptance pending | Person B's compatibility review is recorded. Complete A5 after M2 acceptance and keep the exact preview disabled until the coordinated B4 review is complete. |
+| M2 — authentication and RBAC | Manual development-provider walkthrough accepted by owner; C1/M2 provisional | Resolve the intended Cloudflare build and record authentication-flow/migration review. See [development evidence](M2_DEV_AUTH_EVIDENCE.md). |
+| M3 — inventory and recipes | A4 and older-data report implemented locally; acceptance pending | Person B's compatibility review is recorded. Review A5 with fictional data after the M2 gate; keep the exact preview disabled by default. |
 | M4 — POS ingestion | B4 implemented locally; acceptance pending | Complete the dedicated B4 visual walkthrough, obtain prerequisite M2/M3 acceptance and review, then complete B5 evidence. Clover remains B6. |
 | M5 — Clover | OAuth/menu prototype only | Sandbox merchant, completed-order sync, modifiers, cursors, reconciliation, health, and sandbox evidence. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
