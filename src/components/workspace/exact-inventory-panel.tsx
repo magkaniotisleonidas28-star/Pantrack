@@ -1,5 +1,5 @@
 'use client';
-import {useState} from 'react';
+import {useRef,useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
@@ -30,27 +30,40 @@ export default function ExactInventoryPanel({companyId,products,role,view,legacy
   const firstRecord=view.records[0];
   const [recipeId,setRecipeId]=useState(''),[recipeDraftId,setRecipeDraftId]=useState(''),[recipeName,setRecipeName]=useState(''),[ingredients,setIngredients]=useState<RecipeAmountInput[]>(firstRecord?[{productId:firstRecord.productId,amount:'1',unitId:firstRecord.stockUnitId}]:[]);
   const [modifierRecipeId,setModifierRecipeId]=useState(''),[modifierId,setModifierId]=useState(''),[modifierDraftId,setModifierDraftId]=useState(''),[modifierName,setModifierName]=useState(''),[modifierProduct,setModifierProduct]=useState(firstRecord?.productId||''),[modifierAmount,setModifierAmount]=useState(''),[subtract,setSubtract]=useState(false);
+  const pendingOperations=useRef(new Map<string,string>());
   const record=(id:string)=>view.records.find(value=>value.productId===id);
   const product=(id:string)=>products.find(value=>value.id===id);
-  async function call(body:Record<string,unknown>){
+  function retryable(body:Record<string,unknown>){
+    const key=JSON.stringify({companyId,...body});
+    let operationId=pendingOperations.current.get(key);
+    if(!operationId){operationId=crypto.randomUUID();pendingOperations.current.set(key,operationId);}
+    return {body:{...body,operationId},key};
+  }
+  async function call(body:Record<string,unknown>,retryKey?:string){
     if(busy)return;
     setBusy(true);setError('');setNotice('');
+    let outcome:'unknown'|'rejected'|'saved'='unknown';
     try{
       const response=await fetch('/api/inventory',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})});
       const data=await response.json() as {error?:string};
-      if(!response.ok)throw new Error(data.error||'Inventory update failed.');
-      setNotice('Saved to exact inventory history.');
+      if(!response.ok){outcome='rejected';throw new Error(data.error||'Inventory update failed.');}
+      outcome='saved';
       await onReload();
-    }catch(reason){setError((reason as Error).message);}finally{setBusy(false);}
+      if(retryKey&&pendingOperations.current.get(retryKey)===body.operationId)pendingOperations.current.delete(retryKey);
+      setNotice('Saved to exact inventory history.');
+    }catch(reason){setError(retryKey&&outcome!=='rejected'
+      ? outcome==='saved'?'Saved, but inventory could not refresh. Retry with the same values to confirm it.'
+        :'Could not confirm whether this saved. Retry with the same values before changing them.'
+      :(reason as Error).message);}finally{setBusy(false);}
   }
-  async function configure(event:React.FormEvent){event.preventDefault();await call({
-    action:'configureExact',productId,operationId:crypto.randomUUID(),
+  async function configure(event:React.FormEvent){event.preventDefault();const pending=retryable({
+    action:'configureExact',productId,
     stockUnit:custom?{kind:'custom',id:customId,label:customLabel,dimension,numerator,denominator}:{kind:'curated',id:unitId},
     purchaseUnitLabel:purchaseLabel,purchaseAmount,openingAmount:record(productId)?undefined:openingAmount,effectiveAt:occurrence(effectiveAt),
-  });}
-  async function updateStock(event:React.FormEvent){event.preventDefault();const selected=record(movementProduct);if(!selected)return;await call(movement==='count'?{
-    action:'countExact',productId:movementProduct,operationId:crypto.randomUUID(),expectedVersion:selected.version,amount:movementAmount,unitId:selected.stockUnitId,effectiveAt:occurrence(movementAt),note,
-  }:{action:'movementExact',productId:movementProduct,operationId:crypto.randomUUID(),expectedVersion:selected.version,movement,amount:movementAmount,unitId:selected.stockUnitId,effectiveAt:occurrence(movementAt),note});}
+  });await call(pending.body,pending.key);}
+  async function updateStock(event:React.FormEvent){event.preventDefault();const selected=record(movementProduct);if(!selected)return;const pending=retryable(movement==='count'?{
+    action:'countExact',productId:movementProduct,expectedVersion:selected.version,amount:movementAmount,unitId:selected.stockUnitId,effectiveAt:occurrence(movementAt),note,
+  }:{action:'movementExact',productId:movementProduct,expectedVersion:selected.version,movement,amount:movementAmount,unitId:selected.stockUnitId,effectiveAt:occurrence(movementAt),note});await call(pending.body,pending.key);}
   async function saveRecipe(event:React.FormEvent){event.preventDefault();const lineage=recipeId||crypto.randomUUID(),draft=recipeDraftId||crypto.randomUUID();await call({action:'saveRecipeDraftExact',recipeId:lineage,draftId:draft,name:recipeName,ingredients});setRecipeId(lineage);setRecipeDraftId(draft);}
   async function saveModifier(event:React.FormEvent){event.preventDefault();const lineage=modifierId||crypto.randomUUID(),draft=modifierDraftId||crypto.randomUUID();const selected=record(modifierProduct);if(!selected)return;await call({action:'saveModifierDraftExact',recipeId:modifierRecipeId,modifierId:lineage,draftId:draft,name:modifierName,deltas:[{productId:modifierProduct,amount:modifierAmount,unitId:selected.stockUnitId,signed:subtract}]});setModifierId(lineage);setModifierDraftId(draft);}
   const activeRecipes=view.recipes.filter(version=>version.status==='active');
