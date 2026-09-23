@@ -1,4 +1,4 @@
-# A5 older-data owner review — pending walkthrough
+# A5 older-data owner review — local walkthrough passed
 
 This is a development-only check of the read-only **Older-data review** screen.
 Use only the separate fictional local test database prepared for this check. Do
@@ -16,7 +16,7 @@ on a remote environment for this review.
 ## Owner walkthrough
 
 1. Sign in with a fictional owner or manager account and open the fictional
-   company. Open **Exact inventory** → **Older-data review**.
+   company. Open **Inventory** → **Older-data review**.
 2. Check that the fixture's changed older stock and recipe appear with clear
    review messages. Check that a product lacking an exact opening count and a
    recipe lacking an active reviewed version are identified.
@@ -33,10 +33,10 @@ prepares A5 evidence; it does not by itself accept M3 or authorize deployment.
 
 | Step | Result | Safe notes |
 | --- | --- | --- |
-| Fixture and local preview confirmed | Pending | |
-| Owner/manager flags match fixture | Blocked | Owner could not view the local review tab. Agent precheck is recorded below only. |
-| Report has no stock-changing action | Blocked | Owner could not view the local review tab. Agent precheck is recorded below only. |
-| Inventory unchanged after reading | Pending | |
+| Fixture and local preview confirmed | PASS | Agent confirmed the isolated fictional D1 and local-only preview. |
+| Owner/manager flags match fixture | PASS | Owner viewed the changed fictional milk and latte messages, opening-count need, and reviewed-recipe need in a private browser tab. |
+| Report has no stock-changing action | PASS | Owner reported no stock-changing button in the review area. |
+| Inventory unchanged after reading | PASS | Agent reran read-only fixture verification after the owner's walkthrough; fictional stock and recipe stayed unchanged with no exact balance or event. |
 
 ## Agent precheck — 2026-09-23
 
@@ -63,5 +63,7 @@ continues to use the existing local database and its unchanged gate setting
 run `node scripts/a5-review-fixture.mjs verify`. Do not run the seed command on
 the normal local D1 database.
 
-Owner review date: pending. Owner decision: blocked by access to the local review tab. C1/M2 and Cloudflare
-build gates remain separate.
+Owner review date: 2026-09-23. Owner decision: PASS for this local fictional-data
+screen walkthrough. The initial tab-access blocker was resolved using a private
+browser tab. This does not accept A5/M3 as a whole; C1/M2, the completed M3
+acceptance record, and the Cloudflare build gate remain separate.

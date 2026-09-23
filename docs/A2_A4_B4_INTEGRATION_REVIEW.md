@@ -136,3 +136,17 @@ a separate gate for M3/M4 acceptance.
   live POS or customer data was used. C1/M2, A5/M3, B5/M4, the owner-only
   authentication/migration review, and the intended Cloudflare build remain
   open. Do not merge this branch to `main` yet.
+
+## A5 owner walkthrough resolution — 2026-09-23
+
+- The owner opened the isolated local report in a private browser tab and
+  reported **PASS** for the changed fictional milk and latte guidance and the
+  absence of a stock-changing button. The earlier browser-access blocker is
+  resolved. The agent reran read-only fixture verification afterward: stock
+  and recipe remained unchanged, and no exact balance or event was created.
+  See [A5 owner review](M3_A5_OWNER_REVIEW.md).
+- [Repository checks #21](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35894076431)
+  passed on Ubuntu and Windows at the then-current branch tip `081b140`.
+  This owner-evidence update changes documentation only. A5/M3 is still not
+  accepted, and C1/M2, the owner-only authentication/migration review, and
+  the intended Cloudflare build remain gates before merging to `main`.

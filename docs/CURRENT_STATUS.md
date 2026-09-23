@@ -74,10 +74,11 @@ and exact-inventory cutover. See [M3 local evidence](M3_LOCAL_EVIDENCE.md) and
 [B4 local evidence](M4_B4_LOCAL_EVIDENCE.md).
 
 This does not accept M3. Person B's compatibility review is recorded in the B4
-evidence and found no inventory-specific workaround. A5 now includes a local
-read-only older-data report, but the owner's fictional-data review, M2 gate,
-and Person A's completed M3 acceptance record remain open. No remote migration
-or deployment has occurred.
+evidence and found no inventory-specific workaround. A5 includes a read-only
+older-data report; the owner passed its fictional-data screen walkthrough on
+2026-09-23, and the agent verified that viewing it changed no stock or recipe.
+The M2 gate and Person A's completed M3 acceptance record remain open. No
+remote migration or deployment has occurred.
 
 ## Deployment health
 
