@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "pantrack-dev",
-  "account_id": "71088ac7b341a71e91a2a259a5e1509d",
+  "account_id": "46a94b92309dd488dadd02f6ae70e0ff",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],
   "main": "vinext/server/fetch-handler",
@@ -14,7 +14,7 @@
     {
       "binding": "DB",
       "database_name": "pantrack-dev-db",
-      "database_id": "a810f89d-1a67-416a-baf1-27b014674c2c",
+      "database_id": "9b50014b-f929-4f03-a187-599df6e438b1",
       "migrations_dir": "drizzle"
     }
   ]
