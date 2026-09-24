@@ -22,7 +22,7 @@ class Database {
  prepare(query){return new Statement(this.sql,query);}
  async batch(statements){
   this.sql.exec('BEGIN IMMEDIATE');
-  try{const results=statements.map(statement=>statement.runSync());this.sql.exec('COMMIT');return this.omitBatchChanges?results.map(result=>({...result,meta:{rows_written:result.meta.changes}})):results;}
+  try{const results=statements.map(statement=>statement.runSync());this.sql.exec('COMMIT');return this.omitBatchChanges?results.map(({success,results})=>({success,results})):results;}
   catch(error){this.sql.exec('ROLLBACK');throw error;}
  }
 }
