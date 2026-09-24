@@ -32,9 +32,10 @@ this file concise; detailed workflow and prompt templates live in
 - Never expose or commit secrets, tokens, payment details, or customer data.
 - Make schema changes through new migrations. Never rewrite a used migration.
   Only one schema-bearing change may use the migration merge queue at a time.
-- Prefer a focused module and focused test over unrelated refactoring. Do not
-  modify another workstream's owned files without identifying the handoff and
-  requesting its review.
+- Prefer a focused module and focused test over unrelated refactoring. Identify
+  handoffs before changing another workstream's files, self-review the diff, and
+  verify affected contracts. Coordinate shared-file merges; a second person's
+  development review is not a completion gate.
 - A mocked-provider pass proves local behavior only. Keep local, sandbox, pilot,
   and production evidence clearly separated.
 

@@ -1,6 +1,6 @@
 # Pantrack progress, in plain language
 
-Updated: 2026-09-23. This guide summarizes the roadmap and recorded owner
+Updated: 2026-09-24. This guide summarizes the roadmap and recorded owner
 decisions. Refresh it when workstream branches merge or new evidence is accepted.
 
 ## The short version
@@ -31,8 +31,8 @@ live supplier order or an automatic purchase is permitted.
 - **Done on `main`:** the checked roadmap step is in the shared branch.
 - **Built locally, acceptance open:** code or a screen exists and local checks
   passed, but the required review or real-world evidence is not complete.
-- **Branch awaiting review:** work is saved separately and is not yet part of
-  `main`.
+- **Branch awaiting integration:** work is saved separately and is not yet part
+  of `main`.
 - **Open:** the roadmap step has not been accepted. Some groundwork may still
   exist; “open” does not necessarily mean “no code.”
 
@@ -47,12 +47,11 @@ this computer; it does not prove that a hosted service or real provider works.
 | Local setup and automated checks (M0–M1) | Done on `main`. The app can run locally, and GitHub Actions checks the project on Ubuntu and Windows. |
 | Accounts and company permissions (C1/M2) | Owner-accepted for development. The owner tested confirmation, sign-in, invitations, roles, ownership transfer, recovery, and sign-out with fictional accounts. A separate independent security review and independently verified Cloudflare deployment are **not** claimed. |
 | Exact inventory and recipes (A4–A5/M3) | Owner-accepted for development after the full local pipeline, Person B's contract review, and the fictional older-data walkthrough. The hidden switch remains off by default. Hosted migration `0012` and Worker behavior remain unverified. |
-| Permanent sales events and exceptions (B2–B4/M4) | B2 and B3 are checked on `main`. B4's code is on `main`: manual sales, CSV paths, and the authenticated register bridge can use the exact-inventory flow while the hidden switch is on. Local tests and a fictional browser review passed. A B4 closeout record is on a separate branch, not yet merged. M4 acceptance (B5) is still open. |
+| Permanent sales events and exceptions (B1–B4/M4) | B1–B4 are checked on `main`. Manual sales, CSV paths, and the authenticated register bridge can use the exact-inventory flow while the hidden switch is on. B4's local closeout and privacy check passed; the owner accepted the completed local artifacts. M4 acceptance (B5) is still open. |
 | Clover, suppliers, and payments | Some setup/prototype screens exist. They do **not** represent completed live sales syncing, supplier ordering, or production payment readiness. |
 
-The B4 closeout branch is `workstream-b/b4-closeout-20260923` at `3aa521f`.
-It changes progress/evidence documents only. Until reviewed and merged, the
-`main` roadmap still shows B4 unchecked. Its local tests do not accept M4.
+The B4 closeout began on `workstream-b/b4-closeout-20260923` at `3aa521f`.
+Its evidence is now recorded on `main`; local tests do not accept M4.
 
 ## Person A — inventory and replenishment
 
@@ -81,10 +80,10 @@ review instead of silently changing stock.
 
 | Step | Plain-language job | Status |
 | --- | --- | --- |
-| B1 | Formally approve the common sales-event rules, including duplicates, held sales, refunds, and privacy. | Open in roadmap; design acceptance still needs recording. |
+| B1 | Formally approve the common sales-event rules, including duplicates, held sales, refunds, and privacy. | Done on `main`; the M4 design record is accepted. |
 | B2 | Prove the sales process against a fake inventory service, including retries and failures. | Done on `main`; checked. |
 | B3 | Add permanent sales-event, review, and audit database records. | Done on `main`; checked. |
-| B4 | Connect sales to exact inventory and provide review, replay, dismissal, and correction screens. | Built and tested locally. The separate B4 closeout branch marks this step complete, but that documentation change is awaiting review/merge. |
+| B4 | Connect sales to exact inventory and provide review, replay, dismissal, and correction screens. | Done locally on `main`; closeout and employee-status privacy evidence are recorded. |
 | B5 | Review the complete M4 evidence after A5/M3 acceptance. | **Next B acceptance step**; open. M4 is not complete. |
 | B6 | Finish the Clover connection locally, including mapping, missed sales, and connection health. | Later; open. Current Clover setup is only a prototype. |
 | B7 | Test the completed Clover connection in its approved sandbox. | Later; open. Sandbox access and evidence are required. |
@@ -114,9 +113,8 @@ real order.
 
 1. **A:** begin A6's review-only replenishment calculation work. Keep versioned
    proposals and automatic purchasing behind their later gates.
-2. **B:** review and merge the B4 closeout documentation when the shared-file
-   merge owner agrees; record B1 design acceptance, then perform B5's full M4
-   review. Do not mark M4 complete early.
+2. **B:** perform B5's full M4 evidence and acceptance. Do not mark M4 complete
+   from B4's local closeout alone.
 3. **C:** finish the C2 evidence/limitations record and start collecting C3
    business decisions. C4 may use fake services only while other work proceeds.
 4. **Project owner:** choose and approve outside services when the relevant step

@@ -175,3 +175,43 @@ references and reasons, employee/manager role comparisons, and the individual
 history denial. `pnpm typecheck`, the full 18-suite `pnpm test`, `pnpm db:check`,
 `pnpm build`, and focused ESLint passed. This is local evidence only, not B5 or
 M4 acceptance.
+
+## B4 local closeout and owner artifact acceptance — 2026-09-24
+
+The B4 contributor completed a separate closeout on 2026-09-23 in
+`workstream-b/b4-closeout-20260923` (commit `3aa521f`). Its evidence is recorded
+here on `main` after the owner accepted the completed local review artifacts on
+2026-09-24. The earlier pending-M2, pending-M3, and do-not-merge statements
+above describe the historical branch state; B4 code is already on `main`, and
+C1/M2 and A5/M3 are now owner-accepted for development.
+The [B1 design](decisions/0003-m4-sales-ingestion.md) is accepted, and B4's
+implementation checklist item is complete locally. B5/M4 is still open.
+
+The closeout used an isolated fictional D1 database and enabled the preview
+only for its local served check. A fictional employee's held-sale screen showed
+state and occurrence time, without its distinctive external reference or review
+reason. It showed read-only inventory and no sales-entry or correction controls.
+Focused security tests cover the employee response field allowlist, empty
+conflict/correction lists, denied event detail/history, and owner/manager access.
+The preview is off by default in tracked configuration; the local server was
+stopped after the check. The branch closeout applied all migrations through
+`0012_tough_rage.sql` to its fresh isolated local D1 and passed its full local
+pipeline; its source tests and migration were unchanged when this record moved
+to `main`.
+
+The complete pipeline passed again on current `main` on 2026-09-24:
+
+- PASS: `pnpm typecheck` and `pnpm test` (19 suites).
+- PASS: `pnpm db:check` (13 migrations agree with schema, snapshot, and journal
+  and apply to a fresh SQLite database) and `pnpm build`.
+- PASS: `pnpm db:migrate:local` (no pending local migrations) and
+  `pnpm test:local` (fictional local authentication, company, tenant isolation,
+  and sign-out). The smoke test left a fictional company in local D1.
+
+The two loopback-dependent commands needed a permitted unsandboxed local run
+after sandbox binding returned `EPERM`. This closeout did not apply migration
+`0012` remotely or verify hosted Worker behavior. Leave the exact preview off
+remotely until both are checked. If a nonlocal migration needs repair, retain
+history and add a forward migration. No live POS, supplier, customer-data,
+deployment, or production acceptance is claimed. B5 must separately collect
+and accept the complete M4 evidence before B6/Clover work.

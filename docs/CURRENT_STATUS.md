@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-23
+Updated: 2026-09-24
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -84,6 +84,17 @@ behavior remain unverified. The exact preview stays off remotely until those
 checks pass. The owner authorized a `main` push even if the replacement
 Cloudflare connection auto-deploys.
 
+## M4 local implementation
+
+The accepted [B1 design](decisions/0003-m4-sales-ingestion.md), B2/B3 tests and
+data foundations, and B4 exact-sales integration are on `main`. The B4
+[local closeout](M4_B4_LOCAL_EVIDENCE.md) includes the employee-status privacy
+follow-up, an isolated fictional served check, and a complete local pipeline
+rerun on 2026-09-24. The owner accepted the completed local artifacts on
+2026-09-24. B1 and B4 are checked as local workstream steps; B5/M4 acceptance
+remains open and requires its own complete evidence. No live POS or hosted
+runtime behavior is established by the local closeout.
+
 ## Deployment health
 
 On 2026-09-23, the new development D1 database in Cloudflare account
@@ -123,15 +134,15 @@ supplier credentials, or payment details into chat or source control.
 
 ## What you need to do next
 
-1. Record the user-reported review of the additive M2 migration and
-   authentication flow. C1/M2 was owner-accepted; do not call this independent
-   security verification.
+1. In C2, document the already owner-reported review of the additive M2
+   migration and authentication flow. C1/M2 was owner-accepted; do not call
+   this independent security verification.
 2. Treat the replacement Cloudflare build step as owner-accepted, not
    independently verified. Run hosted development smoke on the correct account.
    Development D1 migration `0012` is unverified; keep the exact inventory preview
    disabled until that migration and hosted runtime are checked.
-3. A5/M3 is accepted for development. Review the separate B4 closeout branch
-   and complete B5's M4 evidence and acceptance before starting B6/Clover.
+3. A5/M3 is accepted for development and B4 is closed locally. Complete B5's
+   M4 evidence and acceptance before starting B6/Clover.
 4. Keep production data and real users out of this environment while these
    gates remain open. Keep `http://127.0.0.1:5173` as the
    development Supabase Site URL until a reviewed hosted URL is available.
@@ -144,9 +155,9 @@ and the [AI development playbook](AI_DEVELOPMENT.md). M4 remains unaccepted.
 
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
-| M2 — authentication and RBAC | C1/M2 accepted by owner for development; replacement Cloudflare build is owner-attested | Record the user-reported authentication and migration review and run hosted development smoke. No independent security or deployment verification is claimed. See [development evidence](M2_DEV_AUTH_EVIDENCE.md). |
+| M2 — authentication and RBAC | C1/M2 accepted by owner for development; authentication/migration review and replacement Cloudflare build are owner-attested | Document the already reported review and run hosted development smoke. No independent security or deployment verification is claimed. See [development evidence](M2_DEV_AUTH_EVIDENCE.md). |
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and the A5 fictional screen walkthrough passed. Hosted `0012` migration and Worker behavior remain separate; keep the exact preview off remotely. |
-| M4 — POS ingestion | B4 implemented and walked through locally; acceptance pending | Review the B4 closeout record, then complete B5 evidence and acceptance. Clover remains B6. |
+| M4 — POS ingestion | B1 and B4 checked; B4 local closeout recorded; acceptance pending | Complete B5 concurrency, recovery, authorization, and compatibility evidence and acceptance. Clover remains B6. |
 | M5 — Clover | OAuth/menu prototype only | Sandbox merchant, completed-order sync, modifiers, cursors, reconciliation, health, and sandbox evidence. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | Prototype exists; not complete | Frozen snapshots, explainable lifecycle, edits/audit, quantity reservation, and concurrency tests. |
