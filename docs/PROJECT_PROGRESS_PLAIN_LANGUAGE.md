@@ -8,8 +8,8 @@ decisions. Refresh it when workstream branches merge or new evidence is accepted
 Pantrack has a working local foundation: accounts and company roles, a product
 catalog, inventory and recipes, and several ways to enter sales. The owner has
 accepted the **M2 account-and-permissions and M3 inventory milestones for
-development**. The new sales-to-inventory connection is built and tested
-locally, but **M4 is not accepted yet**. Real Clover
+development**. The sales-to-inventory connection (M4) is accepted for local
+development and passed a fictional hosted check. Real Clover
 sales, supplier orders, automatic purchasing, and a real café pilot have not
 been completed.
 
@@ -17,7 +17,7 @@ The next dependency is:
 
 ```text
 Person A's M3 acceptance (A5) is recorded
-    → Person B can finish M4 acceptance (B5)
+    → Person B's local M4 acceptance (B5) is recorded
     → Person B can complete and test Clover (B6–B7)
     → later replenishment, supplier, pilot, and release work can proceed
 ```
@@ -45,13 +45,15 @@ this computer; it does not prove that a hosted service or real provider works.
 | Area | Current position |
 | --- | --- |
 | Local setup and automated checks (M0–M1) | Done on `main`. The app can run locally, and GitHub Actions checks the project on Ubuntu and Windows. |
-| Accounts and company permissions (C1/M2) | Owner-accepted for development. The owner tested confirmation, sign-in, invitations, roles, ownership transfer, recovery, and sign-out with fictional accounts. A separate independent security review and independently verified Cloudflare deployment are **not** claimed. |
-| Exact inventory and recipes (A4–A5/M3) | Owner-accepted for development after the full local pipeline, Person B's contract review, and the fictional older-data walkthrough. The hidden switch remains off by default. Hosted migration `0012` and Worker behavior remain unverified. |
-| Permanent sales events and exceptions (B1–B4/M4) | B1–B4 are checked on `main`. Manual sales, CSV paths, and the authenticated register bridge can use the exact-inventory flow while the hidden switch is on. B4's local closeout and privacy check passed; the owner accepted the completed local artifacts. M4 acceptance (B5) is still open. |
+| Accounts and company permissions (C1/M2) | Owner-accepted for development. The owner tested confirmation, sign-in, invitations, roles, ownership transfer, recovery, and sign-out with fictional accounts. A separate independent security review is **not** claimed. A development Worker was deployed and passed hosted sign-in; hosted signup and recovery callbacks remain unchecked. |
+| Exact inventory and recipes (A4–A5/M3) | Owner-accepted for development after the full local pipeline, Person B's contract review, and the fictional older-data walkthrough. Development database migration `0012` and a fictional hosted inventory check passed. The hidden switch is off again. |
+| Permanent sales events and exceptions (B1–B5/M4) | B1–B5 are checked on `main` for local development. Manual sales, CSV paths, and the authenticated register bridge can use the exact-inventory flow while the hidden switch is on. A fictional hosted sale applied once and its duplicate left stock unchanged. Clover remains future work. |
 | Clover, suppliers, and payments | Some setup/prototype screens exist. They do **not** represent completed live sales syncing, supplier ordering, or production payment readiness. |
 
 The B4 closeout began on `workstream-b/b4-closeout-20260923` at `3aa521f`.
-Its evidence is now recorded on `main`; local tests do not accept M4.
+Its evidence and the later [B5 local acceptance](M4_B5_LOCAL_EVIDENCE.md) are
+recorded on `main`. The [hosted development check](C2_HOSTED_DEV_EVIDENCE.md)
+is separate from those local results.
 
 ## Person A — inventory and replenishment
 
@@ -84,8 +86,8 @@ review instead of silently changing stock.
 | B2 | Prove the sales process against a fake inventory service, including retries and failures. | Done on `main`; checked. |
 | B3 | Add permanent sales-event, review, and audit database records. | Done on `main`; checked. |
 | B4 | Connect sales to exact inventory and provide review, replay, dismissal, and correction screens. | Done locally on `main`; closeout and employee-status privacy evidence are recorded. |
-| B5 | Review the complete M4 evidence after A5/M3 acceptance. | **Next B acceptance step**; open. M4 is not complete. |
-| B6 | Finish the Clover connection locally, including mapping, missed sales, and connection health. | Later; open. Current Clover setup is only a prototype. |
+| B5 | Review the complete M4 evidence after A5/M3 acceptance. | Done on `main`; M4 accepted for local development on 2026-09-24. |
+| B6 | Finish the Clover connection locally, including mapping, missed sales, and connection health. | Next B step; open. Current Clover setup is only a prototype. |
 | B7 | Test the completed Clover connection in its approved sandbox. | Later; open. Sandbox access and evidence are required. |
 | B8 | Choose and test a second real register provider using the same approach. | Later; open; needs the owner's provider choice. |
 | B9 | Measure missed, delayed, duplicate, and held sales in an approved café pilot. | Later; open. |
@@ -100,7 +102,7 @@ real order.
 | Step | Plain-language job | Status |
 | --- | --- | --- |
 | C1 | Accept accounts and company permissions with a development Supabase account and owner walkthrough. | Owner-accepted for development on 2026-09-23; checked. Cloudflare build success is owner-reported, not independently verified here. |
-| C2 | Record the full M2 evidence and remaining deployment limits for the team. | Open in roadmap. The owner accepted C1 and later reported completing the authentication/migration review, but a separate written review record and independent hosted-build evidence are unavailable. |
+| C2 | Record the full M2 evidence and remaining deployment limits for the team. | Open in roadmap. The owner accepted C1 and later reported completing the authentication/migration review; its separate written record remains unavailable. Development D1 and Worker validation are [recorded](C2_HOSTED_DEV_EVIDENCE.md). |
 | C3 | Obtain decisions about Clover sandbox, second register provider, first supplier, job runner, alerts, payment responsibility, and limits. | Can proceed in parallel; open. Do not guess missing business decisions. |
 | C4 | Build and test safe supplier, background-job, alert, and spending-limit components using fake services. | Can proceed in parallel within its gates; open. No real submissions or schedules. |
 | C5 | Connect the chosen supplier only after A's replenishment milestone is accepted. | Later; open. One real test order would need separate explicit approval. |
@@ -113,19 +115,19 @@ real order.
 
 1. **A:** begin A6's review-only replenishment calculation work. Keep versioned
    proposals and automatic purchasing behind their later gates.
-2. **B:** perform B5's full M4 evidence and acceptance. Do not mark M4 complete
-   from B4's local closeout alone.
+2. **B:** start B6's Clover adapter work under the accepted sales and inventory
+   contracts. B7 still needs explicitly approved sandbox access.
 3. **C:** finish the C2 evidence/limitations record and start collecting C3
    business decisions. C4 may use fake services only while other work proceeds.
 4. **Project owner:** choose and approve outside services when the relevant step
    reaches that gate. Do not supply secrets in chat or use real customer data for
    these development checks.
 
-No remote database migration, live point-of-sale call, supplier order,
-automatic purchasing, or deployment is implied by this document.
+The development D1 migration and Worker deployment described above are complete.
+No live point-of-sale call, supplier order, automatic purchasing, or production
+deployment is implied by this document.
 
 For the authoritative checkboxes and detailed acceptance rules, use the
 [full A/B/C roadmap](PANTRACK_MILESTONES.md#step-by-step-checklist-for-each-person).
 For the milestone-level summary, use [current status](CURRENT_STATUS.md).
-The B4 local test details are in [B4 evidence](M4_B4_LOCAL_EVIDENCE.md); the
-new closeout section remains on its separate branch until merged.
+The B4 local test details are in [B4 evidence](M4_B4_LOCAL_EVIDENCE.md).

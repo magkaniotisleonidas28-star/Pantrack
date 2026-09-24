@@ -3,10 +3,12 @@
 Implementation is on `main`. The owner accepted the development Supabase
 walkthrough and reports completing the authentication and migration review.
 The owner also accepted a reported replacement Cloudflare build, but its run
-and commit details are unavailable. The new development D1 database has
-migrations through `0011`; this integration adds `0012`, whose remote application
-is unverified. No hosted Worker has been verified. Record the owner's review
-before public release. Do not use production company data to test this change.
+and commit details are unavailable. Development D1 now has migrations through
+`0012`, and a newly deployed development Worker passed a fictional hosted
+walkthrough on 2026-09-24; see [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md).
+The temporary exact inventory preview was disabled afterward. Record the
+owner's M2 review before public release. Do not use production company data to
+test this change.
 
 ## Local prerequisites
 

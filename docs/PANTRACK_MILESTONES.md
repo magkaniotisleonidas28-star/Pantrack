@@ -312,7 +312,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   this is not independent security or production acceptance.
 - [ ] **C2 — Record M2 evidence and unblock the team.** Run the complete checks,
   document deployment limitations, and update current status only when every M2
-  acceptance item has evidence. Notify A and B that M2's gate is open.
+  acceptance item has evidence. Notify A and B that M2's gate is open. The
+  development D1 `0012` migration and fictional hosted Worker walkthrough are
+  [recorded](C2_HOSTED_DEV_EVIDENCE.md); the owner's reported M2 review still
+  needs a separate written record, so C2 remains open.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   ordering channel, account/location/SKUs/terms, scheduler/queue, notification
@@ -533,9 +536,10 @@ Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCA
 Owner-accepted for local development on 2026-09-23 after the complete local
 pipeline and A5 handoff review; see [M3 evidence](M3_LOCAL_EVIDENCE.md).
 The current UI explains the reviewed compatibility calculation. Versioned
-proposal snapshots and policy explanations remain A6/M7 work. Hosted `0012`
-migration and Worker behavior are unverified, so the exact preview stays off
-remotely. M4/B5 acceptance is recorded in the section below.
+proposal snapshots and policy explanations remain A6/M7 work. Development D1
+`0012` and a fictional hosted Worker walkthrough passed on 2026-09-24; see
+[C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview was turned
+off again. M4/B5 acceptance is recorded in the section below.
 
 ### Codex prompt
 
@@ -585,8 +589,9 @@ M4/B5 is accepted for local development on 2026-09-24 after M2/M3 owner
 acceptance, the [B5 local evidence](M4_B5_LOCAL_EVIDENCE.md), and green Ubuntu
 and Windows CI on the B5 branch and merged `main` commit. The active sources are
 manual sales, CSV, and the authenticated bridge. Native provider signatures and
-Clover sandbox evidence belong to B6/B7. Hosted D1 migration `0012` and Worker
-smoke remain separate gates before enabling the exact preview remotely.
+Clover sandbox evidence belong to B6/B7. Development D1 migration `0012` and a
+fictional Worker smoke passed separately in
+[C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md); the exact preview is off again.
 
 ### Codex prompt
 

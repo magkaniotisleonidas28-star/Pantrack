@@ -79,9 +79,9 @@ The owner read the [M3 evidence](M3_LOCAL_EVIDENCE.md) and
 workaround. The fictional older-data screen walkthrough passed, and viewing it
 changed no stock or recipe. The complete local pipeline passed again for A5.
 This opened M3's prerequisite for B5; M4's subsequent local acceptance is
-recorded below. Development D1 is migrated through `0011`; application of B4's
-`0012` migration and hosted Worker behavior remain unverified. The exact preview
-stays off remotely until those checks pass. The owner authorized a `main` push
+recorded below. Development D1 and the Worker now have separate
+[hosted validation evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview is
+off again after the fictional walkthrough. The owner authorized a `main` push
 even if the replacement Cloudflare connection auto-deploys.
 
 ## M4 local-development acceptance
@@ -96,9 +96,10 @@ the [B5 evidence](M4_B5_LOCAL_EVIDENCE.md): concurrency, recovery, authorization
 privacy, compatibility, an isolated fictional gate-on served walkthrough, and
 green Ubuntu and Windows CI on the B5 branch and merged `main` commit. The B5
 walkthrough found and fixed a D1 batch-acknowledgment defect during held-event
-replay. Native Clover authentication and signatures, Clover sandbox cases,
-hosted D1 `0012`, and hosted Worker behavior remain unverified. The exact
-preview stays off remotely.
+replay. Native Clover authentication and signatures and Clover sandbox cases
+remain unverified. Development D1 `0012` and a fictional hosted Worker
+walkthrough have now been verified separately in
+[C2 evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview is off remotely.
 
 ## Deployment health
 
@@ -109,8 +110,11 @@ Remote `migrations apply` failed on `0008` with `incomplete input`; unchanged
 migrations `0008`–`0011` succeeded through Wrangler's file import path, and the
 ledger and schema were verified. See the
 [recovery note](M2_SETUP.md#development-d1-trigger-migration-recovery).
-Application of the new `0012` migration has not been verified on that database.
-No hosted Worker smoke or production acceptance is claimed from this evidence.
+On 2026-09-24, `0012` applied to that development D1 database. Its ledger and
+tables were verified, with no pending migration. The newly deployed development
+Worker passed hosted HTTP and fictional sign-in/inventory/sale checks; see
+[C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md). No production acceptance is
+claimed.
 
 Repository CI is green for documentation-repair commit `333dbbd`
 ([run 35426054567](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567)). The separate
@@ -119,7 +123,8 @@ for that commit failed. The owner removed the misconfigured deployment and
 integration, reports a replacement build is working, and accepts the build step
 as complete. Its run link, tested branch, and commit are not recorded here, so
 this is owner attestation rather than independently checked build evidence.
-No deployment or hosted runtime behavior is claimed.
+That earlier build report remains owner attestation; the separate development
+Worker deployment and hosted behavior are documented in the C2 evidence.
 The Supabase Preview check passed, but that check does not prove that Pantrack's
 email templates, callback URLs, runtime variables, or authentication walkthrough
 are configured and working. Keep production data and real users out of this
@@ -131,8 +136,8 @@ environment until separately reviewed release evidence exists.
 | --- | --- | --- |
 | GitHub | Repository connected; milestone branches consolidated into `main`; earlier Ubuntu and Windows CI runs passed. | Keep `main` as the only long-lived branch. Preserve required checks on new commits. |
 | Supabase | The owner accepted the development-provider manual walkthrough using fictional accounts and reports completing the authentication and migration review. Automated provider tests remain separate. | Record the completed review; do not treat the walkthrough as independent or production security verification. |
-| Cloudflare | Owner reports a replacement build works and accepts the build step; run and commit details are unavailable. Development D1 has migrations through `0011`; `0012` application is unverified. | Verify the hosted Worker and apply `0012` before enabling the exact inventory preview. Do not claim independent build or hosted-runtime verification from the owner's build report. |
-| Custom domain | The user reports that the domain is already in Cloudflare. No Worker route has been verified. | Use the development Worker's `workers.dev` URL for hosted smoke before deciding whether to attach the domain. |
+| Cloudflare | The earlier replacement build report is owner-attested. Development D1 has `0012`; the deployed `pantrack-dev` Worker passed a fictional hosted walkthrough. See [C2 evidence](C2_HOSTED_DEV_EVIDENCE.md). | Keep the exact preview off after the test. C2 still needs the owner's M2 review recorded and any remaining acceptance evidence. |
+| Custom domain | The user reports that the domain is already in Cloudflare. No Worker route has been verified. | Decide whether to attach the domain after the development `workers.dev` validation; the current hosted evidence uses that URL. |
 
 Never send, commit, or paste Supabase keys, Cloudflare API tokens, OAuth secrets,
 supplier credentials, or payment details into chat or source control.
@@ -142,29 +147,33 @@ supplier credentials, or payment details into chat or source control.
 1. In C2, document the already owner-reported review of the additive M2
    migration and authentication flow. C1/M2 was owner-accepted; do not call
    this independent security verification.
-2. Treat the replacement Cloudflare build step as owner-accepted, not
-   independently verified. Run hosted development smoke on the correct account.
-   Development D1 migration `0012` is unverified; keep the exact inventory preview
-   disabled until that migration and hosted runtime are checked.
+2. Use the [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md) for the completed
+   development D1 `0012` and Worker smoke. Keep the exact inventory preview
+   disabled; the fictional walkthrough is complete. Finish any remaining C2
+   acceptance evidence without treating the earlier replacement build report
+   as an independently verified run.
 3. A5/M3 and B5/M4 are accepted for local development. Start B6's Clover
    adapter work using the accepted sales and consumption contracts. B7 still
    requires explicitly approved sandbox access and recorded provider evidence.
 4. Keep production data and real users out of this environment while these
-   gates remain open. Keep `http://127.0.0.1:5173` as the
-   development Supabase Site URL until a reviewed hosted URL is available.
+   gates remain open. Hosted sign-in worked at the development `workers.dev`
+   URL; signup and recovery callback configuration there still needs a
+   separate check. Preserve the local Supabase callback configuration while
+   reviewing any hosted URL change.
 
 Other workstreams can continue local-only work under their individual
 [roadmap checklists](PANTRACK_MILESTONES.md#step-by-step-checklist-for-each-person)
 and the [AI development playbook](AI_DEVELOPMENT.md). M4's acceptance is limited
-to local development; hosted and native-provider evidence remain open.
+to local development; the hosted fictional check does not cover native-provider
+behavior.
 
 ## Remaining roadmap
 
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
-| M2 — authentication and RBAC | C1/M2 accepted by owner for development; authentication/migration review and replacement Cloudflare build are owner-attested | Document the already reported review and run hosted development smoke. No independent security or deployment verification is claimed. See [development evidence](M2_DEV_AUTH_EVIDENCE.md). |
-| M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and the A5 fictional screen walkthrough passed. Hosted `0012` migration and Worker behavior remain separate; keep the exact preview off remotely. |
-| M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers concurrency, recovery, authorization, compatibility, local served behavior, and green branch/main CI. Hosted `0012` and Worker smoke remain separate; Clover remains B6/B7. |
+| M2 — authentication and RBAC | C1/M2 accepted by owner for development; authentication/migration review and replacement Cloudflare build are owner-attested | Document the already reported review. Development Worker smoke passed, but hosted signup/recovery and independent security verification remain open. See [development auth evidence](M2_DEV_AUTH_EVIDENCE.md) and [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md). |
+| M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
+| M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
 | M5 — Clover | OAuth/menu prototype only | Sandbox merchant, completed-order sync, modifiers, cursors, reconciliation, health, and sandbox evidence. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | Prototype exists; not complete | Frozen snapshots, explainable lifecycle, edits/audit, quantity reservation, and concurrency tests. |
@@ -194,6 +203,7 @@ limited automation.
 - [M4 B3 local D1 evidence](M4_B3_LOCAL_EVIDENCE.md)
 - [M4 B4 local exact-sales evidence](M4_B4_LOCAL_EVIDENCE.md)
 - [M4 B5 local acceptance evidence](M4_B5_LOCAL_EVIDENCE.md)
+- [C2 hosted development validation](C2_HOSTED_DEV_EVIDENCE.md)
 - [September 19 readiness snapshot and approved M2 permissions](MILESTONE_READINESS.md)
 - [Full milestone roadmap](PANTRACK_MILESTONES.md)
 - [Branch consolidation record](BRANCH_CONSOLIDATION.md)
