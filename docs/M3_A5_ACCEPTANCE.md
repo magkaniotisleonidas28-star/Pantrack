@@ -68,6 +68,11 @@ TypeScript/TSX files passed again. Migration checks,
 fresh local migration, and served smoke passed before the fix; no migration,
 database service, route, or smoke-covered behavior changed afterward.
 
+Hosted [draft PR #4](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/4)
+ran [repository CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35940202302)
+on source commit `01286e5`: the Ubuntu and Windows jobs both passed. This is
+repository CI evidence, not a deployment or hosted-runtime test.
+
 The first attempts at some checks hit sandbox `spawn EPERM`; each affected
 command was rerun with approved local execution and passed. No remote database,
 hosted runtime, real provider, or production data was contacted by this run.
@@ -89,9 +94,7 @@ planning** manager screens as a set. The UI review rule in
 [AI development guidance](AI_DEVELOPMENT.md) requires a visual walkthrough or
 an explicit QA blocker; this is that blocker. The migration SQL has local
 compatibility review, but the named fresh reviewer and owning-human review for
-a schema-bearing acceptance have not been recorded. Hosted CI for this A5
-packet also cannot run until its branch is published; the local checks are
-not hosted CI.
+a schema-bearing acceptance have not been recorded.
 
 For the outstanding fictional-data manager walkthrough, the reviewer should
 open Exact stock, Recipe versions, Modifiers, Planning explanation, and Count
