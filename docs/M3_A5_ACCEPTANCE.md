@@ -88,25 +88,38 @@ write, retain history and use a new forward-repair migration if needed.
 
 ## Acceptance decision still needed
 
-The older-data screen had its own owner walkthrough, but there is no recorded
-visual walkthrough of the **exact stock, recipe, modifier, count history, and
-planning** manager screens as a set. The UI review rule in
-[AI development guidance](AI_DEVELOPMENT.md) requires a visual walkthrough or
-an explicit QA blocker; this is that blocker. The migration SQL has local
+The owner confirmed **"all matched"** on 2026-09-23 after opening the separate
+fictional local A5 cafe and checking Exact stock, Count history, Recipe versions,
+Modifiers, and Planning explanation. The reviewed fixture showed milk at 12 mL,
+an opening count of 10 mL followed by a 12 mL count with +2 mL variance, an
+active reviewed latte and extra-milk modifier, three suggested milk packs with
+capacity/shelf limits, and no automatic suggestion for overdue coffee. This is
+owner-observed local screen evidence, separate from the automated tests and
+the earlier [older-data screen walkthrough](M3_A5_OWNER_REVIEW.md). The owner
+then requested that displayed decimals omit trailing zeroes while still allowing
+decimal input. The display-only formatting follow-up trims those zeroes without
+changing canonical quantities, conversion precision, or saved values. Exact
+amounts such as `12.000000` now display as `12`, while `12.500000` displays as
+`12.5` and a value needing all six places retains them. The compatibility
+planning tab also hides trailing zeros from its three-place display rounding.
+
+After that display change, PASS: focused `inventory-quantities`, `pnpm
+typecheck`, all 19 `pnpm test` suites, `pnpm db:check`, `pnpm build`,
+`pnpm db:migrate:local` (no pending migrations), `pnpm test:local`, focused
+ESLint for both changed source files, and a read-only check that the isolated
+fictional manager fixture still serves the expected stock, recipe, modifier,
+and planning values. The first `test:local` attempt was blocked by the already
+running review server; it passed after that server was stopped and was then
+restarted. A quick owner look at the compact display is pending.
+
+The migration SQL has local
 compatibility review, but the named fresh reviewer and owning-human review for
 a schema-bearing acceptance have not been recorded.
 
-For the outstanding fictional-data manager walkthrough, the reviewer should
-open Exact stock, Recipe versions, Modifiers, Planning explanation, and Count
-history with the preview enabled **locally only**. They should verify that a
-fresh opening count is required, saved versions remain visible, count variance
-is shown, the planning tab names each limit, and an overdue count offers no
-automatic packs. The reviewer must record any failure and their decision.
 The owning human should also review the additive `0009`/`0011` migration
 summary and forward-repair rule above, or name a qualified reviewer; this
 cannot be inferred from automated tests.
 
-Therefore M3 and A5 stay unchecked. The next work is to record the manager-screen
-walkthrough and migration review, then rerun checks affected by any change and
-record the final acceptance decision. B5/M4
+Therefore M3 and A5 stay unchecked. The next work is to record the migration
+review and the final acceptance decision. B5/M4
 acceptance must wait for that decision. The preview remains off by default.
