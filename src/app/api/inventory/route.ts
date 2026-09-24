@@ -12,6 +12,10 @@ const settings=z.object({targetStock:amount.nullable().optional().default(null),
 const identity=z.string().trim().min(1).max(200);
 const decimal=z.string().min(1).max(128).regex(/^-?(?:0|[1-9]\d*)(?:\.\d{1,6})?$/);
 const occurrence=z.string().min(20).max(35);
+function matchesInventoryRequest(data:string,request:object){
+ try{const event=JSON.parse(data) as {request?:unknown};return JSON.stringify(event.request)===JSON.stringify(request);}
+ catch{return false;}
+}
 const exactUnit=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('curated'),id:z.enum(CURATED_UNIT_IDS)}).strict(),
  z.object({kind:z.literal('custom'),id:identity,label:z.string().trim().min(1).max(200),dimension:z.enum(['count','mass','volume']),numerator:z.string().regex(/^[1-9]\d*$/).max(128),denominator:z.string().regex(/^[1-9]\d*$/).max(128)}).strict(),
@@ -60,8 +64,9 @@ async function handlePOST(req:Request){
  const b=z.object({companyId:z.string().min(1).max(200),productId:z.string().min(1).max(100),id:z.string().uuid(),version:z.number().int().min(0),action:z.enum(['settings','count','receive','use','waste','incoming']),quantity:amount.optional(),settings:settings.optional(),note:z.string().trim().max(300).default(''),fromIncoming:z.boolean().optional()}).strict().parse(body);
  const member=await companyAccess(u.userId,b.companyId);if(!member||!['owner','manager'].includes(member.role))return Response.json({error:'You cannot update this company’s inventory.'},{status:403});
  const db=database();if(!await db.prepare('SELECT id FROM products WHERE owner=? AND id=?').bind(b.companyId,b.productId).first())return Response.json({error:'Product not found.'},{status:404});
- const prior=await db.prepare('SELECT product_id FROM inventory_events WHERE company_id=? AND id=?').bind(b.companyId,b.id).first<{product_id:string}>();
- if(prior){if(prior.product_id!==b.productId)return Response.json({error:'Update reference already used.'},{status:409});return Response.json({ok:true,replayed:true});}
+ const request={productId:b.productId,version:b.version,action:b.action,quantity:b.quantity??null,settings:b.settings??null,note:b.note,fromIncoming:b.fromIncoming??false};
+ const prior=await db.prepare('SELECT data FROM inventory_events WHERE company_id=? AND id=?').bind(b.companyId,b.id).first<{data:string}>();
+ if(prior){if(!matchesInventoryRequest(prior.data,request))return Response.json({error:'Update reference already used with different details.'},{status:409});return Response.json({ok:true,replayed:true});}
  const old=await db.prepare('SELECT data,version FROM inventory WHERE company_id=? AND product_id=?').bind(b.companyId,b.productId).first<{data:string;version:number}>();
  if((old?.version||0)!==b.version)return Response.json({error:'Stock changed in another session. Close this form, refresh inventory, and retry.'},{status:409});
  if(!old&&b.action!=='settings')return Response.json({error:'Set up inventory for this product first.'},{status:400});
@@ -82,12 +87,14 @@ async function handlePOST(req:Request){
  r.onHand=Math.round(r.onHand*1000)/1000;r.incoming=Math.round(r.incoming*1000)/1000;
  if(r.onHand>10000000)return Response.json({error:'Stock exceeds the supported quantity.'},{status:400});
  r.version=b.version+1;r.updated=now;
- const event={id:b.id,productId:b.productId,action:b.action,quantity:b.quantity??null,note:b.note,created:now,actor:u.email};
+ const event={id:b.id,productId:b.productId,action:b.action,quantity:b.quantity??null,note:b.note,created:now,actor:u.email,request};
  await db.batch([
  db.prepare('INSERT OR IGNORE INTO inventory_events(company_id,id,product_id,data,created) SELECT ?,?,?,?,? WHERE COALESCE((SELECT version FROM inventory WHERE company_id=? AND product_id=?),0)=?').bind(b.companyId,b.id,b.productId,JSON.stringify(event),now,b.companyId,b.productId,b.version),
  db.prepare('INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE EXISTS (SELECT 1 FROM inventory_events WHERE company_id=? AND id=?) AND COALESCE((SELECT version FROM inventory WHERE company_id=? AND product_id=?),0)=? ON CONFLICT(company_id,product_id) DO UPDATE SET data=excluded.data,version=excluded.version WHERE inventory.version=?').bind(b.companyId,b.productId,JSON.stringify(r),r.version,b.companyId,b.id,b.companyId,b.productId,b.version,b.version)
  ]);
- if(!await db.prepare('SELECT id FROM inventory_events WHERE company_id=? AND id=?').bind(b.companyId,b.id).first())return Response.json({error:'Inventory changed. Refresh and retry.'},{status:409});
+ const savedEvent=await db.prepare('SELECT data FROM inventory_events WHERE company_id=? AND id=?').bind(b.companyId,b.id).first<{data:string}>();
+ if(!savedEvent)return Response.json({error:'Inventory changed. Refresh and retry.'},{status:409});
+ if(!matchesInventoryRequest(savedEvent.data,request))return Response.json({error:'Update reference already used with different details.'},{status:409});
  return Response.json({ok:true});
  }catch(e){
   if(e instanceof z.ZodError)return Response.json({error:'Check quantities, dates, and required settings.'},{status:400});

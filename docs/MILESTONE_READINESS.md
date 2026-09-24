@@ -1,12 +1,17 @@
 # Milestone readiness
 
-Assessment updated: 2026-09-19. This report distinguishes existing prototype code from demonstrated acceptance. No production, merchant, supplier, payment, or pilot access was performed for this assessment.
+Assessment dated 2026-09-19. This is a historical snapshot, not the current
+milestone status. Use [CURRENT_STATUS.md](CURRENT_STATUS.md) for progress and open
+gates. The approved M2 permissions matrix below remains a decision reference;
+its rows do not claim that future milestone features are implemented. No
+production, merchant, supplier, payment, or pilot access was performed for this
+assessment.
 
 M0 local acceptance passed (commit `0a6986e`). M1 local checks, hosted pull-request CI, and current main-branch Ubuntu/Windows CI passed. M2 product decisions are approved; its implementation and automated security checks are on `main`, and current repository CI passes. Real-provider acceptance, the failed Cloudflare Worker build, and migration/authentication review remain open. Later milestones retain their prerequisites in [PANTRACK_MILESTONES.md](PANTRACK_MILESTONES.md), including the requirement to complete M11 before M12.
 
-## Status and completion evidence
+## Status and completion evidence at assessment
 
-| Milestone | Current status | Blocking work or prerequisite | Evidence needed to mark complete |
+| Milestone | Status on 2026-09-19 | Blocking work or prerequisite | Evidence needed to mark complete |
 | --- | --- | --- | --- |
 | M0: Local baseline | Complete on `main` | None for M0; see [M0 evidence](M0_LOCAL_EVIDENCE.md). | Clean local database initialization; documented reset/run commands; home page and company creation; successful type, test, and build commands; secret/ignore review. |
 | M1: Quality and CI | Complete on `main` | Keep current required checks healthy; see [M1 evidence](M1_CI_EVIDENCE.md). | Passing local pipeline, hosted PR CI and main CI; demonstrated failure on type errors, failing tests, and missing migrations; commit reference. |
@@ -61,7 +66,7 @@ Approved by the product owner in the implementation conversation on 2026-09-18. 
 
 Ownership transfer must verify the recipient and preserve at least one owner; self-removal or demotion cannot leave the company ownerless. A company owner cannot administer another company without membership. Global emergency pause and support operations require a separately defined platform-operator role, not an arbitrary company owner's privileges.
 
-## Critical implementation findings
+## Implementation findings at assessment
 
 - Unit changes currently check only positive stock/incoming and do not check recipe references. Negative stock also requires protection. Recipe writes overwrite the current recipe; historical imports retain aggregated usage but no immutable recipe version.
 - Sales imports check that an opening count exists but carry no sale occurrence cutoff. A delayed sale can therefore deduct stock already included in a later physical count. Count events omit the previous estimate and variance.
@@ -72,7 +77,7 @@ Ownership transfer must verify the recipient and preserve at least one owner; se
 
 Sources inspected include [the milestone roadmap](PANTRACK_MILESTONES.md), `src/db/schema.ts`, inventory/sales/automation/company/payment API routes, `src/lib/inventory.ts`, `src/lib/import-sales.ts`, `src/lib/purchasing-engine.ts`, and existing local tests. Existing tests use mocked external services and local SQLite; they do not prove live integration readiness.
 
-## Verification record
+## Verification record at assessment
 
 - M0: all local criteria passed; commit 0a6986e and draft PR https://github.com/magkaniotisleonidas28-star/Pantrack/pull/1. See M0_LOCAL_EVIDENCE.md.
 - M1: all six original suites, typecheck, migration check and build passed. Deliberate type/test/migration failures were detected. Hosted pull-request CI passed, and documentation-repair commit `333dbbd` passed main CI on Ubuntu and Windows: https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567. See [M1 evidence](M1_CI_EVIDENCE.md).

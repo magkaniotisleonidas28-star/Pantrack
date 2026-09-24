@@ -177,6 +177,6 @@ limited automation.
 - [M4 B2 fake-backed local evidence](M4_B2_LOCAL_EVIDENCE.md)
 - [M4 B3 local D1 evidence](M4_B3_LOCAL_EVIDENCE.md)
 - [M4 B4 local exact-sales evidence](M4_B4_LOCAL_EVIDENCE.md)
-- [Detailed milestone readiness and decisions](MILESTONE_READINESS.md)
+- [September 19 readiness snapshot and approved M2 permissions](MILESTONE_READINESS.md)
 - [Full milestone roadmap](PANTRACK_MILESTONES.md)
 - [Branch consolidation record](BRANCH_CONSOLIDATION.md)
