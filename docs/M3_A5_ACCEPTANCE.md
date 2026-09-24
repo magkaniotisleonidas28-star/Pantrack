@@ -103,17 +103,19 @@ amounts such as `12.000000` now display as `12`, while `12.500000` displays as
 `12.5` and a value needing all six places retains them. The compatibility
 planning tab also hides trailing zeros from its three-place display rounding.
 
-After that display change, PASS: focused `inventory-quantities`, `pnpm
-typecheck`, all 19 `pnpm test` suites, `pnpm db:check`, `pnpm build`,
+After that display change, PASS: focused `inventory-quantities`,
+`pnpm typecheck`, all 19 `pnpm test` suites, `pnpm db:check`, `pnpm build`,
 `pnpm db:migrate:local` (no pending migrations), `pnpm test:local`, focused
 ESLint for both changed source files, and a read-only check that the isolated
 fictional manager fixture still serves the expected stock, recipe, modifier,
 and planning values. The first `test:local` attempt was blocked by the already
 running review server; it passed after that server was stopped and was then
-restarted. A quick owner look at the compact display is pending.
+restarted. The owner refreshed the local Inventory page and confirmed on
+2026-09-23 that the shorter numbers look right. Source commit `ca132a7`
+also passed [Windows and Ubuntu CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35944315221).
 
-The migration SQL has local
-compatibility review, but the named fresh reviewer and owning-human review for
+The migration SQL has local compatibility review, but the named fresh reviewer
+and owning-human review for
 a schema-bearing acceptance have not been recorded.
 
 The owning human should also review the additive `0009`/`0011` migration
