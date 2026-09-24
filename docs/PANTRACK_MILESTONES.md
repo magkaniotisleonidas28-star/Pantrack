@@ -211,16 +211,16 @@ For every numbered item, the assigned person follows the same delivery loop:
 
 #### Person A — Inventory and replenishment sequence
 
-- [ ] **A1 — Specify M3.** Write the unit/precision, conversion, recipe-version,
+- [x] **A1 — Specify M3.** Write the unit/precision, conversion, recipe-version,
   modifier, opening-count cutoff, and physical-count reconciliation decisions.
   Identify how existing inventory and recipe data migrates without rewriting
   history. **Output:** accepted design note and migration plan.
-- [ ] **A2 — Publish the A → B consumption contract.** Define the atomic,
+- [x] **A2 — Publish the A → B consumption contract.** Define the atomic,
   idempotent consumption request/result, recipe-version selection, decimal/unit
   errors, and pre-opening-count result. Review it with Person B. **Output:** small
   shared type module, fake, and contract tests; this unblocks B's M4 application
   work.
-- [ ] **A3 — Add M3 data foundations.** Through the migration queue, add the
+- [x] **A3 — Add M3 data foundations.** Through the migration queue, add the
   additive unit, conversion, recipe-version/modifier, count-cutoff, and
   reconciliation structures. Add compatibility tests for existing records.
   **Gate:** M2 must be accepted before M3 can be marked complete.
@@ -228,7 +228,7 @@ For every numbered item, the assigned person follows the same delivery loop:
   recipe history, modifiers, sale-time recipe selection, cutoff enforcement,
   count variance/history, and decimal-safe target examples. Add the required
   manager UI and authorization/company-isolation tests.
-- [ ] **A5 — Accept M3 and hand off to B.** Run the full definition of done,
+- [x] **A5 — Accept M3 and hand off to B.** Run the full definition of done,
   record evidence for every M3 criterion, and have Person B verify M4 can consume
   the published interface without inventory-specific workarounds. **Milestone:**
   M3 complete only after M2 and all M3 evidence pass.
@@ -500,26 +500,33 @@ Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCA
 
 ### Tasks
 
-- [ ] Define supported stock units and conversion policy. Avoid silent free-text conversions.
-- [ ] Distinguish purchase unit, stock unit, and recipe unit.
-- [ ] Require an explicit conversion such as one case = 128 fl oz or one bag = 1,000 g.
-- [ ] Prevent incompatible unit changes while stock, incoming deliveries, or active recipes exist unless a reviewed migration is performed.
-- [ ] Version recipes so historical sales remain explainable after a recipe changes.
-- [ ] Add recipe status: draft, active, and archived.
-- [ ] Add modifier recipes for extra shots, milk substitutions, sizes, toppings, and other measurable changes.
-- [ ] Add an opening-count timestamp and reject sales that predate that cutoff.
-- [ ] Add reconciliation reports comparing estimated stock to physical counts.
-- [ ] Preserve inventory events for count corrections, use, waste, sales, receipts, and adjustments.
-- [ ] Explain every replenishment calculation in the UI: target, on hand, incoming, shortfall, pack conversion, limits, and final recommendation.
+- [x] Define supported stock units and conversion policy. Avoid silent free-text conversions.
+- [x] Distinguish purchase unit, stock unit, and recipe unit.
+- [x] Require an explicit conversion such as one case = 128 fl oz or one bag = 1,000 g.
+- [x] Prevent incompatible unit changes while stock, incoming deliveries, or active recipes exist unless a reviewed migration is performed.
+- [x] Version recipes so historical sales remain explainable after a recipe changes.
+- [x] Add recipe status: draft, active, and archived.
+- [x] Add modifier recipes for extra shots, milk substitutions, sizes, toppings, and other measurable changes.
+- [x] Add an opening-count timestamp and reject sales that predate that cutoff.
+- [x] Add reconciliation reports comparing estimated stock to physical counts.
+- [x] Preserve inventory events for count corrections, use, waste, sales, receipts, and adjustments.
+- [x] Explain every replenishment calculation in the UI: target, on hand, incoming, shortfall, pack conversion, limits, and final recommendation.
 
 ### Acceptance criteria
 
-- [ ] A sale uses the recipe version active for that sale/import decision.
-- [ ] Editing a current recipe does not rewrite historical usage records.
-- [ ] Incompatible units are rejected before inventory changes.
-- [ ] A repeated sales batch does not deduct twice.
-- [ ] A physical count resets or records estimation variance according to the documented rule.
-- [ ] Target-stock calculation passes examples involving incoming stock, case rounding, capacity, shelf life, zero target, and stale counts.
+- [x] A sale uses the recipe version active for that sale/import decision.
+- [x] Editing a current recipe does not rewrite historical usage records.
+- [x] Incompatible units are rejected before inventory changes.
+- [x] A repeated sales batch does not deduct twice.
+- [x] A physical count resets or records estimation variance according to the documented rule.
+- [x] Target-stock calculation passes examples involving incoming stock, case rounding, capacity, shelf life, zero target, and stale counts.
+
+Owner-accepted for local development on 2026-09-23 after the complete local
+pipeline and A5 handoff review; see [M3 evidence](M3_LOCAL_EVIDENCE.md).
+The current UI explains the reviewed compatibility calculation. Versioned
+proposal snapshots and policy explanations remain A6/M7 work. Hosted `0012`
+migration and Worker behavior are unverified, so the exact preview stays off
+remotely. M4/B5 acceptance remains separate.
 
 ### Codex prompt
 
