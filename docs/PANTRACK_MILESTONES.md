@@ -274,10 +274,11 @@ For every numbered item, the assigned person follows the same delivery loop:
 - [x] **B4 — Integrate A's consumption contract.** Apply mapped events exactly
   once, preserve all-or-nothing ingredient deduction, enforce the opening-count
   cutoff, and implement resolve/replay/dismiss/correction UI and audit behavior.
-  Local closeout: [B4 evidence](M4_B4_LOCAL_EVIDENCE.md). B5/M4 remains open.
-- [ ] **B5 — Accept M4.** After M3 acceptance, run M4 concurrency, recovery,
+  Local closeout: [B4 evidence](M4_B4_LOCAL_EVIDENCE.md).
+- [x] **B5 — Accept M4.** After M3 acceptance, run M4 concurrency, recovery,
   authorization, and compatibility evidence. **Milestone:** M4 complete only
-  after M2–M3 and all M4 evidence pass.
+  after M2–M3 and all M4 evidence pass. Accepted for local development on
+  2026-09-24; see [B5 evidence](M4_B5_LOCAL_EVIDENCE.md).
 - [ ] **B6 — Complete M5 locally.** Finish the Clover adapter, merchant/location
   binding, menu/modifier mapping, cursor/checkpoint reconciliation, token
   lifecycle, disconnect behavior, health, and sync-now path using the M4 service.
@@ -534,7 +535,7 @@ pipeline and A5 handoff review; see [M3 evidence](M3_LOCAL_EVIDENCE.md).
 The current UI explains the reviewed compatibility calculation. Versioned
 proposal snapshots and policy explanations remain A6/M7 work. Hosted `0012`
 migration and Worker behavior are unverified, so the exact preview stays off
-remotely. M4/B5 acceptance remains separate.
+remotely. M4/B5 acceptance is recorded in the section below.
 
 ### Codex prompt
 
@@ -559,26 +560,33 @@ remotely. M4/B5 acceptance remains separate.
 
 ### Tasks
 
-- [ ] Store raw event metadata needed for audit and replay without storing unnecessary payment or customer data.
-- [ ] Validate event size, schema, company mapping, provider identity, and credentials/signature.
-- [ ] Use provider + merchant + event/version identity for idempotency.
-- [ ] Add a durable processing status: received, processing, applied, held, failed, or superseded.
-- [ ] Separate receipt of an event from application of inventory changes.
-- [ ] Add retry-safe processing and a dead-letter/held-event queue.
-- [ ] Add an exception screen for unmapped items, modifiers, invalid quantities, missing recipes, and events before the opening count.
-- [ ] Add manual resolve, replay, dismiss-with-reason, and stock-correction actions with audit records.
-- [ ] Define cancellation, refund, remake, and reopened-order policies based on consumption evidence.
-- [ ] Keep the current CSV and bridge imports compatible with the same service.
+- [x] Store raw event metadata needed for audit and replay without storing unnecessary payment or customer data.
+- [x] Validate event size, schema, company mapping, provider identity, and credentials/signature for active ingress. Native POS signature verification remains B6/M5.
+- [x] Use provider + merchant + event/version identity for idempotency.
+- [x] Add a durable processing status: received, processing, applied, held, failed, or superseded.
+- [x] Separate receipt of an event from application of inventory changes.
+- [x] Add retry-safe processing and a dead-letter/held-event queue.
+- [x] Add an exception screen for unmapped items, modifiers, invalid quantities, missing recipes, and events before the opening count.
+- [x] Add manual resolve, replay, dismiss-with-reason, and stock-correction actions with audit records.
+- [x] Define cancellation, refund, remake, and reopened-order policies based on consumption evidence.
+- [x] Keep the current CSV and bridge imports compatible with the same service.
 
 ### Acceptance criteria
 
-- [ ] Duplicate delivery of the same external event changes inventory once.
-- [ ] Concurrent duplicates cannot both apply.
-- [ ] Unknown items and modifiers are held without partially deducting inventory.
-- [ ] Fixing a mapping allows the held event to be replayed safely.
-- [ ] Events before the opening-count cutoff are not applied.
-- [ ] A refund does not restore ingredients unless a reviewed consumption rule says it should.
-- [ ] Logs and stored payloads contain no access tokens or unnecessary payment/customer information.
+- [x] Duplicate delivery of the same external event changes inventory once.
+- [x] Concurrent duplicates cannot both apply.
+- [x] Unknown items and modifiers are held without partially deducting inventory.
+- [x] Fixing a mapping allows the held event to be replayed safely.
+- [x] Events before the opening-count cutoff are not applied.
+- [x] A refund does not restore ingredients unless a reviewed consumption rule says it should.
+- [x] Logs and stored payloads contain no access tokens or unnecessary payment/customer information.
+
+M4/B5 is accepted for local development on 2026-09-24 after M2/M3 owner
+acceptance, the [B5 local evidence](M4_B5_LOCAL_EVIDENCE.md), and green Ubuntu
+and Windows CI on the B5 branch and merged `main` commit. The active sources are
+manual sales, CSV, and the authenticated bridge. Native provider signatures and
+Clover sandbox evidence belong to B6/B7. Hosted D1 migration `0012` and Worker
+smoke remain separate gates before enabling the exact preview remotely.
 
 ### Codex prompt
 
