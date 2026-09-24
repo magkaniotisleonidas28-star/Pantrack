@@ -216,3 +216,30 @@ outside local/test environments, rollback remains forward-only: stop using the
 exact path and repair schema or data with a new migration; never rewrite or
 remove `0011`. No remote migration, deployment, live POS call, customer data,
 supplier action, or production credential was used.
+
+## A5 older-data review preparation — 2026-09-23
+
+This A5 review branch adds a read-only manager report for inventory and
+recipes copied by migration `0009`. It flags legacy stock settings or update
+times that differ from the migration baseline, legacy recipe names or ingredients
+that differ, products still needing an exact opening count, and recipes still
+needing an active reviewed version. The report reads only the selected company;
+it does not convert a quantity, change stock, approve a recipe, or switch the
+preview on. A changed flag is a prompt for human comparison, not proof that
+the legacy value is wrong: exact operations can also update the legacy
+compatibility projection. The migration did not store a complete old-stock
+snapshot, so this is not a byte-for-byte historical comparison.
+
+Focused `legacy-m3-review` and inventory-management tests passed, including
+unchanged and changed legacy records, records added after the backfill, company
+isolation, no report writes, exact opening-count status, and reviewed-recipe
+status. The full 19-suite `pnpm test`, `pnpm typecheck`, `pnpm db:check`,
+`pnpm build`, focused ESLint, and local-only `pnpm db:migrate:local` passed.
+`pnpm test:local` was attempted but could not start its isolated server because
+another development server was already running; that process was left alone.
+
+This report prepares A5 review but does not accept M3, reconcile any real
+hosted data, or authorize a merge. The owner must review flagged records and
+the remaining M2/M3 gates separately. The fictional-data owner walkthrough is
+prepared in [the A5 review checklist](M3_A5_OWNER_REVIEW.md); it remains
+pending until a separate local fixture and the owner's observations exist.

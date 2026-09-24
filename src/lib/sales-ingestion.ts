@@ -124,7 +124,7 @@ export type SalesTransition = {
 export type SalesAuditEntry = {
   auditId: string;
   eventKey: string;
-  action: 'received' | 'retry' | 'replay' | 'dismiss' | 'conflict_dismissed' | 'correction_requested' | 'lease_expired' | 'superseded';
+  action: 'received' | 'retry' | 'replay' | 'dismiss' | 'conflict_dismissed' | 'correction_requested' | 'correction_applied' | 'occurrence_confirmed' | 'lease_expired' | 'superseded';
   actor: string;
   at: string;
   reason?: string;
@@ -178,10 +178,39 @@ export type SalesCorrectionRequest = {
   correctionId: string;
   eventKey: string;
   companyId: string;
-  status: 'pending';
+  status: 'pending' | 'applied';
   actor: string;
   reason: string;
   requestedAt: string;
+};
+
+export type SalesOccurrenceConfirmation = {
+  eventKey: string;
+  occurredAt: string;
+  actor: string;
+  reason: string;
+  confirmedAt: string;
+};
+
+export type SalesStatusSummary = {
+  eventKey: string;
+  state: SalesEventState;
+  sourceKind: SalesSourceKind;
+  provider: string;
+  externalReference: string;
+  eventType: SalesEventType;
+  occurredAt: string;
+  receivedAt: string;
+  timeQuality: SalesTimeQuality;
+  revision: number;
+  lastReason: string | null;
+};
+
+export type SalesHistoryEntry = {
+  kind: 'transition' | 'attempt' | 'resolution' | 'audit';
+  at: string;
+  label: string;
+  reason: string | null;
 };
 
 export type SalesEventRecord = {
@@ -200,6 +229,7 @@ export type SalesStoreSnapshot = {
   resolutions: SalesResolution[];
   audits: SalesAuditEntry[];
   corrections: SalesCorrectionRequest[];
+  occurrenceConfirmations?: SalesOccurrenceConfirmation[];
 };
 
 export type SalesReceipt =
@@ -233,6 +263,10 @@ export interface SalesEventStore {
   appendResolution(companyId: string, value: SalesResolution): Promise<void>;
   appendAudit(companyId: string, value: SalesAuditEntry): Promise<void>;
   appendCorrection(companyId: string, value: SalesCorrectionRequest, audit: SalesAuditEntry): Promise<void>;
+  confirmOccurrence(companyId: string, value: SalesOccurrenceConfirmation, audit: SalesAuditEntry): Promise<void>;
+  occurrenceConfirmation(companyId: string, eventKey: string): Promise<SalesOccurrenceConfirmation | null>;
+  listStatus(companyId: string, limit: number): Promise<SalesStatusSummary[]>;
+  history(companyId: string, eventKey: string, limit: number): Promise<SalesHistoryEntry[]>;
   state(companyId: string, eventKey: string): Promise<SalesEventState | null>;
   event(companyId: string, eventKey: string): Promise<SalesEventRecord | null>;
   conflict(companyId: string, conflictId: string): Promise<SalesConflictReceipt | null>;
@@ -473,6 +507,7 @@ export class InMemorySalesEventStore implements SalesEventStore {
   private readonly resolutions: SalesResolution[] = [];
   private readonly audits: SalesAuditEntry[] = [];
   private readonly corrections: SalesCorrectionRequest[] = [];
+  private readonly occurrenceConfirmations: SalesOccurrenceConfirmation[] = [];
   private readonly idFactory: () => string;
 
   constructor(snapshot?: SalesStoreSnapshot, idFactory: () => string = () => crypto.randomUUID()) {
@@ -486,6 +521,7 @@ export class InMemorySalesEventStore implements SalesEventStore {
     this.resolutions.push(...clone(snapshot.resolutions));
     this.audits.push(...clone(snapshot.audits));
     this.corrections.push(...clone(snapshot.corrections));
+    this.occurrenceConfirmations.push(...clone(snapshot.occurrenceConfirmations ?? []));
   }
 
   private stateFor(companyId: string, eventKey: string): SalesEventState | null {
@@ -499,6 +535,36 @@ export class InMemorySalesEventStore implements SalesEventStore {
   async event(companyId: string, eventKey: string) {
     const value = this.events.get(eventKey);
     return value?.event.companyId === companyId ? clone(value) : null;
+  }
+
+  async occurrenceConfirmation(companyId: string, eventKey: string) {
+    if (!this.events.has(eventKey) || this.events.get(eventKey)?.event.companyId !== companyId) return null;
+    return clone(this.occurrenceConfirmations.find(item => item.eventKey === eventKey) ?? null);
+  }
+
+  async listStatus(companyId: string, limit: number) {
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new SalesIngestionError('invalid_limit', 'List limit must be between 1 and 100.');
+    return [...this.events.values()].filter(record => record.event.companyId === companyId)
+      .sort((a, b) => b.event.receivedAt.localeCompare(a.event.receivedAt)).slice(0, limit).map(record => {
+        const event = record.event;
+        const transition = this.transitions.filter(item => item.eventKey === event.external.eventIdempotencyKey).at(-1);
+        const confirmed = this.occurrenceConfirmations.find(item => item.eventKey === event.external.eventIdempotencyKey);
+        return {eventKey:event.external.eventIdempotencyKey,state:transition!.to,sourceKind:event.source.kind,provider:event.source.provider,
+          externalReference:event.external.externalOrderId,eventType:event.eventType,occurredAt:confirmed?.occurredAt ?? event.occurredAt,
+          receivedAt:event.receivedAt,timeQuality:confirmed?'confirmed':event.timeQuality,revision:event.external.revision,lastReason:transition?.reason ?? null};
+      });
+  }
+
+  async history(companyId:string,eventKey:string,limit:number){
+    if(!await this.event(companyId,eventKey))throw new SalesIngestionError('not_found','Sales event was not found.');
+    if(!Number.isSafeInteger(limit)||limit<1||limit>100)throw new SalesIngestionError('invalid_limit','History limit must be between 1 and 100.');
+    const values:SalesHistoryEntry[]=[
+      ...this.transitions.filter(item=>item.eventKey===eventKey).map(item=>({kind:'transition' as const,at:item.at,label:`${item.from??'none'}:${item.to}`,reason:item.reason??null})),
+      ...this.attempts.filter(item=>item.eventKey===eventKey&&item.completedAt).map(item=>({kind:'attempt' as const,at:item.completedAt!,label:item.outcome??'unknown',reason:item.errorCode??item.heldReasons?.join(',')??null})),
+      ...this.resolutions.filter(item=>item.eventKey===eventKey).map(item=>({kind:'resolution' as const,at:item.at,label:item.kind,reason:item.reason})),
+      ...this.audits.filter(item=>item.eventKey===eventKey).map(item=>({kind:'audit' as const,at:item.at,label:item.action,reason:item.reason??null})),
+    ];
+    return clone(values.sort((left,right)=>right.at.localeCompare(left.at)).slice(0,limit));
   }
 
   async conflict(companyId: string, conflictId: string) {
@@ -652,6 +718,15 @@ export class InMemorySalesEventStore implements SalesEventStore {
     this.audits.push(clone(audit));
   }
 
+  async confirmOccurrence(companyId: string, value: SalesOccurrenceConfirmation, audit: SalesAuditEntry) {
+    if (audit.action !== 'occurrence_confirmed' || audit.eventKey !== value.eventKey || this.stateFor(companyId, value.eventKey) !== 'held' || this.occurrenceConfirmations.some(item => item.eventKey === value.eventKey)) {
+      throw new SalesIngestionError('invalid_state', 'Occurrence time cannot be confirmed for this event.');
+    }
+    this.occurrenceConfirmations.push(clone(value));
+    this.transitionRecord(value.eventKey, 'held', 'received', value.confirmedAt, value.reason);
+    this.audits.push(clone(audit));
+  }
+
   async recoverExpired(companyId: string, now: string) {
     const nowMs = instant(now);
     if (nowMs === null) throw new SalesIngestionError('invalid_time', 'Recovery time is invalid.');
@@ -682,7 +757,7 @@ export class InMemorySalesEventStore implements SalesEventStore {
   }
 
   snapshot(): SalesStoreSnapshot {
-    return clone({events: [...this.events.values()], transitions: this.transitions, attempts: this.attempts, conflicts: this.conflicts, conflictResolutions: this.conflictResolutions, resolutions: this.resolutions, audits: this.audits, corrections: this.corrections});
+    return clone({events: [...this.events.values()], transitions: this.transitions, attempts: this.attempts, conflicts: this.conflicts, conflictResolutions: this.conflictResolutions, resolutions: this.resolutions, audits: this.audits, corrections: this.corrections, occurrenceConfirmations: this.occurrenceConfirmations});
   }
 }
 
@@ -767,12 +842,13 @@ export class SalesIngestionService {
         held.add(mapping.status);
         continue;
       }
-      const modifiers: Array<{modifierId: string; quantity: string}> = [];
+      const modifierTotals = new Map<string, bigint>();
       for (const modifier of line.modifiers) {
         const result = await this.mappings.resolveModifier({companyId: record.event.companyId, source: record.event.source, externalItemId: line.externalItemId, ...(line.externalVariationId ? {externalVariationId: line.externalVariationId} : {}), externalModifierId: modifier.externalModifierId});
         if (result.status !== 'mapped') held.add(result.status);
-        else modifiers.push({modifierId: result.modifierId, quantity: modifier.quantity});
+        else modifierTotals.set(result.modifierId, (modifierTotals.get(result.modifierId) ?? BigInt(0)) + BigInt(modifier.quantity));
       }
+      const modifiers = [...modifierTotals].map(([modifierId, quantity]) => ({modifierId, quantity: String(quantity)}));
       mapped.push({lineId: line.externalLineId, recipeId: mapping.recipeId, quantity: line.quantity, modifiers});
     }
     return {held: [...held], mapped};
@@ -816,16 +892,18 @@ export class SalesIngestionService {
   private async policy(record: SalesEventRecord) {
     const event = record.event;
     const previous = (await this.store.latestAppliedConsumption(event.companyId, record.lineageKey, event.external.revision))?.event ?? null;
-    if (event.timeQuality === 'inferred') return {held: ['ambiguous_occurrence_time'] as HeldReason[], lines: [] as SalesEventV1['lines']};
+    const confirmed = await this.store.occurrenceConfirmation(event.companyId, event.external.eventIdempotencyKey);
+    if (event.timeQuality === 'inferred' && !confirmed) return {held: ['ambiguous_occurrence_time'] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt:event.occurredAt};
+    const occurredAt = confirmed?.occurredAt ?? event.occurredAt;
     const prepared = event.preparationStatus === 'prepared' || event.preparationStatus === 'fulfilled';
-    if (event.eventType === 'refund' && !previous && !prepared) return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines']};
-    if (event.eventType === 'refund' && previous) return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines']};
-    if (event.eventType === 'cancellation' && event.preparationStatus === 'not_started') return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines']};
-    if (event.eventType === 'cancellation' && previous) return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines']};
-    if (!prepared) return {held: ['ambiguous_preparation'] as HeldReason[], lines: [] as SalesEventV1['lines']};
+    if (event.eventType === 'refund' && !previous && !prepared) return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt};
+    if (event.eventType === 'refund' && previous) return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt};
+    if (event.eventType === 'cancellation' && event.preparationStatus === 'not_started') return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt};
+    if (event.eventType === 'cancellation' && previous) return {held: [] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt};
+    if (!prepared) return {held: ['ambiguous_preparation'] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt};
     const delta = this.positiveDelta(event, previous);
-    if (delta.correction) return {held: ['correction_required'] as HeldReason[], lines: [] as SalesEventV1['lines']};
-    return {held: [] as HeldReason[], lines: delta.lines};
+    if (delta.correction) return {held: ['correction_required'] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt};
+    return {held: [] as HeldReason[], lines: delta.lines, occurredAt};
   }
 
   async process(companyId: string, eventKey: string) {
@@ -855,7 +933,7 @@ export class SalesIngestionService {
       contract: INVENTORY_CONSUMPTION_CONTRACT,
       companyId: record.event.companyId,
       idempotencyKey: record.applicationKey,
-      occurredAt: record.event.occurredAt,
+      occurredAt: policy.occurredAt,
       lines: mapping.mapped,
     };
     let result: InventoryConsumptionResult;
@@ -863,6 +941,18 @@ export class SalesIngestionService {
       result = await this.inventory.consume(request);
     } catch {
       const complete = {...attempt, completedAt: this.now(), outcome: 'failed' as const, errorCode: 'inventory_unavailable' as const};
+      await this.store.completeAttempt(companyId, complete, 'failed', complete.completedAt, complete.errorCode);
+      return this.statusForWorker(companyId, eventKey);
+    }
+    // Reject mismatched replies before callbacks, terminal state changes or
+    // storing their contents in this company's audit history.
+    if (!result || result.contract !== request.contract || result.companyId !== request.companyId ||
+      result.idempotencyKey !== request.idempotencyKey || typeof result.replayed !== 'boolean' ||
+      !['applied', 'held', 'rejected'].includes(result.status) ||
+      (result.status === 'applied' && (Date.parse(result.occurredAt) !== Date.parse(request.occurredAt) ||
+        !Array.isArray(result.selectedVersions) || !Array.isArray(result.changes))) ||
+      (result.status !== 'applied' && (result.replayed || !Array.isArray(result.issues) || !result.issues.length))) {
+      const complete = {...attempt, completedAt: this.now(), outcome: 'failed' as const, errorCode: 'integration_defect' as const};
       await this.store.completeAttempt(companyId, complete, 'failed', complete.completedAt, complete.errorCode);
       return this.statusForWorker(companyId, eventKey);
     }
@@ -969,6 +1059,30 @@ export class SalesIngestionService {
     return clone(correction);
   }
 
+  async confirmOccurrence(companyId: string, eventKey: string, actor: SalesActor | null, occurredAt: string, reason: string) {
+    const record = await this.requiredEvent(companyId, eventKey);
+    const identity = assertOperator(actor, record.event.companyId);
+    if (record.event.timeQuality !== 'inferred' || await this.store.state(companyId, eventKey) !== 'held') throw new SalesIngestionError('invalid_state', 'Only a held event with inferred time may be confirmed.');
+    const parsed = instant(occurredAt);
+    if (parsed === null || parsed > this.clock.now().getTime()) throw new SalesIngestionError('invalid_occurrence_time', 'Occurrence time must be valid and not in the future.');
+    const clean = reason.trim();
+    if (!clean) throw new SalesIngestionError('reason_required', 'Confirmation reason is required.');
+    const confirmedAt = this.now();
+    const value:SalesOccurrenceConfirmation = {eventKey,occurredAt:new Date(parsed).toISOString(),actor:identity,reason:clean,confirmedAt};
+    await this.store.confirmOccurrence(companyId,value,{auditId:this.idFactory(),eventKey,action:'occurrence_confirmed',actor:identity,at:confirmedAt,reason:clean});
+    return clone(value);
+  }
+
+  async listStatus(companyId: string, actor: SalesActor | null, limit = 50) {
+    if (!actor) throw new SalesIngestionError('unauthenticated', 'Authentication is required.');
+    if (actor.kind !== 'user' || actor.companyId !== companyId) throw new SalesIngestionError('wrong_company', 'Actor is not bound to this company.');
+    return this.store.listStatus(companyId,limit);
+  }
+
+  async readHistory(companyId:string,eventKey:string,actor:SalesActor|null,limit=50){
+    const record=await this.requiredEvent(companyId,eventKey);assertReadable(actor,record.event.companyId);return this.store.history(companyId,eventKey,limit);
+  }
+
   async readStatus(companyId: string, eventKey: string, actor: SalesActor | null) {
     const record = await this.requiredEvent(companyId, eventKey);
     assertReadable(actor, record.event.companyId);
@@ -979,7 +1093,7 @@ export class SalesIngestionService {
       eventType: record.event.eventType,
       orderStatus: record.event.orderStatus,
       preparationStatus: record.event.preparationStatus,
-      occurredAt: record.event.occurredAt,
+      occurredAt: (await this.store.occurrenceConfirmation(companyId,eventKey))?.occurredAt ?? record.event.occurredAt,
       receivedAt: record.event.receivedAt,
       revision: record.event.external.revision,
     };

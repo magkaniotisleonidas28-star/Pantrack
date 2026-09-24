@@ -419,3 +419,55 @@ export const salesEventCorrections=sqliteTable('sales_event_corrections',{
  index('sales_event_pending_corrections').on(t.companyId,t.status,t.requestedAt),
  foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
 ]);
+
+export const salesEventOccurrenceConfirmations=sqliteTable('sales_event_occurrence_confirmations',{
+ companyId:text('company_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ occurredAt:text('occurred_at').notNull(),
+ actor:text('actor').notNull(),
+ reason:text('reason').notNull(),
+ confirmedAt:text('confirmed_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.eventKey]}),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const salesEventCorrectionItems=sqliteTable('sales_event_correction_items',{
+ companyId:text('company_id').notNull(),
+ correctionId:text('correction_id').notNull(),
+ productId:text('product_id').notNull(),
+ dimension:text('dimension').notNull(),
+ suggestedMinor:text('suggested_minor').notNull(),
+ approvedMinor:text('approved_minor').notNull(),
+ expectedBalanceVersion:integer('expected_balance_version').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.correctionId,t.productId]}),
+ foreignKey({columns:[t.companyId,t.correctionId],foreignColumns:[salesEventCorrections.companyId,salesEventCorrections.correctionId]}),
+]);
+
+export const salesEventCorrectionResults=sqliteTable('sales_event_correction_results',{
+ companyId:text('company_id').notNull(),
+ correctionId:text('correction_id').notNull(),
+ resultJson:text('result_json').notNull(),
+ confirmedBy:text('confirmed_by').notNull(),
+ appliedAt:text('applied_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.correctionId]}),
+ foreignKey({columns:[t.companyId,t.correctionId],foreignColumns:[salesEventCorrections.companyId,salesEventCorrections.correctionId]}),
+]);
+
+export const salesEventCorrectionAdjustments=sqliteTable('sales_event_correction_adjustments',{
+ companyId:text('company_id').notNull(),
+ correctionId:text('correction_id').notNull(),
+ inventoryEventId:text('inventory_event_id').notNull(),
+ productId:text('product_id').notNull(),
+ dimension:text('dimension').notNull(),
+ quantityMinor:text('quantity_minor').notNull(),
+ balanceVersionBefore:integer('balance_version_before').notNull(),
+ balanceVersionAfter:integer('balance_version_after').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.correctionId,t.productId]}),
+ uniqueIndex('sales_correction_inventory_event').on(t.companyId,t.inventoryEventId),
+ foreignKey({columns:[t.companyId,t.correctionId],foreignColumns:[salesEventCorrections.companyId,salesEventCorrections.correctionId]}),
+ foreignKey({columns:[t.companyId,t.inventoryEventId],foreignColumns:[inventoryEventsExact.companyId,inventoryEventsExact.id]}),
+]);

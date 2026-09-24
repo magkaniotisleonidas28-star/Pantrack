@@ -1,10 +1,12 @@
 # M2 setup and review
 
-Implementation is on `main`. The new development D1 database has all current
-migrations, but no hosted Worker has been verified after the broken Cloudflare
-deployment and integration were removed. Public deployment remains blocked on
-the remaining M2 acceptance work. Do not use production company data to test
-this change.
+Implementation is on `main`. The owner accepted the development Supabase
+walkthrough and reports completing the authentication and migration review.
+The owner also accepted a reported replacement Cloudflare build, but its run
+and commit details are unavailable. The new development D1 database has
+migrations through `0011`; this integration adds `0012`, whose remote application
+is unverified. No hosted Worker has been verified. Record the owner's review
+before public release. Do not use production company data to test this change.
 
 ## Local prerequisites
 
@@ -49,7 +51,7 @@ These templates are required: the application expects server-side token-hash ver
 - Request recovery, follow the email, change password, and confirm other Pantrack sessions are revoked. Verify an expired session requires signing in again.
 - Review security history as owner and confirm secrets are absent.
 
-The automated suite covers these security rules with mocked Supabase responses and a real local SQLite engine. This dashboard/email walkthrough remains required evidence and is only partially complete; see [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
+The automated suite covers these security rules with mocked Supabase responses and a real local SQLite engine. The owner accepted the development walkthrough; its recorded scope and limits are in [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
 
 ## Migration review
 

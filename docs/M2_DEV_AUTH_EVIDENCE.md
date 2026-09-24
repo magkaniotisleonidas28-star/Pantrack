@@ -1,6 +1,6 @@
-# M2 development authentication evidence — partial
+# M2 development authentication evidence — hosted acceptance pending
 
-Date: 2026-09-22. Scope: user-reported walkthrough against a development
+Dates: 2026-09-22 to 2026-09-23. Scope: user-reported walkthrough against a development
 Supabase project, Resend SMTP, the loopback application, and local D1. This is
 not independent agent verification, hosted-Worker evidence, or production
 acceptance. No credentials, email links, or customer data are recorded here.
@@ -36,30 +36,69 @@ evidence](M2_LOCAL_EVIDENCE.md). This report does not prove cookie replay
 rejection, revocation of another concurrent session after recovery, hosted
 deployment, or any behavior not listed above.
 
-## Password-policy feedback — implemented locally; provider retest pending
+## Password-policy feedback and provider retest
 
 Supabase rejected an initial signup with HTTP 422 because its configured
 password policy required a special character. Pantrack now states and validates
 the 12-character-plus-special-character rule for signup and recovery on both
 the client and server. Focused mocked-provider coverage verifies rejected and
 accepted new passwords while ordinary sign-in continues to accept an existing
-password without applying the new-password rule. This is local implementation
-evidence only; re-test signup and recovery against the development provider.
+password without applying the new-password rule. On 2026-09-23 the owner
+reported that the development-provider signup and recovery screens displayed
+the rule and rejected both tested noncompliant password patterns. No passwords
+were recorded.
 
-## Open finding: membership panel freshness
+## Additional owner-observed walkthrough — 2026-09-23
+
+- An unconfirmed test account was kept out of the company workspace. Email
+  confirmation then allowed sign-in. The same fictional company and owner role
+  remained after sign-out and a later sign-in.
+- A second test account accepted an invitation link in a separate browser
+  profile and saw employee read-only access. The owner promoted that account
+  to manager; manager editing of fictional sample data worked, and owner-only
+  controls remained absent. The account then owned a different fictional
+  company, with controls following the selected company's role.
+- A transfer offer was accepted by the second account. The recipient became
+  owner; the original owner became manager and lost owner-only controls after
+  refresh. The owner reported the transfer behavior worked.
+- Recovery rejected the two noncompliant password patterns, accepted a
+  compliant replacement, rejected the old password afterward, and preserved
+  the account's company memberships. A separate pre-existing session of the
+  same account was signed out after recovery and required a new sign-in.
+- Security history visibly listed company creation, invitation creation and
+  acceptance, role change, and ownership offer and acceptance. The owner
+  reported no secret material in the reviewed display. Both accounts' final
+  sign-out checks returned them to sign-in for protected pages.
+
+These are user-observed development-provider results, not independent security
+verification. The owner reviewed the manual findings and found them acceptable.
+No addresses, links, tokens, cookies, passwords, or customer information are
+included in this record.
+
+## Accepted limitation: membership panel freshness
 
 The owner's already-open membership panel continued to display the invitation
 as pending after it was accepted in another browser. A full page refresh loaded
 the accepted invitation and membership correctly. Add a visible refresh action
 or another safe freshness mechanism so owners do not mistake stale client state
-for an invitation failure and create unnecessary replacement links.
+for an invitation failure and create unnecessary replacement links. The owner
+accepted this observed limitation for the development walkthrough; the UI
+improvement remains future work.
 
-## Still required for C1 acceptance
+## Owner C1 acceptance and evidence limits
 
-Complete the remaining [real-provider walkthrough](M2_SETUP.md), including
-unconfirmed-login rejection, session replay/expiry, concurrent-session
-revocation after recovery, invitation replacement/revocation/expiry/replay,
-remaining forbidden-role checks, ownership transfer, and security history.
-Review the authentication flow and additive migration, and resolve the
-Cloudflare Worker build. Keep local, development-provider, and deployed
-evidence separate; do not mark C1 or M2 accepted yet.
+On 2026-09-23 the owner reported that another contributor replaced the failed
+Cloudflare setup with a working build and explicitly accepted the build step as
+complete. No successful run link, branch, or commit was available to record.
+This is owner-attested build acceptance, not an independently verified build or
+a deployment claim. The agent inspected `0008_m2_auth_memberships.sql`, the
+authentication decision and flow, and the latest `auth.ts` changes; the local
+security suite and complete local pipeline passed on the combined merge tree.
+The owner subsequently reported completing the authentication and migration
+review; a separate written record was not provided. The owner directed C1/M2
+to be treated as complete on 2026-09-23 and authorized a `main` push even if
+Cloudflare auto-deploys. Record the review before a public release; do not
+present this as independent security verification. Deterministic invitation replay,
+expiry, replacement, ownership edge cases, wrong-company access, and
+server-side role permissions are covered by the local automated suite rather
+than repeated manually. No hosted-runtime or production acceptance is claimed.
