@@ -246,7 +246,10 @@ For every numbered item, the assigned person follows the same delivery loop:
 - [ ] **A7 — Complete M7 lifecycle and A → C handoff.** Add proposal lifecycle,
   invalidation, edit reasons, audit history, and atomic unresolved-quantity
   reservations. Publish the immutable proposal contract to Person C and test it
-  against C's fake supplier consumer.
+  against C's fake supplier consumer. A-owned lifecycle and reservation code
+  passed local checks in [the A7 evidence](M7_A7_LIFECYCLE_EVIDENCE.md); C4's
+  fake consumer has not been published, so the final cross-workstream contract
+  test and A7 checkbox remain open.
 - [ ] **A8 — Accept M7.** After B supplies accepted M5 inputs, run concurrency
   and end-to-end proposal tests and record M7 evidence. **Milestone:** M7 complete
   only after M3–M5; this handoff unblocks real M8 implementation.

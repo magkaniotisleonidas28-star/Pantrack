@@ -16,7 +16,7 @@ export type ProposalOrigin = Readonly<{
 export type CreateProposalOriginInput = ReviewSourceRequest & Readonly<{id: string; createId: string}>;
 
 export class ProposalOriginError extends Error {
-  constructor(public readonly code: 'invalid_request' | 'forbidden' | 'source_unavailable' | 'source_changed' | 'create_conflict' | 'id_conflict' | 'corrupt_store' | 'storage_failure', message: string) {
+  constructor(public readonly code: 'invalid_request' | 'forbidden' | 'source_unavailable' | 'source_changed' | 'quantity_reserved' | 'create_conflict' | 'id_conflict' | 'corrupt_store' | 'storage_failure', message: string) {
     super(message);
     this.name = 'ProposalOriginError';
   }
@@ -151,6 +151,11 @@ export class D1ReplenishmentProposalOrigins {
       if (await this.get(request.companyId, request.id, request.actor)) {
         throw new ProposalOriginError('id_conflict', 'This proposal ID already exists.');
       }
+      const reserved = await this.db.prepare(`SELECT 1 FROM replenishment_proposal_states
+        WHERE company_id=? AND product_id=? AND packs!='0'
+          AND status NOT IN ('rejected','canceled','closed') LIMIT 1`)
+        .bind(request.companyId, request.productId).first();
+      if (reserved) throw new ProposalOriginError('quantity_reserved', 'An unresolved proposal already holds this product quantity.');
       throw new ProposalOriginError('storage_failure', 'Proposal origin could not be stored.');
     }
     const saved = await this.byCreate(request.companyId, request.createId);
