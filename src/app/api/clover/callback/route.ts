@@ -15,9 +15,9 @@ export async function GET(req:Request){
  reason='provider_denied';if(url.searchParams.has('error'))throw new Error('Clover authorization was canceled.');
  reason='callback';const code=z.string().min(1).max(4000).parse(url.searchParams.get('code')),merchant=z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/).parse(url.searchParams.get('merchant_id'));
  reason='token_unavailable';let t:Awaited<ReturnType<typeof tokenExchange>>;
- try{t=await tokenExchange({code});}catch(e){reason=e instanceof CloverHttpError?(e.status>=400&&e.status<500&&e.status!==429?'token_rejected':'token_unavailable'):e instanceof z.ZodError||e instanceof SyntaxError?'token_response':'token_unavailable';throw e;}
+ try{t=await tokenExchange({code});}catch(e){reason=e instanceof CloverHttpError?(e.status>=300&&e.status<500&&e.status!==429?'token_rejected':'token_unavailable'):e instanceof z.ZodError||e instanceof SyntaxError?'token_response':'token_unavailable';throw e;}
  reason='merchant_unavailable';let verified:{id:string};
- try{verified=z.object({id:z.string()}).parse(await cloverJson(c.api+'/v3/merchants/'+encodeURIComponent(merchant),{headers:{Authorization:'Bearer '+t.access_token}}));}catch(e){reason=e instanceof CloverHttpError?(e.status>=400&&e.status<500&&e.status!==429?'merchant_rejected':'merchant_unavailable'):e instanceof z.ZodError||e instanceof SyntaxError?'merchant_response':'merchant_unavailable';throw e;}
+ try{verified=z.object({id:z.string()}).parse(await cloverJson(c.api+'/v3/merchants/'+encodeURIComponent(merchant),{headers:{Authorization:'Bearer '+t.access_token}}));}catch(e){reason=e instanceof CloverHttpError?(e.status>=300&&e.status<500&&e.status!==429?'merchant_rejected':'merchant_unavailable'):e instanceof z.ZodError||e instanceof SyntaxError?'merchant_response':'merchant_unavailable';throw e;}
  reason='merchant_mismatch';if(verified.id!==merchant)throw new Error('Merchant verification failed.');
  reason='save';
  const now=Date.now();
