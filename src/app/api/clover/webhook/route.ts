@@ -14,12 +14,13 @@ function equal(left:string,right:string){
 }
 
 export async function POST(req:Request){
- if(!cloverSyncEnabled())return new Response(null,{status:404});
  try{
   const body=JSON.parse(await readBoundedUtf8(req,50_000)) as unknown;
   // Clover's dashboard sends this unauthenticated challenge before it can send
-  // authenticated order notifications. It cannot trigger a sales read.
-  if(z.object({verificationCode:z.string().min(1).max(200)}).safeParse(body).success)return Response.json({ok:true});
+  // authenticated order notifications. It cannot trigger a sales read and must
+  // work while the separate sales-sync gate is still off during setup.
+  if(z.object({verificationCode:z.string().min(1).max(200)}).strict().safeParse(body).success)return Response.json({ok:true});
+  if(!cloverSyncEnabled())return new Response(null,{status:404});
   const code=(env as unknown as {CLOVER_WEBHOOK_AUTH_CODE?:string}).CLOVER_WEBHOOK_AUTH_CODE;
   if(!code||!equal(req.headers.get('X-Clover-Auth')??'',code))return new Response(null,{status:401});
   const data=notification.parse(body),config=cloverConfig();

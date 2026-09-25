@@ -33,7 +33,8 @@ for(const role of ['manager','employee']){sql.prepare('INSERT INTO memberships V
 globalThis.testUser={userId:'owner'};assert.equal((await post({action:'disconnect'})).status,200);assert.equal((await(await status()).json()).connected,false);
 globalThis.testEnv.CLOVER_CLIENT_SECRET='';assert.equal((await post({action:'connect'})).status,400);
 const hookBody=(value,headers={})=>webhook.POST(new Request('https://test/api/clover/webhook',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(value)}));
-assert.equal((await hookBody({verificationCode:'challenge'})).status,404);
+assert.equal((await hookBody({verificationCode:'challenge'})).status,200);
+assert.equal((await hookBody({appId:'test-client',merchants:{}},{'X-Clover-Auth':'hook-code'})).status,404);
 globalThis.testEnv.CLOVER_ENVIRONMENT='sandbox';globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED='enabled';globalThis.testEnv.CLOVER_WEBHOOK_AUTH_CODE='hook-code';
 assert.equal((await hookBody({verificationCode:'challenge'})).status,200);
 assert.equal((await hookBody({appId:'test-client',merchants:{}})).status,401);
