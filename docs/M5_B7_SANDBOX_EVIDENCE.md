@@ -8,9 +8,16 @@ cases below have direct evidence.
 ## Hosted preparation
 
 - On 2026-09-24, `main` at `8e481cb` was pushed to `origin/main` after the
-  development D1 migration. The new Worker version is
+  development D1 migration. The initial Worker version was
   `982b9480-83b0-4581-aa72-e70e961f1931` at
   `https://pantrack-dev.christospsimadas25.workers.dev`.
+- The webhook handshake fix was committed as `8c674c7`, pushed to
+  `origin/main`, and deployed as Worker version
+  `c1413505-f7ec-4e53-bb4c-db23f03e3d0e`. A hosted standalone
+  verification challenge returned `200`; a normal empty notification returned
+  `404` while the sync gate was off. After Send Verification Code was clicked,
+  Clover displayed its code-entry field. The one-time code from its request
+  is still needed before the webhook URL can be saved.
 - Before applying `0013_low_stick.sql`, the development D1 ledger ended at
   `0012_tough_rage.sql`, `0013` was the only pending migration, and there were
   no duplicate environment/merchant bindings. The pre-migration D1 Time Travel
@@ -24,7 +31,12 @@ cases below have direct evidence.
   and `CLOVER_ENVIRONMENT` was set to `sandbox`. Only secret names were listed;
   no values were printed or committed. `PANTRACK_CLOVER_SYNC_ENABLED` remains
   absent. The exact inventory preview was temporarily enabled to prepare the
-  fictional fixture; it must be disabled after B7.
+  fictional fixture, then deleted while dashboard setup was pending. The
+  ingredient counts and recipes still require a later gated fixture session.
+- The public sandbox app ID was set as the `CLOVER_CLIENT_ID` Worker secret.
+  This produced development Worker version
+  `b7aba55c-24e0-4f44-9bb4-ea8e5aea423f`. At the time of this check,
+  `CLOVER_CLIENT_SECRET` and `CLOVER_WEBHOOK_AUTH_CODE` remained unset.
 - The hosted home page returned `200`, an anonymous Clover API request returned
   `401`, and an empty webhook request returned `404` while the sync gate was off.
 - The signed-in owner created a dedicated development company,
@@ -43,8 +55,8 @@ cases below have direct evidence.
   can be enabled. The B6 route initially returned `404` for that request while
   the gate was off. A focused B7 fix now accepts only the bounded, standalone
   `verificationCode` challenge with no sales read, while ordinary notifications
-  still return `404` until sync is enabled. Hosted verification and Clover's
-  dashboard handshake are pending deployment.
+  still return `404` until sync is enabled. Hosted response behavior passed;
+  Clover's dashboard code entry and webhook subscription remain pending.
 
 ## Local checks
 
