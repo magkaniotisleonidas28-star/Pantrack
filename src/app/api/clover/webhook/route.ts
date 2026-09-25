@@ -3,6 +3,7 @@ import {database} from '@/db/raw';
 import {readBoundedUtf8,BodyTooLargeError} from '@/lib/bounded-body';
 import {cloverConfig} from '@/lib/clover';
 import {cloverSyncEnabled,syncClover} from '@/lib/clover-sync';
+import {captureChallenge} from '@/lib/clover-webhook-challenge';
 import {z} from 'zod';
 
 const notification=z.object({appId:z.string(),merchants:z.record(z.array(z.object({objectId:z.string(),type:z.enum(['CREATE','UPDATE','DELETE']),ts:z.number().int()})))});
@@ -19,7 +20,8 @@ export async function POST(req:Request){
   // Clover's dashboard sends this unauthenticated challenge before it can send
   // authenticated order notifications. It cannot trigger a sales read and must
   // work while the separate sales-sync gate is still off during setup.
-  if(z.object({verificationCode:z.string().min(1).max(200)}).strict().safeParse(body).success)return Response.json({ok:true});
+  const challenge=z.object({verificationCode:z.string().min(1).max(200)}).strict().safeParse(body);
+  if(challenge.success){await captureChallenge(challenge.data.verificationCode);return Response.json({ok:true});}
   if(!cloverSyncEnabled())return new Response(null,{status:404});
   const code=(env as unknown as {CLOVER_WEBHOOK_AUTH_CODE?:string}).CLOVER_WEBHOOK_AUTH_CODE;
   if(!code||!equal(req.headers.get('X-Clover-Auth')??'',code))return new Response(null,{status:401});

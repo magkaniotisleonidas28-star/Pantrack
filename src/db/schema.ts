@@ -18,6 +18,7 @@ export const registerMappings=sqliteTable('register_mappings',{companyId:text('c
 
 export const cloverConnections=sqliteTable('clover_connections',{companyId:text('company_id').primaryKey(),merchantId:text('merchant_id').notNull(),environment:text('environment').notNull(),secret:text('secret').notNull(),connected:text('connected').notNull(),lastChecked:text('last_checked'),leaseUntil:integer('lease_until').notNull().default(0)},t=>[uniqueIndex('clover_merchant_one_company').on(t.environment,t.merchantId)]);
 export const cloverOauthStates=sqliteTable('clover_oauth_states',{stateHash:text('state_hash').primaryKey(),companyId:text('company_id').notNull(),userId:text('user_id').notNull(),environment:text('environment').notNull(),expires:integer('expires').notNull()});
+export const cloverWebhookChallenges=sqliteTable('clover_webhook_challenges',{companyId:text('company_id').primaryKey().references(()=>companies.id),codeEncrypted:text('code_encrypted').notNull(),capturedAt:integer('captured_at').notNull(),expiresAt:integer('expires_at').notNull()});
 export const cloverSyncState=sqliteTable('clover_sync_state',{
  companyId:text('company_id').primaryKey().references(()=>companies.id),environment:text('environment').notNull(),merchantId:text('merchant_id').notNull(),startedAt:integer('started_at').notNull(),checkpoint:integer('checkpoint').notNull(),lastAttempt:text('last_attempt'),lastSuccess:text('last_success'),lastError:text('last_error'),leaseUntil:integer('lease_until').notNull().default(0),
 });
