@@ -33,6 +33,10 @@ export async function GET(req:Request){
  ]);
  const saved=await db.prepare('SELECT 1 FROM clover_connections c JOIN clover_sync_state s ON s.company_id=c.company_id WHERE c.company_id=? AND c.environment=? AND c.merchant_id=? AND c.lease_until<? AND s.environment=c.environment AND s.merchant_id=c.merchant_id').bind(companyId,c.environment,merchant,now).first();if(!saved)throw new Error('Connection is busy.');
  return back(companyId,'connected');
- }catch{return back(companyId,'failed',reason);}
+ }catch(e){
+  const errorKind=e instanceof CloverHttpError?'clover_http':e instanceof z.ZodError?'schema':e instanceof SyntaxError?'json':e instanceof DOMException&&e.name==='TimeoutError'?'timeout':e instanceof TypeError?'transport':'other';
+  console.error('Clover OAuth callback failed',{reason,errorKind,...e instanceof CloverHttpError?{providerStatus:e.status}:{}});
+  return back(companyId,'failed',reason);
+ }
 }
 function back(companyId:string,result:'connected'|'failed',reason?:FailureReason){const url=new URL(cloverOrigin());url.search=new URLSearchParams({...companyId?{company:companyId}:{},clover:result,...reason?{reason}:{}}).toString();return new Response(null,{status:303,headers:{Location:url.href,'Cache-Control':'no-store','Referrer-Policy':'no-referrer','Set-Cookie':'clover_oauth=; HttpOnly; Secure; SameSite=Lax; Path=/api/clover; Max-Age=0'}});}
