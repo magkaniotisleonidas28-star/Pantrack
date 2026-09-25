@@ -145,6 +145,21 @@ Malformed, oversized, unauthenticated, or unmapped-company requests are rejected
 
 ## Consumption policy
 
+### B6 Clover paid-order decision (owner, 2026-09-24)
+
+For the Clover adapter only, the owner chose to count a **fully paid** order as
+ingredients used even when Clover has no separate preparation or fulfillment
+record. The adapter labels this as `preparationStatus=fulfilled` for the v1
+service; that is a Pantrack business assumption, not a claim that Clover
+reported fulfillment. Partial payment does not trigger consumption. The
+adapter uses the provider payment timestamp as `occurredAt`; if that timestamp
+is missing, the event is held for occurrence-time confirmation without a stock
+change. Refunds and cancellations never restore ingredients automatically. The
+owner also chose an initial sync beginning at connection time, excluding older
+orders.
+This Clover-specific decision does not change manual, CSV, bridge, or other
+native-adapter behavior.
+
 For an order with prior applied consumption, the service compares the new complete revision with the latest applied consumption snapshot using stable line and modifier-line IDs. New prepared lines, new prepared modifiers, and quantity increases are positive deltas. Removed lines, removed modifiers, quantity decreases, or substitutions contain a negative/restorative delta. A revision containing any negative or unresolvable delta is held in full as `correction_required`, even if it also contains valid additions. An unchanged revision is an applied no-op. If there is no prior applied consumption and the complete revision has explicit prepared or fulfilled evidence, all prepared quantities are the positive delta.
 
 | Event facts | Inventory result |

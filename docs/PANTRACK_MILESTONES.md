@@ -279,9 +279,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   authorization, and compatibility evidence. **Milestone:** M4 complete only
   after M2–M3 and all M4 evidence pass. Accepted for local development on
   2026-09-24; see [B5 evidence](M4_B5_LOCAL_EVIDENCE.md).
-- [ ] **B6 — Complete M5 locally.** Finish the Clover adapter, merchant/location
+- [x] **B6 — Complete M5 locally.** Finish the Clover adapter, merchant/location
   binding, menu/modifier mapping, cursor/checkpoint reconciliation, token
   lifecycle, disconnect behavior, health, and sync-now path using the M4 service.
+  Fake-backed local implementation and checks passed on 2026-09-24; see
+  [B6 evidence](M5_B6_LOCAL_EVIDENCE.md). The sandbox sync gate is off.
 - [ ] **B7 — Accept M5 in Clover sandbox.** With explicitly approved sandbox
   access, record normal, duplicate, modifier, refund/cancellation, refresh,
   disconnect, and missed-event recovery cases, including expected versus actual
@@ -602,6 +604,9 @@ fictional Worker smoke passed separately in
 ## M5 — Clover sandbox and pilot integration
 
 **Objective:** Convert the existing Clover authorization/menu work into reliable completed-sale synchronization.
+
+B6's fake-backed local adapter is complete; see [local evidence](M5_B6_LOCAL_EVIDENCE.md).
+M5 acceptance remains open for B7's explicitly approved Clover sandbox cases.
 
 ### Tasks
 

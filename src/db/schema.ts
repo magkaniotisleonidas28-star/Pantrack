@@ -16,8 +16,17 @@ export const purchasingJobs=sqliteTable('purchasing_jobs',{companyId:text('compa
 
 export const registerMappings=sqliteTable('register_mappings',{companyId:text('company_id').notNull(),externalKey:text('external_key').notNull(),data:text('data').notNull()},t=>[primaryKey({columns:[t.companyId,t.externalKey]})]);
 
-export const cloverConnections=sqliteTable('clover_connections',{companyId:text('company_id').primaryKey(),merchantId:text('merchant_id').notNull(),environment:text('environment').notNull(),secret:text('secret').notNull(),connected:text('connected').notNull(),lastChecked:text('last_checked'),leaseUntil:integer('lease_until').notNull().default(0)});
+export const cloverConnections=sqliteTable('clover_connections',{companyId:text('company_id').primaryKey(),merchantId:text('merchant_id').notNull(),environment:text('environment').notNull(),secret:text('secret').notNull(),connected:text('connected').notNull(),lastChecked:text('last_checked'),leaseUntil:integer('lease_until').notNull().default(0)},t=>[uniqueIndex('clover_merchant_one_company').on(t.environment,t.merchantId)]);
 export const cloverOauthStates=sqliteTable('clover_oauth_states',{stateHash:text('state_hash').primaryKey(),companyId:text('company_id').notNull(),userId:text('user_id').notNull(),environment:text('environment').notNull(),expires:integer('expires').notNull()});
+export const cloverSyncState=sqliteTable('clover_sync_state',{
+ companyId:text('company_id').primaryKey().references(()=>companies.id),environment:text('environment').notNull(),merchantId:text('merchant_id').notNull(),startedAt:integer('started_at').notNull(),checkpoint:integer('checkpoint').notNull(),lastAttempt:text('last_attempt'),lastSuccess:text('last_success'),lastError:text('last_error'),leaseUntil:integer('lease_until').notNull().default(0),
+});
+export const cloverItemMappings=sqliteTable('clover_item_mappings',{
+ companyId:text('company_id').notNull().references(()=>companies.id),environment:text('environment').notNull(),merchantId:text('merchant_id').notNull(),itemId:text('item_id').notNull(),recipeId:text('recipe_id').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.environment,t.merchantId,t.itemId]})]);
+export const cloverModifierMappings=sqliteTable('clover_modifier_mappings',{
+ companyId:text('company_id').notNull().references(()=>companies.id),environment:text('environment').notNull(),merchantId:text('merchant_id').notNull(),itemId:text('item_id').notNull(),modifierId:text('modifier_id').notNull(),inventoryModifierId:text('inventory_modifier_id').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.environment,t.merchantId,t.itemId,t.modifierId]})]);
 
 export const registerSettings=sqliteTable('register_settings',{companyId:text('company_id').primaryKey(),data:text('data').notNull(),tokenHash:text('token_hash'),lastReceived:text('last_received')});
 

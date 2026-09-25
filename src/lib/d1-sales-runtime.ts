@@ -16,11 +16,21 @@ export class D1SalesMappingPort implements SalesMappingPort{
  constructor(private readonly db:D1Database){}
  async resolveLine(input:{companyId:string;source:SalesSourceBinding;externalItemId:string;externalVariationId?:string}){
   if(input.source.provider==='pantrack-manual'||input.source.provider==='pantrack-recipe-csv')return {status:'mapped' as const,recipeId:input.externalItemId};
+  if(input.source.kind==='native'&&input.source.provider==='clover'){
+   const row=await this.db.prepare('SELECT recipe_id FROM clover_item_mappings WHERE company_id=? AND environment=? AND merchant_id=? AND item_id=?').bind(input.companyId,input.source.environment,input.source.merchantId,input.externalItemId).first<{recipe_id:string}>();
+   return row?{status:'mapped' as const,recipeId:row.recipe_id}:{status:'unknown_item' as const};
+  }
   const row=await this.db.prepare('SELECT data FROM register_mappings WHERE company_id=? AND external_key=?').bind(input.companyId,input.externalItemId).first<{data:string}>();
   if(!row)return {status:'unknown_item' as const};
   try{const parsed=JSON.parse(row.data) as {recipeId?:unknown};return typeof parsed.recipeId==='string'&&parsed.recipeId?{status:'mapped' as const,recipeId:parsed.recipeId}:{status:'unknown_item' as const};}catch{return {status:'unknown_item' as const};}
  }
- async resolveModifier(){return {status:'unknown_modifier' as const};}
+ async resolveModifier(input:{companyId:string;source:SalesSourceBinding;externalItemId:string;externalVariationId?:string;externalModifierId:string}){
+  if(input.source.kind==='native'&&input.source.provider==='clover'){
+   const row=await this.db.prepare('SELECT inventory_modifier_id FROM clover_modifier_mappings WHERE company_id=? AND environment=? AND merchant_id=? AND item_id=? AND modifier_id=?').bind(input.companyId,input.source.environment,input.source.merchantId,input.externalItemId,input.externalModifierId).first<{inventory_modifier_id:string}>();
+   if(row)return {status:'mapped' as const,modifierId:row.inventory_modifier_id};
+  }
+  return {status:'unknown_modifier' as const};
+ }
 }
 
 export function d1SalesService(db:D1Database){return new SalesIngestionService(new D1SalesEventStore(db),new D1SalesMappingPort(db),new D1InventoryConsumptionPort(db));}

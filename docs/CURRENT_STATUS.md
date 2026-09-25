@@ -51,7 +51,8 @@ are not proof of live production integration.
   register bridge with duplicate protection.
 - Target-stock calculations, supplier-pack rounding, review proposals, vendor
   connection framework, and scheduled-check endpoint.
-- Clover OAuth authorization/menu loading and hosted Stripe payment-method setup.
+- Clover OAuth authorization/menu loading, a gated fake-backed local sales
+  adapter, and hosted Stripe payment-method setup.
 
 The following remain unverified against real services: live Clover sales sync,
 a second POS, a real supplier adapter, live payments,
@@ -152,9 +153,10 @@ supplier credentials, or payment details into chat or source control.
    disabled; the fictional walkthrough is complete. Finish any remaining C2
    acceptance evidence without treating the earlier replacement build report
    as an independently verified run.
-3. A5/M3 and B5/M4 are accepted for local development. Start B6's Clover
-   adapter work using the accepted sales and consumption contracts. B7 still
-   requires explicitly approved sandbox access and recorded provider evidence.
+3. A5/M3, B5/M4, and B6's Clover adapter are accepted for local development.
+   B7 requires explicitly approved Clover sandbox access and recorded provider
+   evidence. The remote development database still needs `0013` before any
+   B6 Worker deployment; keep Clover sync disabled.
 4. Keep production data and real users out of this environment while these
    gates remain open. Hosted sign-in worked at the development `workers.dev`
    URL; signup and recovery callback configuration there still needs a
@@ -174,7 +176,7 @@ behavior.
 | M2 — authentication and RBAC | C1/M2 accepted by owner for development; authentication/migration review and replacement Cloudflare build are owner-attested | Document the already reported review. Development Worker smoke passed, but hosted signup/recovery and independent security verification remain open. See [development auth evidence](M2_DEV_AUTH_EVIDENCE.md) and [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md). |
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
-| M5 — Clover | OAuth/menu prototype only | Sandbox merchant, completed-order sync, modifiers, cursors, reconciliation, health, and sandbox evidence. |
+| M5 — Clover | B6 local adapter passed fake-backed checks; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers the local adapter, mappings, checkpoint, webhook gate, and health. B7 needs a fictional Clover sandbox merchant and provider evidence; no live sync or remote `0013` migration is claimed. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | Prototype exists; not complete | Frozen snapshots, explainable lifecycle, edits/audit, quantity reservation, and concurrency tests. |
 | M8 — supplier adapter | Not started | Select supplier, build approved integration, sandbox/timeout tests, incoming-stock and delivery reconciliation, then one approved low-risk test order. |
@@ -204,6 +206,7 @@ limited automation.
 - [M4 B4 local exact-sales evidence](M4_B4_LOCAL_EVIDENCE.md)
 - [M4 B5 local acceptance evidence](M4_B5_LOCAL_EVIDENCE.md)
 - [C2 hosted development validation](C2_HOSTED_DEV_EVIDENCE.md)
+- [M5 B6 local Clover evidence](M5_B6_LOCAL_EVIDENCE.md)
 - [September 19 readiness snapshot and approved M2 permissions](MILESTONE_READINESS.md)
 - [Full milestone roadmap](PANTRACK_MILESTONES.md)
 - [Branch consolidation record](BRANCH_CONSOLIDATION.md)
