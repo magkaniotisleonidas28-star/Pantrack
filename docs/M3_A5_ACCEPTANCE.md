@@ -1,8 +1,9 @@
 # A5 — M3 acceptance review
 
-Updated: 2026-09-23. Workstream A. **A5 remains open.** This records the
-completed local checks and the exact evidence still needed to accept M3. It
-does not approve a remote migration, deployment, live integration, or purchase.
+Updated: 2026-09-24. Workstream A. **A5/M3 is accepted by the owner for local
+development.** This records the local evidence, independent review, and owner
+decision. It does not approve a remote migration, deployment, live integration,
+or purchase.
 
 ## Task contract
 
@@ -27,7 +28,7 @@ recorded. Preserve the exact inventory preview gate in its default-off state.
 | Physical-count variance and immutable stock events | `inventory-management-contract`, `a4-data-foundations`, reconciliation history UI | Pass locally; count changes retain estimate and signed variance. |
 | Repeated sales do not deduct twice | `inventory-consumption-d1` and `b4-sales-inventory`, including concurrent duplicates and restart/replay | Pass locally. |
 | Target examples: incoming, case rounding, capacity, shelf life, zero target, stale count | `inventory-quantities` tests the exact pure calculation | Pass for the exact calculation. The current preview planning tab still displays a **legacy compatibility estimate**, so these tests do not prove an exact, end-to-end planning recommendation in the UI. A6/M7 owns that replacement. |
-| Explain the current target calculation in the UI | The preview planning tab labels compatibility values and shows target, position, shortfall, pack size, each capacity/shelf-life pack limit, and final result; the exact stock tab shows canonical on-hand/incoming | The A5 review found that an overdue physical count could still show a suggested pack count. This packet fixes it: the count now requires review and yields zero suggested packs. This UI still needs its manager-screen walkthrough. |
+| Explain the current target calculation in the UI | The preview planning tab labels compatibility values and shows target, position, shortfall, pack size, each capacity/shelf-life pack limit, and final result; the exact stock tab shows canonical on-hand/incoming | The A5 review found that an overdue physical count could still show a suggested pack count. This packet fixes it: the count now requires review and yields zero suggested packs. The owner passed the fictional manager-screen walkthrough on 2026-09-23. |
 | Existing-data compatibility | `m3-data-foundations` checks pre-`0009` product, inventory, recipe, event, and import rows; `a4-data-foundations` checks pre-`0011` exact rows; [older-data owner walkthrough](M3_A5_OWNER_REVIEW.md) passed with fictional data | Pass locally for the tested fixtures; real company data has not been reviewed or migrated remotely. |
 | Company and role security | `inventory-management-contract`, `inventory-consumption-d1`, `inventory-management-contract` route coverage in `m2-security` | Pass locally for anonymous, wrong-company, employee-write, manager-write, and employee-read cases. |
 
@@ -86,7 +87,7 @@ generated schema. No migration is edited in this packet. For rollback, leave
 `PANTRACK_EXACT_INVENTORY_PREVIEW` unset; after a nonlocal migration or exact
 write, retain history and use a new forward-repair migration if needed.
 
-## Acceptance decision still needed
+## Independent review and owner decision
 
 The owner confirmed **"all matched"** on 2026-09-23 after opening the separate
 fictional local A5 cafe and checking Exact stock, Count history, Recipe versions,
@@ -114,14 +115,25 @@ restarted. The owner refreshed the local Inventory page and confirmed on
 2026-09-23 that the shorter numbers look right. Source commit `ca132a7`
 also passed [Windows and Ubuntu CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35944315221).
 
-The migration SQL has local compatibility review, but the named fresh reviewer
-and owning-human review for
-a schema-bearing acceptance have not been recorded.
+On 2026-09-24, a separate Codex review of PR #4 inspected migrations `0009`
+and `0011`, the journal order, the compatibility tests, the PR diff, and the
+forward-repair rule. In the integration checkout, whose `0009` and `0011` blobs
+match the PR branch, the focused `m3-data-foundations` and
+`a4-data-foundations` suites passed. The migration check passed for 13 ordered
+migrations, schema agreement, and a fresh in-memory SQLite apply after its
+first sandbox-restricted attempt returned `EPERM`; `git diff --check` passed.
+The review found no blocking migration defect for local development acceptance.
+It did not independently rerun the full PR pipeline or verify the current
+hosted CI state. The seeded fixtures do not establish that every real older
+record will backfill cleanly; a nonlocal migration needs its own older-data
+preflight and recovery plan. Recipe edits predating `0009` cannot be recovered
+from the copied current version, and the documented forward-repair rule is not
+a tested remote restore procedure.
 
-The owning human should also review the additive `0009`/`0011` migration
-summary and forward-repair rule above, or name a qualified reviewer; this
-cannot be inferred from automated tests.
-
-Therefore M3 and A5 stay unchecked. The next work is to record the migration
-review and the final acceptance decision. B5/M4
-acceptance must wait for that decision. The preview remains off by default.
+After receiving that review and its limits, the owner explicitly approved:
+"I approve A5/M3 for local development acceptance. This does not approve a
+remote migration or deployment." A5 and M3 are therefore accepted at the
+local-development evidence level. The exact inventory preview remains off by
+default. Person B may proceed with B5/M4 acceptance work using the reviewed
+consumption contract; A6 may proceed in review-only mode. No remote migration,
+deployment, or production-data action is authorized by this decision.

@@ -1,6 +1,10 @@
 # Milestone readiness
 
-Assessment updated: 2026-09-19. This report distinguishes existing prototype code from demonstrated acceptance. No production, merchant, supplier, payment, or pilot access was performed for this assessment.
+Assessment updated: 2026-09-19. This is a historical assessment; use
+[CURRENT_STATUS.md](CURRENT_STATUS.md) for later acceptance decisions, including
+A5/M3. This report distinguishes existing prototype code from demonstrated
+acceptance. No production, merchant, supplier, payment, or pilot access was
+performed for this assessment.
 
 M0 local acceptance passed (commit `0a6986e`). M1 local checks, hosted pull-request CI, and current main-branch Ubuntu/Windows CI passed. M2 product decisions are approved; its implementation and automated security checks are on `main`, and current repository CI passes. Real-provider acceptance, the failed Cloudflare Worker build, and migration/authentication review remain open. Later milestones retain their prerequisites in [PANTRACK_MILESTONES.md](PANTRACK_MILESTONES.md), including the requirement to complete M11 before M12.
 

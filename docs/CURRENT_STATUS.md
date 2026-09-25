@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-23
+Updated: 2026-09-24
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -61,7 +61,7 @@ provisioned background jobs, and automatic purchases.
 
 The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The owner completed and accepted a development-provider walkthrough of password rules, confirmation, sign-in/out, fictional-company roles, invitation, ownership transfer, recovery, concurrent-session revocation, and security history. The membership panel still required a full page refresh after acceptance in another browser; the owner accepted that limitation. The owner reports that a replacement Cloudflare build works, accepted that build step without a run link or commit record, and explicitly directed C1/M2 to be treated as complete on 2026-09-23. The agent inspected the additive migration and authentication flow and ran local checks; a separate owner review record is unavailable. This is owner-accepted development evidence, not independent security verification, verified deployment, or production approval. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md), [local evidence](M2_LOCAL_EVIDENCE.md), and [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
 
-## M3 local implementation
+## M3 local development acceptance
 
 A4's persistent exact inventory behavior is implemented and passes the complete
 local pipeline. It includes exact curated/custom unit classification, atomic
@@ -73,13 +73,15 @@ local implementation now uses that same gate for the coordinated durable-sales
 and exact-inventory cutover. See [M3 local evidence](M3_LOCAL_EVIDENCE.md) and
 [B4 local evidence](M4_B4_LOCAL_EVIDENCE.md).
 
-This does not accept M3. Person B's compatibility review is recorded in the B4
-evidence and found no inventory-specific workaround. A5 includes a read-only
-older-data report; the owner passed its fictional-data screen walkthrough on
-2026-09-23, and the agent verified that viewing it changed no stock or recipe.
-Person A's completed M3 acceptance record remains open. No remote migration
-was performed by this integration work; the owner authorized a `main` push
-even if the replacement Cloudflare connection auto-deploys.
+The owner accepted A5/M3 for **local development** on 2026-09-24 after an
+independent AI review of migrations `0009` and `0011`, the migration order,
+legacy-data compatibility, recipe-history protection, and forward-repair rule.
+Person B's compatibility review found no inventory-specific workaround. The
+owner's fictional-data walkthrough covered the older-data report, exact stock,
+counts, recipes, modifiers, planning explanation, and compact decimal display.
+See the [A5 acceptance record](M3_A5_ACCEPTANCE.md). The preview remains off
+by default. This acceptance does not authorize a remote migration, deployment,
+live integration, or production-data use.
 
 ## Deployment health
 
@@ -117,8 +119,9 @@ supplier credentials, or payment details into chat or source control.
    verified. The owner authorized a `main` push even if it auto-deploys; do not
    manually configure a Worker, migrate remote D1, or claim hosted-runtime
    verification from the build report.
-3. The A5 older-data screen passed its fictional-data owner walkthrough;
-   complete the remaining M3 acceptance record before B5/M4 acceptance.
+3. A5/M3 is accepted for local development. Person B may complete B5/M4
+   acceptance, and Person A may start the review-only A6/M7 core. Neither
+   handoff authorizes a remote migration, deployment, or live integration.
 4. Do not migrate remote D1, configure production secrets, or invite real users
    while these gates remain open. Keep `http://127.0.0.1:5173` as the
    development Supabase Site URL until a reviewed hosted URL is available.
@@ -135,8 +138,8 @@ does not make M3 or M4 complete before their prerequisite evidence exists.
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
 | M2 — authentication and RBAC | C1/M2 accepted by owner for development; replacement Cloudflare build is owner-attested | Record the separate authentication-flow/migration review before public release. No independent security or deployment verification is claimed. See [development evidence](M2_DEV_AUTH_EVIDENCE.md). |
-| M3 — inventory and recipes | A4 and older-data report implemented locally; acceptance pending | Person B's compatibility review and the A5 fictional screen walkthrough are recorded. Complete A5 acceptance now that C1/M2 is owner-accepted; keep the exact preview disabled by default. |
-| M4 — POS ingestion | B4 implemented locally; acceptance pending | Complete the dedicated B4 visual walkthrough, obtain prerequisite M2/M3 acceptance and review, then complete B5 evidence. Clover remains B6. |
+| M3 — inventory and recipes | A5/M3 accepted by owner for local development on 2026-09-24 | Preserve the default-off exact preview. A remote migration, deployment, and production-data use require separate review and authorization. See [A5 evidence](M3_A5_ACCEPTANCE.md). |
+| M4 — POS ingestion | B4 implemented locally; acceptance pending | Complete the dedicated B4 visual walkthrough and B5 evidence now that M2/M3 have development acceptance. Clover remains B6. |
 | M5 — Clover | OAuth/menu prototype only | Sandbox merchant, completed-order sync, modifiers, cursors, reconciliation, health, and sandbox evidence. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | Prototype exists; not complete | Frozen snapshots, explainable lifecycle, edits/audit, quantity reservation, and concurrency tests. |
