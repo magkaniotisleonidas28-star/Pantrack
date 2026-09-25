@@ -30,8 +30,8 @@ with old rows, duplicate old origins, company isolation, role checks, replay,
 edit and cancellation history, reservation release, source-change races,
 invalid state updates, foreign keys, and SQLite integrity. The A-owned fake
 consumer holds every review-only handoff, including a hypothetical approved
-status. Person C's C4 fake consumer does not yet exist in this repository, so
-the actual cross-workstream consumer test is an explicit remaining handoff.
+status. C4's later [fake supplier consumer](C4_A7_HANDOFF_EVIDENCE.md)
+passed the actual cross-workstream contract test against A's handoff builder.
 
 Local checks on the original A7 lifecycle branch passed: TypeScript `--noEmit`,
 all 28 test suites, the 17-migration schema/journal/snapshot check, the

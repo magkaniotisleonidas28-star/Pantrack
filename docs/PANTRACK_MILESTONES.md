@@ -243,13 +243,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   count, and limit calculations; freeze explainable proposal snapshots. Use B's
   sales-health fixtures and keep everything review-only. Local evidence is in
   [the A6 report](M7_A6_LOCAL_EVIDENCE.md); M7 remains open.
-- [ ] **A7 — Complete M7 lifecycle and A → C handoff.** Add proposal lifecycle,
+- [x] **A7 — Complete M7 lifecycle and A → C handoff.** Add proposal lifecycle,
   invalidation, edit reasons, audit history, and atomic unresolved-quantity
   reservations. Publish the immutable proposal contract to Person C and test it
   against C's fake supplier consumer. A-owned lifecycle and reservation code
-  passed local checks in [the A7 evidence](M7_A7_LIFECYCLE_EVIDENCE.md); C4's
-  fake consumer has not been published, so the final cross-workstream contract
-  test and A7 checkbox remain open.
+  passed local checks in [the A7 evidence](M7_A7_LIFECYCLE_EVIDENCE.md). C4's
+  [fake consumer contract test](C4_A7_HANDOFF_EVIDENCE.md) passed locally.
+  This closes A7's local handoff; M7 acceptance remains A8 work.
 - [ ] **A8 — Accept M7.** After B supplies accepted M5 inputs, run concurrency
   and end-to-end proposal tests and record M7 evidence. **Milestone:** M7 complete
   only after M3–M5; this handoff unblocks real M8 implementation.
@@ -334,6 +334,8 @@ For every numbered item, the assigned person follows the same delivery loop:
   idempotency, ambiguous timeout/unknown status, reconciliation, leases, bounded
   retry, terminal failure, and concurrent budgets. Do not submit or schedule real
   work; validate A's proposal snapshot through the shared contract and tests.
+  The [A7 fake consumer slice](C4_A7_HANDOFF_EVIDENCE.md) passed locally;
+  supplier delivery, scheduler/job, alert, and budget components remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   proposal without recalculating quantities; implement the selected supplier's
   quote, validation, submission, status, incoming-stock, and delivery behavior.

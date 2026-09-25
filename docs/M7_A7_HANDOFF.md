@@ -10,9 +10,11 @@ represented as a currency code and decimal minor-unit string; pack counts and
 stock quantities are strings so JSON does not lose precision.
 
 Every A7 handoff is `review_only` and has `supplierSubmissionAllowed: false`.
-The current supplier, sales, and price sources are fictional fixtures. A fake C
-consumer stand-in in A's contract test confirms that even an `approved` status cannot trigger
-a supplier action. Person C must reject fictional sources and independently
+The current supplier, sales, and price sources are fictional fixtures. C4's
+[`fake supplier consumer`](../src/lib/c4-fake-supplier-consumer.ts) validates
+this handoff and holds it, including when an `approved` status is present. Its
+[cross-workstream test](../tests/c4-a7-supplier-handoff.mjs) proves that no
+supplier call occurs. Person C must independently
 enforce the M8 gate before adding any real adapter. The A7 status graph names
 `sending`, `unknown`, `accepted`, `rejected`, and receipt states for future
 auditing; naming a state does not enable submission.
@@ -25,6 +27,5 @@ and safety limit overrun. The immutable origin remains unchanged. Migration
 `0017` and `D1ReplenishmentLifecycle` record the edit and its actor in an
 append-only audit event before the edited handoff is returned.
 
-This is local A-side handoff evidence. C4 has not published a fake consumer yet,
-so a real A → C contract integration test remains pending. Supplier decisions,
-remote migrations, and M7 acceptance are also pending.
+The local A → C contract test is recorded in [C4 handoff evidence](C4_A7_HANDOFF_EVIDENCE.md).
+Supplier decisions, remote migrations, and M7 acceptance are still pending.

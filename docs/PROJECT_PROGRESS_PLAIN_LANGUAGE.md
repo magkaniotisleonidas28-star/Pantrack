@@ -69,8 +69,8 @@ it does not place an order.
 | A3 | Add database structures for exact quantities and recipe/count history without erasing old records. | Done on `main`; additive migrations and legacy compatibility tests passed locally. |
 | A4 | Build exact inventory, recipe versions, counts, manager screens, and permission tests. | Done on `main`; checked. Hidden switch remains off by default. |
 | A5 | Review all M3 evidence and formally hand the inventory contract to B. | Done on `main`; owner-accepted for development on 2026-09-23. Hosted checks remain separate. |
-| A6 | Build the safe calculation engine for suggested replenishment. | Later; open. Suggestions stay review-only. |
-| A7 | Add the suggestion review/history process and hand its contract to C. | Later; open. |
+| A6 | Build the safe calculation engine for suggested replenishment. | Done on `main`; suggestions stay review-only. |
+| A7 | Add the suggestion review/history process and hand its contract to C. | Done locally; lifecycle, duplicate-quantity protection, and C4 fake consumer test passed. M7 remains open for A8. |
 | A8 | Accept the replenishment milestone after the needed sales inputs are accepted. | Later; open. |
 | A9 | Measure inventory and suggestion accuracy during an approved café pilot. | Later; open; requires written pilot permission. |
 | A10 | Help validate onboarding, data export/deletion, and backup/restore before release. | Later; open; requires pilot acceptance. |
@@ -105,7 +105,7 @@ real order.
 | C1 | Accept accounts and company permissions with a development Supabase account and owner walkthrough. | Owner-accepted for development on 2026-09-23; checked. Cloudflare build success is owner-reported, not independently verified here. |
 | C2 | Record the full M2 evidence and remaining deployment limits for the team. | Open in roadmap. The owner accepted C1 and later reported completing the authentication/migration review; its separate written record remains unavailable. Development D1 and Worker validation are [recorded](C2_HOSTED_DEV_EVIDENCE.md). |
 | C3 | Obtain decisions about Clover sandbox, second register provider, first supplier, job runner, alerts, payment responsibility, and limits. | Can proceed in parallel; open. Do not guess missing business decisions. |
-| C4 | Build and test safe supplier, background-job, alert, and spending-limit components using fake services. | Can proceed in parallel within its gates; open. No real submissions or schedules. |
+| C4 | Build and test safe supplier, background-job, alert, and spending-limit components using fake services. | A7 fake consumer slice passed locally; the broader C4 work remains open. No real submissions or schedules. |
 | C5 | Connect the chosen supplier only after A's replenishment milestone is accepted. | Later; open. One real test order would need separate explicit approval. |
 | C6 | Connect scheduled jobs and alerts after the preceding sales/supplier milestones. | Later; open. |
 | C7 | Finish financial controls after supplier and payment decisions. | Later; open. Automatic purchasing stays disabled. |
