@@ -50,13 +50,41 @@ cases below have direct evidence.
   alternate launch path is `/`, and its default OAuth response is `CODE`.
   The owner approved and the dashboard saved exactly four READ permissions:
   Inventory, Merchant, Orders, and Payments. All WRITE and ecommerce
-  permissions remain off. The app is not yet installed on the test merchant.
+  permissions remain off. The app was not yet installed at this preparation
+  checkpoint; the later OAuth connection below used that merchant.
 - Clover requires its webhook verification request before the sales-sync gate
   can be enabled. The B6 route initially returned `404` for that request while
   the gate was off. A focused B7 fix now accepts only the bounded, standalone
   `verificationCode` challenge with no sales read, while ordinary notifications
   still return `404` until sync is enabled. Hosted response behavior passed;
   Clover's dashboard code entry and webhook subscription remain pending.
+- The owner subsequently saved `CLOVER_CLIENT_SECRET` directly in the
+  development Worker. A read-only secret-name check after deployment showed
+  `APP_ORIGIN`, `CLOVER_CLIENT_ID`, `CLOVER_CLIENT_SECRET`,
+  `CLOVER_ENVIRONMENT`, and `VENDOR_ENCRYPTION_KEY` as `secret_text`; no values
+  were retrieved. `PANTRACK_CLOVER_SYNC_ENABLED` remains absent.
+- A hosted OAuth attempt on the dedicated B7 company selected fictional merchant
+  `4ZJYT1HV8X6Y1` but returned `clover=failed`; a read-only D1 check found no
+  connection or sync checkpoint. Diagnostic commits `c5178c6` and `b252911`
+  made callback failures observable without logging codes or tokens. A filtered
+  Worker tail then showed a token-exchange transport error. A temporary,
+  redacted diagnostic identified the exact runtime error: Cloudflare Workers
+  rejects `fetch` with `redirect: 'error'` before sending the request.
+- Commit `6a7706d` changed Clover token, refresh, and API requests to
+  `redirect: 'manual'`, with non-2xx responses still rejected, and removed the
+  temporary transport-message diagnostic. It was pushed to `origin/main` and
+  deployed to `pantrack-dev` as version
+  `12fbb8fe-0762-4bc3-8152-aa67afabbd6f`.
+- On 2026-09-25, the owner selected `Pantrack B7 Fictional Café` in Clover's
+  sandbox OAuth screen. Pantrack returned `clover=connected` and displayed
+  `Authorized · sandbox`, merchant `4ZJYT1HV8X6Y1`, and a disabled sales-sync
+  control. A read-only remote D1 query confirmed one connection for dedicated
+  company `eb05567b-e227-4f28-ae02-b81f55e6918c`, environment `sandbox`,
+  merchant `4ZJYT1HV8X6Y1`, and matching initial `started_at`/`checkpoint`
+  (`1790309446387`). A second read-only query found one `clover.connected`
+  audit record and zero Clover connections for the separate hosted-validation
+  company. No secret or token value was queried. This proves the fictional
+  merchant connection, not the remaining B7 provider cases.
 
 ## Local checks
 
@@ -71,6 +99,12 @@ cases below have direct evidence.
   and `pnpm test:local` — passed. The first attempted focused
   command included an unsupported `--` separator and did not run; the corrected
   focused command passed.
+- After the OAuth callback and Worker redirect fix: `pnpm typecheck`,
+  `pnpm test` (21 suites), `pnpm db:check`, `pnpm build`,
+  `pnpm db:migrate:local` (no pending migrations), and `pnpm test:local`
+  passed. The focused Clover test additionally covered safe failure codes,
+  anonymous/wrong-user/forbidden-role callbacks, audit-write rollback, and
+  manual redirect mode. These are local mocked-provider checks.
 
 ## Clover provider cases
 
