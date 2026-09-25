@@ -37,7 +37,7 @@ type VersionRow = {balance_version: number; config_id: string; config_version: n
 type Clock = {now(): Date};
 const ZERO = BigInt(0);
 
-function validFixture(request: ReviewSourceRequest): void {
+export function validateReviewFixtures(request: ReviewSourceRequest): void {
   for (const fixture of [request.sales, request.supplier]) {
     if (!fixture || fixture.source !== 'fictional_fixture' || fixture.companyId !== request.companyId) {
       throw new Error('Review fixtures must belong to the requested company.');
@@ -92,7 +92,7 @@ export class D1ReplenishmentReview {
   async build(request: ReviewSourceRequest): Promise<ReviewSourceResult> {
     // The settings store checks the server-derived actor and company before data is read.
     const settings = await this.settings.current(request.companyId, request.productId, request.actor);
-    validFixture(request);
+    validateReviewFixtures(request);
     if (!settings) return {kind: 'unavailable', reason: 'settings_missing'};
     const row = await this.db.prepare(`SELECT b.config_id,c.version AS config_version,c.status AS config_status,
       b.dimension,u.dimension AS unit_dimension,b.on_hand_minor,b.incoming_minor,c.purchase_quantity_minor,
