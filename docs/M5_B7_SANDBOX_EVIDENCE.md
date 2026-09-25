@@ -86,6 +86,54 @@ cases below have direct evidence.
   company. No secret or token value was queried. This proves the fictional
   merchant connection, not the remaining B7 provider cases.
 
+## Fictional catalog and mapping fixture
+
+On 2026-09-25, the dedicated B7 company received three fictional exact opening
+counts. Each count took effect at `2026-09-25T04:22:00.000Z`, after the Clover
+connection cutoff (`2026-09-25T04:10:46.387Z`). These are synthetic test
+balances, not observed physical stock:
+
+| Sample product | Stock unit | Fictional opening count | Purchase unit and quantity |
+| --- | --- | ---: | --- |
+| Whole milk (`sample-0`) | mL | 15,141.647136 | case, 15,141.647136 mL (4 US gallons) |
+| House espresso blend (`sample-4`) | g | 2,267.96185 | bag, 2,267.96185 g (5 lb) |
+| 12 oz hot cups (`sample-8`) | each | 1,000 | case, 1,000 each |
+
+The active **B7 Latte 12 oz (fictional)** recipe is lineage
+`7151ba96-4da6-4a95-8d7a-ef8a8aaafe6d`, version
+`e58c4f2c-fac4-49fb-a06a-eb15aeda9ad6`, active from
+`2026-09-25T04:24:47.198Z`. Its stored ingredients are 200 mL whole milk,
+18 g espresso, and one hot cup. Its active **B7 Extra shot (fictional)**
+modifier is lineage `6ae3d2f6-2a92-47c1-a9ad-8b52cb64bc62`, version
+`682d8fec-57f1-4130-b86a-c75f029fd319`, active from
+`2026-09-25T04:25:45.560Z`; it adds 18 g espresso.
+
+In the fictional Clover sandbox merchant, item **B7 Latte 12 oz (fictional)**
+(`DX2XHRRJEVE8M`, $5.00) was created. Modifier **B7 Extra shot (fictional)**
+(`E52ZXJVB7JX48`, $1.00) was created in group **B7 Latte add-ons
+(fictional)** (`VSM8D8JA34X9C`). Clover confirmed the group was assigned to
+the latte item. An initial assignment through the modifier-group page showed
+an error and left zero assigned items; assigning from the latte item page then
+showed success and the group ID on the item. No order was created.
+
+Pantrack's owner controls loaded the Clover menu and modifiers and saved these
+native mappings for environment `sandbox` and merchant `4ZJYT1HV8X6Y1`:
+
+| Clover ID | Pantrack lineage |
+| --- | --- |
+| Item `DX2XHRRJEVE8M` | Recipe `7151ba96-4da6-4a95-8d7a-ef8a8aaafe6d` |
+| Modifier `E52ZXJVB7JX48` on item `DX2XHRRJEVE8M` | Modifier `6ae3d2f6-2a92-47c1-a9ad-8b52cb64bc62` |
+
+Read-only development D1 queries confirmed the three exact balances, active
+ingredient amounts, one item mapping, and one modifier mapping. The same check
+found zero sales events, zero consumption applications, zero exact sale events,
+and no sync attempt; the sync checkpoint still equals the connection cutoff.
+The exact inventory preview was removed after recipe setup, and a hosted page
+reload showed the ordinary inventory screen. A final Worker secret-name check
+found neither `PANTRACK_EXACT_INVENTORY_PREVIEW` nor
+`PANTRACK_CLOVER_SYNC_ENABLED`. This establishes fixture readiness only;
+webhook verification and all provider cases below remain pending.
+
 ## Local checks
 
 - `pnpm typecheck` — passed.

@@ -161,8 +161,10 @@ supplier credentials, or payment details into chat or source control.
    B7 hosted preparation applied development D1 `0013` and deployed B6 to
    `pantrack-dev`; see [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md). The dedicated
    fictional company is now connected to its Clover sandbox merchant. Recorded
-   provider cases are still required. Keep Clover sync disabled until the
-   fictional catalog, mappings, and webhook setup are ready.
+   provider cases are still required. The dedicated fictional catalog,
+   opening counts, active latte recipe/modifier, and native Clover mappings
+   are recorded in the B7 evidence. Keep Clover sync disabled until webhook
+   setup is ready and provider validation is explicitly underway.
 4. Keep production data and real users out of this environment while these
    gates remain open. Hosted sign-in worked at the development `workers.dev`
    URL; signup and recovery callback configuration there still needs a
