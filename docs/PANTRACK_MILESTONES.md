@@ -289,6 +289,8 @@ For every numbered item, the assigned person follows the same delivery loop:
   access, record normal, duplicate, modifier, refund/cancellation, refresh,
   disconnect, and missed-event recovery cases, including expected versus actual
   ingredient use. **Milestone:** M5 remains incomplete until this evidence exists.
+  The development webhook URL is verified with an Orders-only subscription;
+  sales sync remains off until the separate fictional sale validation.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same

@@ -163,8 +163,12 @@ supplier credentials, or payment details into chat or source control.
    fictional company is now connected to its Clover sandbox merchant. Recorded
    provider cases are still required. The dedicated fictional catalog,
    opening counts, active latte recipe/modifier, and native Clover mappings
-   are recorded in the B7 evidence. Keep Clover sync disabled until webhook
-   setup is ready and provider validation is explicitly underway.
+   are recorded in the B7 evidence. B7's webhook setup slice applied additive
+   development D1 migrations `0014` and `0015`, verified and saved the
+   development URL with an Orders-only Clover subscription, and saved the
+   webhook auth-code secret name. The temporary challenge and setup gate are
+   gone. Keep Clover sync disabled until a separate fictional sale validation
+   is explicitly underway.
 4. Keep production data and real users out of this environment while these
    gates remain open. Hosted sign-in worked at the development `workers.dev`
    URL; signup and recovery callback configuration there still needs a
@@ -184,7 +188,7 @@ behavior.
 | M2 — authentication and RBAC | C1/M2 accepted by owner for development; authentication/migration review and replacement Cloudflare build are owner-attested | Document the already reported review. Development Worker smoke passed, but hosted signup/recovery and independent security verification remain open. See [development auth evidence](M2_DEV_AUTH_EVIDENCE.md) and [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md). |
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
-| M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers local behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records development D1 `0013`, the fictional Clover connection, and the remaining provider cases. Sync remains off. |
+| M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers local behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records development D1 through `0015`, the fictional Clover connection and webhook setup, and the remaining provider cases. Sync remains off. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | A6 review-only core complete locally on its workstream branch; M7 not accepted | A7 durable lifecycle, invalidation, edits/audit, and quantity reservations; A8 integration with reliable M5 inputs and end-to-end evidence. See [A6 local evidence](M7_A6_LOCAL_EVIDENCE.md). |
 | M8 — supplier adapter | Not started | Select supplier, build approved integration, sandbox/timeout tests, incoming-stock and delivery reconciliation, then one approved low-risk test order. |

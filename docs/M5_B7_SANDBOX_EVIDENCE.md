@@ -134,7 +134,65 @@ found neither `PANTRACK_EXACT_INVENTORY_PREVIEW` nor
 `PANTRACK_CLOVER_SYNC_ENABLED`. This establishes fixture readiness only;
 webhook verification and all provider cases below remain pending.
 
-## Local checks
+## Webhook verification setup slice (2026-09-25)
+
+- Commit `c909cf5` adds an encrypted, ten-minute Clover verification-code
+  receipt for the dedicated fictional company. Capture requires an active
+  sandbox Clover connection and the temporary
+  `PANTRACK_CLOVER_WEBHOOK_SETUP_COMPANY_ID` Worker secret. The challenge still
+  returns `200`; ordinary notifications still require the separate sales-sync
+  gate. The owner-only, no-cache `/api/clover/webhook/setup` control reads or
+  clears the challenge. Code values are excluded from source, logs, and audit
+  records; capture and clearing write metadata-only audit records.
+- The generated additive `0015_silky_overlord.sql` creates only
+  `clover_webhook_challenges`, with a company foreign key. Existing `0014` was
+  reviewed before generation. Local tests cover expiry, replacement, clearing,
+  anonymous, wrong-company, manager and employee access, and sync-off behavior.
+- The final post-change local pipeline passed: `pnpm typecheck`, `pnpm test`
+  (25 suites), `pnpm db:check` (16 ordered migrations and fresh SQLite),
+  `pnpm build`, `pnpm db:migrate:local`, and `pnpm test:local`. The local D1 and
+  served smoke commands required loopback permission; both passed after that
+  permission was granted. `git diff --check` passed.
+- Development D1 listed only `0014` and `0015` as pending. Both applied through
+  Wrangler; the ledger contains both, `migrations list` now reports none
+  pending, the challenge table initially had zero rows, and
+  `PRAGMA foreign_key_check` returned no rows. Worker version
+  `c7a71856-bb22-417c-a6aa-a84a140a8767` was deployed to `pantrack-dev`,
+  then the temporary company gate was set. A secret-name check found that gate
+  and no `PANTRACK_CLOVER_SYNC_ENABLED` or `CLOVER_WEBHOOK_AUTH_CODE`. Hosted
+  anonymous setup retrieval returned `401`; an empty ordinary webhook
+  notification returned `404`. Read-only D1 counts showed zero sales events,
+  zero consumption applications, and no sync attempt for the B7 company.
+- Rollback: remove the temporary setup gate and redeploy the earlier B6 Worker
+  code if the setup path fails. Leave additive `0014` and `0015` in place;
+  use a new forward migration for any schema repair. Clear any stored challenge
+  before removing the gate. Do not restore D1 or undo the A6 settings history.
+
+### Direct Clover webhook setup
+
+- In the Global Developer Dashboard's sandbox app `Pantrack B7 Sandbox`
+  (`FGYWQ5J4GQ5H2`), Clover sent a verification request to the development
+  `/api/clover/webhook` URL. The first code-entry prompt appeared before a
+  stored challenge was present. A later synthetic challenge confirmed hosted
+  capture; Clover's resent challenge replaced it. The signed-in Pantrack owner
+  retrieved the unexpired real code through the no-cache setup control and
+  entered it in Clover without recording its value here. Clover accepted
+  **Verify**, then saved the URL and **Orders** as the sole event subscription.
+  The saved Webhooks summary displayed that exact URL and `Subscriptions Orders`.
+  This is direct provider dashboard evidence for URL and subscription setup,
+  not evidence that any order notification has been delivered.
+- The captured code row was deleted from development D1 (`changes: 1`), and a
+  follow-up query found zero rows. The temporary setup gate was removed and a
+  Worker secret-name check confirmed its absence. `PANTRACK_CLOVER_SYNC_ENABLED`
+  remains absent. Read-only D1 checks found zero fictional sales events and
+  zero inventory consumption applications. The owner entered the distinct
+  code shown in Clover's saved Webhooks section directly into Cloudflare's
+  `pantrack-dev` secret form. A subsequent read-only Worker list showed
+  `CLOVER_WEBHOOK_AUTH_CODE` as `secret_text`; its value was not retrieved,
+  logged, or placed in this report. The value cannot be independently proved
+  until a separately authorized sandbox notification is received.
+
+## Earlier local checks
 
 - `pnpm typecheck` — passed.
 - `pnpm test` — passed, 21 suites; Clover fixtures use mocks.
