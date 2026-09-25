@@ -4,6 +4,7 @@ import {calculateTarget, readCanonical, type TargetInput} from './inventory-quan
 export const REPLENISHMENT_PROPOSAL_CONTRACT = 'pantrack.replenishment-review.v1' as const;
 
 type SalesReadiness = Readonly<{
+  source: 'fictional_fixture';
   status: 'current' | 'degraded' | 'unknown';
   heldEventCount: number;
 }>;
@@ -12,15 +13,18 @@ export type ReviewProposalInput = Readonly<{
   companyId: string;
   productId: string;
   inventoryVersion: number;
+  inventoryConfigId: string;
   inventoryConfigVersion: number;
+  settingsChangeId: string;
   settingsVersion: number;
   settingsChangedBy: string;
   calculatedAt: string;
   lastCountAt: string | null;
   countEveryDays: number;
   expiresAt: string | null;
+  expiryStatus: 'checked' | 'not_checked';
   salesReadiness: SalesReadiness;
-  supplier: Readonly<{supplierId: string; accountId: string; locationId: string; sku: string}>;
+  supplier: Readonly<{source: 'fictional_fixture'; supplierId: string; accountId: string; locationId: string; sku: string}>;
   quantities: Omit<TargetInput, 'hasOpeningCount' | 'stale'>;
   policy: Readonly<{
     minimumPacks: string;
@@ -30,7 +34,7 @@ export type ReviewProposalInput = Readonly<{
 }>;
 
 type ReviewReason =
-  | 'opening_count_required' | 'stale_count' | 'expired_stock'
+  | 'opening_count_required' | 'stale_count' | 'expired_stock' | 'expiry_not_checked'
   | 'sales_not_current' | 'held_sales_events'
   | 'minimum_exceeds_limit' | 'order_multiple_exceeds_limit';
 
@@ -40,13 +44,16 @@ export type ReviewProposalSnapshot = Readonly<{
   companyId: string;
   productId: string;
   inventoryVersion: number;
+  inventoryConfigId: string;
   inventoryConfigVersion: number;
+  settingsChangeId: string;
   settingsVersion: number;
   settingsChangedBy: string;
   calculatedAt: string;
   lastCountAt: string | null;
   countEveryDays: number;
   expiresAt: string | null;
+  expiryStatus: 'checked' | 'not_checked';
   salesReadiness: SalesReadiness;
   supplier: ReviewProposalInput['supplier'];
   quantities: ReviewProposalInput['quantities'];
@@ -108,16 +115,21 @@ function freezeSnapshot<T>(value: T): T {
 
 /** Pure review snapshot. The caller must persist and revalidate it before any later lifecycle action. */
 export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalSnapshot {
-  identifier(input.companyId); identifier(input.productId); identifier(input.settingsChangedBy);
+  identifier(input.companyId); identifier(input.productId); identifier(input.inventoryConfigId);
+  identifier(input.settingsChangeId); identifier(input.settingsChangedBy);
   for (const value of Object.values(input.supplier)) identifier(value);
   version(input.inventoryVersion); version(input.inventoryConfigVersion); version(input.settingsVersion);
   if (!Number.isSafeInteger(input.countEveryDays) || input.countEveryDays < 1 || input.countEveryDays > 3650) throw new Error('Count interval is invalid.');
   const at = timestamp(input.calculatedAt);
   const lastCount = input.lastCountAt === null ? null : timestamp(input.lastCountAt);
   const expiry = input.expiresAt === null ? null : timestamp(input.expiresAt);
+  if (input.expiryStatus !== 'checked' && input.expiryStatus !== 'not_checked') throw new Error('Expiry evidence status is invalid.');
+  if (input.expiryStatus === 'not_checked' && expiry !== null) throw new Error('Unchecked expiry cannot contain a date.');
   if (lastCount !== null && lastCount > at) throw new Error('Proposal dates are inconsistent.');
-  if (!['current', 'degraded', 'unknown'].includes(input.salesReadiness.status) ||
+  if (input.salesReadiness.source !== 'fictional_fixture' ||
+      !['current', 'degraded', 'unknown'].includes(input.salesReadiness.status) ||
       !Number.isSafeInteger(input.salesReadiness.heldEventCount) || input.salesReadiness.heldEventCount < 0) throw new Error('Sales readiness fixture is invalid.');
+  if (input.supplier.source !== 'fictional_fixture') throw new Error('Supplier fixture is invalid.');
 
   const copied = {
     target: copyQuantity(input.quantities.target),
@@ -150,6 +162,7 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
     .reduce<bigint | null>((smallest, value) => smallest === null || value < smallest ? value : smallest, null);
   const exceedsUpper = (value: bigint): boolean => upper !== null && value > upper;
   const reviewReasons: ReviewReason[] = [...target.reviewReasons];
+  if (input.expiryStatus === 'not_checked') reviewReasons.push('expiry_not_checked');
   if (expiry !== null && expiry < at) reviewReasons.push('expired_stock');
   if (input.salesReadiness.status !== 'current') reviewReasons.push('sales_not_current');
   if (input.salesReadiness.heldEventCount > 0) reviewReasons.push('held_sales_events');
@@ -169,10 +182,11 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
   return freezeSnapshot({
     contract: REPLENISHMENT_PROPOSAL_CONTRACT, mode: 'review_only',
     companyId: input.companyId, productId: input.productId,
-    inventoryVersion: input.inventoryVersion, inventoryConfigVersion: input.inventoryConfigVersion,
+    inventoryVersion: input.inventoryVersion, inventoryConfigId: input.inventoryConfigId,
+    inventoryConfigVersion: input.inventoryConfigVersion, settingsChangeId: input.settingsChangeId,
     settingsVersion: input.settingsVersion, settingsChangedBy: input.settingsChangedBy,
     calculatedAt: input.calculatedAt, lastCountAt: input.lastCountAt,
-    countEveryDays: input.countEveryDays, expiresAt: input.expiresAt,
+    countEveryDays: input.countEveryDays, expiresAt: input.expiresAt, expiryStatus: input.expiryStatus,
     salesReadiness: {...input.salesReadiness}, supplier: {...input.supplier}, quantities: copied,
     policy: {...input.policy},
     explanation: {

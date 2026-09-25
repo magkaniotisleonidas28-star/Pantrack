@@ -39,8 +39,24 @@ actual schema before retrying; use the documented
 only with separate authorization for that database. Remote apply and restore
 have not been tested for this slice.
 
-The snapshot builder still receives settings and sales health from a caller.
-Connecting persisted settings to exact inventory balances, mapping Person B's
-accepted health contract, and durable proposal storage/invalidation remain
-open. A7 owns the later proposal lifecycle and Person C handoff. M7 acceptance
-still waits for M5's reliable sandbox inputs.
+## Read-only bridge to exact inventory
+
+The A6 D1 review bridge now reads the latest saved settings and active exact
+balance for one company/product. It uses the configuration's canonical purchase
+pack quantity, confirmed incoming balance, physical-count time, and balance
+version. It derives the shelf-life ceiling from saved daily use and shelf days,
+then calls the pure snapshot builder. The snapshot includes the exact inventory
+config ID/version and settings change ID/version. A second read rejects a result
+if those source versions changed during calculation. This is a best-effort read
+check, not a reservation; A7 must revalidate versions when it adds lifecycle
+actions. The bridge makes no writes and exposes no API or supplier action.
+
+Supplier details and sales health are explicitly company-scoped fictional
+fixtures, and the frozen snapshot records that provenance. Person B's accepted
+health contract still needs a reviewed mapping before real POS input is used.
+Lot-level expiry evidence and price estimates are
+not available in this bridge; the snapshot records `expiry_not_checked` as a
+review reason and grants no approval. Durable proposal storage/invalidation
+remains open. A7 owns the later proposal lifecycle and Person C handoff.
+M7 acceptance still waits for M5's
+reliable sandbox inputs.

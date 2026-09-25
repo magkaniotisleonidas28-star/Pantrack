@@ -7,11 +7,11 @@ await build({entryPoints:['src/lib/replenishment-proposal.ts'],bundle:true,platf
 const {buildReviewProposal,REPLENISHMENT_PROPOSAL_CONTRACT}=await import('../.sites-runtime/replenishment-proposal.mjs');
 const q=minor=>({dimension:'count',minor:String(minor)});
 const input={
-  companyId:'fictional-company',productId:'beans',inventoryVersion:4,inventoryConfigVersion:2,
-  settingsVersion:3,settingsChangedBy:'fictional-manager',calculatedAt:'2026-09-25T12:00:00.000Z',
-  lastCountAt:'2026-09-24T12:00:00.000Z',countEveryDays:7,expiresAt:null,
-  salesReadiness:{status:'current',heldEventCount:0},
-  supplier:{supplierId:'fictional-supplier',accountId:'account-1',locationId:'stockroom',sku:'BEANS-CASE'},
+  companyId:'fictional-company',productId:'beans',inventoryVersion:4,inventoryConfigId:'config-2',inventoryConfigVersion:2,
+  settingsChangeId:'settings-3',settingsVersion:3,settingsChangedBy:'fictional-manager',calculatedAt:'2026-09-25T12:00:00.000Z',
+  lastCountAt:'2026-09-24T12:00:00.000Z',countEveryDays:7,expiresAt:null,expiryStatus:'checked',
+  salesReadiness:{source:'fictional_fixture',status:'current',heldEventCount:0},
+  supplier:{source:'fictional_fixture',supplierId:'fictional-supplier',accountId:'account-1',locationId:'stockroom',sku:'BEANS-CASE'},
   quantities:{target:q(100),onHand:q(20),incoming:q(10),pack:q(30),capacity:null,shelfLimit:null},
   policy:{minimumPacks:'0',orderMultiplePacks:'1',maximumPacks:null},
 };
@@ -19,6 +19,10 @@ const make=change=>buildReviewProposal({...input,...change});
 const baseline=make({});
 assert.equal(baseline.contract,REPLENISHMENT_PROPOSAL_CONTRACT);
 assert.equal(baseline.mode,'review_only');
+assert.equal(baseline.inventoryConfigId,'config-2');
+assert.equal(baseline.settingsChangeId,'settings-3');
+assert.equal(baseline.salesReadiness.source,'fictional_fixture');
+assert.equal(baseline.supplier.source,'fictional_fixture');
 assert.deepEqual(baseline.explanation,{position:q(30),shortfall:q(70),wantedPacks:'3',capacityPacks:null,shelfLifePacks:null,maximumPacks:null,recommendedPacks:'3',limitedBy:[],reviewReasons:[]});
 assert.equal(make({quantities:{...input.quantities,incoming:q(80)}}).explanation.recommendedPacks,'0');
 assert.equal(make({quantities:{...input.quantities,target:q(0)}}).explanation.wantedPacks,'0');
@@ -50,13 +54,15 @@ const missing=make({lastCountAt:null}).explanation;
 assert.equal(missing.recommendedPacks,'0');
 assert.ok(missing.reviewReasons.includes('opening_count_required'));
 assert.equal(make({expiresAt:'2026-09-24T12:00:00.000Z'}).explanation.recommendedPacks,'0');
-const degraded=make({salesReadiness:{status:'degraded',heldEventCount:2}}).explanation;
+assert.deepEqual(make({expiryStatus:'not_checked'}).explanation.reviewReasons,['expiry_not_checked']);
+assert.throws(()=>make({expiryStatus:'not_checked',expiresAt:'2026-09-24T12:00:00.000Z'}),/Unchecked expiry/);
+const degraded=make({salesReadiness:{...input.salesReadiness,status:'degraded',heldEventCount:2}}).explanation;
 assert.deepEqual(degraded.reviewReasons,['sales_not_current','held_sales_events']);
 assert.equal(degraded.recommendedPacks,'3','Unhealthy sales still show review arithmetic; the snapshot is never executable.');
 assert.throws(()=>make({inventoryVersion:0}),/versions/);
 assert.throws(()=>make({quantities:{...input.quantities,onHand:{dimension:'mass',minor:'20'}}}),error=>error.code==='unit_incompatible');
 assert.throws(()=>make({policy:{...input.policy,orderMultiplePacks:'0'}}),/Pack limits/);
-assert.throws(()=>make({salesReadiness:{status:'current',heldEventCount:-1}}),/Sales readiness/);
+assert.throws(()=>make({salesReadiness:{...input.salesReadiness,heldEventCount:-1}}),/Sales readiness/);
 
 const mutable=structuredClone(input);
 const frozen=buildReviewProposal(mutable);
