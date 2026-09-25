@@ -17,8 +17,30 @@ events preserve the arithmetic but flag review. Every result is review-only;
 none is an authorization to submit an order.
 
 The sales-readiness shape is a fixture boundary. Person B's accepted health
-contract must be mapped and reviewed before using real POS data. The settings
-version is supplied by the caller; persistent setting versions, author audit,
-proposal storage/invalidation, and concurrent quantity reservations are still
-to be implemented. A7 owns the later proposal lifecycle and Person C handoff.
-M7 acceptance still waits for M5's reliable sandbox inputs.
+contract must be mapped and reviewed before using real POS data.
+
+## Versioned settings storage
+
+Migration `0014` adds an empty, company/product-scoped settings history. It does
+not change or backfill legacy inventory or recipes. Each save inserts a new
+version with an inventory-config reference, actor, reason, time, and stable change
+ID. The insert checks the expected versions and active config. Repeating the
+same change ID and payload returns the original version; a different payload is
+rejected. Database triggers reject updates and deletes of saved history. The
+store accepts writes only for a server-derived owner or manager actor and keeps
+reads inside that actor's company. No route calls it yet.
+
+For a local rollback, restore the database snapshot made before applying `0014`.
+After data has been written, preserve the history and use a new forward-repair
+migration rather than dropping or rewriting `0014`. If a future Wrangler remote
+apply stops while parsing the two triggers, inspect the migration ledger and
+actual schema before retrying; use the documented
+[development D1 trigger recovery](M2_SETUP.md#development-d1-trigger-migration-recovery)
+only with separate authorization for that database. Remote apply and restore
+have not been tested for this slice.
+
+The snapshot builder still receives settings and sales health from a caller.
+Connecting persisted settings to exact inventory balances, mapping Person B's
+accepted health contract, and durable proposal storage/invalidation remain
+open. A7 owns the later proposal lifecycle and Person C handoff. M7 acceptance
+still waits for M5's reliable sandbox inputs.

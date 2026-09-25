@@ -78,6 +78,25 @@ export const inventoryConfigVersions=sqliteTable('inventory_config_versions',{
  foreignKey({columns:[t.companyId,t.productId,t.stockUnitId,t.stockUnitVersion],foreignColumns:[productUnitVersions.companyId,productUnitVersions.productId,productUnitVersions.unitId,productUnitVersions.version]}),
 ]);
 
+export const replenishmentSettingsVersions=sqliteTable('replenishment_settings_versions',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ productId:text('product_id').notNull(),
+ version:integer('version').notNull(),
+ changeId:text('change_id').notNull(),
+ inventoryConfigId:text('inventory_config_id').notNull(),
+ inventoryConfigVersion:integer('inventory_config_version').notNull(),
+ dimension:text('dimension').notNull(),
+ settingsJson:text('settings_json').notNull(),
+ changedBy:text('changed_by').notNull(),
+ changeReason:text('change_reason').notNull(),
+ changedAt:text('changed_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.productId,t.version]}),
+ uniqueIndex('replenishment_settings_change_id').on(t.companyId,t.productId,t.changeId),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+ foreignKey({columns:[t.companyId,t.productId,t.inventoryConfigId],foreignColumns:[inventoryConfigVersions.companyId,inventoryConfigVersions.productId,inventoryConfigVersions.id]}),
+]);
+
 export const inventoryBalancesExact=sqliteTable('inventory_balances_exact',{
  companyId:text('company_id').notNull().references(()=>companies.id),
  productId:text('product_id').notNull(),
