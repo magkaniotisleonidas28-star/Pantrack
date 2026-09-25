@@ -5,12 +5,29 @@ import {AlertDialog,AlertDialogContent,AlertDialogTitle,AlertDialogDescription,A
 
 type Item={id:string;name:string};
 type Status={ready:boolean;environment:string;connected:boolean;merchantId?:string;lastChecked?:string;syncEnabled:boolean;sync?:{startedAt:string;checkpoint:string;lastAttempt:string|null;lastSuccess:string|null;lastError:string|null;heldCount:number;lagMs:number};itemMappings:Array<{item_id:string;recipe_id:string}>;modifierMappings:Array<{item_id:string;modifier_id:string;inventory_modifier_id:string}>;recipes:Array<{recipe_id:string;name:string}>;recipeModifiers:Array<{recipe_id:string;modifier_id:string;name:string}>};
+const failureMessages:Record<string,string>={
+ oauth_state:'The Clover sign-in did not match this browser session. Start Connect Clover again in the same browser window.',
+ session:'Your Pantrack session ended. Sign in and start Connect Clover again.',
+ state_lookup:'Pantrack could not check the Clover sign-in attempt. Try again shortly.',
+ state_expired:'This Clover sign-in attempt expired or was already used. Start Connect Clover again.',
+ access:'Clover setup or company owner access changed. Check setup, then reconnect.',
+ provider_denied:'Clover authorization was canceled. Start Connect Clover again when ready.',
+ callback:'Clover did not return the expected authorization details. Check the sandbox app OAuth settings.',
+ token_rejected:'Clover rejected the code or sandbox app credentials. Check the app secret in Cloudflare, then reconnect.',
+ token_unavailable:'Pantrack could not reach Clover to exchange the code. Try again shortly.',
+ token_response:'Clover returned an unexpected token response. Check the sandbox app OAuth settings.',
+ merchant_rejected:'Clover denied access to this merchant. Check the app installation and Merchant READ permission.',
+ merchant_unavailable:'Pantrack could not verify the Clover merchant. Try again shortly.',
+ merchant_response:'Clover returned unexpected merchant details. Check the sandbox merchant and app.',
+ merchant_mismatch:'Clover returned a different merchant. Check the selected sandbox merchant.',
+ save:'Pantrack could not save the Clover connection. Try Connect Clover again.',
+};
 
 export default function CloverConnection({companyId,onMap}:{companyId:string;onMap:(item:Item,merchantId:string)=>void}){
  const [status,setStatus]=useState<Status|null>(null),[items,setItems]=useState<Item[]>([]),[modifiers,setModifiers]=useState<Item[]>([]),[itemOffset,setItemOffset]=useState<number|null>(0),[modifierOffset,setModifierOffset]=useState<number|null>(0);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState(false),[selectedItem,setSelectedItem]=useState(''),[selectedModifier,setSelectedModifier]=useState(''),[selectedRecipe,setSelectedRecipe]=useState(''),[selectedRecipeModifier,setSelectedRecipeModifier]=useState('');
  async function refresh(){const r=await fetch('/api/clover?companyId='+encodeURIComponent(companyId));const d=await r.json() as Status&{error?:string};if(!r.ok)throw new Error(d.error||'Could not load Clover.');setStatus(d);}
- useEffect(()=>{void refresh().catch(e=>setError(e.message));if(new URLSearchParams(location.search).get('clover')==='failed')setError('Clover authorization was canceled or could not be verified. Check setup, then reconnect.');},[companyId]);
+ useEffect(()=>{void refresh().catch(e=>setError(e.message));const params=new URLSearchParams(location.search),returnedCompany=params.get('company');if(returnedCompany&&returnedCompany!==companyId)return;if(params.get('clover')==='failed'){const reason=params.get('reason')||'';setError((failureMessages[reason]||'Clover authorization could not be completed. Start Connect Clover again.')+(reason?' ('+reason+')':''));}else if(params.get('clover')==='connected')setNotice('Clover connected.');},[companyId]);
  async function action(action:string,extra:Record<string,unknown>={}){if(busy)return;setBusy(true);setError('');setNotice('');try{
   const r=await fetch('/api/clover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,action,...extra})});const d=await r.json() as {error?:string;url?:string;items?:Item[];nextOffset?:number|null;created?:number;held?:number};if(!r.ok)throw new Error(d.error||'Clover request failed.');
   if(d.url){window.location.assign(d.url);return;}
