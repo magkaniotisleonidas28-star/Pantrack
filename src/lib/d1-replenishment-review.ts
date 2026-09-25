@@ -6,6 +6,7 @@ import {buildReviewProposal, type ReviewProposalInput, type ReviewProposalSnapsh
 type Fixture<T> = Readonly<T & {companyId: string; source: 'fictional_fixture'}>;
 export type ReviewSalesFixture = Fixture<ReviewProposalInput['salesReadiness']>;
 export type ReviewSupplierFixture = Fixture<ReviewProposalInput['supplier']>;
+export type ReviewPriceFixture = Fixture<NonNullable<ReviewProposalInput['priceEstimate']>>;
 
 export type ReviewSourceRequest = Readonly<{
   companyId: string;
@@ -13,6 +14,7 @@ export type ReviewSourceRequest = Readonly<{
   actor: SettingsActor;
   sales: ReviewSalesFixture;
   supplier: ReviewSupplierFixture;
+  priceEstimate: ReviewPriceFixture | null;
 }>;
 
 export type ReviewSourceResult =
@@ -41,12 +43,27 @@ function validFixture(request: ReviewSourceRequest): void {
       throw new Error('Review fixtures must belong to the requested company.');
     }
   }
+  if (request.priceEstimate !== null &&
+      (request.priceEstimate?.source !== 'fictional_fixture' || request.priceEstimate.companyId !== request.companyId)) {
+    throw new Error('Review price fixture must belong to the requested company.');
+  }
   if (!['current', 'degraded', 'unknown'].includes(request.sales.status) ||
       !Number.isSafeInteger(request.sales.heldEventCount) || request.sales.heldEventCount < 0) {
     throw new Error('Review sales fixture is invalid.');
   }
-  for (const value of [request.supplier.supplierId, request.supplier.accountId, request.supplier.locationId, request.supplier.sku]) {
+  for (const value of [request.supplier.mappingId, request.supplier.supplierId,
+    request.supplier.accountId, request.supplier.locationId, request.supplier.sku]) {
     if (typeof value !== 'string' || !value.trim() || value.length > 200) throw new Error('Review supplier fixture is invalid.');
+  }
+  if (!Number.isSafeInteger(request.supplier.mappingVersion) || request.supplier.mappingVersion < 1) {
+    throw new Error('Review supplier mapping version is invalid.');
+  }
+  if (request.priceEstimate !== null &&
+      (!/^[A-Z]{3}$/.test(request.priceEstimate.currency) ||
+        typeof request.priceEstimate.perPackMinor !== 'string' ||
+        request.priceEstimate.perPackMinor.length > 20 ||
+        !/^[1-9]\d*$/.test(request.priceEstimate.perPackMinor))) {
+    throw new Error('Review price fixture is invalid.');
   }
 }
 
@@ -111,8 +128,13 @@ export class D1ReplenishmentReview {
         salesReadiness: {source: 'fictional_fixture', status: request.sales.status, heldEventCount: request.sales.heldEventCount},
         supplier: {
           source: 'fictional_fixture',
+          mappingId: request.supplier.mappingId, mappingVersion: request.supplier.mappingVersion,
           supplierId: request.supplier.supplierId, accountId: request.supplier.accountId,
           locationId: request.supplier.locationId, sku: request.supplier.sku,
+        },
+        priceEstimate: request.priceEstimate === null ? null : {
+          source: 'fictional_fixture', currency: request.priceEstimate.currency,
+          perPackMinor: request.priceEstimate.perPackMinor,
         },
         quantities: {target: settings.settings.target, onHand, incoming, pack, capacity: settings.settings.capacity, shelfLimit},
         policy: {

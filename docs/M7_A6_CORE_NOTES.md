@@ -6,6 +6,13 @@ inventory/config/settings versions, supplier identity and SKU, and a fictional
 sales-readiness input. No API, database table, supplier call, scheduling, or
 purchase action uses this module yet.
 
+The snapshot also freezes the fictional supplier mapping ID/version and an
+optional fictional per-pack price estimate. It multiplies the final suggested
+whole-pack count by that price using integer minor currency units, so caps and
+minimums are reflected in the line total without floating-point rounding. A
+missing price leaves the total unset and adds `price_not_checked`. A fixture
+price is only an estimate; neither it nor the snapshot is a supplier quote.
+
 The snapshot records target, on hand, confirmed incoming, pack quantity,
 capacity, shelf-life ceiling, whole-pack shortfall, pack policy, source versions,
 and the final suggested pack count. Capacity, shelf life, and maximum packs cap
@@ -51,12 +58,13 @@ if those source versions changed during calculation. This is a best-effort read
 check, not a reservation; A7 must revalidate versions when it adds lifecycle
 actions. The bridge makes no writes and exposes no API or supplier action.
 
-Supplier details and sales health are explicitly company-scoped fictional
-fixtures, and the frozen snapshot records that provenance. Person B's accepted
-health contract still needs a reviewed mapping before real POS input is used.
-Lot-level expiry evidence and price estimates are
-not available in this bridge; the snapshot records `expiry_not_checked` as a
-review reason and grants no approval. Durable proposal storage/invalidation
-remains open. A7 owns the later proposal lifecycle and Person C handoff.
+Supplier details, price estimates, and sales health are explicitly
+company-scoped fictional fixtures, and the frozen snapshot records that
+provenance. Person B's accepted health contract still needs a reviewed mapping
+before real POS input is used. Real supplier mappings and prices are not
+connected. Lot-level expiry evidence is not available in this bridge; the
+snapshot records `expiry_not_checked` as a review reason and grants no approval.
+Durable proposal storage/invalidation remains open. A7 owns the later proposal
+lifecycle and Person C handoff.
 M7 acceptance still waits for M5's
 reliable sandbox inputs.

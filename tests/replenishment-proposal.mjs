@@ -11,7 +11,8 @@ const input={
   settingsChangeId:'settings-3',settingsVersion:3,settingsChangedBy:'fictional-manager',calculatedAt:'2026-09-25T12:00:00.000Z',
   lastCountAt:'2026-09-24T12:00:00.000Z',countEveryDays:7,expiresAt:null,expiryStatus:'checked',
   salesReadiness:{source:'fictional_fixture',status:'current',heldEventCount:0},
-  supplier:{source:'fictional_fixture',supplierId:'fictional-supplier',accountId:'account-1',locationId:'stockroom',sku:'BEANS-CASE'},
+  supplier:{source:'fictional_fixture',mappingId:'mapping-2',mappingVersion:2,supplierId:'fictional-supplier',accountId:'account-1',locationId:'stockroom',sku:'BEANS-CASE'},
+  priceEstimate:{source:'fictional_fixture',currency:'USD',perPackMinor:'1250'},
   quantities:{target:q(100),onHand:q(20),incoming:q(10),pack:q(30),capacity:null,shelfLimit:null},
   policy:{minimumPacks:'0',orderMultiplePacks:'1',maximumPacks:null},
 };
@@ -23,6 +24,9 @@ assert.equal(baseline.inventoryConfigId,'config-2');
 assert.equal(baseline.settingsChangeId,'settings-3');
 assert.equal(baseline.salesReadiness.source,'fictional_fixture');
 assert.equal(baseline.supplier.source,'fictional_fixture');
+assert.equal(baseline.supplier.mappingId,'mapping-2');
+assert.equal(baseline.supplier.mappingVersion,2);
+assert.deepEqual(baseline.estimatedLineTotal,{currency:'USD',minor:'3750'});
 assert.deepEqual(baseline.explanation,{position:q(30),shortfall:q(70),wantedPacks:'3',capacityPacks:null,shelfLifePacks:null,maximumPacks:null,recommendedPacks:'3',limitedBy:[],reviewReasons:[]});
 assert.equal(make({quantities:{...input.quantities,incoming:q(80)}}).explanation.recommendedPacks,'0');
 assert.equal(make({quantities:{...input.quantities,target:q(0)}}).explanation.wantedPacks,'0');
@@ -35,12 +39,14 @@ const capped=make({quantities:{...input.quantities,capacity:q(100)}}).explanatio
 assert.equal(capped.recommendedPacks,'2');
 assert.deepEqual(capped.limitedBy,['capacity']);
 assert.equal(capped.capacityPacks,'2');
+assert.deepEqual(make({quantities:{...input.quantities,capacity:q(100)}}).estimatedLineTotal,{currency:'USD',minor:'2500'});
 const shelf=make({quantities:{...input.quantities,shelfLimit:q(60)}}).explanation;
 assert.equal(shelf.recommendedPacks,'1');
 assert.deepEqual(shelf.limitedBy,['shelf_life']);
 assert.equal(make({policy:{...input.policy,maximumPacks:'2'}}).explanation.recommendedPacks,'2');
 assert.deepEqual(make({policy:{...input.policy,maximumPacks:'2'}}).explanation.limitedBy,['maximum_packs']);
 assert.equal(make({policy:{minimumPacks:'4',orderMultiplePacks:'2',maximumPacks:null}}).explanation.recommendedPacks,'4');
+assert.equal(make({policy:{minimumPacks:'4',orderMultiplePacks:'2',maximumPacks:null}}).estimatedLineTotal.minor,'5000');
 const minConflict=make({policy:{minimumPacks:'4',orderMultiplePacks:'1',maximumPacks:'3'}}).explanation;
 assert.equal(minConflict.recommendedPacks,'0');
 assert.deepEqual(minConflict.reviewReasons,['minimum_exceeds_limit']);
@@ -53,13 +59,24 @@ assert.ok(stale.reviewReasons.includes('stale_count'));
 const missing=make({lastCountAt:null}).explanation;
 assert.equal(missing.recommendedPacks,'0');
 assert.ok(missing.reviewReasons.includes('opening_count_required'));
+assert.equal(make({lastCountAt:null}).estimatedLineTotal.minor,'0');
 assert.equal(make({expiresAt:'2026-09-24T12:00:00.000Z'}).explanation.recommendedPacks,'0');
 assert.deepEqual(make({expiryStatus:'not_checked'}).explanation.reviewReasons,['expiry_not_checked']);
 assert.throws(()=>make({expiryStatus:'not_checked',expiresAt:'2026-09-24T12:00:00.000Z'}),/Unchecked expiry/);
 const degraded=make({salesReadiness:{...input.salesReadiness,status:'degraded',heldEventCount:2}}).explanation;
 assert.deepEqual(degraded.reviewReasons,['sales_not_current','held_sales_events']);
 assert.equal(degraded.recommendedPacks,'3','Unhealthy sales still show review arithmetic; the snapshot is never executable.');
+const unpriced=make({priceEstimate:null});
+assert.equal(unpriced.estimatedLineTotal,null);
+assert.ok(unpriced.explanation.reviewReasons.includes('price_not_checked'));
+const exactMoney=make({priceEstimate:{...input.priceEstimate,perPackMinor:'9007199254740993'}});
+assert.equal(exactMoney.estimatedLineTotal.minor,'27021597764222979');
+assert.equal(JSON.parse(JSON.stringify(exactMoney)).estimatedLineTotal.minor,'27021597764222979');
 assert.throws(()=>make({inventoryVersion:0}),/versions/);
+assert.throws(()=>make({supplier:{...input.supplier,mappingVersion:0}}),/versions/);
+assert.throws(()=>make({priceEstimate:{...input.priceEstimate,currency:'usd'}}),/Price estimate/);
+assert.throws(()=>make({priceEstimate:{...input.priceEstimate,perPackMinor:'1.25'}}),/Price estimate/);
+assert.throws(()=>make({priceEstimate:{...input.priceEstimate,perPackMinor:'0'}}),/Price estimate/);
 assert.throws(()=>make({quantities:{...input.quantities,onHand:{dimension:'mass',minor:'20'}}}),error=>error.code==='unit_incompatible');
 assert.throws(()=>make({policy:{...input.policy,orderMultiplePacks:'0'}}),/Pack limits/);
 assert.throws(()=>make({salesReadiness:{...input.salesReadiness,heldEventCount:-1}}),/Sales readiness/);
@@ -68,8 +85,11 @@ const mutable=structuredClone(input);
 const frozen=buildReviewProposal(mutable);
 mutable.quantities.onHand.minor='90';
 mutable.supplier.sku='OTHER';
+mutable.priceEstimate.perPackMinor='9999';
 assert.equal(frozen.quantities.onHand.minor,'20');
 assert.equal(frozen.supplier.sku,'BEANS-CASE');
-assert.ok(Object.isFrozen(frozen) && Object.isFrozen(frozen.quantities.onHand) && Object.isFrozen(frozen.explanation.reviewReasons));
+assert.equal(frozen.priceEstimate.perPackMinor,'1250');
+assert.equal(frozen.estimatedLineTotal.minor,'3750');
+assert.ok(Object.isFrozen(frozen) && Object.isFrozen(frozen.quantities.onHand) && Object.isFrozen(frozen.priceEstimate) && Object.isFrozen(frozen.explanation.reviewReasons));
 assert.equal(JSON.parse(JSON.stringify(frozen)).explanation.recommendedPacks,'3');
 console.log('PASS: A6 review snapshot arithmetic, source versions, safety caps, review reasons, and immutable copies.');

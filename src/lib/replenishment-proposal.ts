@@ -9,6 +9,8 @@ type SalesReadiness = Readonly<{
   heldEventCount: number;
 }>;
 
+type PriceEstimate = Readonly<{source: 'fictional_fixture'; currency: string; perPackMinor: string}>;
+
 export type ReviewProposalInput = Readonly<{
   companyId: string;
   productId: string;
@@ -24,7 +26,11 @@ export type ReviewProposalInput = Readonly<{
   expiresAt: string | null;
   expiryStatus: 'checked' | 'not_checked';
   salesReadiness: SalesReadiness;
-  supplier: Readonly<{source: 'fictional_fixture'; supplierId: string; accountId: string; locationId: string; sku: string}>;
+  supplier: Readonly<{
+    source: 'fictional_fixture'; mappingId: string; mappingVersion: number;
+    supplierId: string; accountId: string; locationId: string; sku: string;
+  }>;
+  priceEstimate: PriceEstimate | null;
   quantities: Omit<TargetInput, 'hasOpeningCount' | 'stale'>;
   policy: Readonly<{
     minimumPacks: string;
@@ -36,7 +42,7 @@ export type ReviewProposalInput = Readonly<{
 type ReviewReason =
   | 'opening_count_required' | 'stale_count' | 'expired_stock' | 'expiry_not_checked'
   | 'sales_not_current' | 'held_sales_events'
-  | 'minimum_exceeds_limit' | 'order_multiple_exceeds_limit';
+  | 'minimum_exceeds_limit' | 'order_multiple_exceeds_limit' | 'price_not_checked';
 
 export type ReviewProposalSnapshot = Readonly<{
   contract: typeof REPLENISHMENT_PROPOSAL_CONTRACT;
@@ -56,6 +62,8 @@ export type ReviewProposalSnapshot = Readonly<{
   expiryStatus: 'checked' | 'not_checked';
   salesReadiness: SalesReadiness;
   supplier: ReviewProposalInput['supplier'];
+  priceEstimate: PriceEstimate | null;
+  estimatedLineTotal: Readonly<{currency: string; minor: string}> | null;
   quantities: ReviewProposalInput['quantities'];
   policy: ReviewProposalInput['policy'];
   explanation: Readonly<{
@@ -100,6 +108,14 @@ function packs(value: string, allowZero: boolean): bigint {
   return parsed;
 }
 
+function estimatedPrice(value: PriceEstimate | null): bigint | null {
+  if (value === null) return null;
+  if (value.source !== 'fictional_fixture' || !/^[A-Z]{3}$/.test(value.currency) ||
+      typeof value.perPackMinor !== 'string' || value.perPackMinor.length > 20 ||
+      !/^[1-9]\d*$/.test(value.perPackMinor)) throw new Error('Price estimate fixture is invalid.');
+  return BigInt(value.perPackMinor);
+}
+
 function copyQuantity(value: ExactQuantity): ExactQuantity {
   readCanonical(value);
   return {dimension: value.dimension, minor: value.minor};
@@ -117,8 +133,11 @@ function freezeSnapshot<T>(value: T): T {
 export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalSnapshot {
   identifier(input.companyId); identifier(input.productId); identifier(input.inventoryConfigId);
   identifier(input.settingsChangeId); identifier(input.settingsChangedBy);
-  for (const value of Object.values(input.supplier)) identifier(value);
+  for (const value of [input.supplier.mappingId, input.supplier.supplierId,
+    input.supplier.accountId, input.supplier.locationId, input.supplier.sku]) identifier(value);
   version(input.inventoryVersion); version(input.inventoryConfigVersion); version(input.settingsVersion);
+  version(input.supplier.mappingVersion);
+  const pricePerPack = estimatedPrice(input.priceEstimate);
   if (!Number.isSafeInteger(input.countEveryDays) || input.countEveryDays < 1 || input.countEveryDays > 3650) throw new Error('Count interval is invalid.');
   const at = timestamp(input.calculatedAt);
   const lastCount = input.lastCountAt === null ? null : timestamp(input.lastCountAt);
@@ -166,6 +185,7 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
   if (expiry !== null && expiry < at) reviewReasons.push('expired_stock');
   if (input.salesReadiness.status !== 'current') reviewReasons.push('sales_not_current');
   if (input.salesReadiness.heldEventCount > 0) reviewReasons.push('held_sales_events');
+  if (pricePerPack === null) reviewReasons.push('price_not_checked');
 
   let recommended = exceedsUpper(wanted) ? upper! : wanted;
   if (recommended > ZERO) {
@@ -187,7 +207,12 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
     settingsVersion: input.settingsVersion, settingsChangedBy: input.settingsChangedBy,
     calculatedAt: input.calculatedAt, lastCountAt: input.lastCountAt,
     countEveryDays: input.countEveryDays, expiresAt: input.expiresAt, expiryStatus: input.expiryStatus,
-    salesReadiness: {...input.salesReadiness}, supplier: {...input.supplier}, quantities: copied,
+    salesReadiness: {...input.salesReadiness}, supplier: {...input.supplier},
+    priceEstimate: input.priceEstimate === null ? null : {...input.priceEstimate},
+    estimatedLineTotal: pricePerPack === null ? null : {
+      currency: input.priceEstimate!.currency, minor: (recommended * pricePerPack).toString(),
+    },
+    quantities: copied,
     policy: {...input.policy},
     explanation: {
       position: target.position, shortfall: target.shortfall, wantedPacks: target.wantedPacks,
