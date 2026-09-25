@@ -92,6 +92,13 @@
       "when": 1790020619044,
       "tag": "0012_tough_rage",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1790297170843,
+      "tag": "0013_low_stick",
+      "breakpoints": true
     }
   ]
 }

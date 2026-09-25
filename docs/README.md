@@ -11,18 +11,19 @@ Start with these documents:
   checklists.
 - [AI-driven development](AI_DEVELOPMENT.md) — task packets, session types,
   verification levels, concurrent-agent rules, review prompts, and handoffs.
-- [Milestone readiness](MILESTONE_READINESS.md) — detailed evidence and known
-  technical gaps.
-- [M2 setup and review](M2_SETUP.md) — Supabase configuration and the remaining
-  real-provider acceptance walkthrough.
+- [M2 setup and review](M2_SETUP.md) — Supabase configuration and development
+  provider review notes; check current status for remaining hosted work.
 - [Authentication decision](decisions/0001-m2-authentication.md) — chosen M2
   architecture, session model, roles, invitations, and migration constraints.
 
-Historical evidence is recorded in [M0_LOCAL_EVIDENCE.md](M0_LOCAL_EVIDENCE.md),
-[M1_CI_EVIDENCE.md](M1_CI_EVIDENCE.md), and
-[M2_LOCAL_EVIDENCE.md](M2_LOCAL_EVIDENCE.md). The
+Historical evidence includes [M0 local](M0_LOCAL_EVIDENCE.md),
+[M1 CI](M1_CI_EVIDENCE.md), [M2 local](M2_LOCAL_EVIDENCE.md),
+[M3 local](M3_LOCAL_EVIDENCE.md), and [M4 B4 local](M4_B4_LOCAL_EVIDENCE.md).
+These records are snapshots, not current status. The
 [branch consolidation record](BRANCH_CONSOLIDATION.md) explains how the former
-milestone branches were reviewed and incorporated into `main`.
+milestone branches were reviewed and incorporated into `main`. The
+[September 19 readiness assessment](MILESTONE_READINESS.md) is also historical;
+its approved M2 permissions matrix remains a decision reference.
 
 Operator-facing integration contracts live under `public/` because the
 application links to them directly:

@@ -1,6 +1,8 @@
 # M3 local implementation evidence
 
-Updated: 2026-09-19. Workstream A. M3 is not accepted.
+Updated: 2026-09-23. Workstream A. A5/M3 is owner-accepted for local
+development; hosted migration, runtime, and production use remain unverified.
+The earlier task packets below retain their original, historical status.
 
 ## A4 task packet: exact quantity and target calculations
 
@@ -238,8 +240,60 @@ status. The full 19-suite `pnpm test`, `pnpm typecheck`, `pnpm db:check`,
 `pnpm test:local` was attempted but could not start its isolated server because
 another development server was already running; that process was left alone.
 
-This report prepares A5 review but does not accept M3, reconcile any real
-hosted data, or authorize a merge. The owner must review flagged records and
-the remaining M2/M3 gates separately. The fictional-data owner walkthrough is
-prepared in [the A5 review checklist](M3_A5_OWNER_REVIEW.md); it remains
-pending until a separate local fixture and the owner's observations exist.
+At the time, this report prepared A5 review but did not accept M3, reconcile
+any real hosted data, or authorize a merge. The fictional-data walkthrough was
+prepared in [the A5 review checklist](M3_A5_OWNER_REVIEW.md) and later passed
+with a separate local fixture and the owner's observations. The subsequent A5
+decision is recorded below.
+
+## A5 acceptance and A-to-B handoff — 2026-09-23
+
+The owner read this evidence and the [A5 owner review](M3_A5_OWNER_REVIEW.md)
+and explicitly accepted A5/M3 for development on 2026-09-23. This acceptance
+uses fictional local data and the already recorded owner walkthrough. C1/M2 was
+previously accepted for development. Person B's
+[contract review](M4_B4_LOCAL_EVIDENCE.md#a-to-b-contract-handoff-review)
+found that B4 consumes `pantrack.inventory-consumption.v1` without an
+inventory-specific workaround. B5/M4 still needs its own acceptance.
+
+| M3 acceptance criterion | Local evidence |
+| --- | --- |
+| Sale-time recipe version | A2 contract and persistent D1 consumption tests select the active recipe/modifier versions at the occurrence time. |
+| Historical usage stays fixed after edits | Immutable activated recipe/modifier rows, version selection, and application/event history are exercised by A4 and D1 consumption tests. |
+| Incompatible units fail before stock changes | Exact quantity, management, and atomic consumption tests cover dimension and stale-configuration rejection. |
+| Repeated sales do not deduct twice | A2, D1 consumption, and B4 duplicate/concurrent-delivery tests cover exact-once application. |
+| Physical counts record variance and reset the estimate | A4 management tests cover cutoff, pre-count estimate, signed variance, and reconciliation history. |
+| Target-stock examples | Exact quantity tests cover incoming stock, whole packs, capacity, shelf limits, zero target, and stale/missing counts. The preview shows the existing compatibility plan; versioned proposal policy remains A6/M7 work. |
+
+A1's accepted [design and migration plan](decisions/0002-m3-quantity-and-recipe-model.md),
+A2's published shared port and fake, and A3's additive migration and legacy
+compatibility tests support their workstream checkboxes. The A3 `0009` migration
+adds company-scoped normalized structures and backfills legacy units, recipes,
+and counts without assigning invented dimensions or canonical quantities.
+`0011` adds active-version uniqueness and immutability triggers. SQL, snapshot,
+and journal were reviewed against the additive plan; the compatibility fixture
+compares pre/post legacy products, inventory, recipes, events, and sales imports.
+The fresh-database and migration checks passed. `0012` belongs to B4 and has
+not been verified on development D1.
+
+Complete local pipeline in this worktree on 2026-09-23, using Node 22.23.2
+and pnpm 11.25.0:
+
+- PASS: `pnpm typecheck`.
+- PASS: `pnpm test` (19 suites).
+- PASS: `pnpm db:check` (13 ordered migrations and fresh SQLite application).
+- PASS: `pnpm build`.
+- PASS: `pnpm db:migrate:local` (no pending local migrations).
+- PASS: `pnpm test:local` (fictional local company, authorization, isolation,
+  and sign-out). The smoke test left a fictional company in local D1.
+
+The two loopback-dependent commands required the permitted unsandboxed local
+run after sandbox binding returned `EPERM`; neither used a remote service.
+Migration `0011` is already in the development D1 ledger, but `0012` has not
+been verified there. The exact-inventory preview remains off by default and
+must stay off remotely until the hosted migration and runtime checks are
+complete. No remote migration, live POS call, supplier action, deployment,
+production data, or independent security verification is claimed. Rollback
+before enabling the preview is to leave its variable unset; any later schema
+or data correction must use an additive forward repair, never rewrite a used
+migration.

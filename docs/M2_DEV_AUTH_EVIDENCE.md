@@ -94,11 +94,11 @@ This is owner-attested build acceptance, not an independently verified build or
 a deployment claim. The agent inspected `0008_m2_auth_memberships.sql`, the
 authentication decision and flow, and the latest `auth.ts` changes; the local
 security suite and complete local pipeline passed on the combined merge tree.
-No separate owner authentication/migration review record was provided. The
-owner nevertheless directed C1/M2 to be treated as complete on 2026-09-23 and
-authorized a `main` push even if Cloudflare auto-deploys. Record the missing
-review before a public release; do not present this as independent security
-verification. Deterministic invitation replay,
+The owner subsequently reported completing the authentication and migration
+review; a separate written record was not provided. The owner directed C1/M2
+to be treated as complete on 2026-09-23 and authorized a `main` push even if
+Cloudflare auto-deploys. Record the review before a public release; do not
+present this as independent security verification. Deterministic invitation replay,
 expiry, replacement, ownership edge cases, wrong-company access, and
 server-side role permissions are covered by the local automated suite rather
 than repeated manually. No hosted-runtime or production acceptance is claimed.

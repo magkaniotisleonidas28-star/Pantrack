@@ -1,13 +1,14 @@
 # M2 setup and review
 
-Implementation is on `main`. Repository CI passes. The older Cloudflare
-Workers build failed; the owner reports that another contributor replaced it
-with a working build and accepts that build step, without a run or commit
-record available here. This is not independent verification or deployment
-evidence. The development Supabase walkthrough was accepted by the owner, who
-directed C1/M2 to be treated as complete on 2026-09-23 despite the absence of
-a separate owner authentication/migration review record. Obtain that review
-before public release. Do not use production company data to test this change.
+Implementation is on `main`. The owner accepted the development Supabase
+walkthrough and reports completing the authentication and migration review.
+The owner also accepted a reported replacement Cloudflare build, but its run
+and commit details are unavailable. Development D1 now has migrations through
+`0012`, and a newly deployed development Worker passed a fictional hosted
+walkthrough on 2026-09-24; see [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md).
+The temporary exact inventory preview was disabled afterward. Record the
+owner's M2 review before public release. Do not use production company data to
+test this change.
 
 ## Local prerequisites
 
@@ -52,11 +53,29 @@ These templates are required: the application expects server-side token-hash ver
 - Request recovery, follow the email, change password, and confirm other Pantrack sessions are revoked. Verify an expired session requires signing in again.
 - Review security history as owner and confirm secrets are absent.
 
-The automated suite covers these security rules with mocked Supabase responses and a real local SQLite engine. This dashboard/email walkthrough remains required evidence and is only partially complete; see [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
+The automated suite covers these security rules with mocked Supabase responses and a real local SQLite engine. The owner accepted the development walkthrough; its recorded scope and limits are in [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
 
 ## Migration review
 
 Inspect `0008_m2_auth_memberships.sql`, its snapshot and journal, especially invitation and ownership triggers. It is additive, preserves existing company data and prevents removing the last owner. Review the identity-mapping requirement in `decisions/0001-m2-authentication.md` before moving any existing hosted data. App rollback alone does not undo D1 migration state.
+
+### Development D1 trigger-migration recovery
+
+On 2026-09-23, `wrangler d1 migrations apply --remote` applied `0000`–`0007` to the new development D1 database, then failed on `0008` with `incomplete input: SQLITE_ERROR`. The same migration passed local SQLite and local Wrangler D1. The remote failure is consistent with [Cloudflare's reported `/query` trigger parser issue](https://github.com/cloudflare/workers-sdk/issues/15690). The failed migration left no `0008` tables or triggers. The unchanged SQL for `0008`–`0011` then applied successfully through `wrangler d1 execute --remote --file`, which uses D1's file import path. Each import included its `d1_migrations` entry as its last statement. A final remote `wrangler d1 migrations list` reported no pending migrations. **Do not rerun these imports on the current development database.**
+
+For another fresh **development** database with the same failure, first check `d1_migrations` and `sqlite_master` to confirm which migration is pending and that it left no partial objects. After `0000`–`0007` are applied, import `0008` through `0011` one at a time, in order. For each migration, create a temporary copy of its original SQL with its ledger entry as the last statement. For example, for `0008`:
+
+```sh
+migration=0008_m2_auth_memberships.sql
+repair_dir=$(mktemp -d)
+cat "drizzle/$migration" > "$repair_dir/$migration"
+printf "\nINSERT INTO d1_migrations(name) VALUES ('%s');\n" "$migration" >> "$repair_dir/$migration"
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --remote --config wrangler.jsonc --file "$repair_dir/$migration" &&
+node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --remote --config wrangler.jsonc --command "SELECT name FROM d1_migrations WHERE name='$migration';" &&
+rm -r "$repair_dir"
+```
+
+Repeat with `0009_clammy_doctor_octopus.sql`, `0010_aromatic_the_initiative.sql`, and `0011_slimy_vargas.sql`. Stop if any command fails; confirm each name appears exactly once in `d1_migrations` before continuing. End with `node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 migrations list DB --remote --config wrangler.jsonc`; it should report no pending migrations. Never change the committed migration SQL or insert a ledger entry without its schema import. If an import fails, inspect the remote ledger and schema before retrying; Cloudflare says a failed file import restores the database to its prior state.
 
 ## Commands
 

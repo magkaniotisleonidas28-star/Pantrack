@@ -65,5 +65,14 @@ the normal local D1 database.
 
 Owner review date: 2026-09-23. Owner decision: PASS for this local fictional-data
 screen walkthrough. The initial tab-access blocker was resolved using a private
-browser tab. This does not accept A5/M3 as a whole; C1/M2, the completed M3
-acceptance record, and the Cloudflare build gate remain separate.
+browser tab. This screen result alone did not accept A5/M3.
+
+## Subsequent owner A5/M3 decision — 2026-09-23
+
+After reading the [M3 evidence](M3_LOCAL_EVIDENCE.md) and A5 checklist, the
+owner explicitly accepted A5/M3 for development. The [A5 acceptance record](M3_LOCAL_EVIDENCE.md)
+maps the M3 criteria to local tests, the A1–A3 handoffs, and the complete local
+pipeline. This decision accepts the local M3 implementation and opens B5's M3
+prerequisite. It does not verify migration `0012` on development D1, the hosted
+Worker, production data, or M4 acceptance. The exact-inventory preview remains
+off remotely pending its separate migration and runtime checks.

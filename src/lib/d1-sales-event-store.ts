@@ -310,18 +310,21 @@ export class D1SalesEventStore implements SalesEventStore {
         SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sales_event_states WHERE company_id=? AND event_key=? AND state=?)`).bind(
         companyId,resolution.resolutionId,eventKey,resolution.kind,resolution.actor,resolution.reason,resolution.at,companyId,eventKey,from,
       ),
+      this.db.prepare('SELECT changes() AS changed'),
       this.db.prepare(`UPDATE sales_event_states SET state=?,lease_attempt_id=NULL,lease_expires_at=NULL,
         last_reason=?,linked_event_key=NULL,transition_actor=?,updated_at=?
         WHERE company_id=? AND event_key=? AND state=?
           AND EXISTS(SELECT 1 FROM sales_event_resolutions WHERE company_id=? AND resolution_id=?)`).bind(
         to,resolution.reason,resolution.actor,resolution.at,companyId,eventKey,from,companyId,resolution.resolutionId,
       ),
+      this.db.prepare('SELECT changes() AS changed'),
       this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
         SELECT ?,?,?,?,?,?,?,NULL WHERE EXISTS(
           SELECT 1 FROM sales_event_resolutions WHERE company_id=? AND resolution_id=?
         )`).bind(companyId,audit.auditId,eventKey,audit.action,audit.actor,audit.at,audit.reason ?? null,companyId,resolution.resolutionId),
+      this.db.prepare('SELECT changes() AS changed'),
     ]);
-    if (results.some(result => changes(result) !== 1)) throw new SalesIngestionError('invalid_state', `Expected ${from} state.`);
+    if ([results[1],results[3],results[5]].some(result => selectedChange(result) !== 1)) throw new SalesIngestionError('invalid_state', `Expected ${from} state.`);
   }
 
   async appendResolution(companyId: string, value: SalesResolution) {
@@ -348,12 +351,14 @@ export class D1SalesEventStore implements SalesEventStore {
         SELECT ?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sales_events WHERE company_id=? AND event_key=?)`).bind(
         companyId,value.correctionId,value.eventKey,value.status,value.actor,value.reason,value.requestedAt,companyId,value.eventKey,
       ),
+      this.db.prepare('SELECT changes() AS changed'),
       this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
         SELECT ?,?,?,?,?,?,?,NULL WHERE EXISTS(
           SELECT 1 FROM sales_event_corrections WHERE company_id=? AND correction_id=?
         )`).bind(companyId,audit.auditId,audit.eventKey,audit.action,audit.actor,audit.at,audit.reason ?? null,companyId,value.correctionId),
+      this.db.prepare('SELECT changes() AS changed'),
     ]);
-    if (results.some(result => changes(result) !== 1)) throw new SalesIngestionError('not_found', 'Sales event was not found.');
+    if (selectedChange(results[1]) !== 1 || selectedChange(results[3]) !== 1) throw new SalesIngestionError('not_found', 'Sales event was not found.');
   }
 
   async confirmOccurrence(companyId: string, value: SalesOccurrenceConfirmation, audit: SalesAuditEntry) {
@@ -362,14 +367,17 @@ export class D1SalesEventStore implements SalesEventStore {
       this.db.prepare(`INSERT INTO sales_event_occurrence_confirmations(company_id,event_key,occurred_at,actor,reason,confirmed_at)
         SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM sales_event_states WHERE company_id=? AND event_key=? AND state='held')
         AND NOT EXISTS(SELECT 1 FROM sales_event_occurrence_confirmations WHERE company_id=? AND event_key=?)`).bind(companyId,value.eventKey,value.occurredAt,value.actor,value.reason,value.confirmedAt,companyId,value.eventKey,companyId,value.eventKey),
+      this.db.prepare('SELECT changes() AS changed'),
       this.db.prepare(`UPDATE sales_event_states SET state='received',last_reason=?,transition_actor=?,updated_at=?
         WHERE company_id=? AND event_key=? AND state='held' AND EXISTS(
           SELECT 1 FROM sales_event_occurrence_confirmations WHERE company_id=? AND event_key=?)`).bind(value.reason,value.actor,value.confirmedAt,companyId,value.eventKey,companyId,value.eventKey),
+      this.db.prepare('SELECT changes() AS changed'),
       this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
         SELECT ?,?,?,?,?,?,?,NULL WHERE EXISTS(SELECT 1 FROM sales_event_occurrence_confirmations WHERE company_id=? AND event_key=?)
         AND NOT EXISTS(SELECT 1 FROM sales_event_audits WHERE company_id=? AND event_key=? AND action='occurrence_confirmed')`).bind(companyId,audit.auditId,audit.eventKey,audit.action,audit.actor,audit.at,audit.reason??null,companyId,value.eventKey,companyId,value.eventKey),
+      this.db.prepare('SELECT changes() AS changed'),
     ]);
-    if(results.some(result=>changes(result)!==1))throw new SalesIngestionError('invalid_state','Occurrence time is missing, already confirmed, or no longer held.');
+    if([results[1],results[3],results[5]].some(result=>selectedChange(result)!==1))throw new SalesIngestionError('invalid_state','Occurrence time is missing, already confirmed, or no longer held.');
   }
 
   async occurrenceConfirmation(companyId: string,eventKey: string){
@@ -436,12 +444,14 @@ export class D1SalesEventStore implements SalesEventStore {
         companyId,value.resolutionId,value.conflictId,value.canonicalEventKey,value.kind,value.actor,value.reason,value.at,
         companyId,value.conflictId,value.canonicalEventKey,companyId,value.conflictId,
       ),
+      this.db.prepare('SELECT changes() AS changed'),
       this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
         SELECT ?,?,?,?,?,?,?,? WHERE EXISTS(
           SELECT 1 FROM sales_event_conflict_resolutions WHERE company_id=? AND resolution_id=?
         )`).bind(companyId,audit.auditId,audit.eventKey,audit.action,audit.actor,audit.at,audit.reason ?? null,audit.conflictId ?? null,companyId,value.resolutionId),
+      this.db.prepare('SELECT changes() AS changed'),
     ]);
-    if (results.some(result => changes(result) !== 1)) throw new SalesIngestionError('invalid_state', 'Identity-conflict receipt is missing or already resolved.');
+    if (selectedChange(results[1]) !== 1 || selectedChange(results[3]) !== 1) throw new SalesIngestionError('invalid_state', 'Identity-conflict receipt is missing or already resolved.');
   }
 
   async latestAppliedConsumption(companyId: string, lineageKey: string, beforeRevision: number) {
@@ -478,20 +488,23 @@ export class D1SalesEventStore implements SalesEventStore {
         ) AND NOT EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=?)`).bind(
           companyId,row.lease_attempt_id,row.event_key,now,companyId,row.event_key,row.lease_attempt_id,now,companyId,row.lease_attempt_id,
         ),
+        this.db.prepare('SELECT changes() AS changed'),
         this.db.prepare(`UPDATE sales_event_states SET state='failed',lease_attempt_id=NULL,lease_expires_at=NULL,
           last_reason='interrupted',linked_event_key=NULL,transition_actor='system',updated_at=?
           WHERE company_id=? AND event_key=? AND state='processing' AND lease_attempt_id=?
             AND EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=?)`).bind(
           now,companyId,row.event_key,row.lease_attempt_id,companyId,row.lease_attempt_id,
         ),
+        this.db.prepare('SELECT changes() AS changed'),
         this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
           SELECT ?,?,?,'lease_expired','system',?,'Processing lease expired; application is unknown.',NULL
           WHERE EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=? AND error_code='interrupted')
             AND NOT EXISTS(SELECT 1 FROM sales_event_audits WHERE company_id=? AND event_key=? AND action='lease_expired' AND at=?)`).bind(
           companyId,this.idFactory(),row.event_key,now,companyId,row.lease_attempt_id,companyId,row.event_key,now,
         ),
+        this.db.prepare('SELECT changes() AS changed'),
       ]);
-      if (results.every(result => changes(result) === 1)) recovered.push(row.event_key);
+      if ([results[1],results[3],results[5]].every(result => selectedChange(result) === 1)) recovered.push(row.event_key);
     }
     return recovered;
   }
@@ -502,9 +515,11 @@ export class D1SalesEventStore implements SalesEventStore {
     const rows = await this.db.prepare(`SELECT event_key FROM sales_event_fragments
       WHERE company_id=? AND expires_at<=? ORDER BY expires_at,event_key LIMIT ?`).bind(companyId,now,limit).all<{event_key: string}>();
     if (!rows.results.length) return 0;
-    const results = await this.db.batch(rows.results.map(row => this.db.prepare(
-      `DELETE FROM sales_event_fragments WHERE company_id=? AND event_key=? AND expires_at<=?`,
-    ).bind(companyId,row.event_key,now)));
-    return results.reduce((total, result) => total + changes(result), 0);
+    const statements = rows.results.flatMap(row => [
+      this.db.prepare(`DELETE FROM sales_event_fragments WHERE company_id=? AND event_key=? AND expires_at<=?`).bind(companyId,row.event_key,now),
+      this.db.prepare('SELECT changes() AS changed'),
+    ]);
+    const results = await this.db.batch(statements);
+    return results.reduce((total, result, index) => total + (index % 2 ? selectedChange(result) : 0), 0);
   }
 }

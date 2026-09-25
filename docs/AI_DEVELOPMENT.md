@@ -134,8 +134,10 @@ blocked. Never substitute “the code looks correct” for execution evidence.
 ## 6. Concurrent AI work
 
 One human owns each A/B/C workstream even when that person uses several AI
-sessions. The human remains responsible for scope, review, credentials, external
-actions, and the final merge.
+sessions. The person doing the work is responsible for scope, self-review,
+verification, credentials, external actions, and the final handoff. The merge
+owner coordinates shared files and the final merge without serving as a second
+development reviewer.
 
 - Use one worktree and short-lived branch per task packet. Never run two agents
   that can edit the same files in the same worktree.
@@ -148,12 +150,11 @@ actions, and the final merge.
   rebasing on current `main`; never reserve numbers or hand-merge snapshots.
 - Rebase immediately after a depended-on contract lands, then rerun contract
   tests before resolving unrelated conflicts.
-- Do not ask an AI agent to resolve a semantic contract disagreement. The two
-  workstream owners decide, record the decision, and then provide the agent the
-  accepted contract.
-- A review agent should not be the only reviewer of its own implementation.
-  Use a fresh AI review session plus the owning human for security, migrations,
-  purchases, and external integrations.
+- Do not ask an AI agent to resolve a semantic contract disagreement. Record
+  the agreed interface in the shared contract and tests before integration.
+- The implementer self-reviews the full diff and records the required risk-based
+  checks. A fresh AI review session may help find defects but is not a required
+  second sign-off. External actions still need their explicit authorizations.
 
 Suggested task-branch names include `workstream-a/a2-consumption-contract`,
 `workstream-b/b3-event-storage`, and `workstream-c/c4-supplier-fakes`.
@@ -193,8 +194,8 @@ the evidence level: local fake, local D1, hosted CI, sandbox, pilot, or producti
 
 ## 8. Review prompts
 
-Use a fresh session for risk review after the implementation agent has completed
-its self-review.
+The implementer may use a fresh session for additional risk review after
+completing the required self-review.
 
 ```text
 Read AGENTS.md, docs/CURRENT_STATUS.md, docs/AI_DEVELOPMENT.md, and the relevant

@@ -134,6 +134,7 @@ After receiving that review and its limits, the owner explicitly approved:
 "I approve A5/M3 for local development acceptance. This does not approve a
 remote migration or deployment." A5 and M3 are therefore accepted at the
 local-development evidence level. The exact inventory preview remains off by
-default. Person B may proceed with B5/M4 acceptance work using the reviewed
-consumption contract; A6 may proceed in review-only mode. No remote migration,
-deployment, or production-data action is authorized by this decision.
+default. Person B subsequently accepted B5/M4 for local development using the
+reviewed consumption contract; see [B5 evidence](M4_B5_LOCAL_EVIDENCE.md).
+A6 may proceed in review-only mode. No remote migration, deployment, or
+production-data action is authorized by this decision.

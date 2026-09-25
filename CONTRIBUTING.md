@@ -26,8 +26,9 @@ The GitHub workflow runs these checks on Ubuntu and Windows. It caches only the 
 - Keep `main` as the only long-lived branch. A solo contributor may work there
   directly if that remains the repository owner's preference. When two or more
   contributors or AI sessions work concurrently, use separate worktrees and
-  short-lived workstream branches, then merge reviewed green changes and delete
-  those branches. Follow the file ownership and migration queue in the roadmap.
+  short-lived workstream branches, then merge self-reviewed green changes and
+  delete those branches. Follow the file ownership and migration queue in the
+  roadmap.
 - Scope each AI session to one A/B/C checklist item and one reviewable outcome.
   Record objective, context, constraints, completion conditions, verification,
   and handoff using the AI development playbook.
