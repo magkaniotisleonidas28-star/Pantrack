@@ -113,6 +113,13 @@
       "when": 1790351732541,
       "tag": "0015_silky_overlord",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1790353449007,
+      "tag": "0016_light_hedge_knight",
+      "breakpoints": true
     }
   ]
 }

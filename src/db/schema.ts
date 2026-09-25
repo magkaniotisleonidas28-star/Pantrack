@@ -98,6 +98,22 @@ export const replenishmentSettingsVersions=sqliteTable('replenishment_settings_v
  foreignKey({columns:[t.companyId,t.productId,t.inventoryConfigId],foreignColumns:[inventoryConfigVersions.companyId,inventoryConfigVersions.productId,inventoryConfigVersions.id]}),
 ]);
 
+export const replenishmentProposalOrigins=sqliteTable('replenishment_proposal_origins',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ id:text('id').notNull(),
+ createId:text('create_id').notNull(),
+ productId:text('product_id').notNull(),
+ initialStatus:text('initial_status').notNull(),
+ snapshotJson:text('snapshot_json').notNull(),
+ createdBy:text('created_by').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.id]}),
+ uniqueIndex('replenishment_proposal_create_id').on(t.companyId,t.createId),
+ index('replenishment_proposal_product').on(t.companyId,t.productId),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+]);
+
 export const inventoryBalancesExact=sqliteTable('inventory_balances_exact',{
  companyId:text('company_id').notNull().references(()=>companies.id),
  productId:text('product_id').notNull(),

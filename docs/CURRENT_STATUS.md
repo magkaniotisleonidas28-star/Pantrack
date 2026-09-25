@@ -168,7 +168,9 @@ supplier credentials, or payment details into chat or source control.
    development URL with an Orders-only Clover subscription, and saved the
    webhook auth-code secret name. The temporary challenge and setup gate are
    gone. Keep Clover sync disabled until a separate fictional sale validation
-   is explicitly underway.
+   is explicitly underway. A concurrent local-only A7 migration was moved to
+   `0016` in the merge; development D1 remains at `0015` until A7's separate
+   remote gate is authorized.
 4. Keep production data and real users out of this environment while these
    gates remain open. Hosted sign-in worked at the development `workers.dev`
    URL; signup and recovery callback configuration there still needs a
@@ -190,7 +192,7 @@ behavior.
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
 | M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers local behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records development D1 through `0015`, the fictional Clover connection and webhook setup, and the remaining provider cases. Sync remains off. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
-| M7 — replenishment proposals | A6 review-only core complete locally on its workstream branch; M7 not accepted | A7 durable lifecycle, invalidation, edits/audit, and quantity reservations; A8 integration with reliable M5 inputs and end-to-end evidence. See [A6 local evidence](M7_A6_LOCAL_EVIDENCE.md). |
+| M7 — replenishment proposals | A6 review-only core merged into `main`; A7 immutable origin slice in local development; M7 not accepted | A7 status history, invalidation, edits/audit, and quantity reservations; A8 integration with reliable M5 inputs and end-to-end evidence. See [A6 local evidence](M7_A6_LOCAL_EVIDENCE.md) and [A7 origin notes](M7_A7_ORIGIN_NOTES.md). |
 | M8 — supplier adapter | Not started | Select supplier, build approved integration, sandbox/timeout tests, incoming-stock and delivery reconciliation, then one approved low-risk test order. |
 | M9 — operations | Prototype endpoint only | Provision scheduler/queue, retries, alert channels, operations page, and recovery runbooks. |
 | M10 — financial controls | Partial prototype | Confirm supplier payment model, limits, eligibility, owner reauthentication, and financial audit/testing. |
