@@ -114,6 +114,44 @@ export const replenishmentProposalOrigins=sqliteTable('replenishment_proposal_or
  foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
 ]);
 
+export const replenishmentProposalStates=sqliteTable('replenishment_proposal_states',{
+ companyId:text('company_id').notNull(),
+ proposalId:text('proposal_id').notNull(),
+ productId:text('product_id').notNull(),
+ revision:integer('revision').notNull(),
+ status:text('status').notNull(),
+ packs:text('packs').notNull(),
+ changeId:text('change_id').notNull(),
+ kind:text('kind').notNull(),
+ changedBy:text('changed_by').notNull(),
+ reason:text('reason').notNull(),
+ changedAt:text('changed_at').notNull(),
+ invalidationReason:text('invalidation_reason'),
+},t=>[
+ primaryKey({columns:[t.companyId,t.proposalId]}),
+ index('replenishment_proposal_active_product').on(t.companyId,t.productId,t.status),
+ foreignKey({columns:[t.companyId,t.proposalId],foreignColumns:[replenishmentProposalOrigins.companyId,replenishmentProposalOrigins.id]}),
+]);
+
+export const replenishmentProposalEvents=sqliteTable('replenishment_proposal_events',{
+ companyId:text('company_id').notNull(),
+ proposalId:text('proposal_id').notNull(),
+ revision:integer('revision').notNull(),
+ changeId:text('change_id').notNull(),
+ kind:text('kind').notNull(),
+ fromStatus:text('from_status'),
+ status:text('status').notNull(),
+ packs:text('packs').notNull(),
+ actor:text('actor').notNull(),
+ reason:text('reason').notNull(),
+ at:text('at').notNull(),
+ invalidationReason:text('invalidation_reason'),
+},t=>[
+ primaryKey({columns:[t.companyId,t.proposalId,t.revision]}),
+ uniqueIndex('replenishment_proposal_change_id').on(t.companyId,t.changeId),
+ foreignKey({columns:[t.companyId,t.proposalId],foreignColumns:[replenishmentProposalOrigins.companyId,replenishmentProposalOrigins.id]}),
+]);
+
 export const inventoryBalancesExact=sqliteTable('inventory_balances_exact',{
  companyId:text('company_id').notNull().references(()=>companies.id),
  productId:text('product_id').notNull(),

@@ -115,9 +115,16 @@ export type ProposalHandoff = Readonly<{
   status: ProposalStatus;
   productId: string;
   supplier: ProposalOrigin['snapshot']['supplier'];
+  salesReadiness: ProposalOrigin['snapshot']['salesReadiness'];
+  priceSource: 'fictional_fixture' | null;
   packs: string;
   stockUnitsPerPack: ProposalOrigin['snapshot']['quantities']['pack'];
   estimatedLineTotal: ProposalOrigin['snapshot']['estimatedLineTotal'];
+  estimatedProposalTotal: ProposalOrigin['snapshot']['estimatedLineTotal'];
+  deliveryExpectedAt: null;
+  limitPacks: Readonly<{
+    capacity: string | null; shelfLife: string | null; maximum: string | null;
+  }>;
   inventoryVersion: number;
   inventoryConfigId: string;
   inventoryConfigVersion: number;
@@ -127,6 +134,7 @@ export type ProposalHandoff = Readonly<{
   editedBy: string | null;
   reviewReasons: readonly string[];
   invalidationReasons: readonly ProposalInvalidationReason[];
+  warnings: readonly string[];
   supplierSubmissionAllowed: false;
 }>;
 
@@ -147,20 +155,31 @@ export function buildProposalHandoff(
   const invalidationReasons = Object.freeze([...proposalInvalidation(origin, current)]);
   const reviewReasons = Object.freeze([...snapshot.explanation.reviewReasons]);
   const supplier = Object.freeze({...snapshot.supplier});
+  const salesReadiness = Object.freeze({...snapshot.salesReadiness});
   const stockUnitsPerPack = Object.freeze({...snapshot.quantities.pack});
   const editedTotal = latestEdit === null ? snapshot.estimatedLineTotal : latestEdit.estimatedLineTotal;
   const estimatedLineTotal = editedTotal === null ? null : Object.freeze({...editedTotal});
+  const limitPacks = Object.freeze({
+    capacity: snapshot.explanation.capacityPacks,
+    shelfLife: snapshot.explanation.shelfLifePacks,
+    maximum: snapshot.explanation.maximumPacks,
+  });
+  const warnings = Object.freeze([...reviewReasons, ...invalidationReasons,
+    'delivery_unconfirmed', 'supplier_mapping_unverified',
+    snapshot.priceEstimate === null ? 'price_unavailable' : 'price_estimate_only']);
   return Object.freeze({
     contract: REPLENISHMENT_HANDOFF_CONTRACT, mode: 'review_only',
     companyId: origin.companyId, proposalId: origin.id, revision, status,
-    productId: origin.productId, supplier,
+    productId: origin.productId, supplier, salesReadiness,
+    priceSource: snapshot.priceEstimate?.source ?? null,
     packs: latestEdit?.packs ?? snapshot.explanation.recommendedPacks, stockUnitsPerPack,
-    estimatedLineTotal,
+    estimatedLineTotal, estimatedProposalTotal: estimatedLineTotal,
+    deliveryExpectedAt: null, limitPacks,
     inventoryVersion: snapshot.inventoryVersion,
     inventoryConfigId: snapshot.inventoryConfigId,
     inventoryConfigVersion: snapshot.inventoryConfigVersion,
     settingsVersion: snapshot.settingsVersion, settingsChangeId: snapshot.settingsChangeId,
     editReason: latestEdit?.reason ?? null, editedBy: latestEdit?.changedBy ?? null,
-    reviewReasons, invalidationReasons, supplierSubmissionAllowed: false,
+    reviewReasons, invalidationReasons, warnings, supplierSubmissionAllowed: false,
   });
 }

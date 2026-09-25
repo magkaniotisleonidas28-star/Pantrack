@@ -198,13 +198,18 @@ While B7 was being verified, A7 reached `origin/main` with a different,
 local-only `0015` migration. Development D1 had already applied B7's `0015`,
 so the merge kept B7's SQL and snapshot at that number. A7's additive SQL,
 including its immutability triggers, moved unchanged to `0016`; its snapshot
-and journal entry were regenerated from the merged schema. The merged local
-pipeline passed TypeScript, all tests, the 17-migration fresh-database check,
-build, local D1 application of `0016` after B7 `0015`, and the served smoke
-test. A7's original branch-only `0015` was never applied to development D1.
+and journal entry were regenerated from the merged schema. A later concurrent
+A7 lifecycle migration also moved from its local-only `0016` to `0017`,
+preserving its SQL backfill and triggers. The final merged local pipeline
+passed TypeScript, 28 tests, the 18-migration fresh-database check, build,
+local D1 application of `0016` then `0017` after B7 `0015`, and the served
+smoke test. A7's original branch-only `0015` and `0016` were never applied to
+development D1.
 Development D1 deliberately remains at B7 `0015`; A7 `0016` is pending and
-needs its own authorization and schema review. See the
-[A7 origin note](M7_A7_ORIGIN_NOTES.md) for the local-database handoff.
+the later A7 lifecycle `0017` is also pending. Neither has remote authorization.
+See the [A7 origin note](M7_A7_ORIGIN_NOTES.md) and
+[A7 lifecycle evidence](M7_A7_LIFECYCLE_EVIDENCE.md) for the local-database
+handoff.
 
 ## Earlier local checks
 
