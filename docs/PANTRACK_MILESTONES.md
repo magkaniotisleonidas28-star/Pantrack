@@ -537,6 +537,8 @@ Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCA
 
 Owner-accepted for local development on 2026-09-23 after the complete local
 pipeline and A5 handoff review; see [M3 evidence](M3_LOCAL_EVIDENCE.md).
+The [separate A5 acceptance record](M3_A5_ACCEPTANCE.md) documents the
+2026-09-24 independent AI migration review and owner reaffirmation.
 The current UI explains the reviewed compatibility calculation. Versioned
 proposal snapshots and policy explanations remain A6/M7 work. Development D1
 `0012` and a fictional hosted Worker walkthrough passed on 2026-09-24; see

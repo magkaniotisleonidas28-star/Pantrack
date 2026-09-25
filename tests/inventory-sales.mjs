@@ -52,7 +52,14 @@ const now=Date.now(),record={productId:'milk',onHand:18,incoming:0,lastCount:new
 assert.equal(recommendation(record,now).packs,4);
 assert.equal(recommendation({...record,incoming:48},now).packs,0);
 assert.equal(recommendation({...record,lastCount:null},now).packs,0);
+assert.equal(recommendation({...record,lastCount:null},now).reason,'Opening count required');
+const overdue=recommendation({...record,lastCount:new Date(now-31*86400000).toISOString()},now);
+assert.equal(overdue.stale,true);
+assert.equal(overdue.needsCheck,true);
+assert.equal(overdue.packs,0);
+assert.equal(overdue.reason,'Physical count overdue');
 assert.equal(recommendation({...record,settings:{...record.settings,capacity:30}},now).packs,1);
+assert.equal(recommendation({...record,settings:{...record.settings,capacity:30}},now).capacityPacks,1);
 assert.equal(recommendation({...record,estimatedUsed:1000},now).needsCheck,true);
 globalThis.testUser={userId:'other'};assert.equal((await read()).status,403);assert.equal((await send(sales,sale)).status,403);
 assert.equal((await send(inv,{...incomingCup,id:crypto.randomUUID()})).status,403,'A user from another company cannot mutate inventory.');
@@ -68,6 +75,7 @@ assert.equal(recommendation({...targetRecord,incoming:256},now).packs,1);
 assert.equal(recommendation({...targetRecord,incoming:384},now).packs,0);
 assert.equal(recommendation({...targetRecord,settings:{...targetRecord.settings,targetStock:0}},now).packs,0);
 assert.equal(recommendation({...targetRecord,settings:{...targetRecord.settings,capacity:1000}},now).packs,2);
+assert.equal(recommendation({...targetRecord,settings:{...targetRecord.settings,capacity:1000}},now).wantedPacks,3);
 assert.equal(recommendation({...targetRecord,lastCount:null},now).packs,0);
 console.log('PASS: explicit target with zero forecast usage, exact shortfall, whole-case rounding, incoming stock, zero target, storage limits and opening count requirement.');
 

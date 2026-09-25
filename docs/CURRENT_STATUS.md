@@ -76,9 +76,13 @@ and exact-inventory cutover. See [M3 local evidence](M3_LOCAL_EVIDENCE.md) and
 
 The owner read the [M3 evidence](M3_LOCAL_EVIDENCE.md) and
 [A5 review](M3_A5_OWNER_REVIEW.md) and accepted A5/M3 for development on
-2026-09-23. Person B's compatibility review found no inventory-specific
-workaround. The fictional older-data screen walkthrough passed, and viewing it
-changed no stock or recipe. The complete local pipeline passed again for A5.
+2026-09-23. A separate [A5 acceptance record](M3_A5_ACCEPTANCE.md) documents
+the independent AI migration review and the owner's 2026-09-24 reaffirmation
+of local development acceptance; that decision did not authorize a remote
+migration or deployment. Person B's compatibility review found no
+inventory-specific workaround. The fictional older-data screen walkthrough
+passed, and viewing it changed no stock or recipe. The complete local pipeline
+passed again for A5.
 This opened M3's prerequisite for B5; M4's subsequent local acceptance is
 recorded below. Development D1 and the Worker now have separate
 [hosted validation evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview is

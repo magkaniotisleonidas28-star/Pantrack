@@ -57,7 +57,8 @@ export function formatCanonical(value: ExactQuantity): string {
   const minor = readCanonical(value);
   if (value.dimension === 'count') return minor.toString();
   const digits = (minor < ZERO ? -minor : minor).toString().padStart(7, '0');
-  return `${minor < ZERO ? '-' : ''}${digits.slice(0, -6)}.${digits.slice(-6)}`;
+  const fraction = digits.slice(-6).replace(/0+$/, '');
+  return `${minor < ZERO ? '-' : ''}${digits.slice(0, -6)}${fraction ? `.${fraction}` : ''}`;
 }
 
 function positiveFactor(value: string): bigint {

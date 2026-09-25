@@ -10,7 +10,7 @@ const q=(minor,dimension='mass')=>({dimension,minor:String(minor)});
 const fails=(fn,code)=>assert.throws(fn,error=>error.code===code);
 
 assert.deepEqual(toCanonical('5',curatedUnit('lb'),scope),q('2267961850'));
-assert.equal(formatCanonical(q('2267961850')),'2267.961850');
+assert.equal(formatCanonical(q('2267961850')),'2267.96185');
 assert.deepEqual(toCanonical('1',curatedUnit('gallon_us'),scope),q('3785411784','volume'));
 assert.equal(formatCanonical(q('3785411784','volume')),'3785.411784');
 assert.deepEqual(toCanonical('1',curatedUnit('mg'),scope),q(1000));
@@ -18,7 +18,11 @@ assert.deepEqual(toCanonical('0.000001',curatedUnit('mg'),scope),q(0));
 assert.deepEqual(toCanonical('0.0005',curatedUnit('mg'),scope),q(1));
 assert.deepEqual(toCanonical('-0.0005',curatedUnit('mg'),scope,{signed:true}),q(-1));
 assert.equal(formatCanonical(q(-1)),'-0.000001');
-assert.equal(formatCanonical(q(0)),'0.000000');
+assert.equal(formatCanonical(q(0)),'0');
+assert.equal(formatCanonical(q('12000000')),'12');
+assert.equal(formatCanonical(q('12500000')),'12.5');
+assert.equal(formatCanonical(q('-12500000')),'-12.5');
+assert.equal(formatCanonical(q('12003000')),'12.003');
 assert.equal(formatCanonical(q(1000,'count')),'1000');
 assert.equal(formatCanonical(q('-9223372036854775808')),'-9223372036854.775808');
 
