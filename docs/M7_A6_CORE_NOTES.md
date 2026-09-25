@@ -1,10 +1,10 @@
-# A6 local review snapshot slice
+# A6 local review-only core
 
 This slice adds a pure `pantrack.replenishment-review.v1` calculation. It creates
 an immutable, JSON-safe review snapshot from caller-supplied exact quantities,
 inventory/config/settings versions, supplier identity and SKU, and a fictional
-sales-readiness input. No API, database table, supplier call, scheduling, or
-purchase action uses this module yet.
+sales-readiness input. The read-only D1 bridge calls it, but no API route,
+supplier call, schedule, or purchase action uses it.
 
 The snapshot also freezes the fictional supplier mapping ID/version and an
 optional fictional per-pack price estimate. It multiplies the final suggested
@@ -12,6 +12,12 @@ whole-pack count by that price using integer minor currency units, so caps and
 minimums are reflected in the line total without floating-point rounding. A
 missing price leaves the total unset and adds `price_not_checked`. A fixture
 price is only an estimate; neither it nor the snapshot is a supplier quote.
+
+The pure grouping function accepts frozen snapshots for one company. It rejects
+duplicate products in a batch, groups lines by supplier, account, and location,
+and totals known estimates separately by currency. It counts unpriced lines and
+collects their review reasons. Grouping does not reserve quantities or create a
+durable proposal.
 
 The snapshot records target, on hand, confirmed incoming, pack quantity,
 capacity, shelf-life ceiling, whole-pack shortfall, pack policy, source versions,

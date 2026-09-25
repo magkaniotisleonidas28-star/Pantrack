@@ -238,10 +238,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   record evidence for every M3 criterion, and verify through M4 contract tests
   that the published interface needs no inventory-specific workaround. **Milestone:**
   M3 complete only after M2 and all M3 evidence pass.
-- [ ] **A6 — Build the independent M7 core.** Version replenishment settings;
+- [x] **A6 — Build the independent M7 core.** Version replenishment settings;
   implement pure shortfall, incoming, whole-pack, capacity, shelf-life, stale
   count, and limit calculations; freeze explainable proposal snapshots. Use B's
-  sales-health fixtures and keep everything review-only.
+  sales-health fixtures and keep everything review-only. Local evidence is in
+  [the A6 report](M7_A6_LOCAL_EVIDENCE.md); M7 remains open.
 - [ ] **A7 — Complete M7 lifecycle and A → C handoff.** Add proposal lifecycle,
   invalidation, edit reasons, audit history, and atomic unresolved-quantity
   reservations. Publish the immutable proposal contract to Person C and test it
@@ -686,9 +687,9 @@ Then apply configured capacity, shelf-life, minimum-order, order-multiple, stale
 
 ### Tasks
 
-- [ ] Version replenishment settings and record who changed them.
-- [ ] Freeze a proposal snapshot containing inventory versions, settings, mappings, supplier SKU, pack conversion, price estimate, and calculation explanation.
-- [ ] Group proposal lines by supplier/account/location.
+- [x] Version replenishment settings and record who changed them locally.
+- [x] Freeze a review-only proposal snapshot containing inventory versions, settings, fictional mappings, supplier SKU, pack conversion, fictional price estimate, and calculation explanation.
+- [x] Group review-only proposal lines by supplier/account/location.
 - [ ] Add statuses: draft, review required, approved, sending, unknown, accepted, rejected, canceled, partially received, and closed.
 - [ ] Prevent a new proposal from duplicating unresolved quantities.
 - [ ] Recalculate or invalidate proposals when relevant inventory/settings change.
