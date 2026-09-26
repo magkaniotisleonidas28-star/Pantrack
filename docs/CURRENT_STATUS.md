@@ -171,8 +171,12 @@ supplier credentials, or payment details into chat or source control.
    sandbox evidence: a base latte deducted 200 mL milk, 18 g espresso, and
    one cup; an extra-shot latte deducted 200 mL milk, 36 g espresso, and one
    cup. Each produced one applied event and one consumption application. The
-   temporary sync gate was removed after each; the remaining B7 provider
-   cases are open. Concurrent
+   temporary sync gate was removed after each. A third paid fictional base
+   latte was imported once by owner reconciliation after its first observed
+   webhook returned `404`; a locally constructed authenticated repeat Orders
+   notification and a subsequent owner poll created no extra event or stock
+   use. The temporary gate is off, and native Clover retry behavior and the
+   other B7 provider cases remain open. Concurrent
    local-only A7 migrations were moved to
    `0016` and `0017` in the merge; development D1 remains at `0015` until A7's
    separate remote gate is authorized.
@@ -195,7 +199,7 @@ behavior.
 | M2 — authentication and RBAC | C1/M2 accepted by owner for development; authentication/migration review and replacement Cloudflare build are owner-attested | Document the already reported review. Development Worker smoke passed, but hosted signup/recovery and independent security verification remain open. See [development auth evidence](M2_DEV_AUTH_EVIDENCE.md) and [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md). |
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
-| M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; base and extra-shot latte cases passed; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers local behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records development D1 through `0015`, the fictional Clover connection, webhook setup, two paid latte deductions, and the remaining provider cases. Sync remains off. |
+| M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; base latte, extra-shot, and simulated duplicate/polling cases passed; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers local behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records development D1 through `0015`, the fictional Clover connection, webhook setup, three paid latte deductions, the simulated duplicate and owner poll, and the remaining provider cases. Sync remains off. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | A6 core and A7 lifecycle/handoff complete locally; C4's fake consumer contract test passed; M7 not accepted | A8 still needs reliable M5 inputs, concurrency and end-to-end proposal evidence. Development D1 has not applied the A7 origin/lifecycle migrations. See [A6 local evidence](M7_A6_LOCAL_EVIDENCE.md), [A7 lifecycle evidence](M7_A7_LIFECYCLE_EVIDENCE.md), [A → C handoff](M7_A7_HANDOFF.md), and [C4 contract evidence](C4_A7_HANDOFF_EVIDENCE.md). |
 | M8 — supplier adapter | Not started | Select supplier, build approved integration, sandbox/timeout tests, incoming-stock and delivery reconciliation, then one approved low-risk test order. |

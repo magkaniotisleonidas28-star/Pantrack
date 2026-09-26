@@ -242,7 +242,7 @@ establish their provider behavior.
 | Paid latte sale | Order `ABBD68VDTWENM`; event `ABBD68VDTWENM:1790389081000` | 200 mL milk, 18 g espresso, 1 cup | 200 mL milk, 18 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
 | Extra-shot modifier | Order `141JW0CZY9X76`; event `141JW0CZY9X76:1790391186000` | 200 mL milk, 36 g espresso, 1 cup | 200 mL milk, 36 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
 | Unmapped modifier and replay | Pending | No use until reviewed mapping and replay | Pending | Pending |
-| Duplicate webhook and polling | Pending | One deduction | Pending | Pending |
+| Duplicate webhook and polling | Order `8092KSCCQ51TT`; event `8092KSCCQ51TT:1790444517000` | 200 mL milk, 18 g espresso, 1 cup once | 200 mL milk, 18 g espresso, 1 cup once | Passed for one locally constructed authenticated duplicate notification and one owner polling run; no native Clover retry was observed |
 | Unpaid cancellation | Pending | No use | Pending | Pending |
 | Refund and paid cancellation | Pending | No automatic restock | Pending | Pending |
 | Later paid revision | Pending | Positive incremental use once | Pending | Pending |
@@ -338,12 +338,65 @@ establish their provider behavior.
   reported revoking the temporary extra-shot test token in Clover. This is
   owner-attested; no independent token-list check was performed.
 
+### Duplicate notification and polling for one fictional latte (2026-09-26)
+
+- Before this case, the dedicated company had two applied Clover sales events,
+  two consumption applications, six exact consumption stock events, and
+  balances of 14,741.647136 mL milk, 2,213.96185 g espresso, and 998 cups.
+  The development sync gate was absent. The owner created a separate temporary
+  sandbox merchant API token and entered it only into a hidden local Terminal
+  prompt. A non-creating checkout preview confirmed exactly one unmodified
+  mapped $5 latte and the sandbox cash tender.
+- The owner confirmed one sandbox cash sale. Clover returned paid order
+  `8092KSCCQ51TT` and payment `REVP83GWKZMX6` for 500 cents. The local
+  runner saved its non-secret order ID immediately and blocks a second sale.
+  A Worker tail observed a real `POST /api/clover/webhook` immediately after
+  payment with a `404` response. D1 still showed two sales and an unchanged
+  checkpoint. The timing suggests the new sync secret had not propagated to
+  that Worker invocation; the trace does not prove the cause or identify the
+  notification body. This failed delivery is recorded, not counted as a
+  successful native webhook or a complete missed-event recovery test.
+- After selecting the correct B7 company in Pantrack, the owner used **Sync
+  now** to reconcile the existing paid order. The UI reported **1 new event,
+  0 held**. D1 recorded event `8092KSCCQ51TT:1790444517000` once with one
+  latte line, no modifiers, state `applied`, and reason `inventory_applied`.
+  It added one consumption application and exactly three `sale_consumption`
+  events: -200 mL milk, -18 g espresso, and -1 cup. Balances became
+  14,541.647136 mL milk, 2,195.96185 g espresso, and 997 cups. Sync last
+  succeeded at `2026-09-26T17:50:26.775Z` without an error.
+- A local runner then constructed an Orders UPDATE notification for that same
+  merchant and order, with Clover app ID and the order's provider revision.
+  Its first attempt used a different code and received `401`; no sync attempt
+  or stock change followed. The runner's one-attempt guard stopped an
+  accidental rerun. After preserving that rejected result, the owner entered
+  the distinct saved **Clover Auth Code** from the app's Webhooks summary at a
+  hidden Terminal prompt. The corrected, locally constructed notification
+  returned `200` at `2026-09-26T17:56:38Z`. D1 showed a new sync attempt and
+  success at `17:56:39.603Z`, but still only three company sales events,
+  three consumption applications, and nine exact consumption stock events;
+  balances were unchanged. The Auth Code was not sent through chat, printed,
+  saved by the runner, or committed.
+- The owner then used **Sync now** once more. The UI reported **0 new events,
+  0 held**, and D1 showed a successful attempt at
+  `2026-09-26T17:57:41.230Z`. A final read-only D1 check found one event for
+  order `8092KSCCQ51TT`, three company sales and applications, nine exact
+  consumption stock events, and the same three balances. The temporary sync
+  gate was deleted; Worker secret-name listing confirmed it absent and
+  `CLOVER_WEBHOOK_AUTH_CODE` present. No migrations or source-code deployment
+  were used. The owner reported revoking the temporary merchant API token in
+  Clover; no independent token-list check was performed.
+- This proves one authenticated **simulated repeat notification** and one
+  reconciliation poll did not deduct stock twice for the paid sandbox order.
+  It does not prove Clover's own retry policy, the content of the earlier real
+  webhook request, or broader missed-event recovery behavior. B7 and M5
+  remain open for the other provider cases.
+
 ## Gate and recovery
 
 Keep `PANTRACK_CLOVER_SYNC_ENABLED` unset between explicitly authorized B7
-sandbox cases. It was removed after the one-sale validation. Any correction to
-the fictional stock fixture should use an auditable inventory action rather
-than deleting the accepted sale or consumption history. An app rollback does
-not undo additive migration
-`0013`; preserve the tables and use a new migration for any schema repair.
+sandbox cases. It was removed after the duplicate-delivery validation. Any
+correction to the fictional stock fixture should use an auditable inventory
+action rather than deleting the accepted sale or consumption history. An app
+rollback does not undo additive migration `0013`; preserve the tables and use
+a new migration for any schema repair.
 The D1 bookmark is a recovery reference, not a request to restore data.
