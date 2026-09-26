@@ -296,8 +296,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   A base latte, an extra-shot latte, and a third base latte each deducted the
   expected milk, espresso, and cup once. One authenticated locally constructed
   repeat notification and an owner reconciliation poll caused no additional
-  use. The temporary sync gate is off. Native Clover retry behavior and the
-  other provider cases remain open.
+  use. A fictional unmapped modifier was added, but Clover rejected three
+  guarded atomic-order create attempts with `400`; no order or stock use
+  resulted, so the held-event/replay case remains open. The temporary sync
+  gate is off. Native Clover retry behavior and the other provider cases
+  remain open.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same

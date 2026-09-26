@@ -391,10 +391,54 @@ establish their provider behavior.
   webhook request, or broader missed-event recovery behavior. B7 and M5
   remain open for the other provider cases.
 
+### Unmapped modifier case blocked before sale (2026-09-26)
+
+- For this one B7 case, the fictional merchant received a second $1 modifier,
+  **B7 Unmapped extra shot (fictional)** (`DTAG1KQEQ6WHP`), in the existing
+  latte add-ons group (`VSM8D8JA34X9C`). The group remained assigned to the
+  fictional latte (`DX2XHRRJEVE8M`). Pantrack loaded the Clover modifier but
+  did not map it to an inventory modifier. A read-only Clover API check found
+  both the older mapped extra shot and the new modifier available at 100 cents
+  in the same group, with the latte assigned.
+- The owner entered a temporary merchant API token only into hidden local
+  Terminal prompts. A non-creating atomic checkout preview passed for exactly
+  one fictional latte with the new modifier and a 600-cent total. Three guarded
+  create attempts using the same one-sale runner returned HTTP `400` from
+  Clover's `/atomic_order/orders`: first with modifier ID and amount, then
+  with name and availability, then with the merchant-returned price and group
+  ID. The last rejection was at `2026-09-26T18:36:46.748Z`. Each attempt
+  stopped before payment and preserved a local rejection result; no order ID
+  was returned. The last JSON error response was 68 bytes, but the runner did
+  not retain a diagnostic error field, so the precise Clover rejection reason
+  remains unknown. Clover's [atomic-order guide](https://docs.clover.com/dev/docs/create-an-atomic-order)
+  documents checkout as non-creating and describes create-time `400` errors.
+- After the last rejection, Clover Merchant Dashboard's **Today** order list
+  still showed only the earlier $5 order `8092KSCCQ51TT`. Development D1
+  remained at **3 sales events, 3 consumption applications, and 9 exact
+  consumption stock events**. Whole milk stayed at 14,541.647136 mL,
+  espresso at 2,195.96185 g, and hot cups at 997. There was no held event
+  to map or replay, and no ingredient deduction from this attempted case.
+- Both temporary Worker secrets, `PANTRACK_CLOVER_SYNC_ENABLED` and
+  `PANTRACK_EXACT_INVENTORY_PREVIEW`, were removed and a secret-name check
+  confirmed them absent. `CLOVER_WEBHOOK_AUTH_CODE` remained present. The
+  owner reported revoking the temporary **Pantrack B7 unmapped modifier test**
+  token; its name was then absent from the Clover token list. During an
+  earlier dashboard inspection, the token value appeared in the automation
+  tool's accessibility output. It was not put in source control or the report,
+  and the revocation closes that temporary credential exposure. Local runner,
+  diagnostic, result, and window-marker files were deleted after recording
+  the non-secret evidence here.
+- This case does **not** satisfy the B7 unmapped-modifier acceptance criterion.
+  A later, separately controlled run needs Clover's create-time error details
+  or a supported sandbox register path, then one paid modified sale, a held
+  event with unchanged stock, mapping and one audited replay. No schema,
+  Worker code, or production state was changed for this attempted case.
+
 ## Gate and recovery
 
 Keep `PANTRACK_CLOVER_SYNC_ENABLED` unset between explicitly authorized B7
-sandbox cases. It was removed after the duplicate-delivery validation. Any
+sandbox cases. It was removed after the duplicate-delivery validation and the
+rejected unmapped-modifier attempts. Any
 correction to the fictional stock fixture should use an auditable inventory
 action rather than deleting the accepted sale or consumption history. An app
 rollback does not undo additive migration `0013`; preserve the tables and use
