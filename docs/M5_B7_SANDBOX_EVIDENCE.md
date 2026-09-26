@@ -286,9 +286,9 @@ pending; local mocked-provider checks do not establish their provider behavior.
   the local sale-window marker was removed. A Worker secret-name list confirmed
   `PANTRACK_CLOVER_SYNC_ENABLED` absent and
   `CLOVER_WEBHOOK_AUTH_CODE` present. Development D1 remains at `0015`; this
-  validation applied no migrations. The temporary merchant API test token
-  should be revoked in Clover now that its write permissions are no longer
-  needed.
+  validation applied no migrations. The owner subsequently reported revoking
+  the temporary merchant API test token in Clover. This revocation is
+  owner-attested; no independent token-list check was performed.
 
 ## Gate and recovery
 
