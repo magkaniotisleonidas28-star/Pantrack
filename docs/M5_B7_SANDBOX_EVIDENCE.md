@@ -233,11 +233,12 @@ handoff.
 
 ## Clover provider cases
 
-The following are **pending**, not inferred from the local checks:
+One normal paid-sale case has direct sandbox evidence. The other cases remain
+pending; local mocked-provider checks do not establish their provider behavior.
 
 | Case | Clover order/event ID | Expected ingredient use | Actual ingredient use | Result and resolution |
 | --- | --- | --- | --- | --- |
-| Paid latte sale | Pending | 200 ml milk, 18 g coffee, 1 cup | Pending | Pending |
+| Paid latte sale | Order `ABBD68VDTWENM`; event `ABBD68VDTWENM:1790389081000` | 200 mL milk, 18 g espresso, 1 cup | 200 mL milk, 18 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
 | Extra-shot modifier | Pending | 200 ml milk, 36 g coffee, 1 cup | Pending | Pending |
 | Unmapped modifier and replay | Pending | No use until reviewed mapping and replay | Pending | Pending |
 | Duplicate webhook and polling | Pending | One deduction | Pending | Pending |
@@ -248,10 +249,53 @@ The following are **pending**, not inferred from the local checks:
 | Missed webhook and polling recovery | Pending | One deduction after reconciliation | Pending | Pending |
 | Disconnect | Pending | No new sync; history retained | Pending | Pending |
 
+### One fictional paid latte (2026-09-25 local / 2026-09-26 UTC)
+
+- Before the test, read-only development D1 queries found zero sales events,
+  zero consumption applications, and no sync attempt for the dedicated B7
+  company. Exact balances were 15,141.647136 mL milk, 2,267.96185 g espresso,
+  and 1,000 cups. The Clover sync secret was absent.
+- The merchant's browser checkout accepted an amount and card details but could
+  not include the mapped latte item. The owner therefore used a separate
+  merchant-specific sandbox API test token locally. The test runner held it in
+  a hidden Terminal prompt and never saved or sent its value through chat,
+  source control, or the evidence report. Clover's preflight confirmed exactly
+  one unmodified `B7 Latte 12 oz (fictional)` item (`DX2XHRRJEVE8M`) for $5.00
+  and an enabled sandbox cash tender. No order was created during preflight.
+- After the owner confirmed the one-sale prompt, Clover returned order
+  `ABBD68VDTWENM`, line item `2TVNT197HHPWC`, and a `PAID` cash payment record
+  for 500 cents (`T8SMM6M3QTB9C`). This is a synthetic sandbox cash record,
+  not a real card charge or a live sale. The local runner recorded the order
+  ID immediately after creation to prevent an accidental second run.
+- The development Worker had `PANTRACK_CLOVER_SYNC_ENABLED` set only for this
+  sale. Pantrack recorded exactly one Clover sales event for the order, state
+  `applied` with reason `inventory_applied`, and exactly one inventory
+  consumption application. The event occurred at
+  `2026-09-26T02:18:02.000Z`; the Clover sync state shows an attempt at
+  `02:18:02.185Z`, success at `02:18:04.699Z`, and no error. No manual
+  **Sync now** was used. The timing is consistent with the subscribed Orders
+  webhook triggering sync; a separate request trace was not retained, so
+  webhook delivery itself is not independently proved here.
+- Read-only D1 balances after the sale were 14,941.647136 mL milk,
+  2,249.96185 g espresso, and 999 cups. The differences from the recorded
+  opening counts are exactly 200 mL, 18 g, and one cup. A final read-only
+  query found one sales event, one consumption application, and three exact
+  stock events associated with consumption for the B7 company. There was no
+  extra modifier or second order in this test.
+- Immediately afterward, the sync secret was deleted from `pantrack-dev` and
+  the local sale-window marker was removed. A Worker secret-name list confirmed
+  `PANTRACK_CLOVER_SYNC_ENABLED` absent and
+  `CLOVER_WEBHOOK_AUTH_CODE` present. Development D1 remains at `0015`; this
+  validation applied no migrations. The temporary merchant API test token
+  should be revoked in Clover now that its write permissions are no longer
+  needed.
+
 ## Gate and recovery
 
-Keep `PANTRACK_CLOVER_SYNC_ENABLED` unset until the fictional merchant, app,
-permissions, webhook secret, dedicated company, and native mappings are ready.
-Turn it off after testing. An app rollback does not undo additive migration
+Keep `PANTRACK_CLOVER_SYNC_ENABLED` unset between explicitly authorized B7
+sandbox cases. It was removed after the one-sale validation. Any correction to
+the fictional stock fixture should use an auditable inventory action rather
+than deleting the accepted sale or consumption history. An app rollback does
+not undo additive migration
 `0013`; preserve the tables and use a new migration for any schema repair.
 The D1 bookmark is a recovery reference, not a request to restore data.
