@@ -293,8 +293,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   disconnect, and missed-event recovery cases, including expected versus actual
   ingredient use. **Milestone:** M5 remains incomplete until this evidence exists.
   The development webhook URL is verified with an Orders-only subscription.
-  One fictional paid latte deducted the expected milk, espresso, and cup;
-  sales sync was turned off afterward. The other provider cases remain open.
+  A base latte and an extra-shot latte each deducted the expected milk,
+  espresso, and cup once; sales sync was turned off after each. The other
+  provider cases remain open.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same

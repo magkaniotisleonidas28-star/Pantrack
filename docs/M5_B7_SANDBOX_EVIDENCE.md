@@ -233,13 +233,14 @@ handoff.
 
 ## Clover provider cases
 
-One normal paid-sale case has direct sandbox evidence. The other cases remain
-pending; local mocked-provider checks do not establish their provider behavior.
+The normal paid latte and extra-shot modifier cases have direct sandbox
+evidence. The other cases remain pending; local mocked-provider checks do not
+establish their provider behavior.
 
 | Case | Clover order/event ID | Expected ingredient use | Actual ingredient use | Result and resolution |
 | --- | --- | --- | --- | --- |
 | Paid latte sale | Order `ABBD68VDTWENM`; event `ABBD68VDTWENM:1790389081000` | 200 mL milk, 18 g espresso, 1 cup | 200 mL milk, 18 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
-| Extra-shot modifier | Pending | 200 ml milk, 36 g coffee, 1 cup | Pending | Pending |
+| Extra-shot modifier | Order `141JW0CZY9X76`; event `141JW0CZY9X76:1790391186000` | 200 mL milk, 36 g espresso, 1 cup | 200 mL milk, 36 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
 | Unmapped modifier and replay | Pending | No use until reviewed mapping and replay | Pending | Pending |
 | Duplicate webhook and polling | Pending | One deduction | Pending | Pending |
 | Unpaid cancellation | Pending | No use | Pending | Pending |
@@ -288,6 +289,53 @@ pending; local mocked-provider checks do not establish their provider behavior.
   `CLOVER_WEBHOOK_AUTH_CODE` present. Development D1 remains at `0015`; this
   validation applied no migrations. The owner subsequently reported revoking
   the temporary merchant API test token in Clover. This revocation is
+  owner-attested; no independent token-list check was performed.
+
+### One fictional extra-shot latte (2026-09-25 local / 2026-09-26 UTC)
+
+- The development sync gate was absent before the test. The dedicated B7
+  company had one prior sale, one consumption application, and three exact
+  consumption stock events. Exact pre-sale balances were 14,941.647136 mL
+  milk, 2,249.96185 g espresso, and 999 cups. Read-only D1 queries confirmed
+  the sandbox merchant binding, the native latte and extra-shot mappings, and
+  active recipe amounts of 200 mL milk, 18 g base espresso, one cup, and
+  18 g additional espresso for the modifier.
+- The owner created a separate temporary merchant-specific sandbox API token
+  for this case and entered it only through a hidden local Terminal prompt.
+  Clover's non-creating atomic checkout showed exactly one mapped latte
+  (`DX2XHRRJEVE8M`) with one mapped extra shot (`E52ZXJVB7JX48`) and a
+  $6.00 total. The first preview with an implicit modifier price failed the
+  total guard; setting the existing $1 modifier price explicitly passed.
+  Earlier confirmation attempts stopped before order creation, including one
+  while the sync gate was off. Their local result files were absent, and D1
+  sale/application counts remained unchanged.
+- The owner confirmed one sale through the local runner. Clover returned paid
+  sandbox cash order `141JW0CZY9X76`, line `CGFVBZVCWJ620`, modification
+  `3X91EB049ST7J`, and payment record `ZRKBW6VSQFRTM` for 600 cents. The
+  runner saved only non-secret IDs and status locally; no token, real card, or
+  customer details were sent through chat or committed. The saved Pantrack
+  normalized event contains exactly one latte line and one extra-shot modifier
+  with the expected Clover IDs.
+- During the brief sync window, a development Worker tail showed a Clover
+  `POST /api/clover/webhook` request with `200` response at
+  `2026-09-26T02:53:08.150Z`. Only route, timing, status, and the Clover user
+  agent were used as evidence; the request body and auth header were not
+  retained. This directly proves a Clover webhook reached the Worker during
+  the sale. The captured trace does not identify which order revision was in
+  that request. Pantrack's new sales event occurred at `02:53:06.000Z`, was
+  received at `02:53:07.093Z`, and reached `applied` with reason
+  `inventory_applied`. Sync last succeeded at `02:53:08.978Z` with no error.
+- After the sale, exact balances were 14,741.647136 mL milk, 2,213.96185 g
+  espresso, and 998 cups: differences of exactly 200 mL, 36 g, and one cup.
+  D1 then contained two total sales events, two consumption applications,
+  and six exact consumption stock events for this company, one application
+  and three stock events more than the pre-sale baseline.
+- The temporary sync secret and local sale-window marker were removed
+  immediately after the paid result. A Worker secret-name check confirmed
+  `PANTRACK_CLOVER_SYNC_ENABLED` absent and
+  `CLOVER_WEBHOOK_AUTH_CODE` present. Development D1 remains at `0015`; no
+  migration or source-code deployment was needed. The owner subsequently
+  reported revoking the temporary extra-shot test token in Clover. This is
   owner-attested; no independent token-list check was performed.
 
 ## Gate and recovery
