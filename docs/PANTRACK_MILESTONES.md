@@ -252,7 +252,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   This closes A7's local handoff; M7 acceptance remains A8 work.
 - [ ] **A8 — Accept M7.** After B supplies accepted M5 inputs, run concurrency
   and end-to-end proposal tests and record M7 evidence. **Milestone:** M7 complete
-  only after M3–M5; this handoff unblocks real M8 implementation.
+  only after M3–M5; this handoff unblocks real M8 implementation. One
+  [local sale-to-proposal integration slice](M7_A8_LOCAL_SALE_PROPOSAL_EVIDENCE.md)
+  passed its focused test using fictional B7-shaped stock and sale amounts;
+  this does not satisfy the accepted-M5 or hosted A8 gates.
 - [ ] **A9 — Execute A's M11 slice.** Configure approved pilot units, recipes,
   counts, targets, and pack conversions; measure inventory variance and proposal
   accuracy through two reviewed count-to-delivery cycles. Investigate variance
