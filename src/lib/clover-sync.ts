@@ -1,7 +1,8 @@
 import {env} from 'cloudflare:workers';
 import {database} from '@/db/raw';
 import {cloverConfig,cloverJson,withClover} from '@/lib/clover';
-import {cloverSource,normalizeCloverOrder,type CloverOrder} from '@/lib/clover-orders';
+import {cloverSource,normalizeCloverDeletedOrder,normalizeCloverOrder,type CloverOrder} from '@/lib/clover-orders';
+import type {SalesEventDraftV1} from '@/lib/sales-ingestion';
 import {d1SalesService} from '@/lib/d1-sales-runtime';
 
 const PAGE_SIZE=100;
@@ -29,35 +30,52 @@ export async function syncClover(companyId:string){
    const config=cloverConfig(),source=cloverSource(companyId,state.environment,state.merchant_id),service=d1SalesService(db);
    const lower=Math.max(state.started_at,state.checkpoint-OVERLAP_MS),upper=Math.min(Date.now(),lower+24*60*60*1000);
    if(upper<lower)return {scanned:0,created:0,held:0,duplicates:0,checkpoint:new Date(state.checkpoint).toISOString()};
-   let scanned=0,created=0,held=0,duplicates=0,finished=false;
-   for(let page=0;page<MAX_PAGES;page++){
-    const url=new URL(config.api+'/v3/merchants/'+encodeURIComponent(state.merchant_id)+'/orders');
-    url.searchParams.set('filter',`modifiedTime>=${lower}`);
-    url.searchParams.append('filter',`modifiedTime<=${upper}`);
-    url.searchParams.set('orderBy','modifiedTime ASC,id ASC');
-    url.searchParams.set('limit',String(PAGE_SIZE));url.searchParams.set('offset',String(page*PAGE_SIZE));
-    const list=await cloverJson(url.href,{headers:{Authorization:'Bearer '+token}}) as {elements?:Array<{id?:string;modifiedTime?:number}>};
-    if(!Array.isArray(list.elements)||list.elements.length>PAGE_SIZE)throw new Error('Clover returned an invalid orders page.');
-    for(const item of list.elements){
-     if(!item.id||!Number.isSafeInteger(item.modifiedTime))throw new Error('Clover returned an order without stable identity.');
-     if((item.modifiedTime as number)>upper)continue;
-     const detailUrl=config.api+'/v3/merchants/'+encodeURIComponent(state.merchant_id)+'/orders/'+encodeURIComponent(item.id)+'?expand=lineItems,lineItems.modifications,payments';
-     const order=await cloverJson(detailUrl,{headers:{Authorization:'Bearer '+token}}) as CloverOrder;
-     if(order.id!==item.id)throw new Error('Clover order identity changed during sync.');
-     if(order.modifiedTime>upper)continue;
-     const draft=normalizeCloverOrder(order,state.started_at);scanned++;
-     if(!draft)continue;
-     const receipt=await service.receive({companyId,source,actor:{kind:'machine',machineId:`clover:${companyId}`,companyId,source}},draft);
-     if(receipt.kind==='created'){
-      created++;
-      const status=await service.process(companyId,receipt.eventKey);
-      if(status?.state==='held')held++;
-      if(status?.state==='failed')throw new Error('A Clover sale was received but could not be applied.');
-     }else duplicates++;
+   let scanned=0,created=0,held=0,duplicates=0;
+   const deletedIds=new Set<string>();
+   const ingest=async(draft:SalesEventDraftV1|null)=>{
+    scanned++;
+    if(!draft)return;
+    const receipt=await service.receive({companyId,source,actor:{kind:'machine',machineId:`clover:${companyId}`,companyId,source}},draft);
+    if(receipt.kind==='created'){
+     created++;
+     const status=await service.process(companyId,receipt.eventKey);
+     if(status?.state==='held')held++;
+     if(status?.state==='failed')throw new Error('A Clover event was received but could not be applied.');
+    }else duplicates++;
+   };
+   // Clover omits deleted orders from modifiedTime results and returns 404 for
+   // their detail URL. The deletedTime-filtered list is the provider evidence.
+   for(const field of ['deletedTime','modifiedTime'] as const){
+    let finished=false;
+    for(let page=0;page<MAX_PAGES;page++){
+     const url=new URL(config.api+'/v3/merchants/'+encodeURIComponent(state.merchant_id)+'/orders');
+     url.searchParams.set('filter',`${field}>=${lower}`);
+     url.searchParams.append('filter',`${field}<=${upper}`);
+     url.searchParams.set('orderBy','modifiedTime ASC,id ASC');
+     url.searchParams.set('limit',String(PAGE_SIZE));url.searchParams.set('offset',String(page*PAGE_SIZE));
+     if(field==='deletedTime')url.searchParams.set('expand','lineItems,lineItems.modifications,payments');
+     const list=await cloverJson(url.href,{headers:{Authorization:'Bearer '+token}}) as {elements?:CloverOrder[]};
+     if(!Array.isArray(list.elements)||list.elements.length>PAGE_SIZE)throw new Error('Clover returned an invalid orders page.');
+     for(const item of list.elements){
+      if(!item.id||!Number.isSafeInteger(item.modifiedTime))throw new Error('Clover returned an order without stable identity.');
+      if(item.modifiedTime>upper)continue;
+      if(field==='deletedTime'){
+       if(deletedIds.has(item.id))continue;
+       deletedIds.add(item.id);
+       await ingest(normalizeCloverDeletedOrder(item,state.started_at));
+       continue;
+      }
+      if(deletedIds.has(item.id))continue;
+      const detailUrl=config.api+'/v3/merchants/'+encodeURIComponent(state.merchant_id)+'/orders/'+encodeURIComponent(item.id)+'?expand=lineItems,lineItems.modifications,payments';
+      const order=await cloverJson(detailUrl,{headers:{Authorization:'Bearer '+token}}) as CloverOrder;
+      if(order.id!==item.id)throw new Error('Clover order identity changed during sync.');
+      if(order.modifiedTime>upper)continue;
+      await ingest(normalizeCloverOrder(order,state.started_at));
+     }
+     if(list.elements.length<PAGE_SIZE){finished=true;break;}
     }
-    if(list.elements.length<PAGE_SIZE){finished=true;break;}
+    if(!finished)throw new Error('Clover order page limit reached; checkpoint was not advanced.');
    }
-   if(!finished)throw new Error('Clover order page limit reached; checkpoint was not advanced.');
    const checkpoint=Math.max(state.checkpoint,upper);
    await db.prepare('UPDATE clover_sync_state SET checkpoint=?,last_success=?,last_error=NULL WHERE company_id=? AND lease_until=?').bind(checkpoint,new Date().toISOString(),companyId,lease).run();
    return {scanned,created,held,duplicates,checkpoint:new Date(checkpoint).toISOString()};

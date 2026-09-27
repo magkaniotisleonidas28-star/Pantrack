@@ -243,7 +243,7 @@ mocked-provider checks do not establish their provider behavior.
 | Extra-shot modifier | Order `141JW0CZY9X76`; event `141JW0CZY9X76:1790391186000` | 200 mL milk, 36 g espresso, 1 cup | 200 mL milk, 36 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
 | Unmapped modifier and replay | Order `5XK8NJ9JW6NAW`; event `1b2accac56436a6f14bd62fb0e7d3674072657bcc27a0f023fe64b6fc5a572ed` | Zero while held; after mapping and replay, 200 mL milk, 36 g espresso, 1 cup once | Zero while held; then 200 mL milk, 36 g espresso, 1 cup once | Passed in sandbox after an accidental dismissal and audited owner recovery; see below |
 | Duplicate webhook and polling | Order `8092KSCCQ51TT`; event `8092KSCCQ51TT:1790444517000` | 200 mL milk, 18 g espresso, 1 cup once | 200 mL milk, 18 g espresso, 1 cup once | Passed for one locally constructed authenticated duplicate notification and one owner polling run; no native Clover retry was observed |
-| Unpaid cancellation | Order `DNY2CAPBYN098`; no Pantrack event | No use and one cancellation event | No use; no event | Pending: Clover's deleted-order list retains the ID, but detail GET returns `404` and the current modified-time sync misses it |
+| Unpaid cancellation | Order `DNY2CAPBYN098`; event `DNY2CAPBYN098:1790478351000` | No use and one cancellation event | One held cancellation, owner dismissed; no use | Passed for the already deleted sandbox order through a `deletedTime` reconciliation scan; see below |
 | Refund and paid cancellation | Pending | No automatic restock | Pending | Pending |
 | Later paid revision | Pending | Positive incremental use once | Pending | Pending |
 | Access-token refresh | Pending | Sync continues after rotation | Pending | Pending |
@@ -569,6 +569,49 @@ mocked-provider checks do not establish their provider behavior.
   tombstones without inventing a sale or silently advancing past a
   cancellation; the resulting event and zero-use policy then need fresh
   sandbox evidence.
+
+### Unpaid deletion reconciled and dismissed (2026-09-27 UTC)
+
+- The B7 adapter now scans Clover's `deletedTime` order list as well as its
+  normal `modifiedTime` list in the same checkpoint window. It treats a row
+  from the deletion-filtered list as cancellation evidence even if Clover
+  omits `deletedTime` from that row and order detail returns `404`. It retains
+  expanded line IDs when supplied and holds cancellations with unknown
+  preparation for review. No migration or new Clover order was needed.
+- Local mocked-provider tests covered absent and expanded lines, duplicate
+  scans, deletion-list failure without checkpoint advance, zero stock use,
+  and the narrow authenticated Clover receipt exception. These are local
+  contract checks, separate from the sandbox result below.
+- Development D1 started with **4 sales events, 4 consumption applications,
+  12 sale-consumption stock events**, and balances of **14,341.647136 mL
+  milk, 2,159.96185 g espresso, and 996 cups**. The new Worker was deployed
+  to `pantrack-dev`; the owner signed into the dedicated B7 company, where
+  Pantrack showed `Authorized · sandbox` for merchant `4ZJYT1HV8X6Y1`.
+  An initial gate window closed before any sync when the Pantrack session
+  expired. The two temporary development gates were reopened for the review
+  window after owner sign-in.
+- One owner **Sync now** scan began at `2026-09-27T17:29:09.659Z` and
+  succeeded at `2026-09-27T17:29:11.189Z` with **1 new event, 1 held** and
+  checkpoint `2026-09-27T17:29:10.460Z`.
+  Development D1 recorded event key
+  `9485c2be0379c3c0f2e49e3f56671212b903dd26ef0e4258b4a86d530ab0835e`
+  for order `DNY2CAPBYN098`, revision `1790478351000`, cancellation status,
+  and original latte line `7WDQ9N2CM4SPG`. The provider list still did not
+  expose an explicit preparation result; Pantrack held the event as
+  `ambiguous_preparation` without an inventory application.
+- The owner review used this reason: “Reviewed deleted Clover order
+  DNY2CAPBYN098: original $5 latte was unpaid with zero payments;
+  preparation is unknown. Dismiss cancellation without stock use.” D1 now
+  shows state `dismissed` and one `dismiss` resolution for that event. Final
+  counts are **5 sales events, 4 consumption applications, and 12
+  sale-consumption stock events**. Milk, espresso, and cup balances remain
+  **14,341.647136 mL, 2,159.96185 g, and 996** respectively.
+- A Worker secret-name check confirms both temporary gates absent while
+  `CLOVER_WEBHOOK_AUTH_CODE` remains present. No new Clover order, payment,
+  token, migration, production change, supplier action, or purchase occurred.
+  This one case does not prove native Clover retries, refunds, later paid
+  revisions, token refresh, missed webhook recovery, or disconnect behavior;
+  those B7 cases remain open.
 
 ## Gate and recovery
 

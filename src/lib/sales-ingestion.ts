@@ -38,6 +38,7 @@ export type HeldReason =
   | 'invalid_occurrence_time'
   | 'ambiguous_occurrence_time'
   | 'ambiguous_preparation'
+  | 'deleted_order_detail_unavailable'
   | 'identity_conflict'
   | 'unsupported_revision'
   | 'correction_required';
@@ -387,7 +388,7 @@ function assertReceiptAuthorization(context: TrustedReceiptContext) {
   if (source.kind === 'native' || source.kind === 'bridge') throw new SalesIngestionError('source_mismatch', 'Machine-bound sources require machine authentication.');
 }
 
-function normalizeDraft(draft: SalesEventDraftV1, now: number): Omit<SalesEventV1, 'companyId' | 'source' | 'external' | 'receivedAt' | 'integrity'> & {externalEventId: string; externalOrderId: string; revision: number} {
+function normalizeDraft(draft: SalesEventDraftV1, now: number, source: SalesSourceBinding): Omit<SalesEventV1, 'companyId' | 'source' | 'external' | 'receivedAt' | 'integrity'> & {externalEventId: string; externalOrderId: string; revision: number} {
   if (!draft || draft.schemaVersion !== SALES_EVENT_CONTRACT) throw new SalesIngestionError('invalid_schema', 'Unsupported sales event schema.');
   if (!validId(draft.externalEventId) || !validId(draft.externalOrderId)) throw new SalesIngestionError('invalid_identity', 'External event and order IDs are required.');
   if (!Number.isSafeInteger(draft.revision) || draft.revision < 1) throw new SalesIngestionError('invalid_revision', 'Revision must be a positive safe integer.');
@@ -397,7 +398,8 @@ function normalizeDraft(draft: SalesEventDraftV1, now: number): Omit<SalesEventV
   if (!['provider', 'confirmed', 'inferred'].includes(draft.timeQuality)) throw new SalesIngestionError('invalid_time_quality', 'Time quality is invalid.');
   const occurred = instant(draft.occurredAt);
   if (occurred === null || occurred > now) throw new SalesIngestionError('invalid_occurrence_time', 'Occurrence time must be valid RFC 3339 and not in the future.');
-  if (!Array.isArray(draft.lines) || draft.lines.length < 1 || draft.lines.length > MAX_LINES) throw new SalesIngestionError('invalid_lines', 'Event must contain between 1 and 100 lines.');
+  const emptyCloverCancellation=Array.isArray(draft.lines)&&draft.lines.length===0&&source.kind==='native'&&source.provider==='clover'&&draft.eventType==='cancellation'&&draft.orderStatus==='canceled'&&draft.preparationStatus==='unknown';
+  if (!Array.isArray(draft.lines) || (draft.lines.length < 1&&!emptyCloverCancellation) || draft.lines.length > MAX_LINES) throw new SalesIngestionError('invalid_lines', 'Event must contain between 1 and 100 lines, except a Clover deletion tombstone.');
   const lineIds = new Set<string>();
   const lines = draft.lines.map(line => {
     if (!line || !validId(line.externalLineId) || !validId(line.externalItemId) ||
@@ -804,7 +806,7 @@ export class SalesIngestionService {
     validateSource(context.source);
     assertReceiptAuthorization(context);
     const receivedAt = this.now();
-    const normalized = normalizeDraft(draft, Date.parse(receivedAt));
+    const normalized = normalizeDraft(draft, Date.parse(receivedAt), context.source);
     const sourceJson = canonicalJson(draft.sourcePayload ?? {
       ...normalized,
       lines: normalized.lines,
@@ -892,6 +894,7 @@ export class SalesIngestionService {
 
   private async policy(record: SalesEventRecord) {
     const event = record.event;
+    if (event.eventType === 'cancellation' && event.lines.length === 0) return {held: ['deleted_order_detail_unavailable'] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt:event.occurredAt};
     const previous = (await this.store.latestAppliedConsumption(event.companyId, record.lineageKey, event.external.revision))?.event ?? null;
     const confirmed = await this.store.occurrenceConfirmation(event.companyId, event.external.eventIdempotencyKey);
     if (event.timeQuality === 'inferred' && !confirmed) return {held: ['ambiguous_occurrence_time'] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt:event.occurredAt};

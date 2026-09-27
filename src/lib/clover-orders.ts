@@ -14,16 +14,10 @@ function timestamp(value:number|undefined,label:string){
  return new Date(value).toISOString();
 }
 
-export function normalizeCloverOrder(order:CloverOrder,startedAt:number):SalesEventDraftV1|null{
- if(!order||typeof order.id!=='string'||!order.id||!Number.isSafeInteger(order.modifiedTime)||order.modifiedTime<=0||!Number.isSafeInteger(order.createdTime)||order.createdTime<=0)throw new Error('Clover order identity or revision is invalid.');
- if(order.createdTime<startedAt)return null;
- const paymentState=order.paymentState?.toUpperCase()||'OPEN';
- const paid=paymentState==='PAID';
- const refunded=paymentState==='REFUNDED'||paymentState==='PARTIALLY_REFUNDED';
- const canceled=Boolean(order.deletedTime)||order.state?.toUpperCase()==='CANCELED';
- if(!paid&&!refunded&&!canceled)return null;
+function orderLines(order:CloverOrder,allowMissing=false):SalesEventDraftV1['lines']{
+ if(allowMissing&&order.lineItems===undefined)return [];
  if(!order.lineItems||!Array.isArray(order.lineItems.elements)||order.lineItems.elements.length>=100)throw new Error('Clover order lines are incomplete or too large.');
- const lines=order.lineItems.elements.map(line=>{
+ return order.lineItems.elements.map(line=>{
   if(!line.id||!line.item?.id||line.unitQty!=null&&line.unitQty!==1000)throw new Error('Clover line item identity or quantity needs review.');
   const modifications=line.modifications?.elements??[];
   if(!Array.isArray(modifications)||modifications.length>=100)throw new Error('Clover modifiers are incomplete or too large.');
@@ -32,6 +26,17 @@ export function normalizeCloverOrder(order:CloverOrder,startedAt:number):SalesEv
    return {externalModifierLineId:mod.id,externalModifierId:mod.modifier.id,quantity:'1'};
   })};
  });
+}
+
+export function normalizeCloverOrder(order:CloverOrder,startedAt:number):SalesEventDraftV1|null{
+ if(!order||typeof order.id!=='string'||!order.id||!Number.isSafeInteger(order.modifiedTime)||order.modifiedTime<=0||!Number.isSafeInteger(order.createdTime)||order.createdTime<=0)throw new Error('Clover order identity or revision is invalid.');
+ if(order.createdTime<startedAt)return null;
+ const paymentState=order.paymentState?.toUpperCase()||'OPEN';
+ const paid=paymentState==='PAID';
+ const refunded=paymentState==='REFUNDED'||paymentState==='PARTIALLY_REFUNDED';
+ const canceled=Boolean(order.deletedTime)||order.state?.toUpperCase()==='CANCELED';
+ if(!paid&&!refunded&&!canceled)return null;
+ const lines=orderLines(order);
  const paymentTimes=order.payments?.elements?.map(value=>value.createdTime??value.clientCreatedTime).filter((value):value is number=>typeof value==='number')??[];
  const hasPaymentTime=!paid||paymentTimes.length>0;
  const occurredAt=paid&&hasPaymentTime?timestamp(Math.max(...paymentTimes),'payment time'):timestamp(order.modifiedTime,'modification time');
@@ -39,6 +44,16 @@ export function normalizeCloverOrder(order:CloverOrder,startedAt:number):SalesEv
  const draft:SalesEventDraftV1={schemaVersion:SALES_EVENT_CONTRACT,externalEventId:`${order.id}:${order.modifiedTime}`,externalOrderId:order.id,revision:order.modifiedTime,eventType,orderStatus:refunded?(paymentState==='REFUNDED'?'refunded':'partially_refunded'):canceled?'canceled':'completed',preparationStatus:paid?'fulfilled':canceled?'not_started':'unknown',occurredAt,timeQuality:hasPaymentTime?'provider':'inferred',lines};
  // Hash only the consumption-relevant projection. Never retain Clover's customer,
  // note, tender, or payment objects in the sales event store.
+ draft.sourcePayload={...draft};
+ return draft;
+}
+
+// This projection is valid only for an order returned by Clover's deletedTime
+// filter. The list can omit deletedTime and lineItems while detail GET is 404.
+export function normalizeCloverDeletedOrder(order:CloverOrder,startedAt:number):SalesEventDraftV1|null{
+ if(!order||typeof order.id!=='string'||!order.id||!Number.isSafeInteger(order.modifiedTime)||order.modifiedTime<=0||!Number.isSafeInteger(order.createdTime)||order.createdTime<=0)throw new Error('Clover deleted order identity or revision is invalid.');
+ if(order.createdTime<startedAt)return null;
+ const draft:SalesEventDraftV1={schemaVersion:SALES_EVENT_CONTRACT,externalEventId:`${order.id}:${order.modifiedTime}`,externalOrderId:order.id,revision:order.modifiedTime,eventType:'cancellation',orderStatus:'canceled',preparationStatus:'unknown',occurredAt:timestamp(order.modifiedTime,'deletion modification time'),timeQuality:'provider',lines:orderLines(order,true)};
  draft.sourcePayload={...draft};
  return draft;
 }

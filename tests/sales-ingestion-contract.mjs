@@ -182,6 +182,43 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  for(const [context,code] of authCases){const h=harness();await thrownCode(()=>h.service.receive(context,baseDraft()),code);assert.equal(h.store.snapshot().events.length,0);}
 }
 
+// A deleted Clover order with missing detail is held without stock use. The
+// empty-line exception remains limited to an authenticated native Clover source.
+{
+ const cloverSource={...source,provider:'clover'};
+ const cloverMachine={...machine,source:cloverSource};
+ const cloverContext={companyId:'company-a',source:cloverSource,actor:cloverMachine};
+ const tombstone=baseDraft({externalEventId:'deleted-v1',externalOrderId:'deleted-order',eventType:'cancellation',orderStatus:'canceled',preparationStatus:'unknown',lines:[]});
+ for(const [context,draft,code] of [
+  [nativeContext(),tombstone,'invalid_lines'],
+  [manualContext(),tombstone,'invalid_lines'],
+  [cloverContext,baseDraft({lines:[]}), 'invalid_lines'],
+  [cloverContext,{...tombstone,preparationStatus:'not_started'},'invalid_lines'],
+  [{...cloverContext,actor:null},tombstone,'unauthenticated'],
+  [{...cloverContext,actor:{...cloverMachine,companyId:'company-b'}},tombstone,'wrong_company'],
+  [{...cloverContext,actor:{...cloverMachine,source}},tombstone,'source_mismatch'],
+  [{...cloverContext,actor:owner},tombstone,'source_mismatch'],
+ ]){
+  const h=harness();
+  await thrownCode(()=>h.service.receive(context,draft),code);
+  assert.equal(h.store.snapshot().events.length,0);
+ }
+ const h=harness(),before=h.inventory.getBalance('company-a','milk');
+ const receipt=await h.service.receive(cloverContext,tombstone);
+ assert.equal(receipt.kind,'created');
+ const result=await h.service.process('company-a',receipt.eventKey);
+ assert.equal(result.state,'held');
+ assert.deepEqual(lastAttempt(h.store).heldReasons,['deleted_order_detail_unavailable']);
+ assert.deepEqual(h.inventory.getBalance('company-a','milk'),before);
+ assert.equal((await h.service.receive(cloverContext,tombstone)).kind,'duplicate');
+ assert.equal(h.store.snapshot().events.length,1);
+ const expanded=harness(),expandedBefore=expanded.inventory.getBalance('company-a','milk');
+ const expandedReceipt=await expanded.service.receive(cloverContext,{...tombstone,lines:baseDraft().lines});
+ assert.equal((await expanded.service.process('company-a',expandedReceipt.eventKey)).state,'held');
+ assert.deepEqual(lastAttempt(expanded.store).heldReasons,['ambiguous_preparation']);
+ assert.deepEqual(expanded.inventory.getBalance('company-a','milk'),expandedBefore);
+}
+
 // Normal application sends only mapped A2 fields and preserves selected versions and changes.
 {
  const h=harness();

@@ -84,7 +84,7 @@ function validPersistedEvent(event: SalesEventV1) {
       !['not_started','prepared','fulfilled','unknown'].includes(event.preparationStatus) ||
       !['provider','confirmed','inferred'].includes(event.timeQuality) ||
       !timestamp(event.occurredAt) || !timestamp(event.receivedAt) ||
-      !Array.isArray(event.lines) || event.lines.length < 1 || !event.integrity ||
+      !Array.isArray(event.lines) || (event.lines.length < 1 && !(event.source.kind === 'native' && event.source.provider === 'clover' && event.eventType === 'cancellation' && event.orderStatus === 'canceled' && event.preparationStatus === 'unknown')) || !event.integrity ||
       !text(event.integrity.sourcePayloadSha256) || event.integrity.payloadExpiresAt !== null || event.integrity.normalizedContractVersion !== SALES_EVENT_CONTRACT) return false;
   const lineIds = new Set<string>();
   for (const line of event.lines) {

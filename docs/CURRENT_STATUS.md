@@ -188,10 +188,12 @@ supplier credentials, or payment details into chat or source control.
    owner-reported revoked and both Worker gates are off. A later fictional
    unpaid-cancellation attempt created and deleted one $5 latte with zero
    payments and no ingredient use. Clover retained its ID in a deleted-order
-   list but returned `404` for order detail, while Pantrack's modified-time
-   scan recorded no cancellation event. That case remains pending an adapter
-   fix; both gates are off. Native Clover retry behavior and the other B7
-   provider cases remain open. Concurrent
+   list but returned `404` for order detail, exposing an adapter gap. A focused
+   deletion-list scan then reconciled that already deleted order as one held
+   cancellation. Owner review dismissed it with an audit reason and no stock
+   use: D1 now has 5 sales events, 4 consumption applications, and unchanged
+   milk, espresso, and cup balances. Both gates are off. Native Clover retry
+   behavior and the other B7 provider cases remain open. Concurrent
    local-only A7 migrations were moved to
    `0016` and `0017` in the merge; development D1 remains at `0015` until A7's
    separate remote gate is authorized.
@@ -214,7 +216,7 @@ behavior.
 | M2 — authentication and RBAC | C1/M2 accepted by owner and C2 evidence closed for development; replacement Cloudflare build remains owner-attested | The [C2 closeout](C2_M2_CLOSEOUT.md) records the reported review, local pipeline and read-only Worker smoke. Hosted signup/recovery callbacks and independent security verification remain release follow-ups. |
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
-| M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; base latte, mapped extra-shot, unmapped-modifier/replay, and simulated duplicate/polling cases passed; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records four paid latte deductions, one held sale with zero partial use and an audited recovery replay, and the simulated duplicate and owner poll. An unpaid cancellation was safely deleted with zero use, but Clover's deletion tombstone did not reach Pantrack, so that case remains pending. Sync remains off. |
+| M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; base latte, mapped extra-shot, unmapped-modifier/replay, simulated duplicate/polling, and unpaid deletion reconciliation passed; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records four paid latte deductions, one held sale with zero partial use and an audited recovery replay, the simulated duplicate and owner poll, and an already deleted unpaid order reconciled as a held cancellation then dismissed without stock use. Sync remains off. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | A6 core and A7 lifecycle/handoff complete locally; C4's fake consumer and one A8 local sale-to-proposal integration test passed; M7 not accepted | A8 still needs accepted M5 inputs, a real sales-readiness source, and further concurrency and end-to-end proposal evidence. Development D1 has not applied the A7 origin/lifecycle migrations. See [A6 local evidence](M7_A6_LOCAL_EVIDENCE.md), [A7 lifecycle evidence](M7_A7_LIFECYCLE_EVIDENCE.md), [C4 contract evidence](C4_A7_HANDOFF_EVIDENCE.md), and [A8 local slice](M7_A8_LOCAL_SALE_PROPOSAL_EVIDENCE.md). |
 | M8 — supplier adapter | Not started | Select supplier, build approved integration, sandbox/timeout tests, incoming-stock and delivery reconciliation, then one approved low-risk test order. |

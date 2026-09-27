@@ -305,9 +305,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   needed because UI automation accidentally dismissed the held event. The
   temporary token was owner-reported revoked and both temporary Worker gates
   are off. A new fictional unpaid latte was deleted before payment with no
-  stock use, but Clover returned `404` for detail and Pantrack's modified-time
-  scan recorded no cancellation event; this case remains pending an adapter
-  fix. Native Clover retry behavior and the other provider cases remain open.
+  stock use. Clover returned `404` for detail, so a focused deletion-list scan
+  reconciled it as one held cancellation; owner review dismissed it with an
+  audit reason and zero stock use. Native Clover retry behavior and the other
+  provider cases remain open.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same
