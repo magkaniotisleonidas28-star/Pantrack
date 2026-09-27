@@ -243,7 +243,7 @@ mocked-provider checks do not establish their provider behavior.
 | Extra-shot modifier | Order `141JW0CZY9X76`; event `141JW0CZY9X76:1790391186000` | 200 mL milk, 36 g espresso, 1 cup | 200 mL milk, 36 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
 | Unmapped modifier and replay | Order `5XK8NJ9JW6NAW`; event `1b2accac56436a6f14bd62fb0e7d3674072657bcc27a0f023fe64b6fc5a572ed` | Zero while held; after mapping and replay, 200 mL milk, 36 g espresso, 1 cup once | Zero while held; then 200 mL milk, 36 g espresso, 1 cup once | Passed in sandbox after an accidental dismissal and audited owner recovery; see below |
 | Duplicate webhook and polling | Order `8092KSCCQ51TT`; event `8092KSCCQ51TT:1790444517000` | 200 mL milk, 18 g espresso, 1 cup once | 200 mL milk, 18 g espresso, 1 cup once | Passed for one locally constructed authenticated duplicate notification and one owner polling run; no native Clover retry was observed |
-| Unpaid cancellation | Pending | No use | Pending | Pending |
+| Unpaid cancellation | Order `DNY2CAPBYN098`; no Pantrack event | No use and one cancellation event | No use; no event | Pending: Clover's deleted-order list retains the ID, but detail GET returns `404` and the current modified-time sync misses it |
 | Refund and paid cancellation | Pending | No automatic restock | Pending | Pending |
 | Later paid revision | Pending | Positive incremental use once | Pending | Pending |
 | Access-token refresh | Pending | Sync continues after rotation | Pending | Pending |
@@ -525,6 +525,50 @@ mocked-provider checks do not establish their provider behavior.
   marker, and result file were deleted after this non-secret evidence was
   recorded. B7 remains open for native retry,
   refund/cancellation, token refresh, disconnect, and missed-event recovery.
+
+### Unpaid cancellation blocked at Clover deletion tombstone (2026-09-27 UTC)
+
+- This one-case B7 attempt used a new fictional $5 latte order in the dedicated
+  merchant `4ZJYT1HV8X6Y1`. The first temporary token was mistakenly created
+  for a different sandbox merchant and its first merchant GET returned `401`;
+  no order was attempted with it. The owner reported revoking that token and
+  created the replacement under the correct B7 merchant. Both values stayed
+  in hidden local Terminal input and out of source control.
+- Before the order, development D1 showed **4 sales events, 4 consumption
+  applications, and 12 `sale_consumption` stock events**. Balances were
+  **14,341.647136 mL milk, 2,159.96185 g espresso, and 996 cups**. Both
+  temporary Worker gates were absent. The guarded runner checked the B7
+  merchant and $5 latte item before the owner entered the one-order creation
+  phrase. It created Clover order `DNY2CAPBYN098` with latte line
+  `7WDQ9N2CM4SPG`; an expanded read verified total 500 cents, payment state
+  `OPEN`, exactly one latte line, and **zero payments**. Pantrack still had no
+  event for the open order.
+- After both development gates were briefly enabled, the runner rechecked
+  that same unpaid order and sent **one** Clover order DELETE. Clover returned
+  success at `2026-09-27T03:05:51.417Z`. A subsequent expanded detail GET
+  returned `404`. The development Worker performed a sync attempt at
+  `2026-09-27T03:05:52.174Z` and reported success at
+  `2026-09-27T03:05:53.245Z`, but recorded **no event** for this order.
+- With sync off, a separate read-only Clover check found both expanded and
+  plain detail GETs returned `404`. A recent `modifiedTime` order list returned
+  zero entries; a recent `deletedTime` order list returned one entry for this
+  order, but its inspected projection had `state=OPEN`, `paymentState=OPEN`,
+  and no `deletedTime` value. The current Pantrack adapter scans
+  `modifiedTime` and then requires a successful detail GET, so it cannot
+  ingest this deletion. This is direct provider evidence of an adapter gap,
+  **not** a passing unpaid-cancellation case.
+- D1 remained at **4 sales events, 4 applications, and 12 sale-consumption
+  movements**; the milk, espresso, and cup balances were unchanged. Both
+  temporary Worker secrets were deleted and a secret-name check confirmed
+  them absent while `CLOVER_WEBHOOK_AUTH_CODE` remained present. No payment,
+  production change, migration, supplier action, or purchase occurred. The
+  owner reported revoking the correct-merchant temporary token; no
+  independent token-list check was made. The temporary runner, marker,
+  result, and read-only diagnostic files were deleted. Before repeating an
+  unpaid cancellation, a focused adapter change must reconcile Clover deletion
+  tombstones without inventing a sale or silently advancing past a
+  cancellation; the resulting event and zero-use policy then need fresh
+  sandbox evidence.
 
 ## Gate and recovery
 
