@@ -123,6 +123,17 @@ const managerSales=await(await call('sales/events','GET',null,cookies.manager)).
 assert.equal(managerSales.events[0].externalReference,privateReference,'Managers retain sale references for review.');
 assert.equal(managerSales.corrections[0].reason,privateReason,'Managers retain correction reasons for review.');
 assert.equal(managerSales.conflicts[0].reason,privateReason,'Managers retain conflict reasons for review.');
+sql.prepare("UPDATE sales_event_states SET state='dismissed' WHERE company_id='company-a' AND event_key=?").run(exactEventKey);
+const dismissedReplay={companyId:'company-a',action:'replay',eventKey:exactEventKey,reason:'Owner reviewed dismissal'};
+assert.equal((await call('sales/events','POST',dismissedReplay)).status,401,'Anonymous users cannot replay dismissed events.');
+assert.equal((await call('sales/events','POST',dismissedReplay,cookies.other)).status,403,'Other companies cannot replay dismissed events.');
+assert.equal((await call('sales/events','POST',dismissedReplay,cookies.employee)).status,403,'Employees cannot replay dismissed events.');
+const managerDismissedReplay=await call('sales/events','POST',dismissedReplay,cookies.manager);
+assert.equal(managerDismissedReplay.status,403,await managerDismissedReplay.clone().text());
+const ownerDismissedReplay=await call('sales/events','POST',dismissedReplay,cookies.owner);
+assert.equal(ownerDismissedReplay.status,200,await ownerDismissedReplay.clone().text());
+assert.equal(sql.prepare("SELECT state FROM sales_event_states WHERE company_id='company-a' AND event_key=?").get(exactEventKey).state,'applied','Owner replay resolves the event.');
+assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor,'9000000','Replaying a previously applied idempotency key does not deduct stock twice.');
 assert.equal((await call('sales','POST',{companyId:'company-a',action:'import',reference:'missing-confirmed-time',lines:[{recipeId:crypto.randomUUID(),quantity:1}]},cookies.manager)).status,400,'Exact sales imports require a manager-confirmed occurrence time.');
 delete globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW;
 assert.deepEqual((await(await call('workspace','GET',null,cookies.employee)).json()).orders,[]);

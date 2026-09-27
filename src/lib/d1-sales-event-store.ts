@@ -300,9 +300,10 @@ export class D1SalesEventStore implements SalesEventStore {
     if (changes(result) !== 1) throw new SalesIngestionError('invalid_state', `Expected ${from} state.`);
   }
 
-  async resolve(companyId: string, eventKey: string, from: 'failed' | 'held', to: 'received' | 'dismissed', resolution: SalesResolution, audit: SalesAuditEntry) {
+  async resolve(companyId: string, eventKey: string, from: 'failed' | 'held' | 'dismissed', to: 'received' | 'dismissed', resolution: SalesResolution, audit: SalesAuditEntry) {
     const allowed = (from === 'failed' && to === 'received' && resolution.kind === 'retry' && audit.action === 'retry') ||
       (from === 'held' && to === 'received' && resolution.kind === 'replay' && audit.action === 'replay') ||
+      (from === 'dismissed' && to === 'received' && resolution.kind === 'replay' && audit.action === 'replay') ||
       (from === 'held' && to === 'dismissed' && resolution.kind === 'dismiss' && audit.action === 'dismiss');
     if (!allowed || resolution.eventKey !== eventKey || audit.eventKey !== eventKey || resolution.at !== audit.at) throw new SalesIngestionError('invalid_state', 'Resolution linkage is invalid.');
     const results = await this.db.batch([

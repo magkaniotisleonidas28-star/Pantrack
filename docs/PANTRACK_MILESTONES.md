@@ -296,13 +296,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   A base latte, an extra-shot latte, and a third base latte each deducted the
   expected milk, espresso, and cup once. One authenticated locally constructed
   repeat notification and an owner reconciliation poll caused no additional
-  use. A fictional unmapped modifier was added, but Clover rejected three
-  earlier guarded atomic-order create attempts with `400`. A fourth follow-up
-  also returned `400` before payment, with no new Pantrack event or stock use.
-  The owner reported no new $6 Clover order and revocation of the latest
-  temporary token. The held-event/replay case remains open and the temporary
-  sync gate is off. Native Clover retry behavior and the other provider cases
-  remain open.
+  use. A later $6 fictional latte with an unmapped modifier held with no
+  ingredient use. After reviewed mapping and an audited owner recovery replay,
+  it deducted 200 mL milk, 36 g espresso, and one cup once. The recovery was
+  needed because UI automation accidentally dismissed the held event. The
+  temporary token was owner-reported revoked and both temporary Worker gates
+  are off. Native Clover retry behavior and the other provider cases remain
+  open.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same

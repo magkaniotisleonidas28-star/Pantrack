@@ -259,7 +259,7 @@ export interface SalesEventStore {
   claim(companyId: string, eventKey: string, attempt: SalesAttempt, at: string): Promise<boolean>;
   completeAttempt(companyId: string, attempt: SalesAttempt, to: 'applied' | 'held' | 'failed', at: string, reason?: string): Promise<void>;
   transition(companyId: string, eventKey: string, from: SalesEventState, to: SalesEventState, at: string, reason?: string, linkedEventKey?: string): Promise<void>;
-  resolve(companyId: string, eventKey: string, from: 'failed' | 'held', to: 'received' | 'dismissed', resolution: SalesResolution, audit: SalesAuditEntry): Promise<void>;
+  resolve(companyId: string, eventKey: string, from: 'failed' | 'held' | 'dismissed', to: 'received' | 'dismissed', resolution: SalesResolution, audit: SalesAuditEntry): Promise<void>;
   appendResolution(companyId: string, value: SalesResolution): Promise<void>;
   appendAudit(companyId: string, value: SalesAuditEntry): Promise<void>;
   appendCorrection(companyId: string, value: SalesCorrectionRequest, audit: SalesAuditEntry): Promise<void>;
@@ -678,9 +678,10 @@ export class InMemorySalesEventStore implements SalesEventStore {
     this.transitionRecord(eventKey, from, to, at, reason, linkedEventKey);
   }
 
-  async resolve(companyId: string, eventKey: string, from: 'failed' | 'held', to: 'received' | 'dismissed', resolution: SalesResolution, audit: SalesAuditEntry) {
+  async resolve(companyId: string, eventKey: string, from: 'failed' | 'held' | 'dismissed', to: 'received' | 'dismissed', resolution: SalesResolution, audit: SalesAuditEntry) {
     const allowed = (from === 'failed' && to === 'received' && resolution.kind === 'retry' && audit.action === 'retry') ||
       (from === 'held' && to === 'received' && resolution.kind === 'replay' && audit.action === 'replay') ||
+      (from === 'dismissed' && to === 'received' && resolution.kind === 'replay' && audit.action === 'replay') ||
       (from === 'held' && to === 'dismissed' && resolution.kind === 'dismiss' && audit.action === 'dismiss');
     if (!allowed || resolution.eventKey !== eventKey || audit.eventKey !== eventKey || resolution.at !== audit.at || this.stateFor(companyId, eventKey) !== from) throw new SalesIngestionError('invalid_state', `Expected ${from} state.`);
     this.transitionRecord(eventKey, from, to, resolution.at, resolution.reason);
@@ -1001,12 +1002,14 @@ export class SalesIngestionService {
   async replay(companyId: string, eventKey: string, actor: SalesActor | null, reason: string) {
     const record = await this.requiredEvent(companyId, eventKey);
     const identity = assertOperator(actor, record.event.companyId);
-    if (await this.store.state(companyId, eventKey) !== 'held') throw new SalesIngestionError('invalid_state', 'Only held events may be replayed.');
+    const state = await this.store.state(companyId, eventKey);
+    if (state !== 'held' && state !== 'dismissed') throw new SalesIngestionError('invalid_state', 'Only held or dismissed events may be replayed.');
+    if (state === 'dismissed' && (actor?.kind !== 'user' || actor.role !== 'owner')) throw new SalesIngestionError('forbidden_role', 'Only a company owner may replay a dismissed event.');
     const clean = reason.trim();
     if (!clean) throw new SalesIngestionError('reason_required', 'Replay reason is required.');
     const at = this.now();
     await this.store.resolve(
-      companyId,eventKey,'held','received',
+      companyId,eventKey,state,'received',
       {resolutionId: this.idFactory(), eventKey, kind: 'replay', actor: identity, reason: clean, at},
       {auditId: this.idFactory(), eventKey, action: 'replay', actor: identity, at, reason: clean},
     );

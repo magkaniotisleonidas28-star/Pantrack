@@ -379,6 +379,11 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  // The immutable time-quality fact remains inferred, so replay safely holds again.
  await h.service.process('company-a',held.eventKey);assert.equal(await h.store.state('company-a',held.eventKey),'held');assert.equal(h.store.snapshot().attempts.length,2);
  await h.service.dismiss('company-a',held.eventKey,owner,'Cannot establish occurrence time');assert.equal(await h.store.state('company-a',held.eventKey),'dismissed');
+ for(const actor of [null,employee,outsider,machine,manager])await assert.rejects(()=>h.service.replay('company-a',held.eventKey,actor,'Reopen reviewed dismissal'),error=>['unauthenticated','forbidden_role','wrong_company'].includes(error.code));
+ await assert.rejects(()=>h.service.replay('company-a',held.eventKey,owner,' '),error=>error.code==='reason_required');
+ await h.service.replay('company-a',held.eventKey,owner,'Reopen reviewed dismissal');assert.equal(await h.store.state('company-a',held.eventKey),'received');
+ await assert.rejects(()=>h.service.replay('company-a',held.eventKey,owner,'Again'),error=>error.code==='invalid_state');
+ assert.ok(h.store.snapshot().transitions.some(value=>value.eventKey===held.eventKey&&value.from==='dismissed'&&value.to==='received'));
 
  const confirmable=await h.service.receive(nativeContext(),baseDraft({externalEventId:'confirmable',externalOrderId:'confirmable',timeQuality:'inferred'}));await h.service.process('company-a',confirmable.eventKey);
  for(const actor of [null,employee,outsider,machine])await assert.rejects(()=>h.service.confirmOccurrence('company-a',confirmable.eventKey,actor,'2026-02-15T17:00:00Z','Register close reviewed'),error=>['unauthenticated','forbidden_role','wrong_company'].includes(error.code));
@@ -392,6 +397,22 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  assert.deepEqual(await h.service.readStatus('company-a',applied.eventKey,employee),{eventKey:applied.eventKey,companyId:'company-a',state:'applied',eventType:'sale',orderStatus:'completed',preparationStatus:'prepared',occurredAt:'2026-02-15T17:00:00.000Z',receivedAt:'2026-03-01T00:00:00.000Z',revision:1});
  await assert.rejects(()=>h.service.readStatus('company-a',applied.eventKey,outsider),error=>error.code==='wrong_company');await assert.rejects(()=>h.service.readStatus('company-a',applied.eventKey,machine),error=>error.code==='wrong_company');
  assert.ok(!JSON.stringify(await h.service.readStatus('company-a',applied.eventKey,employee)).includes('latte-item'));
+}
+{
+ const h=harness();
+ const draft=baseDraft({externalEventId:'dismissed-unmapped',externalOrderId:'dismissed-unmapped',lines:[{externalLineId:'line-1',externalItemId:'latte-item',externalVariationId:'large',quantity:'1',modifiers:[{externalModifierLineId:'modifier-line-1',externalModifierId:'new-shot',quantity:'1'}]}]});
+ const receipt=await h.service.receive(nativeContext(),draft);
+ await h.service.process('company-a',receipt.eventKey);
+ assert.equal(await h.store.state('company-a',receipt.eventKey),'held');
+ const before=h.inventory.getBalance('company-a','milk').onHandMinor;
+ await h.service.dismiss('company-a',receipt.eventKey,owner,'Accidental dismissal');
+ h.mappings.setModifier({companyId:'company-a',provider:'test-pos',externalItemId:'latte-item',externalVariationId:'large',recipeId:'latte',externalModifierId:'new-shot',modifierId:'extra-shot'});
+ await h.service.replay('company-a',receipt.eventKey,owner,'Mapping reviewed after accidental dismissal');
+ await h.service.process('company-a',receipt.eventKey);
+ assert.equal(await h.store.state('company-a',receipt.eventKey),'applied');
+ assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,String(BigInt(before)-11_000_000n));
+ await assert.rejects(()=>h.service.replay('company-a',receipt.eventKey,owner,'Again'),error=>error.code==='invalid_state');
+ assert.equal(h.store.snapshot().attempts.filter(value=>value.eventKey===receipt.eventKey&&value.outcome==='applied').length,1);
 }
 
 // Crash after A2 application: lease expiry never assumes success; explicit retry reuses the A2 key and gets replayed.

@@ -58,7 +58,7 @@ async function handlePOST(req:Request){
   return Response.json({ok:true,correction:await corrections.apply(body.companyId,body.correctionId,correctionActor,body.items)});
  }catch(error){
   if(error instanceof z.ZodError)return Response.json({error:'Check the requested sales action and required fields.'},{status:400});
-  if(error instanceof SalesIngestionError){const status=error.code==='not_found'?404:['invalid_state','claim_conflict','stale_inventory'].includes(error.code)?409:400;return Response.json({error:error.message,code:error.code},{status});}
+  if(error instanceof SalesIngestionError){const status=error.code==='unauthenticated'?401:['forbidden_role','wrong_company'].includes(error.code)?403:error.code==='not_found'?404:['invalid_state','claim_conflict','stale_inventory'].includes(error.code)?409:400;return Response.json({error:error.message,code:error.code},{status});}
   return Response.json({error:'Could not update the sales event.'},{status:503});
  }
 }

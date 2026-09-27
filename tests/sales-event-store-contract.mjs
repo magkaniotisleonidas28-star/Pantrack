@@ -134,6 +134,13 @@ async function exercise(name,store){
   {resolutionId:`dismiss-${name}`,eventKey:held.eventKey,kind:'dismiss',actor,reason:'Cannot map item',at:'2026-01-01T00:05:00.000Z'},
   {auditId:`dismiss-audit-${name}`,eventKey:held.eventKey,action:'dismiss',actor,reason:'Cannot map item',at:'2026-01-01T00:05:00.000Z'});
  assert.equal(await store.state('company-a',held.eventKey),'dismissed',`${name}: held replay and dismissal history`);
+ await store.resolve('company-a',held.eventKey,'dismissed','received',
+  {resolutionId:`restore-${name}`,eventKey:held.eventKey,kind:'replay',actor,reason:'Owner reviewed accidental dismissal',at:'2026-01-01T00:06:00.000Z'},
+  {auditId:`restore-audit-${name}`,eventKey:held.eventKey,action:'replay',actor,reason:'Owner reviewed accidental dismissal',at:'2026-01-01T00:06:00.000Z'});
+ assert.equal(await store.state('company-a',held.eventKey),'received',`${name}: dismissed event replay is auditable`);
+ await assert.rejects(()=>store.resolve('company-a',held.eventKey,'dismissed','received',
+  {resolutionId:`restore-again-${name}`,eventKey:held.eventKey,kind:'replay',actor,reason:'Again',at:'2026-01-01T00:07:00.000Z'},
+  {auditId:`restore-again-audit-${name}`,eventKey:held.eventKey,action:'replay',actor,reason:'Again',at:'2026-01-01T00:07:00.000Z'}),error=>error.code==='invalid_state',`${name}: dismissed replay is single-transition`);
 
  const lease=await store.receive('company-a',record({eventKey:'lease',lineageKey:'lease-lineage',hash:'lease',externalEventId:'lease',externalOrderId:'lease-order'}),actor,at);
  const leaseAttempt={attemptId:`lease-${name}`,eventKey:lease.eventKey,startedAt:at,leaseExpiresAt:'2026-01-01T00:05:00.000Z'};

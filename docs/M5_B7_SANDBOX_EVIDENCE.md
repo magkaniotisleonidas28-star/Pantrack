@@ -2,7 +2,7 @@
 
 **Target:** fictional Clover sandbox merchant connected to a dedicated fictional
 company on the `pantrack-dev` Worker. No production merchant, real customer,
-supplier, payment, or purchase is in scope. M5 remains open until the provider
+real payment, supplier, or purchase is in scope. M5 remains open until the provider
 cases below have direct evidence.
 
 ## Hosted preparation
@@ -233,15 +233,15 @@ handoff.
 
 ## Clover provider cases
 
-The normal paid latte and extra-shot modifier cases have direct sandbox
-evidence. The other cases remain pending; local mocked-provider checks do not
-establish their provider behavior.
+The normal paid latte, mapped extra-shot, and unmapped-modifier/replay cases
+have direct sandbox evidence. The other cases remain pending; local
+mocked-provider checks do not establish their provider behavior.
 
 | Case | Clover order/event ID | Expected ingredient use | Actual ingredient use | Result and resolution |
 | --- | --- | --- | --- | --- |
 | Paid latte sale | Order `ABBD68VDTWENM`; event `ABBD68VDTWENM:1790389081000` | 200 mL milk, 18 g espresso, 1 cup | 200 mL milk, 18 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
 | Extra-shot modifier | Order `141JW0CZY9X76`; event `141JW0CZY9X76:1790391186000` | 200 mL milk, 36 g espresso, 1 cup | 200 mL milk, 36 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
-| Unmapped modifier and replay | Pending | No use until reviewed mapping and replay | Pending | Pending |
+| Unmapped modifier and replay | Order `5XK8NJ9JW6NAW`; event `1b2accac56436a6f14bd62fb0e7d3674072657bcc27a0f023fe64b6fc5a572ed` | Zero while held; after mapping and replay, 200 mL milk, 36 g espresso, 1 cup once | Zero while held; then 200 mL milk, 36 g espresso, 1 cup once | Passed in sandbox after an accidental dismissal and audited owner recovery; see below |
 | Duplicate webhook and polling | Order `8092KSCCQ51TT`; event `8092KSCCQ51TT:1790444517000` | 200 mL milk, 18 g espresso, 1 cup once | 200 mL milk, 18 g espresso, 1 cup once | Passed for one locally constructed authenticated duplicate notification and one owner polling run; no native Clover retry was observed |
 | Unpaid cancellation | Pending | No use | Pending | Pending |
 | Refund and paid cancellation | Pending | No automatic restock | Pending | Pending |
@@ -465,11 +465,72 @@ establish their provider behavior.
   runner, window marker, and result file were removed after recording this
   non-secret evidence.
 
+### Paid unmapped-modifier sale, hold, and audited replay (2026-09-27 UTC)
+
+- The owner created the temporary **Pantrack B7 modifier atomic fix** token for
+  this fictional merchant and entered it only into a hidden local Terminal
+  prompt. An atomic checkout preview with Clover's documented create shape
+  omitted the modifier and returned $5, so the runner stopped before creating
+  anything. A guarded $6 preview with the known nested modifier shape then
+  passed. The owner entered `PAY ONE B7 UNMAPPED LATTE`; the runner waited for
+  the development sync window before creating an order.
+- With both temporary Worker gates briefly enabled, the runner used Clover's
+  custom-order sequence: create one open order, add the known latte inventory
+  item, apply modifier `DTAG1KQEQ6WHP`, update the total to 600 cents, verify
+  the returned item/modifier/price, and record one sandbox cash payment. Clover
+  returned order `5XK8NJ9JW6NAW`, line `ABV1XGMSRP6NC`, modification
+  `GMYKBTH3W87PP`, and paid payment `TT5FQTCB8M36T`. The sync gate was deleted
+  immediately after the held event was confirmed; no real card or customer
+  details were used. The observed D1 event receipt followed the paid order by
+  about three seconds, but no Worker tail captured this request, so its native
+  webhook route and body are not independently proved here.
+- Before this sale, the B7 company had 3 sales events, 3 consumption
+  applications, and 9 `sale_consumption` stock events. Balances were
+  14,541.647136 mL milk, 2,195.96185 g espresso, and 997 cups. The new event
+  `1b2accac56436a6f14bd62fb0e7d3674072657bcc27a0f023fe64b6fc5a572ed`
+  contained one latte and the new Clover modifier. It transitioned through
+  received and processing to **held** with `unknown_modifier` at
+  `2026-09-27T01:46:35.868Z`. D1 then had 4 sales events but still only 3
+  applications and 9 consumption stock events. All three balances were
+  unchanged: **zero partial deduction**.
+- In the dedicated B7 company, the owner mapped the new Clover modifier to
+  existing Pantrack modifier lineage `6ae3d2f6-2a92-47c1-a9ad-8b52cb64bc62`,
+  which adds 18 g espresso. A read-only D1 check confirmed the active mapping.
+  During UI automation, I clicked a flattened table cell intending **Replay**;
+  it activated **Dismiss** instead at `2026-09-27T01:51:03.940Z`. I reported
+  the mistake immediately. D1 showed a dismissed event and still no new stock
+  use. The audit retains this transition and its reason.
+- A focused code change added an owner-only, reason-required replay control
+  for dismissed events, with the same atomic state transition and audit trail
+  as held-event replay. Anonymous, other-company, employee, and manager
+  requests are denied. The complete local pipeline passed before development
+  deployment. The deployed Worker version was
+  `8bf21843-f119-4ba3-8f08-180b14727134`. The owner control replayed this
+  one dismissed event at `2026-09-27T01:59:16.532Z` using a reason that names
+  the accidental dismissal and reviewed mapping; D1 then recorded processing
+  and **applied** with `inventory_applied` at
+  `2026-09-27T01:59:16.883Z`.
+- After replay, D1 had 4 sales events, **4 consumption applications**, and
+  **12 sale-consumption stock events**. This event had exactly one application
+  (key `5ab69310e74ef58f681313c53614a1bb436a1857c7ea5b3e78b7bc874a393b00`)
+  and three stock movements: **-200 mL milk, -36 g espresso, -1 cup**. Balances
+  became 14,341.647136 mL milk, 2,159.96185 g espresso, and 996 cups. These
+  equal the $5 latte recipe plus one reviewed 18 g extra shot, exactly once.
+- The owner reported revoking the temporary Clover merchant token; no
+  independent token-list inspection was made. A Worker secret-name check
+  confirmed both `PANTRACK_CLOVER_SYNC_ENABLED` and
+  `PANTRACK_EXACT_INVENTORY_PREVIEW` absent, with
+  `CLOVER_WEBHOOK_AUTH_CODE` still present. No migration, production change,
+  supplier action, or purchase was made. The temporary local runner, window
+  marker, and result file were deleted after this non-secret evidence was
+  recorded. B7 remains open for native retry,
+  refund/cancellation, token refresh, disconnect, and missed-event recovery.
+
 ## Gate and recovery
 
 Keep `PANTRACK_CLOVER_SYNC_ENABLED` unset between explicitly authorized B7
-sandbox cases. It was removed after the duplicate-delivery validation and the
-rejected unmapped-modifier attempts. Any
+sandbox cases. It was removed after the duplicate-delivery validation, the
+rejected unmapped-modifier attempts, and the paid held-event replay. Any
 correction to the fictional stock fixture should use an auditable inventory
 action rather than deleting the accepted sale or consumption history. An app
 rollback does not undo additive migration `0013`; preserve the tables and use
