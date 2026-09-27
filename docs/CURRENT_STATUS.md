@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-25
+Updated: 2026-09-26
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -178,8 +178,11 @@ supplier credentials, or payment details into chat or source control.
    use. A separate unmapped-modifier attempt added a fictional Clover
    modifier but stopped before any sale: three atomic-order create requests
    returned `400`, with no new order, sales event, or stock use. The temporary
-   token was revoked and both temporary Worker gates are off; the held-event
-   and replay acceptance case remains open. Native Clover retry behavior and
+   token was revoked. A fourth guarded follow-up also returned `400` before
+   payment; development D1 showed no new sale or ingredient use. The owner
+   reported no new $6 Clover order and revocation of the follow-up token. Both
+   temporary Worker gates are off. The held-event and replay
+   acceptance case remains open. Native Clover retry behavior and
    the other B7 provider cases remain open. Concurrent
    local-only A7 migrations were moved to
    `0016` and `0017` in the merge; development D1 remains at `0015` until A7's

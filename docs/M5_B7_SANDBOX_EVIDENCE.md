@@ -434,6 +434,37 @@ establish their provider behavior.
   event with unchanged stock, mapping and one audited replay. No schema,
   Worker code, or production state was changed for this attempted case.
 
+### Guarded unmapped-modifier follow-up (2026-09-26)
+
+- The owner created a new temporary sandbox merchant token and entered it only
+  into a hidden local Terminal prompt. A new guarded runner confirmed the
+  merchant, enabled cash tender, available $1 unmapped modifier, latte group
+  assignment, and a non-creating atomic checkout for exactly one $6 latte.
+  The owner confirmed the one-sale phrase; the runner waited until the two
+  development Worker gates were set to the exact literal `enabled`.
+- The runner made one create request to Clover's atomic-order endpoint. Clover
+  returned HTTP `400` at `2026-09-27T01:34:40.113Z`. The runner recorded
+  `create_rejected` and attempted no payment. Clover returned a 68-byte body
+  marked JSON, but the runner could not parse it and retained no raw body or
+  credential; the precise rejection reason is still unknown. The local result
+  guard prevents another create attempt from the same runner.
+- Both temporary Worker gates were deleted immediately. A subsequent secret
+  name check found `PANTRACK_CLOVER_SYNC_ENABLED` and
+  `PANTRACK_EXACT_INVENTORY_PREVIEW` absent while
+  `CLOVER_WEBHOOK_AUTH_CODE` remained present. Read-only development D1 checks
+  still found **3 sales events, 3 consumption applications, and 9 exact sale
+  consumption stock events**. Milk, espresso, and cups remained at
+  **14,541.647136 mL**, **2,195.96185 g**, and **997**. No Pantrack sale was
+  ingested and no ingredient was deducted in this attempt.
+- The owner checked the fictional merchant's **Today** orders and reported no
+  new $6 order, then reported revoking the temporary **Pantrack B7
+  held-modifier follow-up** API token. These are owner-reported Clover checks;
+  no independent merchant API order-list or token-list check was performed.
+  The held-event and replay acceptance case remains open. No schema, Worker
+  code, or production state was changed in this follow-up. The temporary local
+  runner, window marker, and result file were removed after recording this
+  non-secret evidence.
+
 ## Gate and recovery
 
 Keep `PANTRACK_CLOVER_SYNC_ENABLED` unset between explicitly authorized B7

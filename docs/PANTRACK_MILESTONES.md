@@ -297,9 +297,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   expected milk, espresso, and cup once. One authenticated locally constructed
   repeat notification and an owner reconciliation poll caused no additional
   use. A fictional unmapped modifier was added, but Clover rejected three
-  guarded atomic-order create attempts with `400`; no order or stock use
-  resulted, so the held-event/replay case remains open. The temporary sync
-  gate is off. Native Clover retry behavior and the other provider cases
+  earlier guarded atomic-order create attempts with `400`. A fourth follow-up
+  also returned `400` before payment, with no new Pantrack event or stock use.
+  The owner reported no new $6 Clover order and revocation of the latest
+  temporary token. The held-event/replay case remains open and the temporary
+  sync gate is off. Native Clover retry behavior and the other provider cases
   remain open.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
