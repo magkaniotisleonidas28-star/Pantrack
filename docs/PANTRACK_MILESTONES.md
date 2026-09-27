@@ -325,12 +325,15 @@ For every numbered item, the assigned person follows the same delivery loop:
   provided. The user subsequently reported completing that review. The agent
   inspected the additive migration and auth flow and ran local checks, but
   this is not independent security or production acceptance.
-- [ ] **C2 — Record M2 evidence and unblock the team.** Run the complete checks,
+- [x] **C2 — Record M2 evidence and unblock the team.** Run the complete checks,
   document deployment limitations, and update current status only when every M2
   acceptance item has evidence. Notify A and B that M2's gate is open. The
   development D1 `0012` migration and fictional hosted Worker walkthrough are
-  [recorded](C2_HOSTED_DEV_EVIDENCE.md); the owner's reported M2 review still
-  needs a separate written record, so C2 remains open.
+  [recorded](C2_HOSTED_DEV_EVIDENCE.md). The
+  [C2 closeout](C2_M2_CLOSEOUT.md) records the owner's reported review, the
+  agent's migration/auth inspection, the complete local pipeline, and the
+  remaining hosted and production limits. M2 is open to A and B for development;
+  no production acceptance is claimed.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   ordering channel, account/location/SKUs/terms, scheduler/queue, notification
@@ -488,7 +491,7 @@ Implementation evidence: all six original suites, type checks, migration checks,
 
 **Objective:** Replace hosting-specific identity assumptions with secure authentication suitable for the chosen deployment platform.
 
-Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCAL_EVIDENCE.md). The implementation is on `main`, and hosted repository CI passes. The owner accepted the development Supabase walkthrough and directed C1/M2 to be treated as complete on 2026-09-23, including owner-attested acceptance of a replacement Cloudflare build. Its successful run/commit and a separate owner authentication/migration review record are unavailable; see [development auth evidence](M2_DEV_AUTH_EVIDENCE.md). Deterministic invitation, ownership, role, replay, and expiry cases are automated. This acceptance is not independent security verification, a deployment verification, or production approval.
+Implementation and local acceptance checks are recorded in [M2 evidence](M2_LOCAL_EVIDENCE.md). The implementation is on `main`, and hosted repository CI passes. The owner accepted the development Supabase walkthrough and directed C1/M2 to be treated as complete on 2026-09-23, including owner-attested acceptance of a replacement Cloudflare build. That replacement build's run/commit and separate owner-authored review findings remain unavailable; the [C2 closeout](C2_M2_CLOSEOUT.md) records the owner's reported migration/auth review and a later agent inspection. Deterministic invitation, ownership, role, replay, and expiry cases are automated. This acceptance is not independent security verification or production approval.
 
 ### Product decisions approved
 

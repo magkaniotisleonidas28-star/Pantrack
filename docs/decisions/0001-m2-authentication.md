@@ -5,7 +5,8 @@ implementation is on `main` and repository CI passes. The owner accepted the
 development-provider walkthrough and a reported replacement Cloudflare build,
 then directed C1/M2 completion on 2026-09-23. The replacement build's run and
 commit are unavailable. The user reports completing the authentication and
-migration review, though a separate written record is still missing. No
+migration review. The later [C2 closeout](../C2_M2_CLOSEOUT.md) records that
+report and an agent inspection; owner-authored findings were not supplied. No
 independent security or production deployment approval is claimed.
 
 ## Decision

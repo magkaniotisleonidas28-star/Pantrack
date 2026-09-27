@@ -3,12 +3,13 @@
 Implementation is on `main`. The owner accepted the development Supabase
 walkthrough and reports completing the authentication and migration review.
 The owner also accepted a reported replacement Cloudflare build, but its run
-and commit details are unavailable. Development D1 now has migrations through
-`0012`, and a newly deployed development Worker passed a fictional hosted
+and commit details are unavailable. Development D1 reached `0012` for the C2
+walkthrough, and a newly deployed development Worker passed a fictional hosted
 walkthrough on 2026-09-24; see [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md).
-The temporary exact inventory preview was disabled afterward. Record the
-owner's M2 review before public release. Do not use production company data to
-test this change.
+The temporary exact inventory preview was disabled afterward. The
+[C2 closeout](C2_M2_CLOSEOUT.md) records the owner's reported M2 review and the
+agent's inspection; independent security and hosted callback checks remain
+release follow-ups. Do not use production company data to test this change.
 
 ## Local prerequisites
 
