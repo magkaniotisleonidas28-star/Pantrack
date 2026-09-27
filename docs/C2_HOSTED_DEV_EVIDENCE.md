@@ -69,8 +69,9 @@ protection, and disabling the preview. It does not prove hosted cross-company
 or forbidden-role behavior, signup/recovery callbacks, native Clover delivery,
 supplier integration, or production readiness. Local authorization and
 concurrency evidence remains in [B5 local evidence](M4_B5_LOCAL_EVIDENCE.md).
-The owner's reported M2 authentication/migration review still needs a separate
-written C2 record before marking C2 complete.
+At the time of this walkthrough, the owner's reported M2 authentication/migration
+review still needed a separate written C2 record. The later
+[C2 development closeout](C2_M2_CLOSEOUT.md) records it and the remaining limits.
 
 The D1 migration is additive; do not rewrite it or assume an app rollback
 undoes it. If the development Worker must be reverted, use Cloudflare Worker

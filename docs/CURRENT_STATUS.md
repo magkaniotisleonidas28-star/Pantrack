@@ -60,7 +60,7 @@ provisioned background jobs, and automatic purchases.
 
 ## M2 implementation
 
-The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The owner completed and accepted a development-provider walkthrough of password rules, confirmation, sign-in/out, fictional-company roles, invitation, ownership transfer, recovery, concurrent-session revocation, and security history. The membership panel still required a full page refresh after acceptance in another browser; the owner accepted that limitation. The owner reports that a replacement Cloudflare build works, accepted that build step without a run link or commit record, and explicitly directed C1/M2 to be treated as complete on 2026-09-23. The user subsequently reported completing the additive migration and authentication review; a separate written review record remains unavailable. This is owner-accepted development evidence, not independent security verification, verified deployment, or production approval. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md), [local evidence](M2_LOCAL_EVIDENCE.md), and [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
+The approved Supabase/Cloudflare design is implemented on `main`. Seven-day single-use invitations, membership roles, protected ownership transfer, account recovery, CSRF protection and security history have automated coverage. The owner completed and accepted a development-provider walkthrough of password rules, confirmation, sign-in/out, fictional-company roles, invitation, ownership transfer, recovery, concurrent-session revocation, and security history. The membership panel still required a full page refresh after acceptance in another browser; the owner accepted that limitation. The owner reports that a replacement Cloudflare build works, accepted that build step without a run link or commit record, and explicitly directed C1/M2 to be treated as complete on 2026-09-23. The owner subsequently reported completing the additive migration and authentication review. The [C2 closeout](C2_M2_CLOSEOUT.md) records that report, a separate agent inspection, the complete local pipeline, and deployment limits; no owner-authored review findings were supplied. This is owner-accepted development evidence, not independent security verification or production approval. See [setup](M2_SETUP.md), [decision record](decisions/0001-m2-authentication.md), [local evidence](M2_LOCAL_EVIDENCE.md), and [development auth evidence](M2_DEV_AUTH_EVIDENCE.md).
 
 ## M3 development acceptance
 
@@ -140,8 +140,8 @@ environment until separately reviewed release evidence exists.
 | Service | Reported status | Still needed |
 | --- | --- | --- |
 | GitHub | Repository connected; milestone branches consolidated into `main`; earlier Ubuntu and Windows CI runs passed. | Keep `main` as the only long-lived branch. Preserve required checks on new commits. |
-| Supabase | The owner accepted the development-provider manual walkthrough using fictional accounts and reports completing the authentication and migration review. Automated provider tests remain separate. | Record the completed review; do not treat the walkthrough as independent or production security verification. |
-| Cloudflare | The earlier replacement build report is owner-attested. Development D1 has `0012`; the deployed `pantrack-dev` Worker passed a fictional hosted walkthrough. See [C2 evidence](C2_HOSTED_DEV_EVIDENCE.md). | Keep the exact preview off after the test. C2 still needs the owner's M2 review recorded and any remaining acceptance evidence. |
+| Supabase | The owner accepted the development-provider manual walkthrough using fictional accounts and reports completing the authentication and migration review. The [C2 closeout](C2_M2_CLOSEOUT.md) records that report and an agent inspection. Automated provider tests remain separate. | Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
+| Cloudflare | The earlier replacement build report is owner-attested. Development D1 has advanced through B7 `0015`; the deployed `pantrack-dev` Worker passed a fictional hosted walkthrough and the later C2 read-only smoke. See [C2 evidence](C2_HOSTED_DEV_EVIDENCE.md) and [closeout](C2_M2_CLOSEOUT.md). | Keep the exact preview off. Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
 | Custom domain | The user reports that the domain is already in Cloudflare. No Worker route has been verified. | Decide whether to attach the domain after the development `workers.dev` validation; the current hosted evidence uses that URL. |
 
 Never send, commit, or paste Supabase keys, Cloudflare API tokens, OAuth secrets,
@@ -149,14 +149,13 @@ supplier credentials, or payment details into chat or source control.
 
 ## What you need to do next
 
-1. In C2, document the already owner-reported review of the additive M2
-   migration and authentication flow. C1/M2 was owner-accepted; do not call
-   this independent security verification.
+1. C2's [development closeout](C2_M2_CLOSEOUT.md) now records the owner's
+   reported additive M2 migration/auth review and a separate agent inspection.
+   A and B may use the M2 development gate. Keep hosted signup/recovery and
+   independent security review on the release follow-up list.
 2. Use the [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md) for the completed
-   development D1 `0012` and Worker smoke. Keep the exact inventory preview
-   disabled; the fictional walkthrough is complete. Finish any remaining C2
-   acceptance evidence without treating the earlier replacement build report
-   as an independently verified run.
+   development D1 `0012` and Worker walkthrough. Keep the exact inventory
+   preview disabled. The earlier replacement build report remains owner-attested.
 3. A5/M3, B5/M4, and B6's Clover adapter are accepted for local development.
    B7 hosted preparation applied development D1 `0013` and deployed B6 to
    `pantrack-dev`; see [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md). The dedicated
@@ -207,7 +206,7 @@ behavior.
 
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
-| M2 — authentication and RBAC | C1/M2 accepted by owner for development; authentication/migration review and replacement Cloudflare build are owner-attested | Document the already reported review. Development Worker smoke passed, but hosted signup/recovery and independent security verification remain open. See [development auth evidence](M2_DEV_AUTH_EVIDENCE.md) and [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md). |
+| M2 — authentication and RBAC | C1/M2 accepted by owner and C2 evidence closed for development; replacement Cloudflare build remains owner-attested | The [C2 closeout](C2_M2_CLOSEOUT.md) records the reported review, local pipeline and read-only Worker smoke. Hosted signup/recovery callbacks and independent security verification remain release follow-ups. |
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
 | M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; base latte, mapped extra-shot, unmapped-modifier/replay, and simulated duplicate/polling cases passed; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers local behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records development D1 through `0015`, the fictional Clover connection, webhook setup, four paid latte deductions, one held sale with zero partial use and an audited recovery replay, and the simulated duplicate and owner poll. Sync remains off. |
