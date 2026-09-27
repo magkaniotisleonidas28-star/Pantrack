@@ -651,9 +651,11 @@ mocked-provider checks do not establish their provider behavior.
   consumption. Local contract and mocked-provider tests passed, but Clover
   did not emit a paid deletion tombstone in this case, so that path has **no
   direct sandbox evidence**. A distinct, explicitly approved refund or
-  supported paid-cancellation flow is needed to finish that B7 case. The
-  temporary merchant token must be revoked after this read-only diagnosis;
-  the separate app Webhooks Auth Code stays in place.
+  supported paid-cancellation flow is needed to finish that B7 case. After
+  the owner handled cleanup, a read-only view of the B7 merchant's API Tokens
+  page no longer listed “Pantrack B7 paid cancellation.” The separate app
+  Webhooks Auth Code stayed in place; Worker secret-name inspection still
+  showed it present.
 
 ## Gate and recovery
 
