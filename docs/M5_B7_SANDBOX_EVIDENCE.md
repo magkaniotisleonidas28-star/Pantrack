@@ -613,6 +613,48 @@ mocked-provider checks do not establish their provider behavior.
   revisions, token refresh, missed webhook recovery, or disconnect behavior;
   those B7 cases remain open.
 
+### Paid cancellation blocked by Clover (2026-09-27 UTC)
+
+- This single B7 attempt used the dedicated fictional merchant
+  `4ZJYT1HV8X6Y1`. Before it, development D1 had **5 sales events, 4
+  consumption applications, and 12 sale-consumption movements**. Balances
+  were 14,341.647136 mL milk, 2,159.96185 g espresso, and 996 cups. Both
+  temporary Worker gates were absent. A fresh temporary merchant token was
+  entered only in a hidden local Terminal prompt.
+- The guarded preflight checked that merchant, one unmodified mapped $5 B7
+  latte, and an enabled cash tender. After the owner's one-sale confirmation,
+  Clover returned order `MYYZBP7EV0H4A`, latte line `FHAA7HW611PYE`, and one
+  sandbox cash payment `SNHQZ2EG5R5T0`. This was a fictional cash record,
+  with no real charge. Pantrack's `pantrack-dev` Worker version
+  `0322276c-dbe0-4a44-aa77-8ad7f13c4bde` was deployed for this case;
+  no migration was needed.
+- With both gates briefly enabled, one **Sync now** scan finished at
+  `2026-09-27T23:27:08.227Z` with **1 new event, 0 held**. D1 recorded the
+  order as an applied sale, revision `1790551499000`, and one inventory
+  consumption application with exactly three movements: **-200 mL milk,
+  -18 g espresso, -1 cup**. Balances became 14,141.647136 mL milk,
+  2,141.96185 g espresso, and 995 cups. The checkpoint advanced to
+  `1790551627439`. Both temporary gates were then deleted and secret-name
+  inspection confirmed their absence.
+- The separate guarded runner read the same order back as `PAID`, with one
+  latte line and one payment, before the owner's single confirmation to send
+  DELETE. Clover returned **HTTP 400** for that paid order at
+  `2026-09-27T23:28:33.586Z`. The runner's durable attempt marker prevents a
+  retry. Clover's Today list still showed the order as **Paid**, with one $5
+  latte and a $5 cash payment. No refund or alternate cancellation action was
+  attempted. Read-only D1 inspection after rejection still showed **6 sales
+  events, 5 applications, and 15 movements**, with the same post-sale balances.
+  No cancellation event or restock occurred. This is a provider-rejected paid
+  deletion, **not** a passing paid-cancellation case.
+- The code change in this branch makes a zero-line deletion tombstone a
+  stock-neutral applied no-op when the same order already has applied
+  consumption. Local contract and mocked-provider tests passed, but Clover
+  did not emit a paid deletion tombstone in this case, so that path has **no
+  direct sandbox evidence**. A distinct, explicitly approved refund or
+  supported paid-cancellation flow is needed to finish that B7 case. The
+  temporary merchant token must be revoked after this read-only diagnosis;
+  the separate app Webhooks Auth Code stays in place.
+
 ## Gate and recovery
 
 Keep `PANTRACK_CLOVER_SYNC_ENABLED` unset between explicitly authorized B7

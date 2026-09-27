@@ -217,6 +217,15 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  assert.equal((await expanded.service.process('company-a',expandedReceipt.eventKey)).state,'held');
  assert.deepEqual(lastAttempt(expanded.store).heldReasons,['ambiguous_preparation']);
  assert.deepEqual(expanded.inventory.getBalance('company-a','milk'),expandedBefore);
+ const paidMapping=new FakeSalesMappingPort([{companyId:'company-a',provider:'clover',externalItemId:'latte-item',externalVariationId:'large',recipeId:'latte'}]);
+ const paid=harness({mappings:paidMapping});
+ const paidReceipt=await paid.service.receive(cloverContext,baseDraft({externalEventId:'paid-v1',externalOrderId:'paid-then-deleted'}));
+ assert.equal((await paid.service.process('company-a',paidReceipt.eventKey)).state,'applied');
+ const afterPaid=paid.inventory.getBalance('company-a','milk');
+ const deletedReceipt=await paid.service.receive(cloverContext,{...tombstone,externalEventId:'deleted-v2',externalOrderId:'paid-then-deleted',revision:2});
+ assert.equal((await paid.service.process('company-a',deletedReceipt.eventKey)).state,'applied');
+ assert.equal(lastAttempt(paid.store).outcome,'noop');
+ assert.deepEqual(paid.inventory.getBalance('company-a','milk'),afterPaid);
 }
 
 // Normal application sends only mapped A2 fields and preserves selected versions and changes.

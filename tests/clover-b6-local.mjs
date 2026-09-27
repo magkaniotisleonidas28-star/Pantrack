@@ -74,6 +74,17 @@ const deletedEvent=sql.prepare("SELECT e.normalized_json,s.state,s.last_reason F
 assert.equal(deletedEvent.state,'held');assert.equal(deletedEvent.last_reason,'deleted_order_detail_unavailable');assert.deepEqual(JSON.parse(deletedEvent.normalized_json).lines,[]);
 assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,beforeDeletedBalance);
 await syncClover('a');assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM sales_events WHERE company_id='a' AND external_order_id=?").get(tombstone.id).n,1,'Repeated deletion poll is idempotent.');
+const paidDeletion={id:'with-mod',createdTime:order.createdTime,modifiedTime:now-90_000,paymentState:'PAID',state:'OPEN'};
+deletedFixture=paidDeletion;
+const paidDeletionBalance=sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor;
+const paidDeletionApplications=sql.prepare("SELECT COUNT(*) AS n FROM inventory_consumption_applications WHERE company_id='a'").get().n;
+assert.equal((await syncClover('a')).created,1);
+const paidDeletionEvent=sql.prepare("SELECT s.state FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=? AND e.revision=?").get(paidDeletion.id,paidDeletion.modifiedTime);
+assert.equal(paidDeletionEvent.state,'applied','A deleted paid order with missing lines is a no-op after its applied sale.');
+assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM inventory_consumption_applications WHERE company_id='a'").get().n,paidDeletionApplications);
+assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,paidDeletionBalance);
+await syncClover('a');assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM sales_events WHERE company_id='a' AND external_order_id=? AND revision=?").get(paidDeletion.id,paidDeletion.modifiedTime).n,1);
+deletedFixture=tombstone;
 const beforeFailure=sql.prepare("SELECT checkpoint FROM clover_sync_state WHERE company_id='a'").get().checkpoint;failDetail=true;
 await assert.rejects(()=>syncClover('a'),/provider outage/);
 assert.equal(sql.prepare("SELECT checkpoint FROM clover_sync_state WHERE company_id='a'").get().checkpoint,beforeFailure,'Provider failure cannot advance checkpoint.');

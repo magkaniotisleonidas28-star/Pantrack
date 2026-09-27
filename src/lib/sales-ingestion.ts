@@ -894,8 +894,8 @@ export class SalesIngestionService {
 
   private async policy(record: SalesEventRecord) {
     const event = record.event;
-    if (event.eventType === 'cancellation' && event.lines.length === 0) return {held: ['deleted_order_detail_unavailable'] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt:event.occurredAt};
     const previous = (await this.store.latestAppliedConsumption(event.companyId, record.lineageKey, event.external.revision))?.event ?? null;
+    if (event.eventType === 'cancellation' && event.lines.length === 0 && !previous) return {held: ['deleted_order_detail_unavailable'] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt:event.occurredAt};
     const confirmed = await this.store.occurrenceConfirmation(event.companyId, event.external.eventIdempotencyKey);
     if (event.timeQuality === 'inferred' && !confirmed) return {held: ['ambiguous_occurrence_time'] as HeldReason[], lines: [] as SalesEventV1['lines'], occurredAt:event.occurredAt};
     const occurredAt = confirmed?.occurredAt ?? event.occurredAt;
