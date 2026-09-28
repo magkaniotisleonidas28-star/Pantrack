@@ -246,7 +246,7 @@ mocked-provider checks do not establish their provider behavior.
 | Unpaid cancellation | Order `DNY2CAPBYN098`; event `DNY2CAPBYN098:1790478351000` | No use and one cancellation event | One held cancellation, owner dismissed; no use | Passed for the already deleted sandbox order through a `deletedTime` reconciliation scan; see below |
 | Full refund and paid cancellation | Order `MYYZBP7EV0H4A`; refund `ZNTAJ1C73VAY8` | Zero additional use or automatic restock | Applied refund revision with zero movements | Full $5 refund passed; Clover rejected paid-order DELETE, so that deletion path remains unproved |
 | Later paid revision | Pending | Positive incremental use once | Pending | Pending |
-| Access-token refresh | Pending | Sync continues after rotation | Pending | Pending |
+| Access-token refresh | Fictional merchant `4ZJYT1HV8X6Y1` | Sync continues after rotation, without duplicate stock use | Expiry advanced, menu loaded, and sales/stock counts stayed fixed | Partial: natural rotation and continued menu read passed; post-rotation sales sync remains unproved |
 | Missed webhook and polling recovery | Order `N8GB1EV3E01NW`; event `N8GB1EV3E01NW:1790627357000` | One deduction after reconciliation: 200 mL milk, 18 g espresso, 1 cup | Exactly one applied sale and three matching movements | Passed with sales sync off during payment and one authenticated owner-workspace reconciliation; see below |
 | Disconnect | Pending | No new sync; history retained | Pending | Pending |
 
@@ -761,7 +761,40 @@ mocked-provider checks do not establish their provider behavior.
   confirmed both temporary gates absent while `CLOVER_WEBHOOK_AUTH_CODE`
   remained present. The owner reported the correct temporary merchant token
   revoked. This proves owner polling recovered this sale; native retry,
-  token refresh, and disconnect remain separate B7 cases.
+  token refresh, and disconnect were separate B7 cases at that point.
+
+### Natural OAuth token refresh (2026-09-28 UTC)
+
+- A focused change deployed to `pantrack-dev` as Worker version
+  `438347f8-99b2-4673-9dc6-54144874c44b` added only access-token and
+  refresh-token expiry timestamps to the existing owner-only, no-cache Clover
+  connection status. It returns no token or encrypted credential. No schema
+  migration or sales-sync gate change was needed. Mocked local tests covered
+  owner isolation, rotation, and a failed refresh retaining the stored secret;
+  those tests are separate from the sandbox result below.
+- Before the sandbox request, the authorized connection still named fictional
+  merchant `4ZJYT1HV8X6Y1`. Status reported access expiry
+  `2026-09-28T21:02:25.000Z`, refresh expiry
+  `2027-09-28T20:32:25.000Z`, and `syncEnabled: false`. Development D1 held
+  9 Clover sales events, 6 consumption applications, and 18 sale-consumption
+  movements. Exact on-hand balances were `13941647136` milk minor units,
+  `2123961850` espresso minor units, and 994 cups.
+- After the existing access token entered Pantrack's 60-second refresh window,
+  the authenticated owner workspace loaded the Clover menu **once**. The UI
+  displayed its item-mapping controls and updated last successful contact to
+  `2026-09-28T21:02:11.364Z`. A subsequent owner-only status read reported
+  access expiry `2026-09-28T21:32:10.000Z` and refresh expiry
+  `2027-09-28T21:02:10.000Z`, with the same merchant and sync still disabled.
+  The later expiry pair after this menu request is evidence of the normal
+  refresh path; no token value was retrieved or submitted manually.
+- Read-only D1 checks afterward still found 9 sales events, 6 consumption
+  applications, 18 consumption movements, and the exact same three balances.
+  The sync checkpoint remained `2026-09-28T20:32:25.768Z`. Worker secret names
+  showed both temporary development gates absent and `CLOVER_WEBHOOK_AUTH_CODE`
+  present. This proves one sandbox token rotation with continuing menu read
+  access. A sales sync after rotation was not run while the gate was off, so
+  that part of B7 acceptance remains open. Recovery after a lost rotated
+  token, disconnect, and native webhook retry remain separate cases.
 
 ## Gate and recovery
 
