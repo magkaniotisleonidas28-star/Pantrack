@@ -313,8 +313,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   refund of that same fictional order. A corrected refund-expanded sync
   recorded an applied refund revision with no additional stock use or
   restock. The local zero-line paid-deletion policy is not yet proved in
-  sandbox. Native Clover retry behavior and the other provider cases remain
-  open.
+  sandbox. One later $5 fictional latte was paid while sync was off, then
+  recovered by one authenticated owner-workspace reconciliation with exactly
+  200 mL milk, 18 g espresso, and one cup consumed once. Native Clover retry
+  behavior, token refresh, disconnect, and other provider cases remain open.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same
