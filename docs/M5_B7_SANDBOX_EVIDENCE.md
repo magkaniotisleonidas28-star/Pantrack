@@ -248,7 +248,7 @@ mocked-provider checks do not establish their provider behavior.
 | Later paid revision | Pending | Positive incremental use once | Pending | Pending |
 | Access-token refresh | Fictional merchant `4ZJYT1HV8X6Y1` | Sync continues after rotation, without duplicate stock use | Expiry advanced, menu loaded, then one owner sync returned 0 new and 0 held; counts and stock stayed fixed | Passed for one natural rotation and post-rotation sandbox reconciliation; see below |
 | Missed webhook and polling recovery | Order `N8GB1EV3E01NW`; event `N8GB1EV3E01NW:1790627357000` | One deduction after reconciliation: 200 mL milk, 18 g espresso, 1 cup | Exactly one applied sale and three matching movements | Passed with sales sync off during payment and one authenticated owner-workspace reconciliation; see below |
-| Disconnect | Pending | No new sync; history retained | Pending | Pending |
+| Disconnect and reconnect | Fictional merchant `4ZJYT1HV8X6Y1` | No new sync or stock use; history and mappings retained | Connection removed and restored for the same merchant; checkpoint, mappings, sales history, and stock unchanged | Passed one owner-driven sandbox disconnect and reauthorization; see below |
 
 ### One fictional paid latte (2026-09-25 local / 2026-09-26 UTC)
 
@@ -828,6 +828,41 @@ mocked-provider checks do not establish their provider behavior.
   This completes one B7 sandbox token-refresh case with continuing read and
   reconciliation access; it does not prove lost-token recovery, native Clover
   retry, or disconnect behavior.
+
+### Disconnect and restore the fictional Clover connection (2026-09-28)
+
+- This one B7 case used the dedicated fictional Pantrack company
+  `eb05567b-e227-4f28-ae02-b81f55e6918c` and sandbox merchant
+  `4ZJYT1HV8X6Y1`. Before disconnect, the development Worker had no
+  `PANTRACK_CLOVER_SYNC_ENABLED` or `PANTRACK_EXACT_INVENTORY_PREVIEW` secret;
+  `CLOVER_WEBHOOK_AUTH_CODE` remained present. The owner workspace showed the
+  same merchant and sales sync disabled.
+- Read-only development D1 baseline: one connection, no pending OAuth state,
+  one sync state, one item mapping, two modifier mappings, nine sales events,
+  six consumption applications, and 18 sale-consumption movements. The sync
+  checkpoint was `1790629863007` with last success
+  `2026-09-28T21:11:04.079Z`. Exact balances were `13941647136` milk,
+  `2123961850` espresso, and `994` cups in their stored minor units.
+- The owner confirmed Pantrack's **Disconnect Clover?** dialog once. Read-only
+  D1 then showed zero connections and zero OAuth states. The sync state,
+  mappings, event/application/movement counts, checkpoint, last success, and
+  all three exact balances matched the baseline. Pantrack displayed **Ready to
+  connect · sandbox** with no sync control.
+- The owner selected **Pantrack B7 Fictional Café** in Clover's sandbox OAuth
+  merchant selector and completed authorization. Pantrack returned **Authorized
+  · sandbox**, displayed merchant `4ZJYT1HV8X6Y1`, and showed sales sync
+  disabled. A read-only Clover menu load returned **B7 Latte 12 oz
+  (fictional)** (`DX2XHRRJEVE8M`). Development D1 again had one connection,
+  zero pending OAuth states, and the same sync start, checkpoint, last attempt,
+  last success, mappings, event counts, and exact balances. Only the
+  connection's last checked time advanced (`2026-09-28T21:21:41.437Z`).
+- Focused mocked-provider tests additionally cover owner access, anonymous and
+  wrong-company rejection, forbidden roles, pending OAuth-state deletion,
+  repeated disconnect, blocked sync even if the development gate is enabled,
+  retention of mapping/history/stock fixtures, and same-merchant restoration.
+  The complete local pipeline passed. No sale, payment, or supplier order was
+  created for this case. This does not prove a Clover-side app uninstall or a
+  new sale after reconnect; B7 remains open for its other provider cases.
 
 ## Gate and recovery
 
