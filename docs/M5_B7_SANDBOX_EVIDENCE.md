@@ -243,6 +243,7 @@ mocked-provider checks do not establish their provider behavior.
 | Extra-shot modifier | Order `141JW0CZY9X76`; event `141JW0CZY9X76:1790391186000` | 200 mL milk, 36 g espresso, 1 cup | 200 mL milk, 36 g espresso, 1 cup | Passed once in sandbox; applied with reason `inventory_applied` |
 | Unmapped modifier and replay | Order `5XK8NJ9JW6NAW`; event `1b2accac56436a6f14bd62fb0e7d3674072657bcc27a0f023fe64b6fc5a572ed` | Zero while held; after mapping and replay, 200 mL milk, 36 g espresso, 1 cup once | Zero while held; then 200 mL milk, 36 g espresso, 1 cup once | Passed in sandbox after an accidental dismissal and audited owner recovery; see below |
 | Duplicate webhook and polling | Order `8092KSCCQ51TT`; event `8092KSCCQ51TT:1790444517000` | 200 mL milk, 18 g espresso, 1 cup once | 200 mL milk, 18 g espresso, 1 cup once | Passed for one locally constructed authenticated duplicate notification and one owner polling run; no native Clover retry was observed |
+| Native retry observation and polling recovery | Order `CBG7K5TTH3WM0`; revision `1790636552000` | No stock use while Clover's first webhook receives `503`; one later deduction of 200 mL milk, 18 g espresso, 1 cup | No native retry observed in 20 minutes; one owner sync then applied one event and three exact movements | Controlled `503` and polling recovery passed; native Clover retry remains unproved |
 | Unpaid cancellation | Order `DNY2CAPBYN098`; event `DNY2CAPBYN098:1790478351000` | No use and one cancellation event | One held cancellation, owner dismissed; no use | Passed for the already deleted sandbox order through a `deletedTime` reconciliation scan; see below |
 | Full refund and paid cancellation | Order `MYYZBP7EV0H4A`; refund `ZNTAJ1C73VAY8` | Zero additional use or automatic restock | Applied refund revision with zero movements | Full $5 refund passed; Clover rejected paid-order DELETE, so that deletion path remains unproved |
 | Later paid revision | Order `2DBW139B2RRNY`; revisions `1790631186000` and `1790631503000` | Each paid latte uses 200 mL milk, 18 g espresso, 1 cup; second revision uses only its new line | Two applied events, two applications, three movements per revision, and no conflict; totals 400 mL milk, 36 g espresso, 2 cups | Passed one same-order paid addition in sandbox; see below |
@@ -912,6 +913,60 @@ mocked-provider checks do not establish their provider behavior.
   does not establish native retry delivery,
   lost-token recovery, or the rejected paid-order DELETE path. B7 remains
   open for those cases.
+
+### Native webhook retry observation (2026-09-28)
+
+- This one-case attempt used the dedicated fictional company and merchant. A
+  read-only D1 baseline showed **11 Clover sales events, 8 consumption
+  applications, and 24 sale-consumption movements**, with exact balances of
+  13,541.647136 mL milk, 2,087.96185 g espresso, and 992 cups. The sync
+  checkpoint was `1790631555134`; both development sync gates were absent.
+- A temporary, sandbox-only Worker probe was locally tested and deployed as
+  version `bbb9e627-1f27-4aa8-befe-63b42934d512`. It required Clover's
+  authentication code, the configured app, the bound B7 company and merchant,
+  and one exact order ID before returning `503`. The trace logged only a
+  truncated SHA-256 correlation and response status, never the webhook body
+  or credential. The complete local pipeline passed with the probe present.
+- The first same-named temporary token was mistakenly created under Test
+  Merchant `BQ4PS2NVGNS41`; the owner reported revoking it. The replacement
+  token appeared under the correct B7 merchant `4ZJYT1HV8X6Y1` with Orders
+  and Payments read/write plus Merchant and Inventory read permissions. Its
+  value stayed in a hidden local Terminal prompt. A guarded runner's first
+  invocation without its mode argument stopped before a Clover request; it
+  was corrected to default to `create`.
+- The owner confirmed one **unpaid** $5 sandbox order after a non-creating
+  checkout preview: order `CBG7K5TTH3WM0`, line `9HWT8Y0EGBR7J`, zero
+  payments. D1 had zero events for that order. The temporary probe was bound
+  to its ID; the sales-sync and exact-inventory gates were enabled briefly.
+  After the owner's separate payment confirmation, the runner recorded one
+  fictional $5 cash payment `S57M2CEDAFX68`; Clover returned `PAID` with
+  `modifiedTime=1790636552000`.
+- A live Worker tail captured one authenticated `POST /api/clover/webhook`
+  at `1790636553954` with HTTP `503` and correlation
+  `59aa015884e783cb`. The failure switch was removed immediately. In an
+  approximately **20-minute** observation window, that trace captured no
+  later webhook for the same order and D1 still had zero events for it.
+  This proves the controlled failure reached Pantrack; it **does not prove
+  Clover native retry delivery or a retry schedule**. No locally constructed
+  notification was sent and no second order or payment was attempted.
+- The sync gates and remaining correlation secret were deleted. The ordinary
+  Worker was restored as version `6b7f2f35-2077-4529-8f80-1fe7f3ff5b86`;
+  a secret-name check found only the persistent `CLOVER_WEBHOOK_AUTH_CODE`
+  among these Clover test controls. An expired Pantrack owner session was
+  restored before a separate, brief recovery sync window. One authenticated
+  B7 owner **Sync now** reported **1 new, 0 held**, with last success
+  `2026-09-28T23:30:25.245Z` and checkpoint `1790638224152`. Both sync gates
+  were deleted immediately afterward.
+- Read-only D1 showed one applied sale revision `1790636552000` for that order,
+  one consumption application, three `sale_consumption` movements of
+  **−200 mL milk, −18 g espresso, and −1 cup**, and zero conflicts. Company
+  totals became **12 Clover sales events, 9 applications, and 27 movements**.
+  Exact balances became 13,341.647136 mL milk, 2,069.96185 g espresso, and
+  991 cups. This proves owner polling recovered the paid sale with expected
+  stock use; native retry remains unproved in this bounded observation. The
+  owner reported revoking the temporary B7 merchant API token; that
+  revocation was not independently checked. The local runner and non-secret
+  attempt markers were removed.
 
 ## Gate and recovery
 

@@ -327,7 +327,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   on the same order. Each applied revision consumed exactly 200 mL milk,
   18 g espresso, and one cup; the second used only the newly added latte.
   Both temporary development gates are off again, and the owner reports
-  revoking the temporary merchant API token.
+  revoking the temporary merchant API token. A subsequent targeted sandbox
+  webhook received a controlled `503` for one paid fictional latte; no native
+  retry was observed in a 20-minute window. One separate owner sync recovered
+  that sale and deducted 200 mL milk, 18 g espresso, and one cup once. The
+  temporary probe and gates were removed, and the owner reports revoking the
+  temporary merchant token. Native retry remains unproved.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same
