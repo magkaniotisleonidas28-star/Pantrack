@@ -3,15 +3,15 @@ import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
 import {digest} from '@/lib/vendor-adapter';
-import {callbackUrl,cloverConfig,cloverConnection,cloverJson,withClover} from '@/lib/clover';
+import {callbackUrl,cloverConfig,cloverConnection,cloverJson,cloverTokenExpirations,withClover} from '@/lib/clover';
 import {cloverSyncEnabled,cloverSyncStatus,syncClover} from '@/lib/clover-sync';
 import {z} from 'zod';
-async function handleGET(req:Request){const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});try{const id=new URL(req.url).searchParams.get('companyId');if((await companyAccess(u.userId,id))?.role!=='owner')return Response.json({error:'Company owner access required.'},{status:403});const c=cloverConfig(),row=await cloverConnection(id!),db=database();const sync=row?await cloverSyncStatus(id!):null;const [items,modifiers,recipes,recipeModifiers]=row?await Promise.all([
+async function handleGET(req:Request){const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});try{const id=new URL(req.url).searchParams.get('companyId');if((await companyAccess(u.userId,id))?.role!=='owner')return Response.json({error:'Company owner access required.'},{status:403});const c=cloverConfig(),row=await cloverConnection(id!),db=database();const [sync,tokenExpirations]=row?await Promise.all([cloverSyncStatus(id!),cloverTokenExpirations(row)]):[null,null];const [items,modifiers,recipes,recipeModifiers]=row?await Promise.all([
  db.prepare('SELECT item_id,recipe_id FROM clover_item_mappings WHERE company_id=? AND environment=? AND merchant_id=?').bind(id,row.environment,row.merchant_id).all(),
  db.prepare('SELECT item_id,modifier_id,inventory_modifier_id FROM clover_modifier_mappings WHERE company_id=? AND environment=? AND merchant_id=?').bind(id,row.environment,row.merchant_id).all(),
  db.prepare("SELECT recipe_id,name FROM recipe_versions WHERE company_id=? AND status='active' ORDER BY name").bind(id).all(),
  db.prepare("SELECT v.recipe_id,v.modifier_id,l.name FROM recipe_modifier_versions v JOIN recipe_modifier_lineages l ON l.company_id=v.company_id AND l.recipe_id=v.recipe_id AND l.id=v.modifier_id WHERE v.company_id=? AND v.status='active' ORDER BY l.name").bind(id).all(),
- ]):[{results:[]},{results:[]},{results:[]},{results:[]}];return Response.json({ready:c.ready,environment:c.environment,connected:!!row,merchantId:row?.merchant_id,lastChecked:row?.last_checked,callbackUrl:callbackUrl(),syncEnabled:cloverSyncEnabled(),sync,itemMappings:items.results,modifierMappings:modifiers.results,recipes:recipes.results,recipeModifiers:recipeModifiers.results},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load Clover connection.'},{status:503});}}
+ ]):[{results:[]},{results:[]},{results:[]},{results:[]}];return Response.json({ready:c.ready,environment:c.environment,connected:!!row,merchantId:row?.merchant_id,lastChecked:row?.last_checked,...(tokenExpirations||{}),syncEnabled:cloverSyncEnabled(),sync,itemMappings:items.results,modifierMappings:modifiers.results,recipes:recipes.results,recipeModifiers:recipeModifiers.results},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load Clover connection.'},{status:503});}}
 async function handlePOST(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  if(req.headers.get('sec-fetch-site')==='cross-site'||!req.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'Invalid request.'},{status:403});

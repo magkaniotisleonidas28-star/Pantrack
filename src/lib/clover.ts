@@ -22,6 +22,10 @@ async function refreshTokens(refreshToken:string){
 }
 export type Connection={company_id:string;merchant_id:string;environment:string;secret:string;connected:string;last_checked:string|null;lease_until:number};
 export async function cloverConnection(companyId:string){return database().prepare('SELECT * FROM clover_connections WHERE company_id=?').bind(companyId).first<Connection>();}
+export async function cloverTokenExpirations(connection:Connection){
+ const token=tokens.parse(JSON.parse(await decrypt(connection.secret,'clover:'+connection.company_id)));
+ return {accessTokenExpiresAt:new Date(token.access_token_expiration*1000).toISOString(),refreshTokenExpiresAt:new Date(token.refresh_token_expiration*1000).toISOString()};
+}
 export async function withClover<T>(companyId:string,fn:(c:Connection,token:string)=>Promise<T>):Promise<T>{
  const db=database(),now=Date.now(),lease=now+120000;
  const c=await db.prepare('UPDATE clover_connections SET lease_until=? WHERE company_id=? AND lease_until<? RETURNING *').bind(lease,companyId,now).first<Connection>();
