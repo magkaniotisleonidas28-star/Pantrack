@@ -322,8 +322,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   reconciliation after rotation returned zero new or held events, advanced the
   checkpoint, and left stock unchanged. A later owner-driven disconnect and
   same-merchant reauthorization preserved mappings, the checkpoint, sales
-  history, and exact stock; a Clover menu read succeeded afterward. Both
-  temporary development gates are off again.
+  history, and exact stock; a Clover menu read succeeded afterward. A new
+  fictional order then produced one paid latte sale and a later paid revision
+  on the same order. Each applied revision consumed exactly 200 mL milk,
+  18 g espresso, and one cup; the second used only the newly added latte.
+  Both temporary development gates are off again, and the owner reports
+  revoking the temporary merchant API token.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same

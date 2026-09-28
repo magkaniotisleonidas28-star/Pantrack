@@ -245,7 +245,7 @@ mocked-provider checks do not establish their provider behavior.
 | Duplicate webhook and polling | Order `8092KSCCQ51TT`; event `8092KSCCQ51TT:1790444517000` | 200 mL milk, 18 g espresso, 1 cup once | 200 mL milk, 18 g espresso, 1 cup once | Passed for one locally constructed authenticated duplicate notification and one owner polling run; no native Clover retry was observed |
 | Unpaid cancellation | Order `DNY2CAPBYN098`; event `DNY2CAPBYN098:1790478351000` | No use and one cancellation event | One held cancellation, owner dismissed; no use | Passed for the already deleted sandbox order through a `deletedTime` reconciliation scan; see below |
 | Full refund and paid cancellation | Order `MYYZBP7EV0H4A`; refund `ZNTAJ1C73VAY8` | Zero additional use or automatic restock | Applied refund revision with zero movements | Full $5 refund passed; Clover rejected paid-order DELETE, so that deletion path remains unproved |
-| Later paid revision | Pending | Positive incremental use once | Pending | Pending |
+| Later paid revision | Order `2DBW139B2RRNY`; revisions `1790631186000` and `1790631503000` | Each paid latte uses 200 mL milk, 18 g espresso, 1 cup; second revision uses only its new line | Two applied events, two applications, three movements per revision, and no conflict; totals 400 mL milk, 36 g espresso, 2 cups | Passed one same-order paid addition in sandbox; see below |
 | Access-token refresh | Fictional merchant `4ZJYT1HV8X6Y1` | Sync continues after rotation, without duplicate stock use | Expiry advanced, menu loaded, then one owner sync returned 0 new and 0 held; counts and stock stayed fixed | Passed for one natural rotation and post-rotation sandbox reconciliation; see below |
 | Missed webhook and polling recovery | Order `N8GB1EV3E01NW`; event `N8GB1EV3E01NW:1790627357000` | One deduction after reconciliation: 200 mL milk, 18 g espresso, 1 cup | Exactly one applied sale and three matching movements | Passed with sales sync off during payment and one authenticated owner-workspace reconciliation; see below |
 | Disconnect and reconnect | Fictional merchant `4ZJYT1HV8X6Y1` | No new sync or stock use; history and mappings retained | Connection removed and restored for the same merchant; checkpoint, mappings, sales history, and stock unchanged | Passed one owner-driven sandbox disconnect and reauthorization; see below |
@@ -863,6 +863,55 @@ mocked-provider checks do not establish their provider behavior.
   The complete local pipeline passed. No sale, payment, or supplier order was
   created for this case. This does not prove a Clover-side app uninstall or a
   new sale after reconnect; B7 remains open for its other provider cases.
+
+### Later paid revision on one fictional order (2026-09-28)
+
+- Before this case, the dedicated B7 company had **9 sales events, 6
+  consumption applications, and 18 sale-consumption movements**. Exact
+  balances were 13,941.647136 mL milk, 2,123.96185 g espresso, and 994 cups.
+  The same sandbox merchant `4ZJYT1HV8X6Y1` was authorized, its latte item
+  `DX2XHRRJEVE8M` still mapped to an active recipe, the sync checkpoint was
+  `1790629863007`, and both temporary Worker gates were absent. Clover's
+  Today list showed only the already recorded previous order.
+- The owner created a temporary merchant-specific API token named **Pantrack
+  B7 paid revision** with Orders and Payments read/write and Merchant and
+  Inventory read access. Its value stayed in a hidden Terminal prompt, never
+  in chat or source control. A local `/private/tmp` runner used a non-creating
+  $5 checkout preview and a durable non-secret attempt marker to prevent
+  ambiguous retries. Its first invocation without the `initial` argument
+  stopped before any Clover request; the runner was corrected to default to
+  `initial`.
+- With sync off, the owner confirmed one custom-order $5 cash latte. Clover
+  returned order `2DBW139B2RRNY`, line `T3ZXRFMXE2232`, payment
+  `Z4ME9CHF7FWJW`, and `modifiedTime=1790631186000`. Read-only D1 still had
+  zero events for this order. Both development gates were briefly enabled;
+  one authenticated owner **Sync now** reported **1 new, 0 held**. D1 recorded
+  one applied sale and three movements: **−200 mL milk, −18 g espresso,
+  −1 cup**. Totals became 10 sales events, 7 applications, and 21 movements.
+  The gates were removed before the order edit.
+- The guarded second invocation re-read that exact paid order, appended the
+  same inventory item as line `J2A00TQKJMY00`, set the order total to $10,
+  and recorded one more $5 cash payment `K92G4JEHXXESA`. Its final read
+  confirmed two unmodified latte lines, two payments, `paymentState=PAID`,
+  and later `modifiedTime=1790631503000`. With sync still off, D1 retained
+  only the first applied revision and unchanged stock.
+- Both gates were briefly enabled for one more owner **Sync now**, which
+  reported **1 new, 0 held**. D1 recorded the later applied sale revision
+  with two lines but created only one additional consumption application and
+  three movements: **−200 mL milk, −18 g espresso, −1 cup**. Together, the
+  two revisions used **400 mL milk, 36 g espresso, and 2 cups**, exactly as
+  expected. Company totals became **11 sales events, 8 applications, and 24
+  movements**, with zero sales-event conflicts. Final exact balances were
+  13,541.647136 mL milk, 2,087.96185 g espresso, and 992 cups.
+- A final Worker secret-name check found both temporary gates absent and the
+  app Webhooks Auth Code still present. The owner reported revoking the
+  temporary merchant API token after the read-only checks; its revocation was
+  not independently checked. The temporary runner and non-secret marker were
+  removed. The focused mocked Clover test passed before the sandbox attempt.
+  This proves one later positive paid revision for the fictional merchant; it
+  does not establish native retry delivery,
+  lost-token recovery, or the rejected paid-order DELETE path. B7 remains
+  open for those cases.
 
 ## Gate and recovery
 
