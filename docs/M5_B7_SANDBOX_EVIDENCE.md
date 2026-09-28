@@ -246,7 +246,7 @@ mocked-provider checks do not establish their provider behavior.
 | Unpaid cancellation | Order `DNY2CAPBYN098`; event `DNY2CAPBYN098:1790478351000` | No use and one cancellation event | One held cancellation, owner dismissed; no use | Passed for the already deleted sandbox order through a `deletedTime` reconciliation scan; see below |
 | Full refund and paid cancellation | Order `MYYZBP7EV0H4A`; refund `ZNTAJ1C73VAY8` | Zero additional use or automatic restock | Applied refund revision with zero movements | Full $5 refund passed; Clover rejected paid-order DELETE, so that deletion path remains unproved |
 | Later paid revision | Pending | Positive incremental use once | Pending | Pending |
-| Access-token refresh | Fictional merchant `4ZJYT1HV8X6Y1` | Sync continues after rotation, without duplicate stock use | Expiry advanced, menu loaded, and sales/stock counts stayed fixed | Partial: natural rotation and continued menu read passed; post-rotation sales sync remains unproved |
+| Access-token refresh | Fictional merchant `4ZJYT1HV8X6Y1` | Sync continues after rotation, without duplicate stock use | Expiry advanced, menu loaded, then one owner sync returned 0 new and 0 held; counts and stock stayed fixed | Passed for one natural rotation and post-rotation sandbox reconciliation; see below |
 | Missed webhook and polling recovery | Order `N8GB1EV3E01NW`; event `N8GB1EV3E01NW:1790627357000` | One deduction after reconciliation: 200 mL milk, 18 g espresso, 1 cup | Exactly one applied sale and three matching movements | Passed with sales sync off during payment and one authenticated owner-workspace reconciliation; see below |
 | Disconnect | Pending | No new sync; history retained | Pending | Pending |
 
@@ -792,9 +792,42 @@ mocked-provider checks do not establish their provider behavior.
   The sync checkpoint remained `2026-09-28T20:32:25.768Z`. Worker secret names
   showed both temporary development gates absent and `CLOVER_WEBHOOK_AUTH_CODE`
   present. This proves one sandbox token rotation with continuing menu read
-  access. A sales sync after rotation was not run while the gate was off, so
-  that part of B7 acceptance remains open. Recovery after a lost rotated
-  token, disconnect, and native webhook retry remain separate cases.
+  access. A sales sync after rotation had not yet run at that point because
+  the gate was off. Recovery after a lost rotated token, disconnect, and
+  native webhook retry remain separate cases.
+
+### Reconciliation after token rotation (2026-09-28 UTC)
+
+- This follow-up used the already rotated OAuth connection and the same
+  fictional merchant. Clover's sandbox Orders view showed six orders created
+  during the last seven days; the latest was the previously reconciled paid
+  latte `N8GB1EV3E01NW`, created before Pantrack's checkpoint. That view is
+  filtered by order creation time and is not proof that older orders had no
+  later changes. No order or payment was created for this check.
+- Before opening the sync gate, owner-only Pantrack status showed the same
+  sandbox merchant, access expiry `2026-09-28T21:32:10.000Z`, sync disabled,
+  and checkpoint `2026-09-28T20:32:25.768Z`. Read-only development D1 held
+  9 Clover sales events, 6 consumption applications, and 18 sale-consumption
+  movements. On-hand balances were `13941647136` milk minor units,
+  `2123961850` espresso minor units, and 994 cups. Both temporary development
+  gates were absent. Focused local Clover connection and sync tests passed
+  with a mocked provider; they do not prove the sandbox outcome.
+- Only `PANTRACK_CLOVER_SYNC_ENABLED` was enabled briefly on `pantrack-dev`.
+  The authenticated B7 owner workspace showed the development sync gate on,
+  then one **Sync now** action returned **0 new events, 0 held**. It recorded
+  last attempt `2026-09-28T21:11:02.918Z`, success
+  `2026-09-28T21:11:04.079Z`, and checkpoint
+  `2026-09-28T21:11:03.007Z`, with no error. The gate was deleted immediately
+  after that single result; the exact-inventory preview gate was never on.
+- Post-sync D1 still held exactly 9 Clover events, 6 consumption
+  applications, 18 sale-consumption movements, and the same three balances.
+  The merchant binding remained `4ZJYT1HV8X6Y1` in sandbox. The owner-only
+  status showed the rotated access expiry unchanged, `syncEnabled: false`,
+  zero held events, and the advanced checkpoint. Worker secret names confirmed
+  both temporary gates absent and `CLOVER_WEBHOOK_AUTH_CODE` still present.
+  This completes one B7 sandbox token-refresh case with continuing read and
+  reconciliation access; it does not prove lost-token recovery, native Clover
+  retry, or disconnect behavior.
 
 ## Gate and recovery
 

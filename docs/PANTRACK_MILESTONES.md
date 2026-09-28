@@ -318,8 +318,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   200 mL milk, 18 g espresso, and one cup consumed once. Native Clover retry
   behavior, lost-token recovery, disconnect, and other provider cases remain
   open. One owner menu read during the natural OAuth refresh window advanced
-  both token expiries and left fictional stock unchanged, proving continued
-  sandbox menu access after rotation.
+  both token expiries and left fictional stock unchanged. A subsequent owner
+  reconciliation after rotation returned zero new or held events, advanced the
+  checkpoint, and left stock unchanged. Both temporary development gates are
+  off again.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same
