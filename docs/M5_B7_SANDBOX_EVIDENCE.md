@@ -657,6 +657,64 @@ mocked-provider checks do not establish their provider behavior.
   Webhooks Auth Code stayed in place; Worker secret-name inspection still
   showed it present.
 
+### Full cash refund of the existing paid latte (2026-09-27 UTC)
+
+- The owner approved one full refund of the existing fictional order
+  `MYYZBP7EV0H4A` and payment `SNHQZ2EG5R5T0`; no new sale was created.
+  Before the refund, development D1 had **6 sales events, 5 consumption
+  applications, and 15 sale-consumption movements**. Exact balances were
+  14,141.647136 mL milk, 2,141.96185 g espresso, and 995 cups.
+- A read-only Clover Platform API check before submission showed a $5 paid
+  order, one $5 successful cash payment, and no refund. In the sandbox
+  Merchant Dashboard, the owner submitted the single selected $5 latte refund
+  once and reported success. A separate read-only check then showed order
+  `paymentState=REFUNDED`, one $5 refund `ZNTAJ1C73VAY8` on the order and the
+  same refund on payment `SNHQZ2EG5R5T0`.
+- Both temporary development gates were briefly enabled for one owner sync.
+  The UI reported **1 new event, 0 held**, with checkpoint `1790553351295`
+  and success at `2026-09-27T23:55:52.097Z`. D1 showed **7 events, 5
+  applications, and 15 movements**; milk, espresso, and cup balances stayed
+  unchanged, as expected for a financial refund. **The new order revision
+  was recorded as a sale no-op, not a refund.** This is incomplete sandbox
+  reconciliation evidence. Both gates were removed immediately. Do not
+  submit another refund or silently rewrite the stored event.
+- The focused local fix now requests Clover's `refunds` expansion and gives
+  a linked refund its own auditable revision if an earlier paid-looking
+  response at the same `modifiedTime` was already stored. Mocked local tests
+  cover that late visibility, repeated polling, state convergence, and zero
+  additional stock use. A further read-only provider comparison confirmed the
+  exact cause: the previous sync-shaped GET returned `PAID` with no refunds,
+  while the refund-expanded GET returned `REFUNDED` and the linked $5 refund.
+  Both responses reported `modifiedTime=1790553205000`; the refund's
+  `createdTime` was also `1790553205000`.
+- The reviewed fix passed `pnpm typecheck`, `pnpm test` (30 suites),
+  `pnpm db:check`, `pnpm build`, `pnpm db:migrate:local`, and
+  `pnpm test:local`. There was no schema change. Worker version
+  `4a09ab36-786e-4a56-8341-52382bf19fc4` was deployed to `pantrack-dev`
+  with both gates absent. An expired Pantrack browser session interrupted
+  the first brief gate window before any sync; both gates were removed. After
+  local sign-in, the gates were briefly restored for exactly one **Sync now**
+  action. It finished with **1 new event, 0 held**, checkpoint
+  `1790563322506`, and success at `2026-09-28T02:42:04.087Z`.
+- Read-only development D1 inspection shows the original applied sale at
+  revision `1790551499000`, the immutable paid-looking sale no-op at
+  `1790553205000`, and a new **applied refund** at `1790553205001` with
+  `orderStatus=refunded` and `policy_noop`. Totals are **8 sales events, 5
+  consumption applications, and 15 sale-consumption movements**. Exact
+  balances remain **14,141.647136 mL milk, 2,141.96185 g espresso, and 995
+  cups**. There are zero identity conflicts for this order. Expected and
+  actual *additional* ingredient use from this refund are both zero; no
+  automatic restock occurred. Secret-name inspection
+  confirmed both temporary gates absent and `CLOVER_WEBHOOK_AUTH_CODE`
+  present. The owner reported the temporary read-only merchant token revoked;
+  its value was never sent through chat or saved in the repository.
+- This proves one full cash refund of this fictional order and correct
+  stock-neutral reconciliation in the Clover sandbox. Partial refunds,
+  native webhook retry delivery, token refresh, disconnect, and missed-event
+  recovery still require separate B7 evidence. Revert the Worker to its
+  previous version if the adapter regresses; preserve the three audit events
+  and make any later correction through a reviewed new revision.
+
 ## Gate and recovery
 
 Keep `PANTRACK_CLOVER_SYNC_ENABLED` unset between explicitly authorized B7

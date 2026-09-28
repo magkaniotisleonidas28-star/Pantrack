@@ -193,13 +193,20 @@ supplier credentials, or payment details into chat or source control.
    cancellation. Owner review dismissed it with an audit reason and no stock
    use. A separate paid $5 fictional latte then synced once and consumed the
    expected 200 mL milk, 18 g espresso, and one cup. Clover rejected the
-   single DELETE attempt on that paid order with HTTP 400; the order remains
-   Paid, and no cancellation or restock was recorded. D1 now has 6 sales
-   events, 5 consumption applications, and 15 consumption movements. Both
-   gates are off. The local zero-line paid-deletion policy change has no
-   direct sandbox proof because Clover rejected the DELETE. Native Clover
-   retry behavior, a supported refund/cancellation flow, and the other B7
-   provider cases remain open. Concurrent local-only A7 migrations were moved
+   single DELETE attempt on that paid order with HTTP 400. The owner later
+   issued one full $5 sandbox cash refund of that same order. Clover's
+   refund-expanded response confirmed its linked payment/refund; the old
+   sync-shaped response still said Paid at the same modification time. A
+   focused adapter fix now expands refunds and records the linked refund as
+   a separate immutable revision. One guarded development reconciliation
+   applied a stock-neutral refund event. D1 has **8 sales events, 5
+   consumption applications, and 15 consumption movements**; the expected
+   refund impact of zero additional ingredient use or restock matched actual
+   balances. Both gates are off and the temporary read-only token was
+   owner-reported revoked. The local zero-line paid-deletion policy change
+   still has no direct sandbox proof because Clover rejected the DELETE.
+   Native Clover retry behavior and the other B7 provider cases remain open.
+   Concurrent local-only A7 migrations were moved
    to `0016` and `0017` in the merge; development D1 remains at `0015` until
    A7's separate remote gate is authorized.
 4. Keep production data and real users out of this environment while these
@@ -221,7 +228,7 @@ behavior.
 | M2 — authentication and RBAC | C1/M2 accepted by owner and C2 evidence closed for development; replacement Cloudflare build remains owner-attested | The [C2 closeout](C2_M2_CLOSEOUT.md) records the reported review, local pipeline and read-only Worker smoke. Hosted signup/recovery callbacks and independent security verification remain release follow-ups. |
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
-| M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; paid latte, modifier/replay, duplicate/polling, and unpaid deletion cases recorded; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records five paid latte deductions, one held sale with zero partial use and an audited recovery replay, a simulated duplicate and owner poll, and an unpaid deletion dismissed without stock use. Clover rejected a paid-order DELETE with HTTP 400, so paid cancellation remains unproved. Sync remains off. |
+| M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; paid latte, modifier/replay, duplicate/polling, unpaid deletion, and full refund cases recorded; M5 remains open | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records five paid latte deductions, one held sale with zero partial use and an audited recovery replay, a simulated duplicate and owner poll, an unpaid deletion dismissed without stock use, and one linked full $5 refund reconciled with zero additional stock use. Clover rejected a paid-order DELETE with HTTP 400; that deletion path remains unproved. Sync remains off. |
 | M6 — second POS | Not started | Choose a real second provider and implement/test the shared adapter contract. |
 | M7 — replenishment proposals | A6 core and A7 lifecycle/handoff complete locally; C4's fake consumer and one A8 local sale-to-proposal integration test passed; M7 not accepted | A8 still needs accepted M5 inputs, a real sales-readiness source, and further concurrency and end-to-end proposal evidence. Development D1 has not applied the A7 origin/lifecycle migrations. See [A6 local evidence](M7_A6_LOCAL_EVIDENCE.md), [A7 lifecycle evidence](M7_A7_LIFECYCLE_EVIDENCE.md), [C4 contract evidence](C4_A7_HANDOFF_EVIDENCE.md), and [A8 local slice](M7_A8_LOCAL_SALE_PROPOSAL_EVIDENCE.md). |
 | M8 — supplier adapter | Not started | Select supplier, build approved integration, sandbox/timeout tests, incoming-stock and delivery reconciliation, then one approved low-risk test order. |

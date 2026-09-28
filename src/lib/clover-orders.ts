@@ -3,7 +3,7 @@ import {SALES_EVENT_CONTRACT,type SalesEventDraftV1,type SalesSourceBinding} fro
 type CloverCollection<T>={elements:T[]};
 type CloverModification={id:string;modifier?:{id:string}};
 type CloverLine={id:string;item?:{id:string};unitQty?:number|null;modifications?:CloverCollection<CloverModification>};
-export type CloverOrder={id:string;createdTime:number;modifiedTime:number;paymentState?:string;state?:string;deletedTime?:number;lineItems?:CloverCollection<CloverLine>;payments?:CloverCollection<{id:string;createdTime?:number;clientCreatedTime?:number}>};
+export type CloverOrder={id:string;createdTime:number;modifiedTime:number;total?:number;paymentState?:string;state?:string;deletedTime?:number;lineItems?:CloverCollection<CloverLine>;payments?:CloverCollection<{id:string;createdTime?:number;clientCreatedTime?:number}>;refunds?:CloverCollection<{id:string;amount:number}>};
 
 export function cloverSource(companyId:string,environment:string,merchantId:string):SalesSourceBinding{
  return {kind:'native',provider:'clover',environment,connectionId:`clover:${companyId}`,merchantId,locationId:merchantId};
@@ -33,15 +33,30 @@ export function normalizeCloverOrder(order:CloverOrder,startedAt:number):SalesEv
  if(order.createdTime<startedAt)return null;
  const paymentState=order.paymentState?.toUpperCase()||'OPEN';
  const paid=paymentState==='PAID';
- const refunded=paymentState==='REFUNDED'||paymentState==='PARTIALLY_REFUNDED';
+ const refundEntries=order.refunds?.elements;
+ if(refundEntries&&!Array.isArray(refundEntries))throw new Error('Clover refund expansion is incomplete.');
+ let linkedRefundStatus:'refunded'|'partially_refunded'|null=null;
+ if(refundEntries?.length){
+  if(!Number.isSafeInteger(order.total)||Number(order.total)<=0||refundEntries.some(refund=>!refund.id||!Number.isSafeInteger(refund.amount)||refund.amount<=0)||new Set(refundEntries.map(refund=>refund.id)).size!==refundEntries.length)throw new Error('Clover refund details need review.');
+  const refundedAmount=refundEntries.reduce((sum,refund)=>sum+refund.amount,0);
+  if(!Number.isSafeInteger(refundedAmount)||refundedAmount>order.total!)throw new Error('Clover refund amount needs review.');
+  linkedRefundStatus=refundedAmount===order.total?'refunded':'partially_refunded';
+ }
+ const refunded=Boolean(linkedRefundStatus)||paymentState==='REFUNDED'||paymentState==='PARTIALLY_REFUNDED'||paymentState==='CREDITED';
  const canceled=Boolean(order.deletedTime)||order.state?.toUpperCase()==='CANCELED';
  if(!paid&&!refunded&&!canceled)return null;
  const lines=orderLines(order);
  const paymentTimes=order.payments?.elements?.map(value=>value.createdTime??value.clientCreatedTime).filter((value):value is number=>typeof value==='number')??[];
  const hasPaymentTime=!paid||paymentTimes.length>0;
- const occurredAt=paid&&hasPaymentTime?timestamp(Math.max(...paymentTimes),'payment time'):timestamp(order.modifiedTime,'modification time');
+ const occurredAt=paid&&hasPaymentTime&&!linkedRefundStatus?timestamp(Math.max(...paymentTimes),'payment time'):timestamp(order.modifiedTime,'modification time');
  const eventType=refunded?'refund':canceled?'cancellation':'sale';
- const draft:SalesEventDraftV1={schemaVersion:SALES_EVENT_CONTRACT,externalEventId:`${order.id}:${order.modifiedTime}`,externalOrderId:order.id,revision:order.modifiedTime,eventType,orderStatus:refunded?(paymentState==='REFUNDED'?'refunded':'partially_refunded'):canceled?'canceled':'completed',preparationStatus:paid?'fulfilled':canceled?'not_started':'unknown',occurredAt,timeQuality:hasPaymentTime?'provider':'inferred',lines};
+ // A linked refund can become visible after a detail response for this same
+ // modifiedTime was already received as PAID. Keep that receipt immutable and
+ // give the refund its own adjacent revision, so a later poll can reconcile it.
+ if(linkedRefundStatus&&!Number.isSafeInteger(order.modifiedTime+1))throw new Error('Clover refund revision is invalid.');
+ const revision=linkedRefundStatus?order.modifiedTime+1:order.modifiedTime;
+ const externalEventId=linkedRefundStatus?`${order.id}:refund:${refundEntries!.map(refund=>refund.id).sort().join(',')}`:`${order.id}:${order.modifiedTime}`;
+ const draft:SalesEventDraftV1={schemaVersion:SALES_EVENT_CONTRACT,externalEventId,externalOrderId:order.id,revision,eventType,orderStatus:linkedRefundStatus??(refunded?(paymentState==='PARTIALLY_REFUNDED'?'partially_refunded':'refunded'):canceled?'canceled':'completed'),preparationStatus:refunded?'unknown':paid?'fulfilled':canceled?'not_started':'unknown',occurredAt,timeQuality:refunded||hasPaymentTime?'provider':'inferred',lines};
  // Hash only the consumption-relevant projection. Never retain Clover's customer,
  // note, tender, or payment objects in the sales event store.
  draft.sourcePayload={...draft};

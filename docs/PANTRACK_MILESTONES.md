@@ -309,10 +309,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   reconciled it as one held cancellation; owner review dismissed it with an
   audit reason and zero stock use. A separate paid $5 fictional latte deducted
   200 mL milk, 18 g espresso, and one cup once; Clover rejected its single
-  paid-order DELETE with HTTP 400, leaving the paid order and stock unchanged.
-  The local zero-line paid-deletion policy is not yet proved in sandbox.
-  Native Clover retry behavior, a supported refund/cancellation flow, and the
-  other provider cases remain open.
+  paid-order DELETE with HTTP 400. The owner later issued one full $5 cash
+  refund of that same fictional order. A corrected refund-expanded sync
+  recorded an applied refund revision with no additional stock use or
+  restock. The local zero-line paid-deletion policy is not yet proved in
+  sandbox. Native Clover retry behavior and the other provider cases remain
+  open.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same

@@ -66,7 +66,7 @@ export async function syncClover(companyId:string){
        continue;
       }
       if(deletedIds.has(item.id))continue;
-      const detailUrl=config.api+'/v3/merchants/'+encodeURIComponent(state.merchant_id)+'/orders/'+encodeURIComponent(item.id)+'?expand=lineItems,lineItems.modifications,payments';
+      const detailUrl=config.api+'/v3/merchants/'+encodeURIComponent(state.merchant_id)+'/orders/'+encodeURIComponent(item.id)+'?expand=lineItems,lineItems.modifications,payments,refunds';
       const order=await cloverJson(detailUrl,{headers:{Authorization:'Bearer '+token}}) as CloverOrder;
       if(order.id!==item.id)throw new Error('Clover order identity changed during sync.');
       if(order.modifiedTime>upper)continue;
