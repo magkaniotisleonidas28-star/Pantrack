@@ -124,4 +124,19 @@ assert.equal((await hookBody({verificationCode:'challenge'})).status,200);
 assert.equal((await hookBody({appId:'test-client',merchants:{}})).status,401);
 assert.equal((await hookBody({appId:'wrong',merchants:{}},{'X-Clover-Auth':'hook-code'})).status,403);
 assert.equal((await hookBody({appId:'test-client',merchants:{}},{'X-Clover-Auth':'hook-code'})).status,200);
+const retryCompany='eb05567b-e227-4f28-ae02-b81f55e6918c',retryMerchant='4ZJYT1HV8X6Y1';
+sql.prepare('INSERT INTO companies VALUES (?,?,?)').run(retryCompany,'B7 fictional','now');
+sql.prepare('INSERT INTO clover_connections(company_id,merchant_id,environment,secret,connected) VALUES (?,?,?,?,?)').run(retryCompany,retryMerchant,'sandbox','encrypted-fixture','now');
+globalThis.testEnv.PANTRACK_CLOVER_RETRY_TEST_ORDER_ID='retry-order';globalThis.testEnv.PANTRACK_CLOVER_RETRY_TEST_FAIL='enabled';
+const retryBody={appId:'test-client',merchants:{[retryMerchant]:[{objectId:'O:retry-order',type:'UPDATE',ts:Date.now()}]}};
+const retryLogs=[],originalInfo=console.info;console.info=(...args)=>retryLogs.push(args);
+try{
+ assert.equal((await hookBody(retryBody)).status,401,'Unauthenticated notification cannot trigger the probe.');
+ assert.equal((await hookBody({...retryBody,appId:'wrong'},{'X-Clover-Auth':'hook-code'})).status,403,'Wrong app cannot trigger the probe.');
+ assert.equal((await hookBody({...retryBody,merchants:{unknown:retryBody.merchants[retryMerchant]}},{'X-Clover-Auth':'hook-code'})).status,403,'Unbound merchant cannot trigger the probe.');
+ assert.equal((await hookBody({...retryBody,merchants:{[retryMerchant]:[{objectId:'I:retry-order',type:'UPDATE',ts:Date.now()}]}},{'X-Clover-Auth':'hook-code'})).status,200,'Non-order event bypasses the probe.');
+ assert.equal(retryLogs.length,0);
+ assert.equal((await hookBody(retryBody,{'X-Clover-Auth':'hook-code'})).status,503,'Only the bound B7 order gets the controlled failure.');
+ assert.equal(retryLogs.length,1);assert.equal(retryLogs[0][1].result,'controlled_503');assert.ok(!JSON.stringify(retryLogs).includes('retry-order'));
+}finally{console.info=originalInfo;delete globalThis.testEnv.PANTRACK_CLOVER_RETRY_TEST_ORDER_ID;delete globalThis.testEnv.PANTRACK_CLOVER_RETRY_TEST_FAIL;}
 console.log('PASS: setup gating, owner isolation, OAuth replay rejection, encrypted tokens, refresh, menu, disconnect, and webhook auth; Clover API mocked.');
