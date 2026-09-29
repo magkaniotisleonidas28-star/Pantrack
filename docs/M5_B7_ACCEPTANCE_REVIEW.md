@@ -1,25 +1,26 @@
 # B7/M5 Clover sandbox acceptance review — 2026-09-29
 
-**Decision status: owner review pending.** This review compares the
+**Decision status: accepted by the owner on 2026-09-29 for the tested
+development sandbox scope.** This review compares the
 [B7 checklist and M5 criteria](PANTRACK_MILESTONES.md) with the
 [sandbox case report](M5_B7_SANDBOX_EVIDENCE.md) and current read-only
-development state. B7 and M5 remain open. The review created no Clover order,
+development state. The review created no Clover order,
 payment, sales event, stock movement, migration, or Worker change.
 
-## Recommendation
+## Accepted scope and criterion
 
-Accept M5 **for the tested development sandbox scope only** if the owner
-explicitly approves this narrower reliability criterion: repeated authenticated
+The owner accepted M5/B7 **for the tested development sandbox scope only** and
+approved this narrower reliability criterion: repeated authenticated
 notifications and reconciliation polls must apply a sale at most once, and a
 missed or failed webhook must be recoverable by owner polling. The current
-criterion says "webhook retries and reconciliation polling do not duplicate
-usage"; native Clover redelivery after a `503` has not been observed. Clover's
+roadmap criterion has been revised accordingly. Native Clover redelivery after
+a `503` has not been observed. Clover's
 [webhook guide](https://docs.clover.com/dev/docs/webhooks) requires `200 OK`
 and describes notification testing, but does not state a retry schedule or
 guarantee redelivery. A real webhook reached Pantrack and received the
 controlled `503`; one separate owner poll recovered its sale exactly once.
 
-The proposed scope includes mapped paid orders and positive revisions, mapped
+The accepted scope includes mapped paid orders and positive revisions, mapped
 modifiers, held unknown modifiers, full refunds with no automatic restock,
 unpaid deletion held for owner review, token refresh/recovery, same-merchant
 reconnection, and polling recovery. Do not claim direct sandbox coverage for
@@ -31,10 +32,10 @@ through the merchant dashboard instead. Clover documents the
 so this single rejection is a limit of the tested order and merchant, not proof
 that every paid-order DELETE is unsupported.
 
-If the owner requires native redelivery or any of the unobserved order states
-for B7 acceptance, keep B7 open. The next bounded action should establish the
-provider's retry contract with Clover before another fault-injection sale;
-the 20-minute `503` observation supplied no retry timing to test against.
+Native redelivery and the unobserved provider states remain follow-ups outside
+this acceptance. The 20-minute `503` observation supplied no retry timing to
+test against. This decision does not authorize a pilot, production connection,
+or automatic purchasing.
 
 ## Evidence against the M5 tasks
 
@@ -60,7 +61,7 @@ the 20-minute `503` observation supplied no retry timing to test against.
 | Atomic, recoverable refresh rotation | **Local and sandbox pass for one loss.** Natural rotation, one deliberately lost refresh response, Clover recovery, persisted replacement, and a later ordinary Worker read passed. Save-failure and refusal paths passed local mocked tests during the temporary probe. |
 | Correct latte and modifier consumption once | **Sandbox pass.** Base latte: 200 mL milk, 18 g espresso, one cup. Extra shot: 200 mL milk, 36 g espresso, one cup. The later paid revision consumed only its newly added latte. |
 | Unknown modifier holds without partial deduction | **Sandbox pass.** The $6 fictional latte held with zero use, then applied 200 mL milk, 36 g espresso, and one cup once after audited mapping and replay. |
-| Webhook retries and polling do not duplicate usage | **Partly proved.** An authenticated locally constructed repeat notification and owner poll did not duplicate use; a real `503` delivery was later recovered by polling. No native Clover retry was observed in 20 minutes. Literal native-retry acceptance remains unproved. |
+| Repeated authenticated notifications and polling apply a sale at most once; owner polling recovers missed or failed webhooks | **Accepted scope proved.** An authenticated locally constructed repeat notification and owner poll did not duplicate use; a real `503` delivery was later recovered by polling. No native Clover retry was observed in 20 minutes. |
 | Disconnect preserves history and stops sync | **Sandbox pass for Pantrack-side disconnect.** The owner disconnected and reauthorized the same merchant; mappings, checkpoint, sales history, and stock remained. Clover-side app uninstall/revocation was not tested. |
 | Report has event IDs, expected/actual use, exceptions | **Pass for recorded cases.** The B7 report identifies sandbox orders and revisions, exact movements, held-event resolution, refund, and recovery limits. |
 
@@ -76,8 +77,10 @@ sync, exact-inventory, or B7 token-probe gate. Development D1 remains at
 
 Today's focused `clover-b6-local` and `clover-connection` test suites passed.
 They use mocked Clover responses and are distinct from the direct cases above.
-No schema, runtime, or public API contract changed in this review. A rollback
-would revert only this review document and its status link. If the owner accepts
-the narrowed development scope, record the decision and revised retry
-criterion explicitly before checking B7/M5 or starting B8. Otherwise leave
-both open and select one named provider gap for the next task.
+No schema, runtime, or public API contract changed in this review. The B7/M5
+roadmap checkboxes record this bounded owner acceptance; the unobserved cases
+remain explicit follow-ups. A rollback would revert only the documentation
+decision. B8 can now use the accepted Clover behavior as its initial adapter
+contract, subject to selecting a real second POS. A8 can use these accepted M5
+inputs while its own development migration and sales-readiness gates remain
+separate.

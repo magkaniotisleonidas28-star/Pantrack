@@ -250,12 +250,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   passed local checks in [the A7 evidence](M7_A7_LIFECYCLE_EVIDENCE.md). C4's
   [fake consumer contract test](C4_A7_HANDOFF_EVIDENCE.md) passed locally.
   This closes A7's local handoff; M7 acceptance remains A8 work.
-- [ ] **A8 — Accept M7.** After B supplies accepted M5 inputs, run concurrency
+- [ ] **A8 — Accept M7.** Using B's accepted M5 development inputs, run concurrency
   and end-to-end proposal tests and record M7 evidence. **Milestone:** M7 complete
   only after M3–M5; this handoff unblocks real M8 implementation. One
   [local sale-to-proposal integration slice](M7_A8_LOCAL_SALE_PROPOSAL_EVIDENCE.md)
   passed its focused test using fictional B7-shaped stock and sale amounts;
-  this does not satisfy the accepted-M5 or hosted A8 gates.
+  it predates M5 acceptance and does not satisfy hosted A8 gates.
 - [ ] **A9 — Execute A's M11 slice.** Configure approved pilot units, recipes,
   counts, targets, and pack conversions; measure inventory variance and proposal
   accuracy through two reviewed count-to-delivery cycles. Investigate variance
@@ -291,10 +291,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   lifecycle, disconnect behavior, health, and sync-now path using the M4 service.
   Fake-backed local implementation and checks passed on 2026-09-24; see
   [B6 evidence](M5_B6_LOCAL_EVIDENCE.md). The sandbox sync gate is off.
-- [ ] **B7 — Accept M5 in Clover sandbox.** With explicitly approved sandbox
+- [x] **B7 — Accept M5 in Clover sandbox.** With explicitly approved sandbox
   access, record normal, duplicate, modifier, refund/cancellation, refresh,
   disconnect, and missed-event recovery cases, including expected versus actual
-  ingredient use. **Milestone:** M5 remains incomplete until this evidence exists.
+  ingredient use. **Milestone:** accepted by the owner on 2026-09-29 for the
+  tested development sandbox scope; see the [acceptance decision](M5_B7_ACCEPTANCE_REVIEW.md).
   The development webhook URL is verified with an Orders-only subscription.
   A base latte, an extra-shot latte, and a third base latte each deducted the
   expected milk, espresso, and cup once. One authenticated locally constructed
@@ -316,8 +317,8 @@ For every numbered item, the assigned person follows the same delivery loop:
   sandbox. One later $5 fictional latte was paid while sync was off, then
   recovered by one authenticated owner-workspace reconciliation with exactly
   200 mL milk, 18 g espresso, and one cup consumed once. Native Clover retry
-  behavior and other provider cases remain
-  open. One owner menu read during the natural OAuth refresh window advanced
+  behavior and other provider cases remain unverified follow-ups outside the
+  accepted scope. One owner menu read during the natural OAuth refresh window advanced
   both token expiries and left fictional stock unchanged. A subsequent owner
   reconciliation after rotation returned zero new or held events, advanced the
   checkpoint, and left stock unchanged. A later owner-driven disconnect and
@@ -338,7 +339,8 @@ For every numbered item, the assigned person follows the same delivery loop:
   succeeded afterward; sales history, exact stock, and the sync checkpoint
   stayed unchanged. Its one-use probe and secrets were removed. This proves
   one provider recovery path; native retry and paid-order deletion remain
-  unproved.
+  unproved. Polling recovery is the required fallback; acceptance does not
+  cover pilot or production use.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same
@@ -664,31 +666,45 @@ fictional Worker smoke passed separately in
 **Objective:** Convert the existing Clover authorization/menu work into reliable completed-sale synchronization.
 
 B6's fake-backed local adapter is complete; see [local evidence](M5_B6_LOCAL_EVIDENCE.md).
-M5 acceptance remains open for B7's explicitly approved Clover sandbox cases.
+The owner accepted M5 on 2026-09-29 for the tested development sandbox scope;
+see the [B7 decision](M5_B7_ACCEPTANCE_REVIEW.md). Polling recovery is required
+when a webhook is missed or fails. Pilot and production acceptance are separate.
 
 ### Tasks
 
-- [ ] Register/configure a Clover sandbox app with the minimum required read permissions.
-- [ ] Complete OAuth callback, encrypted token storage, refresh rotation, expiration, reconnect, and revocation behavior.
-- [ ] Confirm merchant identity and bind it to exactly one authorized company connection.
-- [ ] Import menu items, variations, and relevant modifier identifiers.
-- [ ] Map Clover items/modifiers to active Pantrack recipes.
-- [ ] Ingest completed/prepared Clover orders using the M4 event model.
-- [ ] Add pagination/cursor checkpoints and a bounded initial-sync cutoff.
-- [ ] Add webhook handling if available and polling reconciliation to recover missed events.
-- [ ] Record last successful sync, last attempted sync, lag, error, and held-event count.
-- [ ] Handle order changes, voids, refunds, reopened orders, and partial fulfillment according to the documented consumption policy.
-- [ ] Add a connection health and “sync now” interface.
+- [x] Register/configure a Clover sandbox app with the minimum required read permissions.
+- [x] Complete OAuth callback, encrypted token storage, refresh rotation,
+  expiration, same-merchant reconnect, and Pantrack-side disconnect behavior.
+- [x] Confirm merchant identity and bind it to exactly one authorized company connection.
+- [x] Import the tested menu item and relevant modifier identifiers.
+- [x] Map Clover items/modifiers to active Pantrack recipes.
+- [x] Ingest fully paid Clover orders using the M4 event model and approved
+  consumption policy.
+- [x] Add bounded pagination, cursor checkpoints, and an initial-sync cutoff;
+  validate page bounds locally and checkpoint advancement in sandbox.
+- [x] Add authenticated webhook handling and owner polling reconciliation to
+  recover missed events.
+- [x] Record last successful sync, last attempted sync, lag, error, and held-event count.
+- [x] Handle the tested paid addition, unpaid deletion, and full refund under
+  the documented consumption policy.
+- [x] Add a connection health and “sync now” interface.
+
+The accepted sandbox scope excludes native Clover webhook redelivery, Clover-side
+app revocation, menu variations, multi-page provider scans, paid-order DELETE,
+voids, reopened orders, and partial fulfillment. Their local mocked coverage,
+where present, does not establish provider behavior. Resolve any of these cases
+before relying on it in a pilot.
 
 ### Acceptance criteria
 
-- [ ] OAuth state/replay tests pass and tokens never reach browser logs or source control.
-- [ ] Refresh-token rotation is atomic and recoverable.
-- [ ] A completed sandbox latte sale deducts the correct milk, coffee, cup, and configured modifiers exactly once.
-- [ ] An unmapped Clover modifier holds the event and does not partially deduct.
-- [ ] Webhook retries and reconciliation polling do not duplicate usage.
-- [ ] Disconnecting stops sync while preserving historical inventory events and mappings.
-- [ ] A documented sandbox test report includes event IDs, expected usage, actual usage, and resolution of exceptions.
+- [x] OAuth state/replay tests pass and tokens never reach browser logs or source control in the tested flows.
+- [x] Refresh-token rotation is atomic and recoverable in the tested flows.
+- [x] A completed sandbox latte sale deducts the correct milk, coffee, cup, and configured modifiers exactly once.
+- [x] An unmapped Clover modifier holds the event and does not partially deduct.
+- [x] Repeated authenticated notifications and reconciliation polls apply a sale
+  at most once; a missed or failed webhook is recoverable by owner polling.
+- [x] Pantrack-side disconnect stops sync while preserving historical inventory events and mappings.
+- [x] A documented sandbox test report includes event IDs, expected usage, actual usage, and resolution of exceptions.
 
 ### Codex prompt
 

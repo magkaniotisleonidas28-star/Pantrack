@@ -1,9 +1,12 @@
-# B7 Clover sandbox acceptance — in progress
+# B7 Clover sandbox evidence — accepted development scope
 
 **Target:** fictional Clover sandbox merchant connected to a dedicated fictional
 company on the `pantrack-dev` Worker. No production merchant, real customer,
-real payment, supplier, or purchase is in scope. M5 remains open until the provider
-cases below have direct evidence.
+real payment, supplier, or purchase is in scope. The owner accepted the tested
+development sandbox scope on 2026-09-29; see the
+[B7/M5 acceptance decision](M5_B7_ACCEPTANCE_REVIEW.md) for the revised
+polling criterion and explicit provider cases outside that acceptance. The
+chronological notes below retain their status at the time of each test.
 
 ## Hosted preparation
 
