@@ -248,6 +248,7 @@ mocked-provider checks do not establish their provider behavior.
 | Full refund and paid cancellation | Order `MYYZBP7EV0H4A`; refund `ZNTAJ1C73VAY8` | Zero additional use or automatic restock | Applied refund revision with zero movements | Full $5 refund passed; Clover rejected paid-order DELETE, so that deletion path remains unproved |
 | Later paid revision | Order `2DBW139B2RRNY`; revisions `1790631186000` and `1790631503000` | Each paid latte uses 200 mL milk, 18 g espresso, 1 cup; second revision uses only its new line | Two applied events, two applications, three movements per revision, and no conflict; totals 400 mL milk, 36 g espresso, 2 cups | Passed one same-order paid addition in sandbox; see below |
 | Access-token refresh | Fictional merchant `4ZJYT1HV8X6Y1` | Sync continues after rotation, without duplicate stock use | Expiry advanced, menu loaded, then one owner sync returned 0 new and 0 held; counts and stock stayed fixed | Passed for one natural rotation and post-rotation sandbox reconciliation; see below |
+| Lost refresh response and recovery | Fictional merchant `4ZJYT1HV8X6Y1` | The previous refresh token recovers a discarded new pair; no sale or stock change | One provider recovery response was saved, followed by successful menu and modifier reads; sales events, applications, movements, balances, and checkpoint stayed fixed | Passed one controlled sandbox loss and recovery; see below |
 | Missed webhook and polling recovery | Order `N8GB1EV3E01NW`; event `N8GB1EV3E01NW:1790627357000` | One deduction after reconciliation: 200 mL milk, 18 g espresso, 1 cup | Exactly one applied sale and three matching movements | Passed with sales sync off during payment and one authenticated owner-workspace reconciliation; see below |
 | Disconnect and reconnect | Fictional merchant `4ZJYT1HV8X6Y1` | No new sync or stock use; history and mappings retained | Connection removed and restored for the same merchant; checkpoint, mappings, sales history, and stock unchanged | Passed one owner-driven sandbox disconnect and reauthorization; see below |
 
@@ -967,6 +968,55 @@ mocked-provider checks do not establish their provider behavior.
   owner reported revoking the temporary B7 merchant API token; that
   revocation was not independently checked. The local runner and non-secret
   attempt markers were removed.
+
+### Lost refresh response and Clover recovery (2026-09-29)
+
+- This test used the existing B7 fictional company and sandbox merchant, with
+  sales sync and exact-inventory gates absent. Read-only development D1 showed
+  **12 Clover sales events, 9 consumption applications, and 27 sale movements**;
+  milk, espresso, and cups held 13,341.647136 mL, 2,069.96185 g, and 991.
+  The sync checkpoint was `1790638224152`. The connection was still bound to
+  merchant `4ZJYT1HV8X6Y1` and had no active lease. Worker secret names
+  included the permanent webhook auth code and neither temporary sync gate.
+- Clover [documents](https://docs.clover.com/dev/docs/refresh-access-tokens)
+  single-use refresh tokens and recovery by the immediately preceding token
+  for high-trust apps. The B7 web app uses the server-side authorization-code
+  flow and an app secret, matching Clover's
+  [high-trust flow](https://docs.clover.com/dev/docs/high-trust-app-auth-flow);
+  that classification was inferred from the flow. The provider response below
+  directly established whether recovery was available for this connection.
+- A temporary Worker probe, scoped to the exact sandbox company and merchant,
+  required a one-use run marker and disabled sales sync. It used the existing
+  owner-only menu action, made one refresh request, discarded the returned
+  token pair **before storage**, and returned the safe message **B7 token-loss
+  simulation complete**. D1 retained the old encrypted connection and last
+  successful-contact time, and recorded one `clover.token_loss_attempt` and
+  one `clover.token_loss_complete` audit entry. No token or response body was
+  logged or shown to the browser.
+- The same owner made one second menu request with the probe in recovery mode.
+  Its safe Worker trace reported `provider_recovery_saved`. The menu loaded,
+  the connection's last successful contact advanced to
+  `2026-09-29T19:55:10.233Z`, and D1 recorded one recovery attempt and one
+  completion audit entry. The probe used Clover's documented recovery endpoint
+  only after its refresh endpoint returned `401` with the recovery-available
+  header. A modifier read on the restored ordinary Worker succeeded at about
+  `19:56:30Z`, confirming the persisted connection still worked.
+- Both probe secrets were deleted and the temporary source and tests were
+  removed. The ordinary Worker was restored as version
+  `ea5f9f6f-2770-4310-b91a-97e9412c9ecb`; a secret-name check found no
+  token-loss or sales-sync gate. Final D1 still showed **12 sales events, 9
+  applications, 27 movements**, the same three balances, and the same sync
+  checkpoint. No Clover order, payment, sales event, stock movement, or
+  purchasing action was created for this case. No development D1 migration
+  was applied; it remains through `0015`.
+- The temporary code passed the complete local pipeline: typecheck, 31 test
+  suites (including targeted one-use, recovered, declined, and failed-save
+  cases), migration check, build, local migration, and served local smoke.
+  Anonymous, wrong-company, and forbidden-role menu requests were also checked
+  locally. Those are mocked-provider checks; the two owner menu requests and
+  safe trace above are the direct Clover sandbox evidence. This proves one
+  lost-response recovery for the fictional connection, not every token outage
+  or native webhook retry. B7 remains open.
 
 ## Gate and recovery
 

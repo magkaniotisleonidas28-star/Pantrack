@@ -316,7 +316,7 @@ For every numbered item, the assigned person follows the same delivery loop:
   sandbox. One later $5 fictional latte was paid while sync was off, then
   recovered by one authenticated owner-workspace reconciliation with exactly
   200 mL milk, 18 g espresso, and one cup consumed once. Native Clover retry
-  behavior, lost-token recovery, and other provider cases remain
+  behavior and other provider cases remain
   open. One owner menu read during the natural OAuth refresh window advanced
   both token expiries and left fictional stock unchanged. A subsequent owner
   reconciliation after rotation returned zero new or held events, advanced the
@@ -333,6 +333,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   that sale and deducted 200 mL milk, 18 g espresso, and one cup once. The
   temporary probe and gates were removed, and the owner reports revoking the
   temporary merchant token. Native retry remains unproved.
+  A separate controlled lost-refresh-response case recovered the same sandbox
+  connection through Clover's recovery endpoint. Owner menu and modifier reads
+  succeeded afterward; sales history, exact stock, and the sync checkpoint
+  stayed unchanged. Its one-use probe and secrets were removed. This proves
+  one provider recovery path; native retry and paid-order deletion remain
+  unproved.
 - [ ] **B8 — Implement and accept M6.** After the product owner selects a real
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same
