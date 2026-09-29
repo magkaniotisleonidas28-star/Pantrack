@@ -14,9 +14,9 @@ export async function tokenExchange(body:object){const c=cloverConfig();return t
 async function refreshTokens(refreshToken:string){
  const c=cloverConfig(),body=JSON.stringify({client_id:c.clientId,refresh_token:refreshToken});
  const response=await fetch(c.api+'/oauth/v2/refresh',{method:'POST',redirect:'manual',headers:{'Content-Type':'application/json','User-Agent':'Pantrack/1.0'},body,signal:AbortSignal.timeout(15000)});
- if(response.ok)return {value:tokens.parse(await response.json()),viaRecovery:false};
+ if(response.ok)return tokens.parse(await response.json());
  if(response.status===401&&response.headers.get('X-Clover-Recovery-Available')==='true'){
-  return {value:tokens.parse(await cloverJson(c.api+'/oauth/v2/recovery',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:c.clientId,client_secret:c.clientSecret,recovery_token:refreshToken})})),viaRecovery:true};
+  return tokens.parse(await cloverJson(c.api+'/oauth/v2/recovery',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:c.clientId,client_secret:c.clientSecret,recovery_token:refreshToken})}));
  }
  throw new Error('Clover authorization expired. Reconnect your account.');
 }
@@ -32,37 +32,7 @@ export async function withClover<T>(companyId:string,fn:(c:Connection,token:stri
  if(!c)throw new Error('Connect Clover first, or wait for the current request to finish.');
  try{const config=cloverConfig();if(c.environment!==config.environment)throw new Error('Clover environment changed. Disconnect and reconnect.');
  const scope='clover:'+companyId;let t=tokens.parse(JSON.parse(await decrypt(c.secret,scope)));
- const testEnv=env as unknown as Record<string,string|undefined>;
- const runId=testEnv.PANTRACK_B7_TOKEN_LOSS_RUN_ID;
- const mode=testEnv.PANTRACK_B7_TOKEN_LOSS_MODE;
- const probe=runId&&/^[a-f0-9-]{36}$/.test(runId)&&['lose','recover'].includes(mode||'')&&config.environment==='sandbox'&&companyId==='eb05567b-e227-4f28-ae02-b81f55e6918c'&&c.merchant_id==='4ZJYT1HV8X6Y1'&&testEnv.PANTRACK_CLOVER_SYNC_ENABLED!=='enabled';
- const marker=(stage:string)=>'b7-token-'+stage+':'+runId;
- const audit=async(stage:string)=>{
-  const result=await db.prepare('INSERT OR IGNORE INTO security_audit(id,company_id,actor,action,target,created) VALUES (?,?,?,?,?,?)').bind(marker(stage),companyId,'b7-sandbox-probe','clover.token_'+stage,c.merchant_id,Date.now()).run();
-  return (result.meta?.changes??(result as unknown as {changes:number}).changes)===1;
- };
- if(probe&&mode==='recover'){
-  if(!await db.prepare('SELECT 1 FROM security_audit WHERE id=?').bind(marker('loss_complete')).first())throw new Error('B7 token-loss attempt has not completed.');
-  if(!await audit('recovery_attempt'))throw new Error('B7 token-recovery attempt already exists.');
- }
- if(probe&&mode==='lose'&&!await audit('loss_attempt'))throw new Error('B7 token-loss attempt already exists.');
- if(probe||t.access_token_expiration*1000<Date.now()+60000){
-  if(t.refresh_token_expiration*1000<Date.now())throw new Error('Clover authorization expired. Reconnect your account.');
-  const refreshed=await refreshTokens(t.refresh_token);
-  if(probe&&mode==='lose'&&!refreshed.viaRecovery){
-   await audit('loss_complete');
-   console.info('B7 Clover token probe',{stage:'loss',result:'new_pair_discarded'});
-   throw new Error('B7 token-loss simulation complete.');
-  }
-  t=refreshed.value;
-  const saved=await db.prepare('UPDATE clover_connections SET secret=? WHERE company_id=? AND lease_until=?').bind(await encrypt(JSON.stringify(t),scope),companyId,lease).run();
-  if((saved.meta?.changes??(saved as unknown as {changes:number}).changes)!==1)throw new Error('Clover token rotation could not be saved.');
-  if(probe&&mode==='lose')throw new Error('B7 token-loss preflight found an already-used refresh token; recovered credentials were saved.');
-  if(probe&&mode==='recover'){
-   await audit('recovery_complete');
-   console.info('B7 Clover token probe',{stage:'recovery',result:refreshed.viaRecovery?'provider_recovery_saved':'direct_refresh_saved'});
-  }
- }
+ if(t.access_token_expiration*1000<Date.now()+60000){if(t.refresh_token_expiration*1000<Date.now())throw new Error('Clover authorization expired. Reconnect your account.');t=await refreshTokens(t.refresh_token);const saved=await db.prepare('UPDATE clover_connections SET secret=? WHERE company_id=? AND lease_until=?').bind(await encrypt(JSON.stringify(t),scope),companyId,lease).run();if((saved.meta?.changes??(saved as unknown as {changes:number}).changes)!==1)throw new Error('Clover token rotation could not be saved.');}
  const result=await fn(c,t.access_token);await db.prepare('UPDATE clover_connections SET last_checked=? WHERE company_id=? AND lease_until=?').bind(new Date().toISOString(),companyId,lease).run();return result;
  }finally{await db.prepare('UPDATE clover_connections SET lease_until=0 WHERE company_id=? AND lease_until=?').bind(companyId,lease).run();}
 }

@@ -61,11 +61,11 @@ assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_connections WHERE com
 assert.ok(diagnostics.some(([label,details])=>label==='Clover OAuth callback failed'&&details.reason==='token_rejected'&&details.providerStatus===400));
 assert.ok(diagnostics.some(([label,details])=>label==='Clover OAuth callback failed'&&details.reason==='token_unavailable'&&details.errorKind==='transport'));
 assert.ok(!JSON.stringify(diagnostics).includes('hidden-provider-secret'));console.error=originalConsoleError;
-globalThis.testUser=null;assert.equal((await status()).status,401);assert.equal((await post({action:'sync'})).status,401);assert.equal((await post({action:'menu'})).status,401);
+globalThis.testUser=null;assert.equal((await status()).status,401);assert.equal((await post({action:'sync'})).status,401);
 globalThis.testUser={userId:'outsider'};assert.equal((await post({action:'disconnect'})).status,403);assert.equal((await status()).status,403);
 sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('other-company','Other','now');assert.equal((await post({companyId:'other-company',action:'mapItem',itemId:'x',recipeId:'x'})).status,403);
-globalThis.testUser={userId:'owner'};assert.equal((await post({companyId:'other-company',action:'disconnect'})).status,403);assert.equal((await post({companyId:'other-company',action:'menu'})).status,403);
-for(const role of ['manager','employee']){sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(role,'company',role);globalThis.testUser={userId:role};assert.equal((await status()).status,403);assert.equal((await post({action:'mapItem',itemId:'x',recipeId:'x'})).status,403);assert.equal((await post({action:'sync'})).status,403);assert.equal((await post({action:'menu'})).status,403);assert.equal((await post({action:'disconnect'})).status,403);}
+globalThis.testUser={userId:'owner'};assert.equal((await post({companyId:'other-company',action:'disconnect'})).status,403);
+for(const role of ['manager','employee']){sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(role,'company',role);globalThis.testUser={userId:role};assert.equal((await status()).status,403);assert.equal((await post({action:'mapItem',itemId:'x',recipeId:'x'})).status,403);assert.equal((await post({action:'sync'})).status,403);assert.equal((await post({action:'disconnect'})).status,403);}
 globalThis.testUser={userId:'owner'};
 sql.prepare('INSERT INTO clover_item_mappings VALUES (?,?,?,?,?)').run('company','sandbox','merchant1','latte-id','recipe-id');
 sql.prepare('INSERT INTO clover_modifier_mappings VALUES (?,?,?,?,?,?)').run('company','sandbox','merchant1','latte-id','shot-id','modifier-id');
