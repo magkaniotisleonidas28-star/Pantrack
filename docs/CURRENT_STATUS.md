@@ -241,6 +241,9 @@ supplier credentials, or payment details into chat or source control.
    secrets were removed. This closes that one lost-response case; native
    webhook retry, the rejected paid-order DELETE path, and other B7 limits
    remain open. See [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md).
+   The [B7 acceptance review](M5_B7_ACCEPTANCE_REVIEW.md) maps every M5 task
+   and criterion to direct sandbox or local evidence and proposes a bounded
+   development scope. Owner acceptance is pending; B7 and M5 remain open.
    Concurrent local-only A7 migrations were moved to `0016` and `0017` in
    the merge; development D1 remains at `0015` until A7's separate remote
    gate is authorized.
