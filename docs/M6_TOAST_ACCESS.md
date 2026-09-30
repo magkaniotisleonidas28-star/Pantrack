@@ -10,6 +10,17 @@ The owner has selected the **integration-partner application** route. The
 product/technical drafts and private owner fill-in fields. It is prepared locally;
 submission, agreement acceptance, and approval are not recorded.
 
+The owner reports that Pantrack is a **personal project**, not a registered
+business. The packet includes a simple walkthrough and short draft answers for
+that stage. Toast's acceptance of an individual applicant remains unconfirmed;
+do not infer it from access to the public application page.
+
+Toast's public API agreement (checked 2026-09-30) contains a competing-product
+restriction in section 2.4(vii) and business insurance requirements in section
+4.8. Their applicability to Pantrack and the application/testing stage has not
+been clarified by Toast. The packet includes a clarification draft for owner
+review; no message has been sent and no agreement accepted by the agent.
+
 ## Application submission sequence — owner actions
 
 1. Complete the packet's business/contact/customer details in a private copy.
@@ -87,7 +98,9 @@ remain unchecked until a real second provider satisfies the roadmap evidence.
 | --- | --- |
 | Second POS | Toast, selected by owner |
 | Access route | Integration-partner application, selected by owner |
-| Application material | [Draft packet](M6_TOAST_PARTNER_APPLICATION.md) prepared locally; owner details pending |
+| Applicant stage | Owner reports a personal project, not a registered business; individual eligibility unconfirmed |
+| Personal-project / agreement questions | Individual eligibility, inventory-use eligibility, and application/testing-stage insurance requirements need provider clarification; no provider answer recorded |
+| Application material | [Draft packet](M6_TOAST_PARTNER_APPLICATION.md) prepared locally with a simple walkthrough and personal-project wording; private contact details pending |
 | API agreement acceptance | No owner acceptance recorded; not performed by this task |
 | Application submission/date | No submission recorded; not performed by this task |
 | Toast response / use-case eligibility | Pending; no response or eligibility confirmation recorded |
@@ -119,3 +132,29 @@ not rerun for this documentation-only task.
 B8/M6 completion remains gated by the real second adapter and sandbox evidence
 in the roadmap. No runtime, API, schema, deployment, or provider account changed.
 Rollback is a revert of this documentation commit; the foundation remains intact.
+
+## Personal-project walkthrough follow-up — 2026-09-30
+
+The owner authorized the application walkthrough after confirming the
+personal-project stage. Safari reached the official agreement page, and its
+three initial fields and **I Agree** button were observed without entering
+contact details or submitting. The packet now contains short answers and a
+clarification draft for individual eligibility, the inventory use case, and
+application/testing-stage insurance requirements. These questions remain
+unanswered by Toast; submission and approval are not claimed.
+
+Verification: `git diff --check` passed; all four unique relative link
+occurrences across the two changed documents resolve. The official application
+and agreement pages were checked through web reads, and the agreement's initial
+form was observed directly in Safari. Runtime checks were not rerun because
+this follow-up changes documentation only.
+
+Next owner action: review the clarification draft and send it through the
+appropriate Toast contact, or provide an existing non-sensitive clarification
+status. Once the agreement questions are resolved, the owner can decide whether
+to accept and continue to the emailed application form. Contact details,
+correspondence, and any credentials stay private.
+
+Only this handoff and the packet changed. No runtime, schema, deployment,
+provider credential, agreement acceptance, or external message changed. B8/M6
+remain open. Revert the follow-up documentation commit to undo these additions.
