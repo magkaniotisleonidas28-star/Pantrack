@@ -255,7 +255,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   only after M3–M5; this handoff unblocks real M8 implementation. One
   [local sale-to-proposal integration slice](M7_A8_LOCAL_SALE_PROPOSAL_EVIDENCE.md)
   passed its focused test using fictional B7-shaped stock and sale amounts;
-  it predates M5 acceptance and does not satisfy hosted A8 gates.
+  it predates M5 acceptance and does not satisfy hosted A8 gates. A
+  [company-scoped Clover sales-health reader](M7_A8_SALES_READINESS_EVIDENCE.md)
+  now passes local checks, but its result is not yet wired into the proposal
+  contract or hosted UI.
 - [ ] **A9 — Execute A's M11 slice.** Configure approved pilot units, recipes,
   counts, targets, and pack conversions; measure inventory variance and proposal
   accuracy through two reviewed count-to-delivery cycles. Investigate variance
