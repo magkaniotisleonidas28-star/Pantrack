@@ -176,7 +176,7 @@ body{font-family:Arial,Helvetica,sans-serif;color:#20392f;margin:0}button,a,inpu
 .sidebar-foot small { font-size: 10px; margin-top: 5px; color: #87928b; }
 .sidebar-status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #75877b; margin-right: 7px; }
 .sidebar-workspace .workspace-body { min-width: 0; }
-.sidebar-workspace main { width: 100%; max-width: 1600px; margin: 0; padding: 28px 20px 0; }
+.sidebar-workspace main { width: 100%; max-width: none; margin: 0; padding: 28px 20px 0; }
 .sidebar-workspace .demo-banner { background: #fff; border-color: #e1e6e3; font-size: 12px; padding: 12px 14px; }
 .sidebar-workspace .page-heading { margin: 28px 0 24px; }
 .sidebar-workspace h1 { font-size: 28px; letter-spacing: -.7px; line-height: 1.3; }
