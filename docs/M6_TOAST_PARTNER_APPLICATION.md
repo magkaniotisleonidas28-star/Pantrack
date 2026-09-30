@@ -1,7 +1,7 @@
 # B8 — Pantrack Toast partner application packet
 
-Prepared: 2026-09-30. Outcome: application material prepared locally for owner
-review and private completion. The owner selected the integration-partner route.
+Prepared: 2026-09-30. Outcome: application material adapted to Toast's form and
+submitted by the owner. The owner selected the integration-partner route.
 Foundation commit `936f3ff` is preserved. B8/M6 remain incomplete.
 
 The owner confirmed on 2026-09-30 that Pantrack is currently a **personal
@@ -9,8 +9,10 @@ project**, rather than a registered business. This is owner-reported project
 status, not confirmation that Toast accepts this applicant type.
 
 The owner subsequently reports reading the terms and believes clarification
-has been received. Details were not supplied. Agreement acceptance, application
-submission, partner approval, and testing access are still separately pending.
+has been received. Details were not supplied. The owner's agreement completion
+on 2026-09-30 is now supported by Toast's confirmation viewed in Safari. The
+owner also submitted the application that day; Toast's receipt confirmation
+was observed directly. Partner approval and testing access remain pending.
 
 ## How to use this packet
 
@@ -18,8 +20,9 @@ Copy the relevant drafts into a private working document, fill in the owner
 details below, then adapt them to the actual questions in Toast's application.
 These are reusable answers, not a transcription of the form: the application
 form is linked in Toast's follow-up email. Review the wording before submitting.
-No application, email, agreement acceptance, or credential request was submitted
-by this task.
+The owner has completed this application. Preserve these drafts for reference;
+do not submit a duplicate. The agent did not accept the agreement or submit the
+application, and no credential request was submitted by the agent.
 
 Toast's [application page](https://pos.toasttab.com/partners/integration-partner-application)
 currently directs prospective partners to review its API agreement, follow the
@@ -39,12 +42,12 @@ private correspondence, and credentials outside this repository.
 | Applicant's legal business name and entity status | Owner reports a personal project, not a registered business; Pantrack is the product name. Confirm how Toast accepts an individual applicant if the form requires a legal business. |
 | Authorized applicant's name, role, and authority to represent the business | Owner/developer of the personal project; name completed privately. Do not claim authority to represent an unregistered company. |
 | Business email and phone, if requested | `[OWNER TO COMPLETE PRIVATELY]` |
-| Website or public product page | `[OWNER TO CONFIRM]` — describe any prototype/demo URL accurately |
-| Target customer | Cafés; intended future service across multiple businesses |
-| Intended launch countries/regions | `[OWNER TO CONFIRM]` |
+| Website or public product page | Owner selected the hosted Pantrack development prototype; the application explicitly explains that it requires sign-in |
+| Target customer | Owner selected individual cafés and small groups first; intended future service across separate café businesses |
+| Intended launch countries/regions | Owner reports USA for the current development/application stage; timing remains unconfirmed |
 | Business/development stage and launch expectations | Development prototype; `[OWNER TO CONFIRM BUSINESS STAGE AND TIMING]` |
-| Actual customers and adoption figures, if requested | `[OWNER TO CONFIRM]` — no production customer/adoption evidence is recorded in this packet |
-| Interested Toast cafés or mutual customers | `[OWNER TO CONFIRM PRIVATELY WITH THEIR PERMISSION]` — no named café or confirmed Toast pilot is supplied |
+| Actual customers and adoption figures, if requested | Owner reports no current customer cafés; no production adoption is claimed |
+| Interested Toast cafés or mutual customers | Owner reports no current Toast customer requests; no confirmed Toast pilot or endorsement is supplied |
 | Commercial model, if requested | `[OWNER TO CONFIRM]` — pricing and commercial terms are not established by this packet |
 | Supporting material | Use a sanitized fictional-data demo and accurately labeled development evidence |
 
@@ -199,8 +202,9 @@ capabilities in Pantrack.
 
 ### Customer demand — fill in privately
 
-`[OWNER TO ADD AN ACCURATE ACCOUNT OF INTERESTED CUSTOMERS, OR STATE THAT NO
-TOAST PILOT CUSTOMER IS CONFIRMED. SHARE NAMES OR CONTACTS ONLY WITH PERMISSION.]`
+The owner reports no current customer cafés or Toast integration requests.
+Describe Pantrack as pre-launch. Add future customer interest only after the
+owner confirms it accurately and has permission to share names or contacts.
 
 Toast's application page asks applicants to explain the proposed integration
 and any mutual-customer interest. No customer endorsements are implied by the
@@ -226,8 +230,9 @@ approval date, response time, or acceptance is promised by this packet.
 
 ## Handoff and evidence limits
 
-- **Owner/C3:** complete business details, submit the application, and provide
-  the approved non-secret access handoff in [M6_TOAST_ACCESS.md](M6_TOAST_ACCESS.md).
+- **Owner/C3:** agreement acceptance and application submission are complete.
+  Await Toast's review response, then provide the approved non-secret access
+  handoff in [M6_TOAST_ACCESS.md](M6_TOAST_ACCESS.md).
 - **B:** after approved sandbox access, plan one read-only Toast connection
   outcome using the [existing adapter foundation](M6_B8_ADAPTER_FOUNDATION.md).
   Native sales cases and B8 acceptance follow in separate tasks.
@@ -235,8 +240,12 @@ approval date, response time, or acceptance is promised by this packet.
   and official Toast pages checked on 2026-09-30. The foundation's code/test
   evidence belongs to its earlier record; no runtime tests were rerun for this
   documentation-only outcome.
-- **External evidence:** no Toast application submission, agreement acceptance,
-  approval, credential provision, API call, or sandbox connection is proved.
+- **External evidence:** Toast's agreement-completion and application-receipt
+  confirmations were observed directly in Safari on 2026-09-30 after the owner
+  completed those actions. The receipt says a response may take up to 30 days;
+  no approval, eligibility decision, credential provision, API call, or sandbox
+  connection is proved.
 - **Contracts/migrations/rollback:** no API, schema, runtime, or deployment
   change. Revert this documentation commit to remove the packet and tracker
-  additions; foundation commit `936f3ff` remains intact.
+  additions; foundation commit `936f3ff` remains intact. Reverting documentation
+  does not withdraw the owner's submitted application.
