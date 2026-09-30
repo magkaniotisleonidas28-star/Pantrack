@@ -158,7 +158,7 @@ export class D1ReplenishmentProposalOrigins {
       ? cloverSourceGuard(snapshot.salesReadiness, policy, new Date(at))
       : {sql: '1=1', args: [] as readonly (string | number)[]};
     try {
-      const result = await this.db.prepare(`INSERT INTO replenishment_proposal_origins
+      await this.db.prepare(`INSERT INTO replenishment_proposal_origins
         (company_id,id,create_id,product_id,initial_status,snapshot_json,created_by,created_at)
         SELECT ?,?,?,?,?,?,?,? WHERE ${clover.sql} AND EXISTS (
           SELECT 1 FROM inventory_balances_exact b
@@ -175,9 +175,16 @@ export class D1ReplenishmentProposalOrigins {
           request.actor.userId, at, ...clover.args, snapshot.settingsVersion, request.companyId, request.productId,
           snapshot.inventoryVersion, snapshot.inventoryConfigId, snapshot.inventoryConfigVersion,
           snapshot.settingsChangeId).run();
-      if (Number(result.meta?.changes ?? 0) !== 1) {
+      // Some local D1 runtimes report zero changes for INSERT ... SELECT even
+      // when the row was committed. The persisted create ID is authoritative.
+      const saved = await this.byCreate(request.companyId, request.createId);
+      if (!saved) {
         throw new ProposalOriginError('source_changed', 'Inventory, settings, or Clover sales health changed before this proposal was stored.');
       }
+      if (!sameRequest(saved, request)) {
+        throw new ProposalOriginError('create_conflict', 'This create ID already represents a different proposal.');
+      }
+      return saved;
     } catch (error) {
       if (error instanceof ProposalOriginError) throw error;
       const replay = await this.byCreate(request.companyId, request.createId);
@@ -195,8 +202,5 @@ export class D1ReplenishmentProposalOrigins {
       if (reserved) throw new ProposalOriginError('quantity_reserved', 'An unresolved proposal already holds this product quantity.');
       throw new ProposalOriginError('storage_failure', 'Proposal origin could not be stored.');
     }
-    const saved = await this.byCreate(request.companyId, request.createId);
-    if (!saved) throw new ProposalOriginError('corrupt_store', 'A saved proposal origin is missing.');
-    return saved;
   }
 }

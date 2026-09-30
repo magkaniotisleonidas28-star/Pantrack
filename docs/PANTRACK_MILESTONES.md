@@ -264,8 +264,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   [read-only preview API/UI slice](M7_A8_PREVIEW_API_UI_EVIDENCE.md) now shows
   the arithmetic to managers behind the exact-inventory preview gate. A
   [gated manager flow](M7_A8_MANAGER_FLOW_EVIDENCE.md) exposes durable v2
-  list/create/edit/cancel actions; a positive served walkthrough and hosted
-  end-to-end evidence remain open.
+  list/create/edit/cancel actions. A [served local HTTP check](M7_A8_SERVED_LOCAL_EVIDENCE.md)
+  now exercises the positive flow and found and fixed false change-count
+  failures in conditional D1 writes. Browser visual review, the sales-freshness
+  decision, and hosted end-to-end evidence remain open.
 - [ ] **A9 — Execute A's M11 slice.** Configure approved pilot units, recipes,
   counts, targets, and pack conversions; measure inventory variance and proposal
   accuracy through two reviewed count-to-delivery cycles. Investigate variance

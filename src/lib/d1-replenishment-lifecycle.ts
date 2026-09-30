@@ -235,9 +235,8 @@ export class D1ReplenishmentLifecycle {
     try { edit = prepareProposalPackEdit(view.origin, salesCurrent ? current : null, input.actor, input.packs, reason); }
     catch { throw new ProposalLifecycleError('invalid_request', 'Quantity edit violates current review rules.'); }
     const sales = this.salesGuard(view.origin);
-    let result: D1Result;
     try {
-      result = await this.db.prepare(`UPDATE replenishment_proposal_states
+      await this.db.prepare(`UPDATE replenishment_proposal_states
         SET revision=revision+1,packs=?,change_id=?,kind='edit',changed_by=?,reason=?,changed_at=?
         WHERE company_id=? AND proposal_id=? AND revision=? AND status IN ('draft','review_required')
          AND invalidation_reason IS NULL AND ${SOURCE_MATCH} AND ${sales.sql}`)
@@ -253,7 +252,12 @@ export class D1ReplenishmentLifecycle {
       if (competing) throw new ProposalLifecycleError('quantity_reserved', 'Another unresolved proposal holds this product quantity.');
       throw new ProposalLifecycleError('storage_failure', 'Proposal edit could not be stored.');
     }
-    if (Number(result.meta?.changes ?? 0) !== 1) {
+    // Read the committed revision: local D1 can report zero changes after
+    // state triggers have written the matching audit event.
+    const editedState = await this.state(view.origin);
+    if (editedState.revision !== input.expectedRevision + 1 ||
+        editedState.change_id !== input.changeId || editedState.kind !== 'edit' ||
+        editedState.packs !== edit.packs) {
       throw new ProposalLifecycleError('source_changed', 'Proposal sources or revision changed before the edit was stored.');
     }
     return (await this.get(input.companyId, input.proposalId, input.actor))!;
@@ -280,9 +284,8 @@ export class D1ReplenishmentLifecycle {
     if (view.revision !== input.expectedRevision || !['draft', 'review_required', 'approved'].includes(view.status)) {
       throw new ProposalLifecycleError('conflict', 'Proposal cannot be canceled from this revision or state.');
     }
-    let result: D1Result;
     try {
-      result = await this.db.prepare(`UPDATE replenishment_proposal_states
+      await this.db.prepare(`UPDATE replenishment_proposal_states
         SET revision=revision+1,status='canceled',change_id=?,kind='cancel',changed_by=?,reason=?,changed_at=?
         WHERE company_id=? AND proposal_id=? AND revision=? AND status IN ('draft','review_required','approved')`)
         .bind(input.changeId, input.actor.userId, reason, this.clock.now().toISOString(),
@@ -292,7 +295,12 @@ export class D1ReplenishmentLifecycle {
       if (duplicate) throw new ProposalLifecycleError('conflict', 'Change ID already exists.');
       throw new ProposalLifecycleError('storage_failure', 'Proposal cancellation could not be stored.');
     }
-    if (Number(result.meta?.changes ?? 0) !== 1) throw new ProposalLifecycleError('conflict', 'Proposal revision changed.');
+    const canceledState = await this.state(view.origin);
+    if (canceledState.revision !== input.expectedRevision + 1 ||
+        canceledState.change_id !== input.changeId || canceledState.kind !== 'cancel' ||
+        canceledState.status !== 'canceled') {
+      throw new ProposalLifecycleError('conflict', 'Proposal revision changed.');
+    }
     return (await this.get(input.companyId, input.proposalId, input.actor))!;
   }
 }
