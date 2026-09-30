@@ -63,7 +63,6 @@ return <div className="app sidebar-workspace">
 </header>
 <div className="workspace-shell">
   <aside className="workspace-sidebar">
-    <div className="sidebar-label">WORKSPACE</div>
     {renderNavigation()}
     <div className="sidebar-foot"><span className="sidebar-status-dot"/>Purchasing workspace<small>Prepare. Review. Order with care.</small></div>
   </aside>
