@@ -1,7 +1,7 @@
 # Quick waste recording and menu analysis roadmap
 
-Prepared: 2026-09-30. Status: planned extensions; no feature implemented by
-this preparation task. The owner approved a roadmap alongside
+Prepared and updated: 2026-09-30. Status: W1 implemented for local review;
+W2/W3 and P1–P4 remain planned. The owner approved a roadmap alongside
 [C3 Baldor preparation](C3_BALDOR_PREPARATION.md).
 
 ## Goal and starting point
@@ -10,8 +10,8 @@ Make waste recording quick enough for workers to use during a busy shift, and
 give managers explainable ingredient/packaging margins and waste analysis.
 
 Basic ingredient waste already exists in the general inventory form. The
-inventory API currently restricts all writes to managers/owners; staff quick
-entry needs its own narrowly authorized behavior. Exact quantities, inventory
+general inventory API restricts writes to managers/owners; W1 adds narrowly
+authorized staff waste entry. Exact quantities, inventory
 events, recipe versions, and sales duplicate protection are reusable foundations.
 The exact inventory flow remains behind its existing development gate.
 
@@ -42,12 +42,27 @@ not rename the existing A/B/C milestone checklist or reopen accepted M3/M4 work.
 | P3 — Sales and waste analysis | B revenue handoff; A reporting; C price-source handoff | Popularity, contribution estimates, price trends, waste trends | Validated revenue and coverage before actual period results; waste is not charged twice |
 | P4 — Business profitability | Owner chooses expense sources; A/C implement | Labor, rent, utilities, other expenses | Separate scope and accounting rules agreed before implementation |
 
-While supplier access is pending, W1 is the next unblocked product task. Keep
+While supplier access is pending, W1 usability review is the next unblocked
+product step, followed by a separate W2 outcome. Keep
 Baldor inquiry preparation and local development independent. M7/A8 acceptance
 and approved supplier access still gate C5/M8; this roadmap bypasses no existing
 pilot or production requirement.
 
 ## W1 — A quick, repeatable staff flow
+
+**Local status:** [implementation and evidence](W1_LOCAL_EVIDENCE.md) are ready
+for review. The full local pipeline passed, including 35 test suites and a
+fresh database with additive migration `0018`. Fictional Safari walkthroughs
+covered light/dark, phone/tablet, staff access, manager shortcuts, and recovery
+after server loss. Automated favorite-item tasks took 6.48 and 6.137 seconds;
+these are preliminary measurements, not a worker usability study.
+
+- [x] Implement the narrow flow, authorization, exact stock effects, and safe retries locally.
+- [x] Verify automated contracts and fictional served visual behavior.
+- [ ] Complete manual keyboard and physical-device/worker usability review.
+- [ ] Record owner acceptance of the reviewed W1 scope.
+
+No hosted migration, deployment, pilot, or production acceptance is included.
 
 **Flow:** Record waste → choose ingredient → choose quantity and reason → Save.
 
@@ -157,8 +172,9 @@ ingredient-only calculations.
 
 ## Implementation gates
 
-- No public API/type/schema changes occur in this documentation task. Future
-  W1 introduces narrow company-scoped waste access; W2 coordinates consumption
+- W1 introduces narrow company-scoped waste access and additive migration
+  `0018`; its local contracts and compatibility are in the evidence record.
+  W2 coordinates consumption
   identities with B; P1 adds dated cost records; P3 publishes a revenue contract.
 - Preserve accepted inventory/sales semantics. New persisted records use new
   additive migrations through the single schema merge queue, never reserved
@@ -170,7 +186,10 @@ ingredient-only calculations.
   deployments, real café data, supplier contact, and purchases each require the
   relevant task's authorization and roadmap evidence.
 
-## Preparation handoff
+## Original preparation handoff
+
+The following records the earlier documentation-only C3 preparation task.
+W1's later implementation has its own [handoff](W1_LOCAL_EVIDENCE.md#handoff).
 
 **Workstream/outcome:** C3 Baldor preparation packet plus the approved staged
 feature roadmap; B8 recorded as waiting on Toast. These documents are ready for

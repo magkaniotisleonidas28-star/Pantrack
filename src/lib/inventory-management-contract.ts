@@ -17,6 +17,8 @@ export type ConfigureInventoryInput = {
   effectiveAt: string;
 };
 
+export type WasteReason = 'spilled' | 'spoiled' | 'preparation_error' | 'other';
+
 export type InventoryMovementInput = {
   companyId: string;
   productId: string;
@@ -29,6 +31,7 @@ export type InventoryMovementInput = {
   effectiveAt: string;
   note: string;
   fromIncoming?: boolean;
+  wasteReason?: WasteReason;
 };
 
 export type InventoryCountInput = {

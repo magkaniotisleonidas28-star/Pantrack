@@ -11,6 +11,8 @@ const managedLinux = readExecutionProfile() === "managed-linux";
 
 export default defineConfig(async ({ command }) => {
   const a5LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_A5_REVIEW === "enabled";
+  const w1LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_W1_REVIEW === "enabled";
+  const exactLocalReview = a5LocalReview || w1LocalReview;
   return {
     server: {
       host: "127.0.0.1",
@@ -23,13 +25,13 @@ export default defineConfig(async ({ command }) => {
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
-        ...(a5LocalReview ? { persistState: { path: ".sites-runtime/a5-review-state" } } : {}),
+        ...(exactLocalReview ? { persistState: { path: w1LocalReview ? ".sites-runtime/w1-review-state" : ".sites-runtime/a5-review-state" } } : {}),
         // Development uses an isolated placeholder binding. Production builds
         // read the real development binding from the checked-in Wrangler file.
         ...(command === "serve"
           ? {
               configPath: "wrangler.local.jsonc",
-              config: { main: "vinext/server/fetch-handler", ...(a5LocalReview ? { vars: { PANTRACK_EXACT_INVENTORY_PREVIEW: "enabled" } } : {})},
+              config: { main: "vinext/server/fetch-handler", ...(exactLocalReview ? { vars: { PANTRACK_EXACT_INVENTORY_PREVIEW: "enabled" } } : {})},
             }
           : {}),
       }),

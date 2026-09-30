@@ -3,12 +3,14 @@ import {companyAccess} from '@/lib/company-access';
 import {audit,csrf} from '@/lib/auth';
 import {z} from 'zod';
 export type Role='owner'|'manager'|'employee';
-export type Permission='read'|'operate'|'integrations'|'members'|'finance'|'pause';
+export type Permission='read'|'operate'|'integrations'|'members'|'finance'|'pause'|'recordWaste';
 export function permitted(role:string,permission:Permission){
-  return role==='owner'||role==='manager'&&['read','operate','pause'].includes(permission)||role==='employee'&&permission==='read';
+  return role==='owner'||role==='manager'&&['read','operate','pause','recordWaste'].includes(permission)||role==='employee'&&['read','recordWaste'].includes(permission);
 }
-type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members';
+type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts';
 export function routePermission(family:Family,method:string,action?:string):Permission{
+  if(family==='waste')return 'recordWaste';
+  if(family==='waste-shortcuts')return 'operate';
   if(family==='members'||family==='companies')return 'members';
   if(family==='payments')return 'finance';
   if(family==='clover'||family==='register'&&method!=='GET')return 'integrations';
@@ -28,13 +30,14 @@ export function withCompanyRoute(family:Family,handler:(req:Request)=>Promise<Re
         const member=await companyAccess(user.userId,companyId);
         if(!member||!permitted(member.role,routePermission(family,req.method,body?.action)))return Response.json({error:'You do not have permission for this company action.'},{status:403});
       }
-      const logged=mutation&&['companies','inventory','register','clover','payments','automation'].includes(family);
-      const target=typeof body?.action==='string'?body.action.slice(0,80):'';
+      const logged=mutation&&['companies','inventory','register','clover','payments','automation','waste','waste-shortcuts'].includes(family);
+      const target=(family==='waste'||family==='waste-shortcuts')&&typeof body?.operationId==='string'
+        ?body.operationId.slice(0,80):typeof body?.action==='string'?body.action.slice(0,80):'';
       if(logged)await audit(typeof companyId==='string'?companyId:null,user.userId,family+'.attempt',target).run();
       const response=await handler(req);
       if(logged)await audit(typeof companyId==='string'?companyId:null,user.userId,family+(response.ok?'.succeeded':'.failed'),target).run();
       response.headers.set('Cache-Control','private, no-store');
       return response;
-    }catch{return Response.json({error:'Request could not be completed. Please retry.'},{status:400});}
+    }catch{if(family==='waste'||family==='waste-shortcuts')return Response.json({error:'The save outcome is uncertain. Retry the same entry.',uncertain:true},{status:503});return Response.json({error:'Request could not be completed. Please retry.'},{status:400});}
   };
 }

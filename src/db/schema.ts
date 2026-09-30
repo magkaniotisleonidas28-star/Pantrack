@@ -197,11 +197,27 @@ export const inventoryEventsExact=sqliteTable('inventory_events_exact',{
  actor:text('actor').notNull(),
  note:text('note').notNull(),
  consumptionKey:text('consumption_key'),
+ wasteReason:text('waste_reason'),
 },t=>[
  primaryKey({columns:[t.companyId,t.id]}),
  index('inventory_events_exact_product_time').on(t.companyId,t.productId,t.effectiveAt),
  foreignKey({columns:[t.companyId,t.productId,t.configId],foreignColumns:[inventoryConfigVersions.companyId,inventoryConfigVersions.productId,inventoryConfigVersions.id]}),
  foreignKey({columns:[t.companyId,t.consumptionKey],foreignColumns:[inventoryConsumptionApplications.companyId,inventoryConsumptionApplications.idempotencyKey]}),
+]);
+
+export const wasteShortcuts=sqliteTable('waste_shortcuts',{
+ companyId:text('company_id').notNull(),
+ productId:text('product_id').notNull(),
+ configId:text('config_id').notNull(),
+ revision:integer('revision').notNull(),
+ operationId:text('operation_id').notNull(),
+ shortcutsJson:text('shortcuts_json').notNull(),
+ updatedBy:text('updated_by').notNull(),
+ updatedAt:text('updated_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.productId]}),
+ uniqueIndex('waste_shortcuts_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.productId,t.configId],foreignColumns:[inventoryConfigVersions.companyId,inventoryConfigVersions.productId,inventoryConfigVersions.id]}),
 ]);
 
 export const recipeLineages=sqliteTable('recipe_lineages',{

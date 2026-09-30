@@ -410,3 +410,48 @@ body[data-workspace-theme=dark] :is(.order-dialog,.workspace-navigation-sheet) :
 body[data-workspace-theme=dark] .workspace-navigation-sheet :is(.sidebar-main-item,.sidebar-subsections button) { color: #bdd2c2; }
 body[data-workspace-theme=dark] .workspace-navigation-sheet nav button:hover { background: #263a2e; }
 body[data-workspace-theme=dark] .workspace-navigation-sheet nav button[aria-current=page] { background: #244533; color: #c2f0d0; }
+
+/* Quick ingredient waste uses the same theme as portal-based workspace panels. */
+.waste-entry-button { flex-shrink: 0; min-height: 44px; }
+.employee-waste-actions { display: flex; gap: 8px; margin: 16px 0; }
+.employee-workspace[data-workspace-theme=dark] { color: #eaf3ec; }
+.employee-workspace[data-workspace-theme=dark] :is(h1,h2,h3,strong,p) { color: #eaf3ec; }
+.waste-sheet[data-slot=sheet-content] { width: min(100%, 480px); max-width: 480px; padding: 24px; overflow-y: auto; background: var(--background); color: var(--foreground); animation: none !important; transition: none; }
+body:has(.waste-sheet) [data-slot=sheet-overlay] { animation: none !important; }
+.waste-discard-dialog, body:has(.waste-discard-dialog) [data-slot=alert-dialog-overlay] { animation: none !important; }
+.waste-sheet h2 { font-size: 22px; margin: 0; font-weight: 650; }
+.waste-sheet h3 { font-size: 12px; font-weight: 650; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: .06em; margin: 22px 0 8px; }
+.waste-sheet label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 550; }
+.waste-sheet label span, .waste-hint { font-weight: 400; color: var(--muted-foreground); font-size: 13px; }
+.waste-sheet input, .waste-sheet textarea { min-height: 46px; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; color: var(--foreground); background: var(--background); }
+.waste-sheet textarea { resize: vertical; }
+.waste-sheet fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 16px; }
+.waste-form, .waste-picker { display: grid; gap: 16px; }
+.waste-ingredient { display: flex; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+.waste-ingredient button { padding: 12px; min-height: 52px; text-align: left; border-radius: 10px; }
+.waste-ingredient button:first-child { flex: 1; font-weight: 550; }
+.waste-ingredient small { display: block; color: var(--muted-foreground); font-weight: 400; font-size: 12px; }
+.waste-ingredient button:hover { background: var(--accent); }
+.waste-sheet button:focus-visible, .waste-sheet textarea:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.waste-shortcuts, .waste-reasons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px !important; }
+.waste-sheet .waste-reasons { gap: 8px; }
+.waste-reasons legend { font-size: 14px; font-weight: 550; margin-bottom: 10px; }
+.waste-reasons button, .waste-shortcuts button { height: auto; min-height: 48px; white-space: normal; }
+.waste-shortcuts button { flex-direction: column; gap: 2px; }
+.waste-shortcuts small { font-weight: 400; }
+.waste-sheet button[aria-pressed=true] { background: var(--accent); border-color: var(--primary); color: var(--primary); }
+.waste-actions { display: flex; gap: 8px; position: sticky; bottom: -24px; background: var(--background); padding: 16px 0; }
+.waste-actions button { min-height: 48px; flex: 1; }
+.waste-back { justify-self: start; padding-left: 0; }
+.waste-error { background: #fff0eb; color: #822f20; border-radius: 8px; padding: 12px; font-size: 14px; }
+body[data-workspace-theme=dark] .waste-error { background: #4b2928; color: #ffceca; }
+.waste-success { display: grid; gap: 16px; padding: 32px 0; }
+.waste-success svg { color: var(--primary); }
+.waste-shortcut-row { display: grid; grid-template-columns: 1fr 90px auto; gap: 8px; align-items: end; }
+@media(max-width: 640px) {
+  .waste-sheet[data-slot=sheet-content] { padding: 20px 16px; }
+  .waste-actions { bottom: -20px; }
+  .topbar { flex-wrap: wrap; }
+  .sidebar-workspace .topbar { height: auto; min-height: 60px; padding: 8px 16px; row-gap: 8px; }
+  .topbar .waste-entry-button { order: 3; margin: 4px 0; }
+}

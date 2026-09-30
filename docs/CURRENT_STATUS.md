@@ -149,15 +149,22 @@ supplier credentials, or payment details into chat or source control.
 
 ## What you need to do next
 
-Current focus: **C3 Baldor supplier preparation** and the planned
-[quick waste/menu analysis extensions](WASTE_AND_MARGIN_ROADMAP.md). The
+Current focus: **W1 quick ingredient-waste local review** and
+**C3 Baldor supplier preparation**. The
+[waste/menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md) now has a
+[working W1 local preview](W1_LOCAL_EVIDENCE.md): staff can record a quantity
+and reason, use favorites and manager shortcuts, and confirm an uncertain save
+without deducting stock twice. Local automated checks and fictional Safari
+phone/tablet walkthroughs passed. Manual keyboard and real-worker usability
+review remain open; W1 has not been deployed or accepted for a pilot. The
 [Baldor packet](C3_BALDOR_PREPARATION.md) includes an inquiry ready for owner
 review and sending. The owner reports a NYC café with an existing Baldor
 account for a later pilot; it has not been accessed or independently verified.
 **B8 is on hold while Toast reviews the application submitted on 2026-09-30.**
 Resume B8 on a request for information or an approved testing-access handoff.
-Waste and margin features are planned only; the next unblocked product task is
-W1 quick ingredient-waste entry. Supplier submission remains disabled.
+Prepared-item waste and margin features remain planned. The next unblocked
+step is the W1 usability review, then a separate W2 prepared-item waste outcome.
+Supplier submission remains disabled.
 
 1. C2's [development closeout](C2_M2_CLOSEOUT.md) now records the owner's
    reported additive M2 migration/auth review and a separate agent inspection.
@@ -316,6 +323,7 @@ limited automation.
 - [M6 Toast access handoff](M6_TOAST_ACCESS.md)
 - [C3 Baldor supplier preparation](C3_BALDOR_PREPARATION.md)
 - [Quick waste recording and menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md)
+- [W1 quick ingredient-waste local evidence](W1_LOCAL_EVIDENCE.md)
 - [September 19 readiness snapshot and approved M2 permissions](MILESTONE_READINESS.md)
 - [Full milestone roadmap](PANTRACK_MILESTONES.md)
 - [Branch consolidation record](BRANCH_CONSOLIDATION.md)

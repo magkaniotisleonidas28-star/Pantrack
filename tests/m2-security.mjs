@@ -11,7 +11,7 @@ globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
 const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review','replenishment/proposals'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
+for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review','replenishment/proposals','waste','waste/shortcuts'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
  const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
@@ -205,6 +205,45 @@ for(const family of ['register/ingest','automation/tick']){
  assert.equal((await call(family,'POST',{},'',{Authorization:'Bearer wrong'})).status,401);
 }
 assert.match((await call('clover/callback')).headers.get('location'),/failed/);
+// W1 has a narrow permission, separate from general inventory writes.
+for(const route of ['waste','waste/shortcuts']){
+ assert.equal((await call(route)).status,401,route+' anonymous read');
+ assert.equal((await call(route,'POST',{companyId:'company-a'})).status,401,route+' anonymous write');
+ assert.equal((await call(route,'GET',null,cookies.other)).status,403,route+' wrong-company read');
+ assert.equal((await call(route,'POST',{companyId:'company-a'},cookies.other)).status,403,route+' wrong-company write');
+ assert.equal((await call(route,'POST',{companyId:'company-a'},cookies.owner,{Origin:'https://evil.test'})).status,403,route+' CSRF');
+}
+assert.equal((await call('waste/shortcuts','GET',null,cookies.employee)).status,403,'Employees cannot configure shortcuts.');
+assert.equal((await call('waste/shortcuts','POST',{companyId:'company-a'},cookies.employee)).status,403,'Employees cannot save shortcuts.');
+globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='';
+assert.equal((await call('waste','GET',null,cookies.employee)).status,404,'Waste is dark by default.');
+assert.equal((await call('waste','POST',{companyId:'company-a'},cookies.employee)).status,404,'Dark waste writes are blocked.');
+globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
+const safeWaste=await(await call('waste','GET',null,cookies.employee)).json();
+assert.deepEqual(Object.keys(safeWaste).sort(),['enabled','items','serverNow']);
+assert.deepEqual(Object.keys(safeWaste.items[0]).sort(),['configId','name','productId','shortcutRevision','shortcuts','unitId','unitLabel','version']);
+assert.ok(!/price|cost|actor|email|payment|audit|onHand/.test(JSON.stringify(safeWaste)),'Waste response excludes finances and other staff details.');
+const wasteItem=safeWaste.items.find(i=>i.productId==='milk');
+const shortcutRequest={companyId:'company-a',productId:'milk',configId:wasteItem.configId,expectedRevision:0,operationId:crypto.randomUUID(),shortcuts:[{label:'Small spill',amount:'1',unitId:'mL'}]};
+assert.equal((await call('waste/shortcuts','POST',shortcutRequest,cookies.manager)).status,200,'Managers can configure company shortcuts.');
+assert.equal((await call('waste/shortcuts','POST',shortcutRequest,cookies.manager)).status,200,'Shortcut retry is idempotent.');
+const wasteRequest={companyId:'company-a',productId:'milk',operationId:crypto.randomUUID(),expectedVersion:wasteItem.version,amount:'1',unitId:'mL',effectiveAt:'2026-05-01T00:00:00Z',reason:'spilled',note:''};
+assert.equal((await call('waste','POST',{...wasteRequest,actor:accounts.owner.id},cookies.employee)).status,400,'Client actor is rejected.');
+assert.equal((await call('waste','POST',{...wasteRequest,action:'receive'},cookies.employee)).status,400,'Waste cannot be used for receipts.');
+assert.equal((await call('waste','POST',{...wasteRequest,reason:'unknown'},cookies.employee)).status,400,'Reasons are required and validated.');
+const savedWaste=await call('waste','POST',wasteRequest,cookies.employee);
+assert.equal(savedWaste.status,200,await savedWaste.clone().text());
+assert.match(savedWaste.headers.get('Cache-Control'),/no-store/);
+assert.deepEqual(Object.keys((await savedWaste.json()).result).sort(),['amount','effectiveAt','operationId','productId','reason','unitId']);
+assert.equal((await call('waste','POST',wasteRequest,cookies.employee)).status,200,'Staff can confirm a duplicate without another deduction.');
+assert.equal((await call('waste','POST',{...wasteRequest,reason:'other'},cookies.employee)).status,409,'Changed duplicate reason is rejected.');
+const wasteEvent=sql.prepare('SELECT actor,waste_reason FROM inventory_events_exact WHERE company_id=? AND id=?').get('company-a','movement:'+wasteRequest.operationId);
+assert.equal(wasteEvent.actor,accounts.employee.id,'Waste actor is session-derived.');
+assert.equal(wasteEvent.waste_reason,'spilled');
+assert.equal(sql.prepare("SELECT count(*) AS n FROM security_audit WHERE company_id='company-a' AND action='waste.succeeded'").get().n,2,'Waste mutations are audited.');
+assert.equal((await call('waste','POST',wasteRequest,'expired-cookie')).status,401,'Expired session never claims success.');
+assert.equal((await call('inventory','POST',{companyId:'company-a',action:'movementExact',movement:'waste'},cookies.employee)).status,403,'Broad inventory writes remain forbidden.');
+
 // Direct hostile hosting headers never create identity.
 assert.equal((await call('companies','GET',null,'',{'oai-authenticated-user-id':accounts.owner.id,'oai-authenticated-user-email':accounts.owner.email,'x-pantrack-local-stamp':String(Date.now()),'x-pantrack-local-signature':'ab'.repeat(32)})).status,401);
 // A real second-company membership has its own role.

@@ -79,7 +79,7 @@ export default function ExactInventoryPanel({companyId,products,role,view,legacy
   const suggested=plans.filter(value=>value.plan.packs>0);
   return <>
     <div className="page-heading"><div><div className="eyebrow">B4 EXACT SALES & INVENTORY PREVIEW</div><h1>Inventory, recipes & sales</h1><p>Exact units, immutable recipe history, durable sales events, and reviewed exceptions now move together behind this preview switch.</p></div><Button variant="outline" disabled={loading||busy} onClick={()=>void onReload()}><RefreshCw size={16}/>Refresh</Button></div>
-    {!canManage&&<div className="notice">You have read-only access. An owner or manager records counts, unit changes, and recipe versions.</div>}
+    {!canManage&&<div className="notice">Use Record waste for ingredient waste. An owner or manager records counts, unit changes, and recipe versions.</div>}
     {error&&<div role="alert" className="error">{error}</div>}{notice&&<div role="status" className="notice">{notice}<button onClick={()=>setNotice('')}>×</button></div>}
     <div className="inventory-stats"><article><strong>{view.records.length}</strong><span>Products classified</span></article><article><strong>{products.length-view.records.length}</strong><span>Need an opening count</span></article><article><strong>{activeRecipes.length}</strong><span>Active recipe versions</span></article></div>
     <>

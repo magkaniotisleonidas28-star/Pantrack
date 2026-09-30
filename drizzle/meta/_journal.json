@@ -127,6 +127,13 @@
       "when": 1790353695769,
       "tag": "0017_confused_electro",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1790808259911,
+      "tag": "0018_w1_quick_waste",
+      "breakpoints": true
     }
   ]
 }

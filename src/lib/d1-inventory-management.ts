@@ -48,7 +48,7 @@ type ConfigRow = {
 };
 type StoredMovementRow = {
   product_id: string; action: string; entered_amount: string | null; entered_unit_id: string | null;
-  balance_version_before: number; effective_at: string; actor: string; note: string;
+  balance_version_before: number; effective_at: string; actor: string; note: string; waste_reason: string | null;
 };
 type StoredCountRow = {
   product_id: string; entered_amount: string; entered_unit_id: string | null;
@@ -308,34 +308,49 @@ export class D1InventoryManagementService implements InventoryManagementService 
   }
 
   async recordMovement(input: InventoryMovementInput) {
-    const state=await this.movementState(input),{row,unit,effectiveAt,at,legacy}=state;
-    const amount=toCanonical(input.amount,unit,{companyId:input.companyId,productId:input.productId});positive(amount,'Movement quantity must be positive.');
+    await this.product(input.companyId,input.productId);
+    if(!validId(input.operationId)||!validId(input.actor)||!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<0)throw new InventoryManagementError('invalid_input','Operation identity, actor, and expected version are required.');
+    const effectiveAt=this.normalizedTime(input.effectiveAt);
     const eventId=`movement:${input.operationId}`;
-    const stored=await this.db.prepare(`SELECT product_id,action,entered_amount,entered_unit_id,balance_version_before,effective_at,actor,note
+    if(input.wasteReason!==undefined&&(input.action!=='waste'||!['spilled','spoiled','preparation_error','other'].includes(input.wasteReason)))throw new InventoryManagementError('invalid_input','Select a valid waste reason.');
+    const storedMovement=()=>this.db.prepare(`SELECT product_id,action,entered_amount,entered_unit_id,balance_version_before,effective_at,actor,note,waste_reason
       FROM inventory_events_exact WHERE company_id=? AND id=?`).bind(input.companyId,eventId).first<StoredMovementRow>();
-    if(stored){
+    const verifyMovement=(stored:StoredMovementRow)=>{
       if(stored.product_id!==input.productId||stored.action!==input.action||stored.entered_amount!==input.amount||stored.entered_unit_id!==input.unitId||
-          stored.balance_version_before!==input.expectedVersion||stored.effective_at!==effectiveAt||stored.actor!==input.actor||stored.note!==input.note.trim()){
+          stored.balance_version_before!==input.expectedVersion||stored.effective_at!==effectiveAt||stored.actor!==input.actor||stored.note!==input.note.trim()||stored.waste_reason!==(input.wasteReason??null)){
         throw new InventoryManagementError('operation_conflict','That movement operation identity was already used for different input.');
       }
+    };
+    const stored=await storedMovement();
+    if(stored){
+      verifyMovement(stored);
       const replay=await this.balance(input.companyId,input.productId);
       if(!replay)throw new InventoryManagementError('corrupt_store','Updated inventory is missing.');
       return this.record(replay);
     }
+    // Confirm an existing receipt before applying today's unit conversion:
+    // a later custom-unit revision must not invalidate an earlier saved entry.
+    const {row,unit,at,legacy}=await this.movementState(input);
+    const amount=toCanonical(input.amount,unit,{companyId:input.companyId,productId:input.productId});positive(amount,'Movement quantity must be positive.');
     const onHand=readCanonical(exact(row.dimension,row.on_hand_minor)),incoming=readCanonical(exact(row.dimension,row.incoming_minor)),used=readCanonical(exact(row.dimension,row.estimated_used_minor));
     if(row.latest_count_effective_at&&Date.parse(effectiveAt)<=Date.parse(row.latest_count_effective_at))throw new InventoryManagementError('before_count_cutoff','Stock movements must occur after the latest physical count.');
     let nextOnHand=onHand,nextIncoming=incoming,nextUsed=used,delta=ZERO;
     if(input.action==='receive'){nextOnHand+=readCanonical(amount);delta=readCanonical(amount);if(input.fromIncoming)nextIncoming=nextIncoming>readCanonical(amount)?nextIncoming-readCanonical(amount):ZERO;}
     if(input.action==='use'||input.action==='waste'){if(readCanonical(amount)>nextOnHand)throw new InventoryManagementError('invalid_quantity','Quantity exceeds recorded stock. Record a fresh count first.');nextOnHand-=readCanonical(amount);nextUsed+=readCanonical(amount);delta=-readCanonical(amount);}
     if(input.action==='incoming'){nextIncoming=readCanonical(amount);delta=nextIncoming-incoming;}
-    const legacyRecord=this.legacyRecord(legacy,input.productId,at);legacyRecord.onHand=legacyNumber(exact(row.dimension,String(nextOnHand)),unit);legacyRecord.incoming=legacyNumber(exact(row.dimension,String(nextIncoming)),unit);legacyRecord.estimatedUsed=legacyNumber(exact(row.dimension,String(nextUsed)),unit);legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
-    const results=await this.db.batch([
-      this.db.prepare(`INSERT OR IGNORE INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key)
-        SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL WHERE EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=?)`).bind(input.companyId,eventId,input.productId,row.config_id,input.action,row.dimension,String(delta),input.amount,input.unitId,input.expectedVersion,input.expectedVersion+1,effectiveAt,at,input.actor,input.note.trim(),input.companyId,input.productId,input.expectedVersion),
+    const stockUnit=await this.unit(input.companyId,input.productId,row.stock_unit_id,row.stock_unit_version);
+    const legacyRecord=this.legacyRecord(legacy,input.productId,at);legacyRecord.onHand=legacyNumber(exact(row.dimension,String(nextOnHand)),stockUnit);legacyRecord.incoming=legacyNumber(exact(row.dimension,String(nextIncoming)),stockUnit);legacyRecord.estimatedUsed=legacyNumber(exact(row.dimension,String(nextUsed)),stockUnit);legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
+    await this.db.batch([
+      this.db.prepare(`INSERT OR IGNORE INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
+        SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,? WHERE EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=?)`).bind(input.companyId,eventId,input.productId,row.config_id,input.action,row.dimension,String(delta),input.amount,input.unitId,input.expectedVersion,input.expectedVersion+1,effectiveAt,at,input.actor,input.note.trim(),input.wasteReason??null,input.companyId,input.productId,input.expectedVersion),
       this.db.prepare(`UPDATE inventory_balances_exact SET on_hand_minor=?,incoming_minor=?,estimated_used_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1`).bind(String(nextOnHand),String(nextIncoming),String(nextUsed),input.expectedVersion+1,at,input.companyId,input.productId,input.expectedVersion),
       legacy?this.db.prepare('UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1').bind(JSON.stringify(legacyRecord),legacyRecord.version,input.companyId,input.productId,legacy.version):this.db.prepare('INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE changes()=1').bind(input.companyId,input.productId,JSON.stringify(legacyRecord),legacyRecord.version),
     ]);
-    if(changes(results[0])!==1){const replay=await this.db.prepare('SELECT 1 AS found FROM inventory_events_exact WHERE company_id=? AND id=? AND product_id=?').bind(input.companyId,eventId,input.productId).first();if(!replay)throw new InventoryManagementError('concurrent_update','Inventory changed. Refresh and retry.');}
+    // D1 acknowledgments may include more than the direct INSERT changes. Read
+    // the committed receipt and verify its entire payload, including race losers.
+    const committed=await storedMovement();
+    if(!committed)throw new InventoryManagementError('concurrent_update','Inventory changed. Refresh and retry.');
+    verifyMovement(committed);
     const updated=await this.balance(input.companyId,input.productId);if(!updated)throw new InventoryManagementError('corrupt_store','Updated inventory is missing.');return this.record(updated);
   }
 
