@@ -1,4 +1,5 @@
-import {D1ReplenishmentReview, validateReviewFixtures, type ReviewSourceRequest} from './d1-replenishment-review';
+import {D1ReplenishmentReview, validateReviewBase, validateReviewFixtures, type ReviewBaseRequest, type ReviewSourceRequest} from './d1-replenishment-review';
+import {cloverSourceGuard, type CloverReviewPolicy} from './d1-replenishment-clover-source';
 import type {SettingsActor} from './d1-replenishment-settings';
 import {buildReviewProposal, type ReviewProposalSnapshot} from './replenishment-proposal';
 
@@ -14,6 +15,7 @@ export type ProposalOrigin = Readonly<{
   createdAt: string;
 }>;
 export type CreateProposalOriginInput = ReviewSourceRequest & Readonly<{id: string; createId: string}>;
+export type CreateCloverProposalOriginInput = ReviewBaseRequest & Readonly<{id: string; createId: string}>;
 
 export class ProposalOriginError extends Error {
   constructor(public readonly code: 'invalid_request' | 'forbidden' | 'source_unavailable' | 'source_changed' | 'quantity_reserved' | 'create_conflict' | 'id_conflict' | 'corrupt_store' | 'storage_failure', message: string) {
@@ -64,10 +66,9 @@ function decode(row: StoredRow): ProposalOrigin {
   }
 }
 
-function sameRequest(prior: ProposalOrigin, request: CreateProposalOriginInput): boolean {
+function sameRequest(prior: ProposalOrigin, request: CreateProposalOriginInput | CreateCloverProposalOriginInput): boolean {
   const snapshot = prior.snapshot;
   const source = {
-    salesReadiness: {source: request.sales.source, status: request.sales.status, heldEventCount: request.sales.heldEventCount},
     supplier: {
       source: request.supplier.source, mappingId: request.supplier.mappingId, mappingVersion: request.supplier.mappingVersion,
       supplierId: request.supplier.supplierId, accountId: request.supplier.accountId,
@@ -79,7 +80,11 @@ function sameRequest(prior: ProposalOrigin, request: CreateProposalOriginInput):
     },
   };
   return prior.id === request.id && prior.productId === request.productId && prior.createdBy === request.actor.userId &&
-    JSON.stringify({salesReadiness: snapshot.salesReadiness, supplier: snapshot.supplier, priceEstimate: snapshot.priceEstimate}) === JSON.stringify(source);
+    ('sales' in request
+      ? JSON.stringify(snapshot.salesReadiness) === JSON.stringify({source: request.sales.source,
+          status: request.sales.status, heldEventCount: request.sales.heldEventCount})
+      : snapshot.salesReadiness.source === 'clover_sync') &&
+    JSON.stringify({supplier: snapshot.supplier, priceEstimate: snapshot.priceEstimate}) === JSON.stringify(source);
 }
 
 /** Stores only the immutable, review-only origin. Later A7 states belong in append-only history. */
@@ -116,14 +121,46 @@ export class D1ReplenishmentProposalOrigins {
     }
     const review = await this.review.build(request);
     if (review.kind === 'unavailable') throw new ProposalOriginError('source_unavailable', `Review source is unavailable: ${review.reason}.`);
-    const snapshot = review.snapshot;
+    return this.store(request, review.snapshot);
+  }
+
+  /** Persist only a current Clover source. Paused/held sources remain transient review snapshots. */
+  async createWithClover(request: CreateCloverProposalOriginInput, policy: CloverReviewPolicy): Promise<ProposalOrigin> {
+    identifier(request.companyId); identifier(request.productId); identifier(request.id); identifier(request.createId);
+    actorFor(request.actor, request.companyId, true);
+    if (typeof policy?.syncEnabled !== 'boolean' || !Number.isSafeInteger(policy.maxLagMs) || policy.maxLagMs < 1) {
+      throw new ProposalOriginError('invalid_request', 'Clover review policy is invalid.');
+    }
+    try { validateReviewBase(request); }
+    catch { throw new ProposalOriginError('invalid_request', 'Review fixtures must be valid and belong to this company.'); }
+    const prior = await this.byCreate(request.companyId, request.createId);
+    if (prior) {
+      if (sameRequest(prior, request)) return prior;
+      throw new ProposalOriginError('create_conflict', 'This create ID already represents a different proposal.');
+    }
+    const review = await this.review.buildWithClover(request, policy);
+    if (review.kind === 'unavailable') throw new ProposalOriginError('source_unavailable', `Review source is unavailable: ${review.reason}.`);
+    if (review.snapshot.salesReadiness.source !== 'clover_sync' || review.snapshot.salesReadiness.status !== 'current') {
+      throw new ProposalOriginError('source_unavailable', 'Only current Clover health can be saved as a durable proposal.');
+    }
+    return this.store(request, review.snapshot, policy);
+  }
+
+  private async store(
+    request: CreateProposalOriginInput | CreateCloverProposalOriginInput,
+    snapshot: ReviewProposalSnapshot,
+    policy?: CloverReviewPolicy,
+  ): Promise<ProposalOrigin> {
     const status = initialProposalStatus(snapshot);
     const snapshotJson = JSON.stringify(snapshot);
     const at = this.clock.now().toISOString();
+    const clover = snapshot.salesReadiness.source === 'clover_sync'
+      ? cloverSourceGuard(snapshot.salesReadiness, policy, new Date(at))
+      : {sql: '1=1', args: [] as readonly (string | number)[]};
     try {
       const result = await this.db.prepare(`INSERT INTO replenishment_proposal_origins
         (company_id,id,create_id,product_id,initial_status,snapshot_json,created_by,created_at)
-        SELECT ?,?,?,?,?,?,?,? WHERE EXISTS (
+        SELECT ?,?,?,?,?,?,?,? WHERE ${clover.sql} AND EXISTS (
           SELECT 1 FROM inventory_balances_exact b
           JOIN inventory_config_versions c ON c.company_id=b.company_id AND c.product_id=b.product_id AND c.id=b.config_id
           JOIN replenishment_settings_versions s ON s.company_id=b.company_id AND s.product_id=b.product_id AND s.version=?
@@ -135,11 +172,11 @@ export class D1ReplenishmentProposalOrigins {
               WHERE company_id=b.company_id AND product_id=b.product_id)
         )`)
         .bind(request.companyId, request.id, request.createId, request.productId, status, snapshotJson,
-          request.actor.userId, at, snapshot.settingsVersion, request.companyId, request.productId,
+          request.actor.userId, at, ...clover.args, snapshot.settingsVersion, request.companyId, request.productId,
           snapshot.inventoryVersion, snapshot.inventoryConfigId, snapshot.inventoryConfigVersion,
           snapshot.settingsChangeId).run();
       if (Number(result.meta?.changes ?? 0) !== 1) {
-        throw new ProposalOriginError('source_changed', 'Inventory or settings changed before this proposal was stored.');
+        throw new ProposalOriginError('source_changed', 'Inventory, settings, or Clover sales health changed before this proposal was stored.');
       }
     } catch (error) {
       if (error instanceof ProposalOriginError) throw error;

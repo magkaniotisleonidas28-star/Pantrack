@@ -156,7 +156,8 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
       'sync_error', 'sync_stale', 'held_events']);
     if (sales.companyId !== input.companyId || !Array.isArray(sales.reasons) ||
         !sales.reasons.every(reason => validReasons.has(reason)) ||
-        (sales.status === 'current' && (sales.heldEventCount !== 0 || sales.reasons.length !== 0 ||
+        (sales.merchantId !== null && (typeof sales.merchantId !== 'string' || !sales.merchantId.trim() || sales.merchantId.length > 200)) ||
+        (sales.status === 'current' && (sales.merchantId === null || sales.heldEventCount !== 0 || sales.reasons.length !== 0 ||
           sales.checkpointAt === null || sales.lastSuccessAt === null)) ||
         (sales.status !== 'current' && sales.reasons.length === 0) ||
         (sales.heldEventCount > 0 && !sales.reasons.includes('held_events')) ||
@@ -230,6 +231,7 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
     salesReadiness: sales.source === 'clover_sync' ? {
       companyId: sales.companyId, source: sales.source, status: sales.status,
       heldEventCount: sales.heldEventCount, reasons: [...sales.reasons],
+      merchantId: sales.merchantId,
       checkpointAt: sales.checkpointAt, lastSuccessAt: sales.lastSuccessAt,
       checkedAt: sales.checkedAt,
     } : {source: sales.source, status: sales.status, heldEventCount: sales.heldEventCount},

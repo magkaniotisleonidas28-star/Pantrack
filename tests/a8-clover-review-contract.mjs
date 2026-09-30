@@ -9,6 +9,8 @@ await build({entryPoints:[
   'src/lib/replenishment-proposal.ts',
   'src/lib/replenishment-lifecycle.ts',
   'src/lib/c4-fake-supplier-consumer.ts',
+  'src/lib/d1-replenishment-proposal-origins.ts',
+  'src/lib/d1-replenishment-lifecycle.ts',
 ],bundle:true,platform:'node',format:'esm',outdir:'.sites-runtime/a8-clover-review',outExtension:{'.js':'.mjs'}});
 const dir='../.sites-runtime/a8-clover-review/';
 const {D1ReplenishmentReview}=await import(`${dir}d1-replenishment-review.mjs`);
@@ -16,6 +18,8 @@ const {D1ReplenishmentSettingsStore}=await import(`${dir}d1-replenishment-settin
 const {buildReviewProposal}=await import(`${dir}replenishment-proposal.mjs`);
 const {buildProposalHandoff}=await import(`${dir}replenishment-lifecycle.mjs`);
 const {C4FakeSupplierConsumer}=await import(`${dir}c4-fake-supplier-consumer.mjs`);
+const {D1ReplenishmentProposalOrigins}=await import(`${dir}d1-replenishment-proposal-origins.mjs`);
+const {D1ReplenishmentLifecycle}=await import(`${dir}d1-replenishment-lifecycle.mjs`);
 
 const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
 for(const entry of JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8')).entries){
@@ -37,7 +41,16 @@ class Statement{
   bind(...values){return new Statement(this.db,this.query,values);}
   async first(){return this.db.sql.prepare(this.query).get(...this.values)??null;}
   async all(){return {success:true,results:this.db.sql.prepare(this.query).all(...this.values),meta:{changes:0}};}
-  async run(){const result=this.db.sql.prepare(this.query).run(...this.values);return {success:true,results:[],meta:{changes:Number(result.changes)}};}
+  async run(){
+    if(this.query.includes('INSERT INTO replenishment_proposal_origins')&&this.db.beforeInsert){
+      const action=this.db.beforeInsert;this.db.beforeInsert=null;action();
+    }
+    if(this.query.includes('UPDATE replenishment_proposal_states')&&this.db.beforeStateUpdate){
+      const action=this.db.beforeStateUpdate;this.db.beforeStateUpdate=null;action();
+    }
+    const result=this.db.sql.prepare(this.query).run(...this.values);
+    return {success:true,results:[],meta:{changes:Number(result.changes)}};
+  }
 }
 const db={sql,cloverReads:0,heldReads:0,onSecondCloverRead:null,onSecondHeldRead:null,prepare(query){
   if(query.includes('SELECT COUNT(*) AS n FROM sales_events e')){
@@ -75,6 +88,7 @@ assert.equal(snapshot.contract,'pantrack.replenishment-review.v2');
 assert.equal(snapshot.salesReadiness.source,'clover_sync');
 assert.equal(snapshot.salesReadiness.status,'current');
 assert.equal(snapshot.salesReadiness.companyId,'a');
+assert.equal(snapshot.salesReadiness.merchantId,'merchant-a');
 assert.equal(snapshot.salesReadiness.checkpointAt,new Date(now-minute).toISOString());
 assert.equal(snapshot.explanation.recommendedPacks,'2');
 assert.ok(!snapshot.explanation.reviewReasons.includes('sales_not_current'));
@@ -94,10 +108,59 @@ try{
   assert.throws(()=>consumer.consume(handoff,'b'),error=>error.code==='forbidden');
   assert.throws(()=>consumer.consume({...handoff,contract:'pantrack.replenishment-handoff.v1'},'a'),error=>error.code==='invalid_handoff');
   assert.throws(()=>consumer.consume({...handoff,salesReadiness:{...handoff.salesReadiness,companyId:'b'}},'a'),error=>error.code==='invalid_handoff');
+  assert.throws(()=>consumer.consume({...handoff,salesReadiness:{...handoff.salesReadiness,merchantId:null}},'a'),error=>error.code==='invalid_handoff');
   assert.throws(()=>consumer.consume({...handoff,salesReadiness:{...handoff.salesReadiness,checkpointAt:null}},'a'),error=>error.code==='invalid_handoff');
   assert.throws(()=>consumer.consume({...handoff,supplierSubmissionAllowed:true},'a'),error=>error.code==='invalid_handoff');
   assert.equal(calls,0);
 }finally{globalThis.fetch=oldFetch;}
+
+const rejects=(promise,code)=>assert.rejects(promise,error=>error?.code===code);
+const origins=new D1ReplenishmentProposalOrigins(db,{clock:{now:()=>new Date(at)}});
+const lifecycle=new D1ReplenishmentLifecycle(db,{clock:{now:()=>new Date(at)},salesPolicy:policy});
+const durableRequest={...request,id:'durable-1',createId:'durable-create-1'};
+await rejects(origins.createWithClover({...durableRequest,actor:null},policy),'forbidden');
+await rejects(origins.createWithClover({...durableRequest,actor:{...actor,companyId:'b'}},policy),'forbidden');
+await rejects(origins.createWithClover({...durableRequest,actor:{...actor,role:'employee'}},policy),'forbidden');
+await rejects(origins.createWithClover({...durableRequest,supplier:{...supplier,companyId:'b'}},policy),'invalid_request');
+await rejects(origins.createWithClover(durableRequest,{...policy,syncEnabled:false}),'source_unavailable');
+const durable=await origins.createWithClover(durableRequest,policy);
+assert.equal(durable.snapshot.contract,'pantrack.replenishment-review.v2');
+assert.deepEqual(await origins.createWithClover(durableRequest,policy),durable);
+await rejects(origins.createWithClover({...durableRequest,priceEstimate:{...priceEstimate,perPackMinor:'900'}},policy),'create_conflict');
+const live=await lifecycle.get('a','durable-1',actor);
+assert.equal(live.revision,1);
+assert.equal(live.handoff.contract,'pantrack.replenishment-handoff.v2');
+assert.equal(live.handoff.supplierSubmissionAllowed,false);
+assert.deepEqual(live.handoff.invalidationReasons,[]);
+await rejects(lifecycle.get('a','durable-1',null),'forbidden');
+await rejects(lifecycle.get('a','durable-1',{...actor,companyId:'b'}),'forbidden');
+assert.equal(await lifecycle.get('b','durable-1',{...actor,companyId:'b'}),null);
+
+db.beforeInsert=()=>sql.prepare('UPDATE clover_sync_state SET checkpoint=? WHERE company_id=?').run(now-2*minute,'a');
+await rejects(origins.createWithClover({...durableRequest,id:'durable-race',createId:'durable-race'},policy),'source_changed');
+assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM replenishment_proposal_origins WHERE company_id='a'").get().n,1);
+sql.prepare('UPDATE clover_sync_state SET checkpoint=? WHERE company_id=?').run(now-minute,'a');
+db.beforeStateUpdate=()=>sql.prepare('UPDATE clover_sync_state SET checkpoint=? WHERE company_id=?').run(now-2*minute,'a');
+await rejects(lifecycle.edit({companyId:'a',proposalId:'durable-1',expectedRevision:1,changeId:'durable-edit-race',actor,packs:'1',reason:'Fictional review edit'}),'source_changed');
+assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM replenishment_proposal_events WHERE company_id='a' AND proposal_id='durable-1'").get().n,1);
+const stale=await lifecycle.get('a','durable-1',actor);
+assert.equal(stale.revision,2);
+assert.equal(stale.status,'review_required');
+assert.equal(stale.invalidationReason,'source_unavailable');
+assert.match(stale.events[1].reason,/Clover sales health changed/);
+assert.deepEqual(stale.handoff.invalidationReasons,['source_unavailable']);
+assert.equal((await lifecycle.get('a','durable-1',actor)).revision,2,'Repeated reads do not add audit events.');
+await rejects(lifecycle.edit({companyId:'a',proposalId:'durable-1',expectedRevision:2,changeId:'durable-edit-stale',actor,packs:'1',reason:'Fictional review edit'}),'conflict');
+await lifecycle.cancel({companyId:'a',proposalId:'durable-1',expectedRevision:2,changeId:'durable-cancel',actor,reason:'Replace stale review'});
+sql.prepare('UPDATE clover_sync_state SET checkpoint=? WHERE company_id=?').run(now-minute,'a');
+await origins.createWithClover({...durableRequest,id:'durable-merchant',createId:'durable-merchant'},policy);
+sql.prepare("UPDATE clover_sync_state SET merchant_id='merchant-new' WHERE company_id='a'").run();
+sql.prepare("UPDATE clover_connections SET merchant_id='merchant-new' WHERE company_id='a'").run();
+const merchantChanged=await lifecycle.get('a','durable-merchant',actor);
+assert.equal(merchantChanged.invalidationReason,'source_unavailable','A different merchant invalidates even with the same checkpoint.');
+await lifecycle.cancel({companyId:'a',proposalId:'durable-merchant',expectedRevision:2,changeId:'cancel-merchant',actor,reason:'Replace changed merchant review'});
+sql.prepare("UPDATE clover_sync_state SET merchant_id='merchant-a' WHERE company_id='a'").run();
+sql.prepare("UPDATE clover_connections SET merchant_id='merchant-a' WHERE company_id='a'").run();
 
 db.cloverReads=0;
 db.onSecondCloverRead=()=>sql.prepare('UPDATE clover_sync_state SET checkpoint=? WHERE company_id=?').run(now-2*minute,'a');
@@ -105,6 +168,12 @@ assert.deepEqual(await review.buildWithClover(request,policy),{kind:'unavailable
 const paused=await review.buildWithClover(request,{...policy,syncEnabled:false});
 assert.equal(paused.snapshot.salesReadiness.status,'degraded');
 assert.ok(paused.snapshot.explanation.reviewReasons.includes('sales_not_current'));
+await origins.createWithClover({...durableRequest,id:'durable-paused',createId:'durable-paused'},policy);
+const disabledLifecycle=new D1ReplenishmentLifecycle(db,{clock:{now:()=>new Date(at)},salesPolicy:{...policy,syncEnabled:false}});
+const disabled=await disabledLifecycle.get('a','durable-paused',actor);
+assert.equal(disabled.invalidationReason,'source_unavailable','A disabled sync gate invalidates a saved current proposal.');
+await lifecycle.cancel({companyId:'a',proposalId:'durable-paused',expectedRevision:2,changeId:'cancel-paused',actor,reason:'Replace paused review'});
+await origins.createWithClover({...durableRequest,id:'durable-held',createId:'durable-held'},policy);
 const insertHeld=()=>{
   sql.prepare(`INSERT INTO sales_events(company_id,event_key,lineage_key,application_key,provider,environment,merchant_id,external_event_id,external_order_id,revision,occurred_at,received_at,source_payload_sha256,normalized_json)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run('a','held-a','held-a','held-application','clover','sandbox','merchant-a','held-a','held-a',1,at,at,'fictional-hash','{}');
@@ -117,8 +186,13 @@ assert.deepEqual(await review.buildWithClover(request,policy),{kind:'unavailable
 const held=await review.buildWithClover(request,policy);
 assert.equal(held.snapshot.salesReadiness.heldEventCount,1);
 assert.ok(held.snapshot.explanation.reviewReasons.includes('held_sales_events'));
+const heldInvalidation=await lifecycle.get('a','durable-held',actor);
+assert.equal(heldInvalidation.invalidationReason,'source_unavailable','A held sale invalidates a saved current proposal.');
+assert.deepEqual(heldInvalidation.handoff.invalidationReasons,['source_unavailable']);
+assert.equal((await lifecycle.get('a','durable-held',actor)).revision,2);
+await rejects(origins.createWithClover({...durableRequest,id:'durable-after-held',createId:'durable-after-held'},policy),'source_unavailable');
 await assert.rejects(review.buildWithClover({...request,actor:{...actor,companyId:'b'}},policy),/Company access/);
 await assert.rejects(review.buildWithClover({...request,actor:null},policy),/Company access/);
 assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[]);
 sql.close();
-console.log('PASS: A8 v2 review freezes Clover health, detects changed checkpoint/held sales, flags paused sync, and C4 holds the company-scoped handoff without supplier calls.');
+console.log('PASS: A8 v2 review and durable origin detect changed Clover health, block stale edits, audit invalidation, and hold the supplier handoff.');

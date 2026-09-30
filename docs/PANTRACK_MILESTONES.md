@@ -258,8 +258,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   it predates M5 acceptance and does not satisfy hosted A8 gates. A
   [company-scoped Clover sales-health reader](M7_A8_SALES_READINESS_EVIDENCE.md)
   now passes local checks. A [read-only v2 review contract](M7_A8_CLOVER_REVIEW_CONTRACT_EVIDENCE.md)
-  carries that result through a proposal and C's fake consumer; durable
-  lifecycle invalidation, hosted UI, and end-to-end A8 evidence remain open.
+  carries that result through a proposal and C's fake consumer. A later
+  [durable local safety slice](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md)
+  stores current-source v2 origins and audits on-access sales invalidation;
+  authenticated API/UI and hosted end-to-end evidence remain open.
 - [ ] **A9 — Execute A's M11 slice.** Configure approved pilot units, recipes,
   counts, targets, and pack conversions; measure inventory variance and proposal
   accuracy through two reviewed count-to-delivery cycles. Investigate variance

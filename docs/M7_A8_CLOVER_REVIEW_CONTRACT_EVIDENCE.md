@@ -44,3 +44,7 @@ development D1 migration gate for A7 `0016`/`0017`. Rollback is reverting this
 code and documentation commit; no database repair is needed. The A-to-C
 handoff change is that C's fake consumer recognizes v2 and continues to hold
 it without submission.
+
+A later [A8 durable safety slice](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md)
+adds saved current-source v2 origins, on-access invalidation, and merchant ID
+to the v2 contract. The limits above describe this earlier read-only slice.

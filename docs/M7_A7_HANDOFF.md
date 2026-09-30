@@ -34,3 +34,8 @@ A later [A8 local v2 review](M7_A8_CLOVER_REVIEW_CONTRACT_EVIDENCE.md) adds
 company-scoped Clover sales-health metadata to a read-only handoff. The C4 fake
 consumer accepts and holds v2; existing durable A7 origins remain v1 fixtures.
 Neither handoff version permits supplier submission.
+
+The [A8 durable safety slice](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md) requires
+merchant ID in v2 sales health, persists only current Clover-backed review
+origins, and marks changed sales health for review on lifecycle access. C's fake
+consumer validates the expanded v2 shape and still makes no supplier call.

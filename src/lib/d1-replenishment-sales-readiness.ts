@@ -11,6 +11,7 @@ export type CloverSalesReadiness = Readonly<{
   status: 'current' | 'degraded' | 'unknown';
   heldEventCount: number;
   reasons: readonly CloverSalesReadinessReason[];
+  merchantId: string | null;
   checkpointAt: string | null;
   lastSuccessAt: string | null;
   checkedAt: string;
@@ -95,6 +96,7 @@ export class D1ReplenishmentSalesReadiness {
       companyId, source: 'clover_sync' as const,
       status: unknown.length ? 'unknown' as const : degraded.length ? 'degraded' as const : 'current' as const,
       heldEventCount, reasons: Object.freeze(reasons),
+      merchantId: row?.merchant_id ?? null,
       checkpointAt: row && Number.isSafeInteger(row.checkpoint) &&
         Number.isFinite(new Date(row.checkpoint).getTime())
         ? new Date(row.checkpoint).toISOString() : null,

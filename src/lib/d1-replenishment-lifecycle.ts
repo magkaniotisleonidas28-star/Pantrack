@@ -1,4 +1,5 @@
 import {D1ReplenishmentProposalOrigins, type ProposalOrigin} from './d1-replenishment-proposal-origins';
+import {cloverSourceGuard, type CloverReviewPolicy} from './d1-replenishment-clover-source';
 import type {SettingsActor} from './d1-replenishment-settings';
 import {
   buildProposalHandoff, prepareProposalPackEdit, proposalInvalidation, PROPOSAL_TRANSITIONS,
@@ -91,9 +92,23 @@ const SOURCE_MATCH = `EXISTS (
 export class D1ReplenishmentLifecycle {
   private readonly origins: D1ReplenishmentProposalOrigins;
   private readonly clock: Clock;
-  constructor(private readonly db: D1Database, options: {clock?: Clock} = {}) {
+  private readonly salesPolicy: CloverReviewPolicy | undefined;
+  constructor(private readonly db: D1Database, options: {clock?: Clock; salesPolicy?: CloverReviewPolicy} = {}) {
     this.clock = options.clock ?? {now: () => new Date()};
+    this.salesPolicy = options.salesPolicy;
     this.origins = new D1ReplenishmentProposalOrigins(db, {clock: this.clock});
+  }
+
+  private salesGuard(origin: ProposalOrigin): Readonly<{sql: string; args: readonly (string | number)[]}> {
+    return origin.snapshot.salesReadiness.source === 'clover_sync'
+      ? cloverSourceGuard(origin.snapshot.salesReadiness, this.salesPolicy, this.clock.now())
+      : {sql: '1=1', args: []};
+  }
+
+  private async salesCurrent(origin: ProposalOrigin): Promise<boolean> {
+    const guard = this.salesGuard(origin);
+    const row = await this.db.prepare(`SELECT ${guard.sql} AS matches`).bind(...guard.args).first<{matches: number}>();
+    return row?.matches === 1;
   }
 
   private async current(origin: ProposalOrigin): Promise<ProposalSourceVersions | null> {
@@ -125,19 +140,23 @@ export class D1ReplenishmentLifecycle {
     return row;
   }
 
-  private async refresh(origin: ProposalOrigin, state: StateRow, current: ProposalSourceVersions | null): Promise<void> {
+  private async refresh(origin: ProposalOrigin, state: StateRow, current: ProposalSourceVersions | null, salesCurrent: boolean): Promise<void> {
+    const reasons = proposalInvalidation(origin, current);
     if (state.invalidation_reason !== null ||
         ['rejected', 'canceled', 'closed'].includes(state.status) ||
-        proposalInvalidation(origin, current).length === 0) return;
-    const why = proposalInvalidation(origin, current)[0];
+        (reasons.length === 0 && salesCurrent)) return;
+    const why = reasons[0] ?? 'source_unavailable';
+    const reason = reasons.length ? `Proposal source changed: ${why}` : 'Clover sales health changed; generate a new proposal';
+    const sales = this.salesGuard(origin);
     await this.db.prepare(`UPDATE replenishment_proposal_states
       SET revision=revision+1,
        status=CASE WHEN status IN ('draft','approved') THEN 'review_required' ELSE status END,
        change_id=?,kind='invalidate',changed_by='system',reason=?,changed_at=?,invalidation_reason=?
       WHERE company_id=? AND proposal_id=? AND invalidation_reason IS NULL
-       AND status NOT IN ('rejected','canceled','closed') AND NOT ${SOURCE_MATCH}`)
-      .bind(`invalidation:${origin.id}`, `Proposal source changed: ${why}`, this.clock.now().toISOString(),
-        why, origin.companyId, origin.id, ...sourceArgs(origin)).run();
+       AND status NOT IN ('rejected','canceled','closed')
+       AND (NOT ${SOURCE_MATCH} OR NOT ${sales.sql})`)
+      .bind(`invalidation:${origin.id}`, reason, this.clock.now().toISOString(),
+        why, origin.companyId, origin.id, ...sourceArgs(origin), ...sales.args).run();
   }
 
   private async events(origin: ProposalOrigin): Promise<readonly ProposalLifecycleEvent[]> {
@@ -158,7 +177,7 @@ export class D1ReplenishmentLifecycle {
     if (!origin) return null;
     const before = await this.state(origin);
     const current = await this.current(origin);
-    await this.refresh(origin, before, current);
+    await this.refresh(origin, before, current, await this.salesCurrent(origin));
     const state = await this.state(origin);
     const history = await this.events(origin);
     if (history.length !== state.revision || history.at(-1)?.status !== state.status ||
@@ -180,7 +199,8 @@ export class D1ReplenishmentLifecycle {
     return Object.freeze({
       origin, status: state.status, revision: state.revision, packs: state.packs,
       invalidationReason: state.invalidation_reason, events: history,
-      handoff: buildProposalHandoff(origin, state.status, state.revision, current, latestEdit),
+      handoff: buildProposalHandoff(origin, state.status, state.revision,
+        await this.salesCurrent(origin) ? current : null, latestEdit),
     });
   }
 
@@ -210,17 +230,19 @@ export class D1ReplenishmentLifecycle {
     if (view.revision !== input.expectedRevision || !['draft', 'review_required'].includes(view.status) ||
         view.invalidationReason !== null) throw new ProposalLifecycleError('conflict', 'Proposal revision or state changed.');
     const current = await this.current(view.origin);
+    const salesCurrent = await this.salesCurrent(view.origin);
     let edit: ProposalPackEdit;
-    try { edit = prepareProposalPackEdit(view.origin, current, input.actor, input.packs, reason); }
+    try { edit = prepareProposalPackEdit(view.origin, salesCurrent ? current : null, input.actor, input.packs, reason); }
     catch { throw new ProposalLifecycleError('invalid_request', 'Quantity edit violates current review rules.'); }
+    const sales = this.salesGuard(view.origin);
     let result: D1Result;
     try {
       result = await this.db.prepare(`UPDATE replenishment_proposal_states
         SET revision=revision+1,packs=?,change_id=?,kind='edit',changed_by=?,reason=?,changed_at=?
         WHERE company_id=? AND proposal_id=? AND revision=? AND status IN ('draft','review_required')
-         AND invalidation_reason IS NULL AND ${SOURCE_MATCH}`)
+         AND invalidation_reason IS NULL AND ${SOURCE_MATCH} AND ${sales.sql}`)
         .bind(edit.packs, input.changeId, input.actor.userId, edit.reason, this.clock.now().toISOString(),
-          input.companyId, input.proposalId, input.expectedRevision, ...sourceArgs(view.origin)).run();
+          input.companyId, input.proposalId, input.expectedRevision, ...sourceArgs(view.origin), ...sales.args).run();
     } catch {
       const duplicate = await this.prior(input.companyId, input.changeId);
       if (duplicate) throw new ProposalLifecycleError('conflict', 'Change ID already exists.');

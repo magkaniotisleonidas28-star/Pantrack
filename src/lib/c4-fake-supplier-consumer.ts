@@ -105,13 +105,14 @@ function validate(value: unknown, expectedCompanyId: string): ProposalHandoff {
     const sales = value.salesReadiness;
     if (value.contract !== REPLENISHMENT_HANDOFF_CONTRACT_V2 ||
         !exactKeys(sales, ['companyId', 'source', 'status', 'heldEventCount', 'reasons',
-          'checkpointAt', 'lastSuccessAt', 'checkedAt']) ||
+          'merchantId', 'checkpointAt', 'lastSuccessAt', 'checkedAt']) ||
         sales.companyId !== expectedCompanyId || !Array.isArray(sales.reasons) ||
         !sales.reasons.every(reason => CLOVER_REASONS.has(String(reason))) ||
+        (sales.merchantId !== null && !id(sales.merchantId)) ||
         !iso(sales.checkedAt) ||
         (sales.checkpointAt !== null && !iso(sales.checkpointAt)) ||
         (sales.lastSuccessAt !== null && !iso(sales.lastSuccessAt)) ||
-        (sales.status === 'current' && (sales.heldEventCount !== 0 || sales.reasons.length !== 0 ||
+        (sales.status === 'current' && (sales.merchantId === null || sales.heldEventCount !== 0 || sales.reasons.length !== 0 ||
           sales.checkpointAt === null || sales.lastSuccessAt === null)) ||
         (sales.status !== 'current' && sales.reasons.length === 0) ||
         (Number(sales.heldEventCount) > 0 && !sales.reasons.includes('held_events')) ||

@@ -38,7 +38,7 @@ type VersionRow = {balance_version: number; config_id: string; config_version: n
 type Clock = {now(): Date};
 const ZERO = BigInt(0);
 
-function validateSupplierFixtures(request: ReviewBaseRequest): void {
+export function validateReviewBase(request: ReviewBaseRequest): void {
   if (!request.supplier || request.supplier.source !== 'fictional_fixture' ||
       request.supplier.companyId !== request.companyId) {
     throw new Error('Review fixtures must belong to the requested company.');
@@ -64,7 +64,7 @@ function validateSupplierFixtures(request: ReviewBaseRequest): void {
 }
 
 export function validateReviewFixtures(request: ReviewSourceRequest): void {
-  validateSupplierFixtures(request);
+  validateReviewBase(request);
   if (!request.sales || request.sales.source !== 'fictional_fixture' || request.sales.companyId !== request.companyId) {
     throw new Error('Review fixtures must belong to the requested company.');
   }
@@ -77,6 +77,7 @@ export function validateReviewFixtures(request: ReviewSourceRequest): void {
 function sameCloverSource(left: CloverSalesReadiness, right: CloverSalesReadiness): boolean {
   return left.companyId === right.companyId && left.status === right.status &&
     left.heldEventCount === right.heldEventCount &&
+    left.merchantId === right.merchantId &&
     left.checkpointAt === right.checkpointAt && left.lastSuccessAt === right.lastSuccessAt &&
     JSON.stringify(left.reasons) === JSON.stringify(right.reasons);
 }
@@ -111,7 +112,7 @@ export class D1ReplenishmentReview {
 
   /** Read-only v2 path. The caller supplies the server-derived sandbox gate and lag policy. */
   async buildWithClover(request: ReviewBaseRequest, policy: {syncEnabled: boolean; maxLagMs: number}): Promise<ReviewSourceResult> {
-    validateSupplierFixtures(request);
+    validateReviewBase(request);
     const reader = new D1ReplenishmentSalesReadiness(this.db, {...policy, clock: this.clock});
     const first = await reader.read(request.companyId, request.actor);
     const result = await this.buildResolved(request, first);
