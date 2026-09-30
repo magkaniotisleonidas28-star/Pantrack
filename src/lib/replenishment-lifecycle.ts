@@ -2,6 +2,7 @@ import type {ProposalOrigin} from './d1-replenishment-proposal-origins';
 import type {SettingsActor} from './d1-replenishment-settings';
 
 export const REPLENISHMENT_HANDOFF_CONTRACT = 'pantrack.replenishment-handoff.v1' as const;
+export const REPLENISHMENT_HANDOFF_CONTRACT_V2 = 'pantrack.replenishment-handoff.v2' as const;
 
 export type ProposalStatus =
   | 'draft' | 'review_required' | 'approved' | 'sending' | 'unknown'
@@ -107,7 +108,7 @@ export function prepareProposalPackEdit(
 }
 
 export type ProposalHandoff = Readonly<{
-  contract: typeof REPLENISHMENT_HANDOFF_CONTRACT;
+  contract: typeof REPLENISHMENT_HANDOFF_CONTRACT | typeof REPLENISHMENT_HANDOFF_CONTRACT_V2;
   mode: 'review_only';
   companyId: string;
   proposalId: string;
@@ -155,7 +156,9 @@ export function buildProposalHandoff(
   const invalidationReasons = Object.freeze([...proposalInvalidation(origin, current)]);
   const reviewReasons = Object.freeze([...snapshot.explanation.reviewReasons]);
   const supplier = Object.freeze({...snapshot.supplier});
-  const salesReadiness = Object.freeze({...snapshot.salesReadiness});
+  const salesReadiness = snapshot.salesReadiness.source === 'clover_sync'
+    ? Object.freeze({...snapshot.salesReadiness, reasons: Object.freeze([...snapshot.salesReadiness.reasons])})
+    : Object.freeze({...snapshot.salesReadiness});
   const stockUnitsPerPack = Object.freeze({...snapshot.quantities.pack});
   const editedTotal = latestEdit === null ? snapshot.estimatedLineTotal : latestEdit.estimatedLineTotal;
   const estimatedLineTotal = editedTotal === null ? null : Object.freeze({...editedTotal});
@@ -168,7 +171,9 @@ export function buildProposalHandoff(
     'delivery_unconfirmed', 'supplier_mapping_unverified',
     snapshot.priceEstimate === null ? 'price_unavailable' : 'price_estimate_only']);
   return Object.freeze({
-    contract: REPLENISHMENT_HANDOFF_CONTRACT, mode: 'review_only',
+    contract: snapshot.salesReadiness.source === 'clover_sync'
+      ? REPLENISHMENT_HANDOFF_CONTRACT_V2 : REPLENISHMENT_HANDOFF_CONTRACT,
+    mode: 'review_only',
     companyId: origin.companyId, proposalId: origin.id, revision, status,
     productId: origin.productId, supplier, salesReadiness,
     priceSource: snapshot.priceEstimate?.source ?? null,

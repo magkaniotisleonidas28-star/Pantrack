@@ -1,13 +1,15 @@
 import type {ExactQuantity} from './inventory-consumption-contract';
 import {calculateTarget, readCanonical, type TargetInput} from './inventory-quantities';
+import type {CloverSalesReadiness} from './d1-replenishment-sales-readiness';
 
 export const REPLENISHMENT_PROPOSAL_CONTRACT = 'pantrack.replenishment-review.v1' as const;
+export const REPLENISHMENT_PROPOSAL_CONTRACT_V2 = 'pantrack.replenishment-review.v2' as const;
 
-type SalesReadiness = Readonly<{
+export type SalesReadiness = Readonly<{
   source: 'fictional_fixture';
   status: 'current' | 'degraded' | 'unknown';
   heldEventCount: number;
-}>;
+}> | CloverSalesReadiness;
 
 type PriceEstimate = Readonly<{source: 'fictional_fixture'; currency: string; perPackMinor: string}>;
 
@@ -45,7 +47,7 @@ type ReviewReason =
   | 'minimum_exceeds_limit' | 'order_multiple_exceeds_limit' | 'price_not_checked';
 
 export type ReviewProposalSnapshot = Readonly<{
-  contract: typeof REPLENISHMENT_PROPOSAL_CONTRACT;
+  contract: typeof REPLENISHMENT_PROPOSAL_CONTRACT | typeof REPLENISHMENT_PROPOSAL_CONTRACT_V2;
   mode: 'review_only';
   companyId: string;
   productId: string;
@@ -145,9 +147,27 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
   if (input.expiryStatus !== 'checked' && input.expiryStatus !== 'not_checked') throw new Error('Expiry evidence status is invalid.');
   if (input.expiryStatus === 'not_checked' && expiry !== null) throw new Error('Unchecked expiry cannot contain a date.');
   if (lastCount !== null && lastCount > at) throw new Error('Proposal dates are inconsistent.');
-  if (input.salesReadiness.source !== 'fictional_fixture' ||
-      !['current', 'degraded', 'unknown'].includes(input.salesReadiness.status) ||
-      !Number.isSafeInteger(input.salesReadiness.heldEventCount) || input.salesReadiness.heldEventCount < 0) throw new Error('Sales readiness fixture is invalid.');
+  const sales = input.salesReadiness;
+  if (!['current', 'degraded', 'unknown'].includes(sales.status) ||
+      !Number.isSafeInteger(sales.heldEventCount) || sales.heldEventCount < 0) throw new Error('Sales readiness is invalid.');
+  if (sales.source === 'clover_sync') {
+    const validReasons = new Set(['sync_not_configured', 'clover_disconnected', 'merchant_changed',
+      'unaccepted_environment', 'never_synced', 'invalid_sync_state', 'sync_disabled',
+      'sync_error', 'sync_stale', 'held_events']);
+    if (sales.companyId !== input.companyId || !Array.isArray(sales.reasons) ||
+        !sales.reasons.every(reason => validReasons.has(reason)) ||
+        (sales.merchantId !== null && (typeof sales.merchantId !== 'string' || !sales.merchantId.trim() || sales.merchantId.length > 200)) ||
+        (sales.status === 'current' && (sales.merchantId === null || sales.heldEventCount !== 0 || sales.reasons.length !== 0 ||
+          sales.checkpointAt === null || sales.lastSuccessAt === null)) ||
+        (sales.status !== 'current' && sales.reasons.length === 0) ||
+        (sales.heldEventCount > 0 && !sales.reasons.includes('held_events')) ||
+        (sales.heldEventCount === 0 && sales.reasons.includes('held_events'))) {
+      throw new Error('Clover sales readiness is invalid.');
+    }
+    if (timestamp(sales.checkedAt) > at) throw new Error('Clover sales readiness is newer than the proposal.');
+    if (sales.checkpointAt !== null) timestamp(sales.checkpointAt);
+    if (sales.lastSuccessAt !== null) timestamp(sales.lastSuccessAt);
+  } else if (sales.source !== 'fictional_fixture') throw new Error('Sales readiness source is invalid.');
   if (input.supplier.source !== 'fictional_fixture') throw new Error('Supplier fixture is invalid.');
 
   const copied = {
@@ -200,14 +220,22 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
   if (lastCount === null || (expiry !== null && expiry < at)) recommended = ZERO;
 
   return freezeSnapshot({
-    contract: REPLENISHMENT_PROPOSAL_CONTRACT, mode: 'review_only',
+    contract: sales.source === 'clover_sync' ? REPLENISHMENT_PROPOSAL_CONTRACT_V2 : REPLENISHMENT_PROPOSAL_CONTRACT,
+    mode: 'review_only',
     companyId: input.companyId, productId: input.productId,
     inventoryVersion: input.inventoryVersion, inventoryConfigId: input.inventoryConfigId,
     inventoryConfigVersion: input.inventoryConfigVersion, settingsChangeId: input.settingsChangeId,
     settingsVersion: input.settingsVersion, settingsChangedBy: input.settingsChangedBy,
     calculatedAt: input.calculatedAt, lastCountAt: input.lastCountAt,
     countEveryDays: input.countEveryDays, expiresAt: input.expiresAt, expiryStatus: input.expiryStatus,
-    salesReadiness: {...input.salesReadiness}, supplier: {...input.supplier},
+    salesReadiness: sales.source === 'clover_sync' ? {
+      companyId: sales.companyId, source: sales.source, status: sales.status,
+      heldEventCount: sales.heldEventCount, reasons: [...sales.reasons],
+      merchantId: sales.merchantId,
+      checkpointAt: sales.checkpointAt, lastSuccessAt: sales.lastSuccessAt,
+      checkedAt: sales.checkedAt,
+    } : {source: sales.source, status: sales.status, heldEventCount: sales.heldEventCount},
+    supplier: {...input.supplier},
     priceEstimate: input.priceEstimate === null ? null : {...input.priceEstimate},
     estimatedLineTotal: pricePerPack === null ? null : {
       currency: input.priceEstimate!.currency, minor: (recommended * pricePerPack).toString(),

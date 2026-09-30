@@ -4,7 +4,6 @@ import {useRef,useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from '@/components/ui/select';
-import {Tabs,TabsContent,TabsList,TabsTrigger} from '@/components/ui/tabs';
 import {Table,TableBody,TableCell,TableHead,TableHeader,TableRow} from '@/components/ui/table';
 import {Plus,RefreshCw} from 'lucide-react';
 import {CURATED_UNIT_IDS,formatCanonical,type CuratedUnitId} from '@/lib/inventory-quantities';
@@ -12,6 +11,7 @@ import type {InventoryManagementView,RecipeAmountInput} from '@/lib/inventory-ma
 import {recommendation,type InventoryRecord} from '@/lib/inventory';
 import type {Product} from '@/lib/pantry';
 import SalesExceptions from './sales-exceptions';
+import A8ReviewPreview from './a8-review-preview';
 
 const localNow=()=>{
   const date=new Date(Date.now()-new Date().getTimezoneOffset()*60000);
@@ -92,6 +92,7 @@ export default function ExactInventoryPanel({companyId,products,role,view,legacy
       {section==='sales'&&<section><SalesExceptions companyId={companyId} role={role} recipes={activeRecipes.map(value=>({recipeId:value.recipeId,name:value.name}))} onInventoryReload={onReload}/></section>}
       {section==='plan'&&<section><div className="inventory-section-heading"><div><h2>Explainable compatibility plan</h2><p>Canonical stock above is authoritative in this preview. Until A6/M7 versions planning settings, this view explains the existing reviewed target, incoming, pack, capacity, and shelf-life calculation without placing an order.</p></div><Button disabled={!suggested.length||hasDraft||loading} onClick={()=>onStage(Object.fromEntries(suggested.map(value=>[value.record.productId,value.plan.packs])))}>Review suggested order</Button></div><div className="catalog-grid">{plans.map(({record:legacy,plan})=>{const exactRecord=record(legacy.productId);return <article className="catalog-card" key={legacy.productId}><span className="sample-tag">{plan.reason}</span><h2>{product(legacy.productId)?.name||legacy.productId}</h2><p>{plan.packs>0?`Suggest ${plan.packs} purchase pack${plan.packs===1?'':'s'}`:'No automatic suggestion'}</p>{exactRecord&&<p>Exact position: {formatCanonical(exactRecord.onHand)} on hand + {formatCanonical(exactRecord.incoming)} incoming ({exactRecord.dimension})</p>}<div className="pack-detail">{plan.fixedTarget?'Manager target':'Forecast reorder point'}: {formatPlanningValue(plan.trigger)} {legacy.settings.unit}<small>Target {formatPlanningValue(plan.target)} · compatibility position {formatPlanningValue(legacy.onHand+legacy.incoming)}</small><small>Shortfall {formatPlanningValue(plan.shortfall)} · {legacy.settings.unitsPerPack} {legacy.settings.unit} per purchase pack</small><small>Before limits: {plan.wantedPacks} pack(s).</small>{plan.capacityPacks!==null&&<small>Capacity allows at most {plan.capacityPacks} pack(s) with current stock and incoming.</small>}{plan.shelfPacks!==null&&<small>Shelf life allows at most {plan.shelfPacks} pack(s) at the reviewed daily use.</small>}{plan.limited&&<small>Final pack count is reduced by the limit(s) shown above.</small>}{plan.needsCheck&&<small>A current physical count is required before relying on this suggestion.</small>}</div></article>;})}</div>{!plans.length&&<p className="empty">Classify inventory and retain reviewed planning settings to see an explanation.</p>}</section>}
       {section==='history'&&<section><div className="inventory-table"><Table><TableHeader><TableRow><TableHead>Effective time</TableHead><TableHead>Product</TableHead><TableHead>Measured</TableHead><TableHead>Variance</TableHead><TableHead>Recorded by</TableHead></TableRow></TableHeader><TableBody>{view.reconciliations.map(item=><TableRow key={item.id}><TableCell>{new Date(item.effectiveAt).toLocaleString()}</TableCell><TableCell>{product(item.productId)?.name||item.productId}</TableCell><TableCell>{formatCanonical(item.measured)} {item.measured.dimension}</TableCell><TableCell>{item.opening?'Opening count':item.variance?formatCanonical(item.variance):'—'}</TableCell><TableCell>{item.actor}<small>{item.note}</small></TableCell></TableRow>)}</TableBody></Table>{!view.reconciliations.length&&<p className="empty">No exact physical counts yet.</p>}</div></section>}
+      {canManage&&section==='clover-plan'&&<A8ReviewPreview companyId={companyId} products={products}/>}
     </>
   </>;
 }

@@ -41,7 +41,7 @@ const navigation=[
   {value:'suppliers',label:'Suppliers & automation',icon:Truck},
   ...(role==='owner'?[{value:'payments',label:'Payment methods',icon:CreditCard},{value:'setup',label:'Setup & register',icon:Check}]:[]),
 ];
-const subsections=tab==='inventory'?(inventoryMode==='exact'?exactInventorySections.filter(item=>item.id!=='legacy'||role==='owner'||role==='manager'):legacyInventorySections):tab==='suppliers'&&role==='owner'?supplierSections:[];
+const subsections=tab==='inventory'?(inventoryMode==='exact'?exactInventorySections.filter(item=>(item.id!=='legacy'&&item.id!=='clover-plan')||role==='owner'||role==='manager'):legacyInventorySections):tab==='suppliers'&&role==='owner'?supplierSections:[];
 const activeSubsection=tab==='inventory'?inventorySection:supplierSection;
 const activeLabel=[navigation.find(item=>item.value===tab)?.label,subsections.find(item=>item.id===activeSubsection)?.label].filter(Boolean).join(' / ');
 function chooseSubsection(id:string){if(tab==='inventory')setInventorySection(id as InventorySection);else setSupplierSection(id as SupplierSection);setNavigationOpen(false);}
