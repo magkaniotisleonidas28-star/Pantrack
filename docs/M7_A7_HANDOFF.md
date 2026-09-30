@@ -29,3 +29,8 @@ append-only audit event before the edited handoff is returned.
 
 The local A → C contract test is recorded in [C4 handoff evidence](C4_A7_HANDOFF_EVIDENCE.md).
 Supplier decisions, remote migrations, and M7 acceptance are still pending.
+
+A later [A8 local v2 review](M7_A8_CLOVER_REVIEW_CONTRACT_EVIDENCE.md) adds
+company-scoped Clover sales-health metadata to a read-only handoff. The C4 fake
+consumer accepts and holds v2; existing durable A7 origins remain v1 fixtures.
+Neither handoff version permits supplier submission.

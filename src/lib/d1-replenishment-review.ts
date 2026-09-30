@@ -1,21 +1,22 @@
 import type {ExactQuantity, UnitDimension} from './inventory-consumption-contract';
 import {readCanonical} from './inventory-quantities';
 import {D1ReplenishmentSettingsStore, type SettingsActor} from './d1-replenishment-settings';
-import {buildReviewProposal, type ReviewProposalInput, type ReviewProposalSnapshot} from './replenishment-proposal';
+import {D1ReplenishmentSalesReadiness, type CloverSalesReadiness} from './d1-replenishment-sales-readiness';
+import {buildReviewProposal, type ReviewProposalInput, type ReviewProposalSnapshot, type SalesReadiness} from './replenishment-proposal';
 
 type Fixture<T> = Readonly<T & {companyId: string; source: 'fictional_fixture'}>;
-export type ReviewSalesFixture = Fixture<ReviewProposalInput['salesReadiness']>;
+export type ReviewSalesFixture = Fixture<Extract<SalesReadiness, {source: 'fictional_fixture'}>>;
 export type ReviewSupplierFixture = Fixture<ReviewProposalInput['supplier']>;
 export type ReviewPriceFixture = Fixture<NonNullable<ReviewProposalInput['priceEstimate']>>;
 
-export type ReviewSourceRequest = Readonly<{
+export type ReviewBaseRequest = Readonly<{
   companyId: string;
   productId: string;
   actor: SettingsActor;
-  sales: ReviewSalesFixture;
   supplier: ReviewSupplierFixture;
   priceEstimate: ReviewPriceFixture | null;
 }>;
+export type ReviewSourceRequest = ReviewBaseRequest & Readonly<{sales: ReviewSalesFixture}>;
 
 export type ReviewSourceResult =
   | Readonly<{kind: 'snapshot'; snapshot: ReviewProposalSnapshot}>
@@ -37,19 +38,14 @@ type VersionRow = {balance_version: number; config_id: string; config_version: n
 type Clock = {now(): Date};
 const ZERO = BigInt(0);
 
-export function validateReviewFixtures(request: ReviewSourceRequest): void {
-  for (const fixture of [request.sales, request.supplier]) {
-    if (!fixture || fixture.source !== 'fictional_fixture' || fixture.companyId !== request.companyId) {
-      throw new Error('Review fixtures must belong to the requested company.');
-    }
+function validateSupplierFixtures(request: ReviewBaseRequest): void {
+  if (!request.supplier || request.supplier.source !== 'fictional_fixture' ||
+      request.supplier.companyId !== request.companyId) {
+    throw new Error('Review fixtures must belong to the requested company.');
   }
   if (request.priceEstimate !== null &&
       (request.priceEstimate?.source !== 'fictional_fixture' || request.priceEstimate.companyId !== request.companyId)) {
     throw new Error('Review price fixture must belong to the requested company.');
-  }
-  if (!['current', 'degraded', 'unknown'].includes(request.sales.status) ||
-      !Number.isSafeInteger(request.sales.heldEventCount) || request.sales.heldEventCount < 0) {
-    throw new Error('Review sales fixture is invalid.');
   }
   for (const value of [request.supplier.mappingId, request.supplier.supplierId,
     request.supplier.accountId, request.supplier.locationId, request.supplier.sku]) {
@@ -65,6 +61,24 @@ export function validateReviewFixtures(request: ReviewSourceRequest): void {
         !/^[1-9]\d*$/.test(request.priceEstimate.perPackMinor))) {
     throw new Error('Review price fixture is invalid.');
   }
+}
+
+export function validateReviewFixtures(request: ReviewSourceRequest): void {
+  validateSupplierFixtures(request);
+  if (!request.sales || request.sales.source !== 'fictional_fixture' || request.sales.companyId !== request.companyId) {
+    throw new Error('Review fixtures must belong to the requested company.');
+  }
+  if (!['current', 'degraded', 'unknown'].includes(request.sales.status) ||
+      !Number.isSafeInteger(request.sales.heldEventCount) || request.sales.heldEventCount < 0) {
+    throw new Error('Review sales fixture is invalid.');
+  }
+}
+
+function sameCloverSource(left: CloverSalesReadiness, right: CloverSalesReadiness): boolean {
+  return left.companyId === right.companyId && left.status === right.status &&
+    left.heldEventCount === right.heldEventCount &&
+    left.checkpointAt === right.checkpointAt && left.lastSuccessAt === right.lastSuccessAt &&
+    JSON.stringify(left.reasons) === JSON.stringify(right.reasons);
 }
 
 function quantity(dimension: UnitDimension, minor: string): ExactQuantity {
@@ -90,9 +104,25 @@ export class D1ReplenishmentReview {
   }
 
   async build(request: ReviewSourceRequest): Promise<ReviewSourceResult> {
-    // The settings store checks the server-derived actor and company before data is read.
-    const settings = await this.settings.current(request.companyId, request.productId, request.actor);
     validateReviewFixtures(request);
+    return this.buildResolved(request, {source: 'fictional_fixture', status: request.sales.status,
+      heldEventCount: request.sales.heldEventCount});
+  }
+
+  /** Read-only v2 path. The caller supplies the server-derived sandbox gate and lag policy. */
+  async buildWithClover(request: ReviewBaseRequest, policy: {syncEnabled: boolean; maxLagMs: number}): Promise<ReviewSourceResult> {
+    validateSupplierFixtures(request);
+    const reader = new D1ReplenishmentSalesReadiness(this.db, {...policy, clock: this.clock});
+    const first = await reader.read(request.companyId, request.actor);
+    const result = await this.buildResolved(request, first);
+    if (result.kind === 'unavailable') return result;
+    const last = await reader.read(request.companyId, request.actor);
+    return sameCloverSource(first, last) ? result : {kind: 'unavailable', reason: 'source_changed'};
+  }
+
+  private async buildResolved(request: ReviewBaseRequest, sales: SalesReadiness): Promise<ReviewSourceResult> {
+    // The settings store checks the server-derived actor and company before stock is read.
+    const settings = await this.settings.current(request.companyId, request.productId, request.actor);
     if (!settings) return {kind: 'unavailable', reason: 'settings_missing'};
     const row = await this.db.prepare(`SELECT b.config_id,c.version AS config_version,c.status AS config_status,
       b.dimension,u.dimension AS unit_dimension,b.on_hand_minor,b.incoming_minor,c.purchase_quantity_minor,
@@ -125,7 +155,7 @@ export class D1ReplenishmentReview {
         settingsVersion: settings.version, settingsChangedBy: settings.changedBy,
         calculatedAt: this.clock.now().toISOString(), lastCountAt: countTime(row.latest_count_effective_at),
         countEveryDays: settings.settings.countEveryDays, expiresAt: null, expiryStatus: 'not_checked',
-        salesReadiness: {source: 'fictional_fixture', status: request.sales.status, heldEventCount: request.sales.heldEventCount},
+        salesReadiness: sales,
         supplier: {
           source: 'fictional_fixture',
           mappingId: request.supplier.mappingId, mappingVersion: request.supplier.mappingVersion,

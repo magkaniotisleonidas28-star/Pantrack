@@ -14,11 +14,10 @@ and an enabled gate. Missing/disconnected/mismatched or invalid sync state is
 counted across the company's Clover history so reconnecting cannot hide an
 older unresolved event. The result includes reasons and timestamps for review.
 
-This is one read-only source component. The existing A6/A7 proposal snapshot
-and Person C handoff still accept **fictional** sales-health fixtures; this
-result is not passed into a proposal, shown in an API/UI, or a basis for
-supplier submission. Integrating the new source requires an explicit A-to-C
-contract update and source-change validation. No M7 acceptance is claimed.
+At the time of this source-only slice, A6/A7 proposals still accepted
+**fictional** sales-health fixtures. A later [A8 v2 review slice](M7_A8_CLOVER_REVIEW_CONTRACT_EVIDENCE.md)
+passes this result through a read-only proposal and fake A-to-C handoff. No
+API/UI or supplier submission uses it. No M7 acceptance is claimed.
 
 ## Verification in this worktree
 
@@ -38,7 +37,5 @@ contract update and source-change validation. No M7 acceptance is claimed.
 The sandbox evidence is [B7's accepted report](M5_B7_SANDBOX_EVIDENCE.md),
 not this test: the test uses fictional local connection and sales rows. A7's
 development D1 migrations `0016` and `0017` are still a separate remote gate.
-Rollback is removal of this unused read-only module and its test; there is no
-schema or persisted-data change. The next A8 slice is to carry a real sales
-health result through a versioned review-only proposal contract, with
-source-change and A-to-C consumer tests, before hosted proposal testing.
+Rollback at the time was removal of this read-only module and its test; there
+was no schema or persisted-data change.

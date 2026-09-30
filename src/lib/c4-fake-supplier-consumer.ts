@@ -1,4 +1,4 @@
-import {REPLENISHMENT_HANDOFF_CONTRACT, type ProposalHandoff} from './replenishment-lifecycle';
+import {REPLENISHMENT_HANDOFF_CONTRACT, REPLENISHMENT_HANDOFF_CONTRACT_V2, type ProposalHandoff} from './replenishment-lifecycle';
 
 export type FakeSupplierHold = Readonly<{
   kind: 'held';
@@ -17,6 +17,9 @@ type RecordValue = Record<string, unknown>;
 type Saved = Readonly<{revision: number; payload: string; origin: string; hold: FakeSupplierHold}>;
 const STATUSES = new Set(['draft', 'review_required', 'approved', 'sending', 'unknown', 'accepted', 'rejected', 'canceled', 'partially_received', 'closed']);
 const INVALIDATION_REASONS = new Set(['inventory_changed', 'inventory_config_changed', 'settings_changed', 'source_unavailable']);
+const CLOVER_REASONS = new Set(['sync_not_configured', 'clover_disconnected', 'merchant_changed',
+  'unaccepted_environment', 'never_synced', 'invalid_sync_state', 'sync_disabled',
+  'sync_error', 'sync_stale', 'held_events']);
 const HANDOFF_KEYS = [
   'contract', 'mode', 'companyId', 'proposalId', 'revision', 'status', 'productId',
   'supplier', 'salesReadiness', 'priceSource', 'packs', 'stockUnitsPerPack',
@@ -51,6 +54,11 @@ function money(value: unknown): value is {currency: string; minor: string} {
 function textList(value: unknown): value is string[] {
   return Array.isArray(value) && value.every(item => typeof item === 'string' && item.length > 0);
 }
+function iso(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) && new Date(parsed).toISOString() === value;
+}
 function freeze<T>(value: T): T {
   if (value && typeof value === 'object') {
     for (const child of Object.values(value)) freeze(child);
@@ -72,7 +80,9 @@ function validate(value: unknown, expectedCompanyId: string): ProposalHandoff {
   if (!record(value)) invalid();
   if (value.companyId !== expectedCompanyId) throw new FakeSupplierConsumerError('forbidden', 'The proposal belongs to another company.');
   if (!exactKeys(value, HANDOFF_KEYS)) invalid();
-  if (value.contract !== REPLENISHMENT_HANDOFF_CONTRACT || value.mode !== 'review_only' ||
+  if ((value.contract !== REPLENISHMENT_HANDOFF_CONTRACT &&
+      value.contract !== REPLENISHMENT_HANDOFF_CONTRACT_V2) ||
+      value.mode !== 'review_only' ||
       value.supplierSubmissionAllowed !== false || !id(value.proposalId) || !id(value.productId) ||
       !version(value.revision) || !STATUSES.has(String(value.status)) || !canonical(value.packs) ||
       value.deliveryExpectedAt !== null) invalid();
@@ -84,11 +94,29 @@ function validate(value: unknown, expectedCompanyId: string): ProposalHandoff {
       !id(value.supplier.mappingId) || !version(value.supplier.mappingVersion) ||
       !id(value.supplier.supplierId) || !id(value.supplier.accountId) ||
       !id(value.supplier.locationId) || !id(value.supplier.sku)) invalid();
-  if (!exactKeys(value.salesReadiness, ['source', 'status', 'heldEventCount']) ||
-      !record(value.salesReadiness) || value.salesReadiness.source !== 'fictional_fixture' ||
+  if (!record(value.salesReadiness) ||
       !['current', 'degraded', 'unknown'].includes(String(value.salesReadiness.status)) ||
       !Number.isSafeInteger(value.salesReadiness.heldEventCount) ||
       Number(value.salesReadiness.heldEventCount) < 0) invalid();
+  if (value.salesReadiness.source === 'fictional_fixture') {
+    if (value.contract !== REPLENISHMENT_HANDOFF_CONTRACT ||
+        !exactKeys(value.salesReadiness, ['source', 'status', 'heldEventCount'])) invalid();
+  } else if (value.salesReadiness.source === 'clover_sync') {
+    const sales = value.salesReadiness;
+    if (value.contract !== REPLENISHMENT_HANDOFF_CONTRACT_V2 ||
+        !exactKeys(sales, ['companyId', 'source', 'status', 'heldEventCount', 'reasons',
+          'checkpointAt', 'lastSuccessAt', 'checkedAt']) ||
+        sales.companyId !== expectedCompanyId || !Array.isArray(sales.reasons) ||
+        !sales.reasons.every(reason => CLOVER_REASONS.has(String(reason))) ||
+        !iso(sales.checkedAt) ||
+        (sales.checkpointAt !== null && !iso(sales.checkpointAt)) ||
+        (sales.lastSuccessAt !== null && !iso(sales.lastSuccessAt)) ||
+        (sales.status === 'current' && (sales.heldEventCount !== 0 || sales.reasons.length !== 0 ||
+          sales.checkpointAt === null || sales.lastSuccessAt === null)) ||
+        (sales.status !== 'current' && sales.reasons.length === 0) ||
+        (Number(sales.heldEventCount) > 0 && !sales.reasons.includes('held_events')) ||
+        (Number(sales.heldEventCount) === 0 && sales.reasons.includes('held_events'))) invalid();
+  } else invalid();
   if (value.priceSource !== null && value.priceSource !== 'fictional_fixture') invalid();
   if ((value.priceSource === null && (value.estimatedLineTotal !== null || value.estimatedProposalTotal !== null)) ||
       (value.priceSource !== null && (!money(value.estimatedLineTotal) || !money(value.estimatedProposalTotal)))) invalid();
