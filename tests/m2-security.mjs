@@ -11,7 +11,7 @@ globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
 const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
+for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review','replenishment/proposals'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
  const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
@@ -38,7 +38,7 @@ globalThis.fetch=async(url,init={})=>{
  if(path.endsWith('/logout'))return new Response(null,{status:204});
  return Response.json({});
 };
-function req(name,method='GET',body, cookie='',extra={}){const headers=new Headers({'Content-Type':'application/json',Origin:'https://test',...extra});if(cookie)headers.set('Cookie',cookie);globalThis.m2headers=headers;return new Request('https://test/api/'+name+(method==='GET'?'?companyId=company-a'+(name==='replenishment/review'?'&productId=milk':''):''),{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{})});}
+function req(name,method='GET',body, cookie='',extra={}){const headers=new Headers({'Content-Type':'application/json',Origin:'https://test',...extra});if(cookie)headers.set('Cookie',cookie);globalThis.m2headers=headers;return new Request('https://test/api/'+name+(method==='GET'?'?companyId=company-a'+(name.startsWith('replenishment/')?'&productId=milk':''):''),{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{})});}
 async function call(name,method='GET',body,cookie='',extra={}){return modules[name][method](req(name,method,body,cookie,extra));}
 async function login(name){const r=await call('auth','POST',{action:'signin',email:accounts[name].email,password:'existingpassword'});assert.equal(r.status,200,await r.clone().text());const cookie=r.headers.get('set-cookie');assert.match(cookie,/__Host-pantrack=[a-f0-9]{64}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=3600; Secure/);return cookie.split(';')[0];}
 const cookies={};for(const name of Object.keys(accounts))cookies[name]=await login(name);
@@ -99,6 +99,20 @@ assert.equal((await call('replenishment/review')).status,401,'Anonymous A8 revie
 assert.equal((await call('replenishment/review','GET',null,cookies.other)).status,403,'Wrong-company A8 review is denied.');
 assert.equal((await call('replenishment/review','GET',null,cookies.employee)).status,403,'Employees cannot inspect purchasing proposals.');
 assert.equal((await call('replenishment/review','GET',null,cookies.manager)).status,404,'A8 review stays dark with exact preview off.');
+const a8Create={action:'create',companyId:'company-a',productId:'milk',proposalId:crypto.randomUUID(),createId:crypto.randomUUID()};
+const a8Edit={action:'edit',companyId:'company-a',proposalId:'missing-review',expectedRevision:1,changeId:crypto.randomUUID(),packs:'1',reason:'Fictional manager review'};
+const a8Cancel={action:'cancel',companyId:'company-a',proposalId:'missing-review',expectedRevision:1,changeId:crypto.randomUUID(),reason:'Fictional manager review'};
+assert.equal((await call('replenishment/proposals')).status,401,'Anonymous saved proposal reads are denied.');
+assert.equal((await call('replenishment/proposals','GET',null,cookies.other)).status,403,'Wrong-company saved proposal reads are denied.');
+assert.equal((await call('replenishment/proposals','GET',null,cookies.employee)).status,403,'Employees cannot inspect saved proposals.');
+assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.employee)).status,403,'Employees cannot save proposals.');
+assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.other)).status,403,'Wrong-company proposal saves are denied.');
+for(const body of [a8Edit,a8Cancel]){
+ assert.equal((await call('replenishment/proposals','POST',body,cookies.employee)).status,403,'Employees cannot change saved reviews.');
+ assert.equal((await call('replenishment/proposals','POST',body,cookies.other)).status,403,'Wrong-company review changes are denied.');
+}
+assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.manager,{Origin:'https://evil.test'})).status,403,'Proposal writes reject cross-site origins.');
+assert.equal((await call('replenishment/proposals','GET',null,cookies.manager)).status,404,'Saved proposals stay dark with exact preview off.');
 globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
 const exactConfigure={companyId:'company-a',action:'configureExact',productId:'milk',operationId:'config-milk',stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'10',effectiveAt:'2026-01-01T00:00:00Z'};
 assert.equal((await call('inventory','POST',exactConfigure,cookies.employee)).status,403,'Employees cannot mutate exact inventory.');
@@ -109,6 +123,44 @@ assert.equal((await(await call('inventory','GET',null,cookies.employee)).json())
 const a8Preview=await call('replenishment/review','GET',null,cookies.manager);
 assert.equal(a8Preview.status,200,'Manager may request a read-only A8 review.');
 assert.deepEqual(await a8Preview.json(),{kind:'unavailable',reason:'settings_missing'},'Missing planning settings remain a reviewable unavailable result.');
+const a8Saved=await call('replenishment/proposals','GET',null,cookies.manager);
+assert.equal(a8Saved.status,200,'Manager may list company saved proposals.');
+assert.deepEqual(await a8Saved.json(),{views:[]});
+assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.manager)).status,409,'Missing planning settings cannot create a durable proposal.');
+assert.equal((await call('replenishment/proposals','POST',a8Edit,cookies.manager)).status,404,'Missing proposal cannot be edited.');
+assert.equal((await call('replenishment/proposals','POST',a8Cancel,cookies.manager)).status,404,'Missing proposal cannot be canceled.');
+assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM replenishment_proposal_origins').get().n,0,'Rejected proposal creation writes no origin.');
+const a8Config=sql.prepare("SELECT id,version FROM inventory_config_versions WHERE company_id='company-a' AND product_id='milk' AND status='active'").get();
+const a8Quantity=minor=>({dimension:'volume',minor:String(minor)});
+const a8Settings={target:a8Quantity(20000000),capacity:a8Quantity(10000000000),dailyUse:a8Quantity(1000000),shelfDays:3650,countEveryDays:3650,minimumPacks:'0',orderMultiplePacks:'1',maximumPacks:'5'};
+const a8Now=Date.now(),a8At=new Date(a8Now).toISOString(),a8Success=new Date(a8Now-60000).toISOString();
+sql.prepare(`INSERT INTO replenishment_settings_versions
+ (company_id,product_id,version,change_id,inventory_config_id,inventory_config_version,dimension,settings_json,changed_by,change_reason,changed_at)
+ VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run('company-a','milk',1,'a8-settings',a8Config.id,a8Config.version,'volume',JSON.stringify(a8Settings),accounts.manager.id,'Fictional A8 route review',a8At);
+sql.prepare('INSERT INTO clover_connections(company_id,merchant_id,environment,secret,connected,last_checked,lease_until) VALUES (?,?,?,?,?,?,0)')
+ .run('company-a','fictional-merchant','sandbox','encrypted-fictional-placeholder',a8At,a8At);
+sql.prepare('INSERT INTO clover_sync_state(company_id,environment,merchant_id,started_at,checkpoint,last_attempt,last_success,last_error,lease_until) VALUES (?,?,?,?,?,?,?,?,0)')
+ .run('company-a','sandbox','fictional-merchant',a8Now-3600000,a8Now-60000,a8At,a8Success,null);
+globalThis.m2env.PANTRACK_CLOVER_SYNC_ENABLED='enabled';globalThis.m2env.CLOVER_ENVIRONMENT='sandbox';
+const a8Ready=await call('replenishment/review','GET',null,cookies.manager);
+assert.equal(a8Ready.status,200);
+assert.equal((await a8Ready.json()).snapshot.contract,'pantrack.replenishment-review.v2','Manager route produces a Clover-backed preview.');
+const savedA8=await call('replenishment/proposals','POST',a8Create,cookies.manager);
+assert.equal(savedA8.status,200,await savedA8.clone().text());
+assert.equal((await savedA8.json()).view.handoff.supplierSubmissionAllowed,false);
+assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.manager)).status,200,'Create retry replays one saved origin.');
+const a8Listed=await call('replenishment/proposals','GET',null,cookies.manager);
+assert.equal((await a8Listed.json()).views.length,1,'Saved proposal can be reloaded by the manager.');
+const positiveEdit={...a8Edit,proposalId:a8Create.proposalId};
+const editedA8=await call('replenishment/proposals','POST',positiveEdit,cookies.manager);
+assert.equal(editedA8.status,200,await editedA8.clone().text());
+assert.equal((await editedA8.json()).view.revision,2,'Manager edit adds one audited revision.');
+const positiveCancel={...a8Cancel,proposalId:a8Create.proposalId,expectedRevision:2};
+const canceledA8=await call('replenishment/proposals','POST',positiveCancel,cookies.manager);
+assert.equal(canceledA8.status,200,await canceledA8.clone().text());
+assert.equal((await canceledA8.json()).view.status,'canceled');
+assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM replenishment_proposal_origins WHERE company_id='company-a'").get().n,1);
+globalThis.m2env.PANTRACK_CLOVER_SYNC_ENABLED='';
 assert.equal((await call('sales/events','GET',null,cookies.employee)).status,200,'Employees may read safe exact-sales status.');
 const exactRecipeId=crypto.randomUUID(),exactDraftId=crypto.randomUUID();
 assert.equal((await call('inventory','POST',{companyId:'company-a',action:'saveRecipeDraftExact',recipeId:exactRecipeId,draftId:exactDraftId,name:'Exact milk',ingredients:[{productId:'milk',amount:'1',unitId:'mL'}]},cookies.manager)).status,200,'Manager can save exact recipe draft.');

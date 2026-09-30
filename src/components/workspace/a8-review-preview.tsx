@@ -5,6 +5,7 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/c
 import {formatCanonical} from '@/lib/inventory-quantities';
 import type {ReviewProposalSnapshot} from '@/lib/replenishment-proposal';
 import type {Product} from '@/lib/pantry';
+import A8SavedReviews from './a8-saved-reviews';
 
 type ReviewResponse =
   | {kind: 'snapshot'; snapshot: ReviewProposalSnapshot}
@@ -33,7 +34,7 @@ export default function A8ReviewPreview({companyId, products}: {companyId: strin
   const snapshot = result?.kind === 'snapshot' ? result.snapshot : null;
   const explain = snapshot?.explanation;
   const sales = snapshot?.salesReadiness;
-  return <section>
+  return <><section>
     <div className="inventory-section-heading"><div><h2>Clover-backed proposal preview</h2>
       <p>Calculate an explainable review from exact stock, versioned settings, and this company’s Clover sync health. This preview saves nothing and cannot place an order.</p>
     </div></div>
@@ -59,5 +60,5 @@ export default function A8ReviewPreview({companyId, products}: {companyId: strin
       <p>Review reasons: {explain.reviewReasons.join(', ') || 'none'}.</p>
       <small>Supplier SKU, account, delivery, and price are unverified. Sales freshness uses a provisional 10-minute local preview rule. Recalculate after any stock, settings, or sync change.</small>
     </article>}
-  </section>;
+  </section><A8SavedReviews companyId={companyId} products={products}/></>;
 }

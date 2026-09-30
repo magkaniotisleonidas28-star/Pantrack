@@ -3,11 +3,8 @@ import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
 import {exactInventoryPreviewEnabled} from '@/lib/exact-inventory-gate';
-import {cloverSyncEnabled} from '@/lib/clover-sync';
+import {a8ReviewPolicy, a8UnverifiedSupplier} from '@/lib/a8-review-source';
 import {D1ReplenishmentReview} from '@/lib/d1-replenishment-review';
-
-// Provisional local preview policy. A8 acceptance still needs a reviewed hosted policy.
-const PREVIEW_MAX_LAG_MS = 10 * 60_000;
 
 async function handleGET(req: Request): Promise<Response> {
   const user = await getChatGPTUser();
@@ -31,13 +28,9 @@ async function handleGET(req: Request): Promise<Response> {
     const result = await new D1ReplenishmentReview(db).buildWithClover({
       companyId: companyId!, productId,
       actor: {companyId: companyId!, userId: user.userId, role: member.role},
-      supplier: {
-        companyId: companyId!, source: 'fictional_fixture', mappingId: 'a8-preview-unmapped',
-        mappingVersion: 1, supplierId: 'unverified', accountId: 'unverified',
-        locationId: 'unverified', sku: 'unmapped',
-      },
+      supplier: a8UnverifiedSupplier(companyId!),
       priceEstimate: null,
-    }, {syncEnabled: cloverSyncEnabled(), maxLagMs: PREVIEW_MAX_LAG_MS});
+    }, a8ReviewPolicy());
     return Response.json(result);
   } catch {
     return Response.json({error: 'Could not calculate this review. Please retry.'}, {status: 503});
