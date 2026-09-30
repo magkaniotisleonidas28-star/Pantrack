@@ -30,3 +30,9 @@ For scope and acceptance gates, use the [milestone roadmap](docs/PANTRACK_MILEST
 AI-assisted changes follow [AGENTS.md](AGENTS.md) and the
 [development playbook](docs/AI_DEVELOPMENT.md). The [documentation index](docs/README.md)
 links to setup, decisions, integration contracts, and historical evidence.
+
+## Public coming-soon page
+
+The standalone [coming-soon page](sites/coming-soon/README.md) is ready to upload
+to Cloudflare for `pantrack.app`. Its static assets deploy separately from the
+development application and require no build or database.
