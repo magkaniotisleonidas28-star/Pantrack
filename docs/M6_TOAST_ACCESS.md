@@ -5,11 +5,32 @@ confirmed that Toast API access is not available yet. The
 [local adapter foundation](M6_B8_ADAPTER_FOUNDATION.md) can be reviewed now;
 native Toast connection and sandbox acceptance remain open.
 
+The owner has selected the **integration-partner application** route. The
+[application packet](M6_TOAST_PARTNER_APPLICATION.md) now contains reusable
+product/technical drafts and private owner fill-in fields. It is prepared locally;
+submission, agreement acceptance, and approval are not recorded.
+
+## Application submission sequence — owner actions
+
+1. Complete the packet's business/contact/customer details in a private copy.
+2. Open Toast's [partner application page](https://pos.toasttab.com/partners/integration-partner-application)
+   and review the linked API agreement. Complete agreement acceptance yourself
+   only if you choose to proceed and are authorized to represent the applicant.
+3. Follow Toast's email instructions and submit the application linked there
+   yourself. Use the packet's drafts after checking the actual form questions.
+4. Keep confirmations/correspondence private; record only a non-sensitive
+   submission status/date below. Ask Toast to confirm the use case's eligibility,
+   approval requirements, costs/terms, and sandbox availability.
+
+This sequence follows the current application page. Submission is a separate
+stage from approval and credential provision. The agent has not sent a message,
+submitted a form, accepted an agreement, or requested credentials.
+
 ## Owner and C3 checklist
 
 1. **Confirm the access route with Toast.** For Pantrack's intended service
-   across multiple cafés, pursue integration-partner access. This is a planning
-   recommendation, subject to Toast's approval. A restaurant-specific custom
+   across multiple cafés, the owner selected integration-partner access, subject
+   to Toast's approval. A restaurant-specific custom
    integration is a different route, initiated through the restaurant's Toast
    representative. Review the [partnership process](https://dev.toasttab.com/doc/devguide/integrationDevProcess.html),
    costs, agreement, approval requirements, and eligible pilot restaurant before
@@ -65,6 +86,11 @@ remain unchecked until a real second provider satisfies the roadmap evidence.
 | Item | Current evidence |
 | --- | --- |
 | Second POS | Toast, selected by owner |
+| Access route | Integration-partner application, selected by owner |
+| Application material | [Draft packet](M6_TOAST_PARTNER_APPLICATION.md) prepared locally; owner details pending |
+| API agreement acceptance | No owner acceptance recorded; not performed by this task |
+| Application submission/date | No submission recorded; not performed by this task |
+| Toast response / use-case eligibility | Pending; no response or eligibility confirmation recorded |
 | API access | Owner reports none yet |
 | Partner/custom approval and terms | Pending |
 | Sandbox hostname and fictional restaurant | Pending |
@@ -72,3 +98,24 @@ remain unchecked until a real second provider satisfies the roadmap evidence.
 | Credentials | Not supplied or configured by this task |
 | Webhook availability | Pending provider confirmation |
 | Native connection/catalog/sales | Not implemented |
+
+Update a row only after the corresponding owner report or sanitized provider
+evidence exists; label owner reports as such. Keep reference numbers, private
+contacts, correspondence, agreement documents, and credential values outside
+this tracker. For approved access, record only the sandbox hostname, fictional
+restaurant GUID, scope names, webhook availability, and non-sensitive status of
+approval/terms. A partner approval still needs an explicit sandbox access handoff.
+
+## Packet completion and verification
+
+The application packet and owner checklist are prepared locally on
+`workstream-b/b8-toast-access-packet`, based on foundation commit `936f3ff`.
+The submission sequence and five added official source URLs were checked on
+2026-09-30; all five added relative Markdown links resolve. `git diff --check`
+passed, and the full documentation diff was reviewed for private information,
+unsupported claims, scope, and conflicting instructions. Runtime tests were
+not rerun for this documentation-only task.
+
+B8/M6 completion remains gated by the real second adapter and sandbox evidence
+in the roadmap. No runtime, API, schema, deployment, or provider account changed.
+Rollback is a revert of this documentation commit; the foundation remains intact.
