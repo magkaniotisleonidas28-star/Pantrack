@@ -8,6 +8,10 @@ The owner confirmed on 2026-09-30 that Pantrack is currently a **personal
 project**, rather than a registered business. This is owner-reported project
 status, not confirmation that Toast accepts this applicant type.
 
+The owner subsequently reports reading the terms and believes clarification
+has been received. Details were not supplied. Agreement acceptance, application
+submission, partner approval, and testing access are still separately pending.
+
 ## How to use this packet
 
 Copy the relevant drafts into a private working document, fill in the owner

@@ -17,9 +17,11 @@ do not infer it from access to the public application page.
 
 Toast's public API agreement (checked 2026-09-30) contains a competing-product
 restriction in section 2.4(vii) and business insurance requirements in section
-4.8. Their applicability to Pantrack and the application/testing stage has not
-been clarified by Toast. The packet includes a clarification draft for owner
-review; no message has been sent and no agreement accepted by the agent.
+4.8. The owner now reports reviewing the terms and believes clarification has
+been received. No clarification details or provider confirmation were supplied
+for this tracker; record this as owner-reported review, not verified eligibility
+or partner approval. The packet's clarification draft remains available. No
+message has been sent and no agreement accepted by the agent.
 
 ## Application submission sequence — owner actions
 
@@ -99,7 +101,7 @@ remain unchecked until a real second provider satisfies the roadmap evidence.
 | Second POS | Toast, selected by owner |
 | Access route | Integration-partner application, selected by owner |
 | Applicant stage | Owner reports a personal project, not a registered business; individual eligibility unconfirmed |
-| Personal-project / agreement questions | Individual eligibility, inventory-use eligibility, and application/testing-stage insurance requirements need provider clarification; no provider answer recorded |
+| Personal-project / agreement questions | Owner reports reading the terms and believes clarification has been received; no details or independent provider verification supplied |
 | Application material | [Draft packet](M6_TOAST_PARTNER_APPLICATION.md) prepared locally with a simple walkthrough and personal-project wording; private contact details pending |
 | API agreement acceptance | No owner acceptance recorded; not performed by this task |
 | Application submission/date | No submission recorded; not performed by this task |
@@ -140,8 +142,8 @@ personal-project stage. Safari reached the official agreement page, and its
 three initial fields and **I Agree** button were observed without entering
 contact details or submitting. The packet now contains short answers and a
 clarification draft for individual eligibility, the inventory use case, and
-application/testing-stage insurance requirements. These questions remain
-unanswered by Toast; submission and approval are not claimed.
+application/testing-stage insurance requirements. At that point, no Toast
+clarification was recorded; submission and approval were not claimed.
 
 Verification: `git diff --check` passed; all four unique relative link
 occurrences across the two changed documents resolve. The official application
@@ -149,11 +151,16 @@ and agreement pages were checked through web reads, and the agreement's initial
 form was observed directly in Safari. Runtime checks were not rerun because
 this follow-up changes documentation only.
 
-Next owner action: review the clarification draft and send it through the
-appropriate Toast contact, or provide an existing non-sensitive clarification
-status. Once the agreement questions are resolved, the owner can decide whether
-to accept and continue to the emailed application form. Contact details,
-correspondence, and any credentials stay private.
+Subsequent owner report on 2026-09-30: the terms were read and the owner believes
+clarification has been received. This does not establish agreement acceptance,
+application submission, or Toast approval. The initial Safari form was observed
+with owner-entered details and its **I Agree** action available. Contact values
+were not copied into this tracker.
+
+Next owner action: decide whether to accept the agreement and, if accepting,
+click **I Agree** personally, then open the emailed application link in Safari.
+The agent can help adapt the prepared answers to the actual form. Contact
+details, correspondence, and any credentials stay private.
 
 Only this handoff and the packet changed. No runtime, schema, deployment,
 provider credential, agreement acceptance, or external message changed. B8/M6
