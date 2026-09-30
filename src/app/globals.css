@@ -309,9 +309,26 @@ body{font-family:Arial,Helvetica,sans-serif;color:#20392f;margin:0}button,a,inpu
   .order-total-dock { left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); width: auto; }
 }
 
+body[data-workspace-theme=light],
+.sidebar-workspace[data-workspace-theme=light] { --workspace-light-canvas: #f0f2f1; }
+body[data-workspace-theme=light] { background: var(--workspace-light-canvas); }
+.sidebar-workspace[data-workspace-theme=light] {
+  --background: var(--workspace-light-canvas);
+  background: var(--workspace-light-canvas);
+}
+.sidebar-workspace[data-workspace-theme=light] :is(.topbar,.mobile-workspace-nav),
+body[data-workspace-theme=light] :is(.company-bar,.membership-details) {
+  background: var(--workspace-light-canvas);
+}
+body[data-workspace-theme=light] :is(.company-bar,.membership-details) { color-scheme: light; }
+body[data-workspace-theme=light] .membership-details [data-variant=default] {
+  background: #215743; color: #fff;
+}
+body[data-workspace-theme=light] .membership-details [data-variant=default]:hover { background: #2b6b51; }
+
 .sidebar-workspace[data-workspace-theme=dark] {
   color-scheme: dark;
-  --background: #121b17; --foreground: #eaf3ec;
+  --background: var(--workspace-dark-canvas); --foreground: #eaf3ec;
   --card: #1d2a23; --card-foreground: #eaf3ec;
   --popover: #223129; --popover-foreground: #eaf3ec;
   --primary: #68be8a; --primary-foreground: #102318;
@@ -319,10 +336,14 @@ body{font-family:Arial,Helvetica,sans-serif;color:#20392f;margin:0}button,a,inpu
   --muted: #26372e; --muted-foreground: #a9c0b0;
   --accent: #294434; --accent-foreground: #eaf3ec;
   --border: #365043; --input: #365043; --ring: #8bd6a7;
-  background: #121b17; color: #eaf3ec;
+  background: var(--workspace-dark-canvas); color: #eaf3ec;
 }
+body[data-workspace-theme=dark],
+.sidebar-workspace[data-workspace-theme=dark] { --workspace-dark-canvas: #0b1711; }
+body[data-workspace-theme=dark] { background: var(--workspace-dark-canvas); }
 .sidebar-workspace[data-workspace-theme=dark] :is(p,small,.muted) { color: #b3c7b8; }
-.sidebar-workspace[data-workspace-theme=dark] :is(.topbar,.workspace-sidebar,.mobile-workspace-nav) { background: #19261f; border-color: #365043; }
+.sidebar-workspace[data-workspace-theme=dark] :is(.topbar,.mobile-workspace-nav) { background: var(--workspace-dark-canvas); border-color: #365043; }
+.sidebar-workspace[data-workspace-theme=dark] .workspace-sidebar { background: #19261f; border-color: #365043; }
 .sidebar-workspace[data-workspace-theme=dark] :is(.workspace-name span,.account,.sidebar-main-item,.sidebar-subsections button,.sidebar-foot,.eyebrow) { color: #afc4b5; }
 .sidebar-workspace[data-workspace-theme=dark] .brand { color: #b5e6c7; }
 .sidebar-workspace[data-workspace-theme=dark] .avatar { background: #304637; color: #eaf3ec; }
@@ -342,6 +363,31 @@ body{font-family:Arial,Helvetica,sans-serif;color:#20392f;margin:0}button,a,inpu
 .sidebar-workspace[data-workspace-theme=dark] :is(.product-panel tr,.basket-lines,.review-line,.payment-divider,.history-card,.table-foot) { border-color: #365043; }
 .sidebar-workspace[data-workspace-theme=dark] :is(.review-button,.order-total-dock button) { background: #337c57; color: #fff; }
 .sidebar-workspace[data-workspace-theme=dark] .order-total-dock span { color: #b3c7b8; }
+
+/* The company and ownership controls sit above the workspace theme root. */
+body[data-workspace-theme=dark] :is(.company-bar,.membership-details) {
+  color-scheme: dark;
+  --background: #1d2a23; --foreground: #eaf3ec;
+  --primary: #68be8a; --primary-foreground: #102318;
+  --accent: #294434; --accent-foreground: #eaf3ec;
+  --border: #365043; --input: #45604c; --ring: #8bd6a7;
+  background: var(--workspace-dark-canvas); border-color: #365043; color: #eaf3ec;
+}
+body[data-workspace-theme=dark] .company-select,
+body[data-workspace-theme=dark] .membership-details :is(input,select) {
+  background: #1d2a23; border-color: #45604c; color: #eaf3ec;
+}
+body[data-workspace-theme=dark] .company-select [data-slot=select-value] { color: #eaf3ec; }
+body[data-workspace-theme=dark] .company-bar [data-slot=button] { color: #eaf3ec; }
+body[data-workspace-theme=dark] .company-bar [data-variant=outline] { background: #1d2a23; border-color: #45604c; color: #eaf3ec; }
+body[data-workspace-theme=dark] .company-bar [data-slot=button]:hover { background: #294434; color: #eaf3ec; }
+body[data-workspace-theme=dark] .membership-details [data-variant=default] { background: #337c57; color: #fff; }
+body[data-workspace-theme=dark] .membership-details [data-variant=default]:hover { background: #408e65; }
+body[data-workspace-theme=dark] .membership-details :is(p,small) { color: #b3c7b8; }
+body[data-workspace-theme=dark] .membership-details > summary:hover { color: #c2f0d0; }
+body[data-workspace-theme=dark] .membership-details summary:focus-visible {
+  outline: 2px solid #8bd6a7; outline-offset: 4px;
+}
 
 body[data-workspace-theme] :is([data-slot=dialog-content],[data-slot=alert-dialog-content],[data-slot=sheet-content],[data-slot=select-content],[data-slot=popover-content],[data-slot=dropdown-menu-content]) {
   color-scheme: light; --background: #fff; --foreground: #25312c; --popover: #fff; --popover-foreground: #25312c;
