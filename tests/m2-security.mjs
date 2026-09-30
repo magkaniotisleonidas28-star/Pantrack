@@ -11,7 +11,7 @@ globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
 const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
+for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
  const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
@@ -38,7 +38,7 @@ globalThis.fetch=async(url,init={})=>{
  if(path.endsWith('/logout'))return new Response(null,{status:204});
  return Response.json({});
 };
-function req(name,method='GET',body, cookie='',extra={}){const headers=new Headers({'Content-Type':'application/json',Origin:'https://test',...extra});if(cookie)headers.set('Cookie',cookie);globalThis.m2headers=headers;return new Request('https://test/api/'+name+(method==='GET'?'?companyId=company-a':''),{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{})});}
+function req(name,method='GET',body, cookie='',extra={}){const headers=new Headers({'Content-Type':'application/json',Origin:'https://test',...extra});if(cookie)headers.set('Cookie',cookie);globalThis.m2headers=headers;return new Request('https://test/api/'+name+(method==='GET'?'?companyId=company-a'+(name==='replenishment/review'?'&productId=milk':''):''),{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{})});}
 async function call(name,method='GET',body,cookie='',extra={}){return modules[name][method](req(name,method,body,cookie,extra));}
 async function login(name){const r=await call('auth','POST',{action:'signin',email:accounts[name].email,password:'existingpassword'});assert.equal(r.status,200,await r.clone().text());const cookie=r.headers.get('set-cookie');assert.match(cookie,/__Host-pantrack=[a-f0-9]{64}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=3600; Secure/);return cookie.split(';')[0];}
 const cookies={};for(const name of Object.keys(accounts))cookies[name]=await login(name);
@@ -95,6 +95,10 @@ assert.equal((await call('sales/events','POST',{companyId:'company-a',action:'di
 assert.equal((await call('sales/events','POST',{companyId:'company-b',action:'dismiss',eventKey:'missing',reason:'reviewed'},cookies.manager)).status,403,'Managers cannot mutate another company’s sales events.');
 assert.equal((await call('sales/events','GET',null,cookies.employee)).status,200,'Employees may read safe sales status while the gate is dark.');
 assert.equal((await(await call('inventory','GET',null,cookies.owner)).json()).exactEnabled,false,'Exact inventory is dark by default.');
+assert.equal((await call('replenishment/review')).status,401,'Anonymous A8 review is denied.');
+assert.equal((await call('replenishment/review','GET',null,cookies.other)).status,403,'Wrong-company A8 review is denied.');
+assert.equal((await call('replenishment/review','GET',null,cookies.employee)).status,403,'Employees cannot inspect purchasing proposals.');
+assert.equal((await call('replenishment/review','GET',null,cookies.manager)).status,404,'A8 review stays dark with exact preview off.');
 globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
 const exactConfigure={companyId:'company-a',action:'configureExact',productId:'milk',operationId:'config-milk',stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'10',effectiveAt:'2026-01-01T00:00:00Z'};
 assert.equal((await call('inventory','POST',exactConfigure,cookies.employee)).status,403,'Employees cannot mutate exact inventory.');
@@ -102,6 +106,9 @@ assert.equal((await call('inventory','POST',{...exactConfigure,companyId:'compan
 assert.equal((await call('inventory','POST',exactConfigure,cookies.manager)).status,200,'Managers can classify company inventory when the preview is enabled.');
 assert.equal(sql.prepare("SELECT count(*) AS count FROM security_audit WHERE company_id='company-a' AND action='inventory.succeeded' AND target='configureExact'").get().count,1,'Exact inventory mutation is audited.');
 assert.equal((await(await call('inventory','GET',null,cookies.employee)).json()).exact.records.length,1,'Employees can read their company exact inventory.');
+const a8Preview=await call('replenishment/review','GET',null,cookies.manager);
+assert.equal(a8Preview.status,200,'Manager may request a read-only A8 review.');
+assert.deepEqual(await a8Preview.json(),{kind:'unavailable',reason:'settings_missing'},'Missing planning settings remain a reviewable unavailable result.');
 assert.equal((await call('sales/events','GET',null,cookies.employee)).status,200,'Employees may read safe exact-sales status.');
 const exactRecipeId=crypto.randomUUID(),exactDraftId=crypto.randomUUID();
 assert.equal((await call('inventory','POST',{companyId:'company-a',action:'saveRecipeDraftExact',recipeId:exactRecipeId,draftId:exactDraftId,name:'Exact milk',ingredients:[{productId:'milk',amount:'1',unitId:'mL'}]},cookies.manager)).status,200,'Manager can save exact recipe draft.');
