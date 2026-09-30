@@ -3,10 +3,12 @@ import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {database} from '@/db/raw';
 import {digest} from '@/lib/vendor-adapter';
-import {callbackUrl,cloverConfig,cloverConnection,cloverJson,cloverTokenExpirations,withClover} from '@/lib/clover';
-import {cloverSyncEnabled,cloverSyncStatus,syncClover} from '@/lib/clover-sync';
+import {callbackUrl,cloverConfig,cloverConnection,cloverTokenExpirations} from '@/lib/clover';
+import {cloverSyncEnabled} from '@/lib/clover-sync';
+import {cloverPosAdapter} from '@/lib/clover-pos-adapter';
+import {requireSupported} from '@/lib/pos-adapter';
 import {z} from 'zod';
-async function handleGET(req:Request){const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});try{const id=new URL(req.url).searchParams.get('companyId');if((await companyAccess(u.userId,id))?.role!=='owner')return Response.json({error:'Company owner access required.'},{status:403});const c=cloverConfig(),row=await cloverConnection(id!),db=database();const [sync,tokenExpirations]=row?await Promise.all([cloverSyncStatus(id!),cloverTokenExpirations(row)]):[null,null];const [items,modifiers,recipes,recipeModifiers]=row?await Promise.all([
+async function handleGET(req:Request){const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});try{const id=new URL(req.url).searchParams.get('companyId');if((await companyAccess(u.userId,id))?.role!=='owner')return Response.json({error:'Company owner access required.'},{status:403});const c=cloverConfig(),row=await cloverConnection(id!),db=database();const [sync,tokenExpirations]=row?await Promise.all([cloverPosAdapter.health(id!).then(requireSupported),cloverTokenExpirations(row)]):[null,null];const [items,modifiers,recipes,recipeModifiers]=row?await Promise.all([
  db.prepare('SELECT item_id,recipe_id FROM clover_item_mappings WHERE company_id=? AND environment=? AND merchant_id=?').bind(id,row.environment,row.merchant_id).all(),
  db.prepare('SELECT item_id,modifier_id,inventory_modifier_id FROM clover_modifier_mappings WHERE company_id=? AND environment=? AND merchant_id=?').bind(id,row.environment,row.merchant_id).all(),
  db.prepare("SELECT recipe_id,name FROM recipe_versions WHERE company_id=? AND status='active' ORDER BY name").bind(id).all(),
@@ -23,7 +25,7 @@ async function handlePOST(req:Request){
  const state=crypto.randomUUID()+crypto.randomUUID();await db.batch([db.prepare('DELETE FROM clover_oauth_states WHERE company_id=? OR expires<?').bind(b.companyId,Date.now()),db.prepare('INSERT INTO clover_oauth_states(state_hash,company_id,user_id,environment,expires) VALUES (?,?,?,?,?)').bind(await digest(state),b.companyId,u.userId,c.environment,Date.now()+600000)]);
  const url=new URL(c.auth+'/oauth/v2/authorize');url.search=new URLSearchParams({client_id:c.clientId,response_type:'code',redirect_uri:callbackUrl(),state}).toString();return Response.json({url:url.href},{headers:{'Cache-Control':'no-store','Set-Cookie':'clover_oauth='+state+'; HttpOnly; Secure; SameSite=Lax; Path=/api/clover; Max-Age=600'}});
  }
- if(b.action==='sync'){if(!await cloverConnection(b.companyId))throw new Error('Connect Clover first.');return Response.json(await syncClover(b.companyId),{headers:{'Cache-Control':'no-store'}});}
+ if(b.action==='sync'){if(!await cloverConnection(b.companyId))throw new Error('Connect Clover first.');return Response.json(requireSupported(await cloverPosAdapter.sync(b.companyId)),{headers:{'Cache-Control':'no-store'}});}
  if(b.action==='mapItem'||b.action==='mapModifier'){
   const connection=await cloverConnection(b.companyId);if(!connection)throw new Error('Connect Clover first.');
   if(!b.itemId)throw new Error('Choose a Clover item.');
@@ -41,10 +43,8 @@ async function handlePOST(req:Request){
   }
   return Response.json({ok:true});
  }
- const result=await withClover(b.companyId,async(connection,token)=>{
- const url=c.api+'/v3/merchants/'+encodeURIComponent(connection.merchant_id)+(b.action==='modifiers'?'/modifiers':'/items')+'?limit=100&offset='+b.offset;
- const data=z.object({elements:z.array(z.object({id:z.string().min(1),name:z.string().optional(),deleted:z.boolean().optional(),hidden:z.boolean().optional()})).max(100)}).parse(await cloverJson(url,{headers:{Authorization:'Bearer '+token}}));
- return {merchantId:connection.merchant_id,items:data.elements.filter(i=>!i.deleted&&!i.hidden).map(i=>({id:i.id,name:i.name||i.id})),nextOffset:data.elements.length===100?b.offset+100:null};});return Response.json(result,{headers:{'Cache-Control':'no-store'}});
+ const result=requireSupported(await cloverPosAdapter.catalog(b.companyId,b.action==='modifiers'?'modifiers':'items',b.offset));
+ return Response.json({merchantId:result.locationId,items:result.items,nextOffset:result.nextOffset},{headers:{'Cache-Control':'no-store'}});
  }catch(e){return Response.json({error:e instanceof z.ZodError?'Unexpected Clover data or invalid request.':e instanceof Error?e.message:'Clover request failed.'},{status:400});}
 }
 export const GET=withCompanyRoute('clover',handleGET);

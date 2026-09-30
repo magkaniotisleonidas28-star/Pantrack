@@ -357,6 +357,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   second POS, extract the stable adapter interface from accepted Clover behavior,
   add truthful capability/status states, implement the adapter, and run the same
   contract and sandbox tests. Keep CSV and bridge fallbacks supported.
+  **Partial local outcome on 2026-09-30:** the owner selected Toast. The
+  [adapter foundation](M6_B8_ADAPTER_FOUNDATION.md) wraps existing Clover
+  behavior, adds truthful status/capability labels, and tests the shared M4
+  contract with a fictional second provider. No native Toast adapter or Toast
+  sandbox evidence exists; API access is pending the
+  [owner/C3 handoff](M6_TOAST_ACCESS.md). B8 remains unchecked.
 - [ ] **B9 — Execute B's M11 slice.** Operate the approved pilot POS connection;
   measure completeness, lag, duplicates, held/replayed events, and recovery.
   Supply the sale-to-inventory event trail for both reviewed cycles.
@@ -727,6 +733,12 @@ before relying on it in a pilot.
 ## M6 — Additional POS adapters
 
 **Objective:** Prove that Pantrack supports multiple POS systems through adapters rather than provider-specific inventory logic.
+
+**Current partial outcome:** Toast is selected. The
+[B8 local foundation](M6_B8_ADAPTER_FOUNDATION.md) implements the shared interface,
+Clover wrapper, capability/status summary, and fictional-provider contract
+suite. Native Toast implementation and sandbox acceptance await the
+[access handoff](M6_TOAST_ACCESS.md); full M6 criteria remain open.
 
 ### Tasks
 

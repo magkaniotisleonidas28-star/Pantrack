@@ -4,6 +4,7 @@ import {cloverConfig,cloverJson,withClover} from '@/lib/clover';
 import {cloverSource,normalizeCloverDeletedOrder,normalizeCloverOrder,type CloverOrder} from '@/lib/clover-orders';
 import type {SalesEventDraftV1} from '@/lib/sales-ingestion';
 import {d1SalesService} from '@/lib/d1-sales-runtime';
+import {receivePosEvent} from '@/lib/pos-adapter';
 
 const PAGE_SIZE=100;
 const MAX_PAGES=20;
@@ -35,7 +36,7 @@ export async function syncClover(companyId:string){
    const ingest=async(draft:SalesEventDraftV1|null)=>{
     scanned++;
     if(!draft)return;
-    const receipt=await service.receive({companyId,source,actor:{kind:'machine',machineId:`clover:${companyId}`,companyId,source}},draft);
+    const receipt=await receivePosEvent(service,companyId,source,draft);
     if(receipt.kind==='created'){
      created++;
      const status=await service.process(companyId,receipt.eventKey);

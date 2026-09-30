@@ -23,7 +23,7 @@ const failureMessages:Record<string,string>={
  save:'Pantrack could not save the Clover connection. Try Connect Clover again.',
 };
 
-export default function CloverConnection({companyId,onMap}:{companyId:string;onMap:(item:Item,merchantId:string)=>void}){
+export default function CloverConnection({companyId,onMap,onStatusChange}:{companyId:string;onMap:(item:Item,merchantId:string)=>void;onStatusChange?:()=>void}){
  const [status,setStatus]=useState<Status|null>(null),[items,setItems]=useState<Item[]>([]),[modifiers,setModifiers]=useState<Item[]>([]),[itemOffset,setItemOffset]=useState<number|null>(0),[modifierOffset,setModifierOffset]=useState<number|null>(0);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState(false),[selectedItem,setSelectedItem]=useState(''),[selectedModifier,setSelectedModifier]=useState(''),[selectedRecipe,setSelectedRecipe]=useState(''),[selectedRecipeModifier,setSelectedRecipeModifier]=useState('');
  async function refresh(){const r=await fetch('/api/clover?companyId='+encodeURIComponent(companyId));const d=await r.json() as Status&{error?:string};if(!r.ok)throw new Error(d.error||'Could not load Clover.');setStatus(d);}
@@ -37,7 +37,7 @@ export default function CloverConnection({companyId,onMap}:{companyId:string;onM
   if(action==='sync')setNotice(`Sync finished: ${d.created??0} new events, ${d.held??0} held for review.`);
   if(action==='mapItem'||action==='mapModifier')setNotice('Clover mapping saved. Past sales and inventory records were not changed.');
   await refresh();
- }catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+ }catch(e){setError((e as Error).message);}finally{setBusy(false);onStatusChange?.();}}
  const mappedRecipe=status?.itemMappings.find(row=>row.item_id===selectedItem)?.recipe_id;
  const modifierChoices=status?.recipeModifiers.filter(row=>row.recipe_id===mappedRecipe)||[];
  return <section className="catalog-card" style={{margin:'24px 0'}}><div className="between"><h2>Clover register connection</h2><span className="sample-tag">{status?(status.connected?'Authorized · '+status.environment:status.ready?'Ready to connect · '+status.environment:'Developer setup required'):'Loading connection…'}</span></div>
