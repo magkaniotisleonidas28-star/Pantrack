@@ -5,6 +5,14 @@ confirmed that Toast API access is not available yet. The
 [local adapter foundation](M6_B8_ADAPTER_FOUNDATION.md) can be reviewed now;
 native Toast connection and sandbox acceptance remain open.
 
+**On hold — awaiting Toast approval and testing access (2026-09-30).** The
+owner requested this hold while the application is reviewed. Preserve the
+completed application and local adapter foundation. Resume when Toast requests
+information or confirms approved access; a review reply alone does not grant
+credentials. B8/M6 remain unchecked. Work may continue on
+[Baldor preparation](C3_BALDOR_PREPARATION.md) and the
+[waste and menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md).
+
 The owner has selected the **integration-partner application** route. The
 [application packet](M6_TOAST_PARTNER_APPLICATION.md) now contains reusable
 product/technical drafts and private owner fill-in fields. The owner's agreement
@@ -102,6 +110,7 @@ remain unchecked until a real second provider satisfies the roadmap evidence.
 | Item | Current evidence |
 | --- | --- |
 | Second POS | Toast, selected by owner |
+| B8 work status | On hold at owner's request while awaiting Toast review/approved testing access; resume on a request for information or an approved access handoff |
 | Access route | Integration-partner application, selected by owner |
 | Applicant stage | Owner reports a personal project, not a registered business; individual eligibility unconfirmed |
 | Personal-project / agreement questions | Owner reports reading the terms and believes clarification has been received; no details or independent provider verification supplied |

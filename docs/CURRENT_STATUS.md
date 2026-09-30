@@ -149,6 +149,16 @@ supplier credentials, or payment details into chat or source control.
 
 ## What you need to do next
 
+Current focus: **C3 Baldor supplier preparation** and the planned
+[quick waste/menu analysis extensions](WASTE_AND_MARGIN_ROADMAP.md). The
+[Baldor packet](C3_BALDOR_PREPARATION.md) includes an inquiry ready for owner
+review and sending. The owner reports a NYC café with an existing Baldor
+account for a later pilot; it has not been accessed or independently verified.
+**B8 is on hold while Toast reviews the application submitted on 2026-09-30.**
+Resume B8 on a request for information or an approved testing-access handoff.
+Waste and margin features are planned only; the next unblocked product task is
+W1 quick ingredient-waste entry. Supplier submission remains disabled.
+
 1. C2's [development closeout](C2_M2_CLOSEOUT.md) now records the owner's
    reported additive M2 migration/auth review and a separate agent inspection.
    A and B may use the M2 development gate. Keep hosted signup/recovery and
@@ -271,9 +281,9 @@ behavior.
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
 | M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; paid latte, modifier/replay, duplicate/polling, unpaid deletion, full refund, missed-sale polling recovery, natural token refresh, lost-response recovery, disconnect/reconnect, later paid revision, and controlled webhook-failure cases recorded; owner-accepted on 2026-09-29 for tested development sandbox scope | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records nine paid latte deductions across sandbox cases, one held sale with zero partial use and an audited recovery replay, a simulated duplicate and owner poll, an unpaid deletion dismissed without stock use, one linked full $5 refund with zero additional stock use, two sales recovered by owner polling, one OAuth rotation and one controlled lost-response recovery, same-merchant reauthorization with history and stock retained, and one paid order revision that used only the added latte's ingredients. One authenticated webhook received a controlled `503`; owner polling recovered the sale once, while native retry was not observed in 20 minutes. Clover rejected a paid-order DELETE with HTTP 400. See the [bounded acceptance decision](M5_B7_ACCEPTANCE_REVIEW.md) for all excluded provider cases. Sync remains off; pilot and production approval are separate. |
-| M6 — second POS | Toast selected; B8 adapter foundation implemented locally; M6 not accepted | The [local foundation](M6_B8_ADAPTER_FOUNDATION.md) wraps Clover, adds truthful company-scoped capability/status labels, and tests the common M4 boundary with a fictional second provider. Native Toast remains unimplemented; the owner reports no API access yet. Complete the [Toast access handoff](M6_TOAST_ACCESS.md), then implement and validate a read-only sandbox connection before sales cases. |
+| M6 — second POS | B8 on hold at owner's request awaiting Toast approval/testing access; adapter foundation preserved; M6 not accepted | Toast received the owner's application on 2026-09-30. The [local foundation](M6_B8_ADAPTER_FOUNDATION.md) is implemented locally; native Toast remains unimplemented. Resume on Toast's request for information or an approved [access handoff](M6_TOAST_ACCESS.md), then validate a read-only sandbox connection before sales cases. |
 | M7 — replenishment proposals | A6/A7 local core and lifecycle, C4's fake consumer, and A8 local sale, sales-health reader, v2 handoff, durable source safety, gated preview, and manager save/edit/cancel flow passed locally; M7 not accepted | The [served local HTTP check](M7_A8_SERVED_LOCAL_EVIDENCE.md) passed the positive proposal flow and fixed false D1 change-count failures. The manager flow uses server-derived Clover health and fictional supplier details, with supplier submission disabled. A8 still needs browser visual review, a reviewed sales-freshness policy, and hosted end-to-end and concurrency evidence. Development D1 has not applied A7 `0016`/`0017`. See [manager flow evidence](M7_A8_MANAGER_FLOW_EVIDENCE.md), [preview evidence](M7_A8_PREVIEW_API_UI_EVIDENCE.md), and [durable safety evidence](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md). |
-| M8 — supplier adapter | Not started | Select supplier, build approved integration, sandbox/timeout tests, incoming-stock and delivery reconciliation, then one approved low-risk test order. |
+| M8 — supplier adapter | C3 preparation ready; Baldor selected as candidate; real adapter not started | The [Baldor packet](C3_BALDOR_PREPARATION.md) contains public research and an unsent inquiry. The owner reports a NYC café/account for a later pilot. Approved channel, testing access, terms, and café permission remain pending. Preserve M7 acceptance and the sandbox/failure gates before any authorized real order. |
 | M9 — operations | Prototype endpoint only | Provision scheduler/queue, retries, alert channels, operations page, and recovery runbooks. |
 | M10 — financial controls | Partial prototype | Confirm supplier payment model, limits, eligibility, owner reauthentication, and financial audit/testing. |
 | M11 — café pilot | Not started | Written business permission, one POS/supplier/location, measurements, two reviewed count-to-delivery cycles, alerts, pause test, and manager sign-offs. |
@@ -304,6 +314,8 @@ limited automation.
 - [M5 B7 sandbox acceptance in progress](M5_B7_SANDBOX_EVIDENCE.md)
 - [M6 B8 local adapter foundation](M6_B8_ADAPTER_FOUNDATION.md)
 - [M6 Toast access handoff](M6_TOAST_ACCESS.md)
+- [C3 Baldor supplier preparation](C3_BALDOR_PREPARATION.md)
+- [Quick waste recording and menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md)
 - [September 19 readiness snapshot and approved M2 permissions](MILESTONE_READINESS.md)
 - [Full milestone roadmap](PANTRACK_MILESTONES.md)
 - [Branch consolidation record](BRANCH_CONSOLIDATION.md)

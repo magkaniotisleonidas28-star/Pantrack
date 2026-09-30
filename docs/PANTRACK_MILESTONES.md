@@ -363,6 +363,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   contract with a fictional second provider. No native Toast adapter or Toast
   sandbox evidence exists; API access is pending the
   [owner/C3 handoff](M6_TOAST_ACCESS.md). B8 remains unchecked.
+  **On hold at owner's request on 2026-09-30:** the owner submitted the Toast
+  application and its receipt was observed directly. Await review and approved
+  testing access; preserve the local foundation. Resume on Toast's request for
+  information or an approved access handoff. No partnership or sandbox approval
+  is claimed.
 - [ ] **B9 — Execute B's M11 slice.** Operate the approved pilot POS connection;
   measure completeness, lag, duplicates, held/replayed events, and recovery.
   Supply the sale-to-inventory event trail for both reviewed cycles.
@@ -397,6 +402,15 @@ For every numbered item, the assigned person follows the same delivery loop:
   ordering channel, account/location/SKUs/terms, scheduler/queue, notification
   owners, retry policy, payment responsibility, limits, and alert ownership.
   Missing decisions stay explicit blockers rather than guessed defaults.
+  **Preparation outcome on 2026-09-30:** the owner selected Baldor and reports
+  a future NYC café pilot with an existing Baldor account, to be involved after
+  connection development/testing. The [Baldor packet](C3_BALDOR_PREPARATION.md)
+  records public guidance, access blockers, shared-connector design, product
+  mapping checklist, and an unsent inquiry. The
+  [waste and menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md) adds staged
+  future outcomes without changing milestone acceptance. Supplier access,
+  café authorization, payment/operational decisions, and C3 completion remain
+  open; no account was used or supplier contacted.
 - [ ] **C4 — Build safe platform components against fakes.** Define supplier,
   scheduler/job, alert, and budget-reservation contracts. Test sending-before-call,
   idempotency, ambiguous timeout/unknown status, reconciliation, leases, bounded
@@ -809,6 +823,12 @@ Then apply configured capacity, shelf-life, minimum-order, order-multiple, stale
 ## M8 — First real supplier adapter
 
 **Objective:** Submit one controlled order to one real supplier through a supported API or approved connector.
+
+**Preparation only (2026-09-30):** Baldor is the selected supplier candidate;
+the owner reports an existing NYC café account for a later pilot. The
+[C3 packet](C3_BALDOR_PREPARATION.md) is ready, with approved channel, test
+access, terms, mappings, and pilot permission pending. M7 acceptance and M8's
+external validation gates remain in force. Supplier submission stays disabled.
 
 ### Product decisions required
 
