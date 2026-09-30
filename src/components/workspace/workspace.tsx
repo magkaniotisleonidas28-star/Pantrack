@@ -4,7 +4,8 @@ import VendorAutomation from './vendor-automation';
 import ManagerOperations from './manager-operations';
 import InventoryPanel from './inventory-panel';
 import PaymentMethods from './payment-methods';
-import {CreditCard} from 'lucide-react';
+import {CreditCard,Menu,ChevronRight} from 'lucide-react';
+import {Sheet,SheetTrigger,SheetContent,SheetTitle,SheetDescription} from '@/components/ui/sheet';
 import {useEffect,useRef,useState} from 'react';
 import {Package,ShoppingBag,BookOpen,History,Truck,Search,Plus,Minus,ArrowRight,Download,Check,Leaf,Pencil,AlertCircle} from 'lucide-react';
 import {Tabs,TabsList,TabsTrigger,TabsContent} from '@/components/ui/tabs';
@@ -20,6 +21,16 @@ async function request(companyId:string,body?:Record<string,unknown>){const r=aw
 export default function Workspace({email,companyId,companyName,role,onDirtyChange}:{email:string;companyId:string;companyName:string;role:string;onDirtyChange:(dirty:boolean)=>void}){
 const [tab,setTab]=useState('order'),[products,setProducts]=useState<Product[]>([]),[orders,setOrders]=useState<Order[]>([]),[qty,setQty]=useState<Record<string,number>>({}),[search,setSearch]=useState(''),[category,setCategory]=useState('All products'),[loading,setLoading]=useState(true),[error,setError]=useState(''),[busy,setBusy]=useState(false),[review,setReview]=useState(false),[editing,setEditing]=useState<Product|null>(null),[detail,setDetail]=useState<Order|null>(null),[notice,setNotice]=useState('');
 const key=useRef(''),lock=useRef(false);
+const [navigationOpen,setNavigationOpen]=useState(false);
+const navigation=[
+  {value:'order',label:'New order',icon:ShoppingBag},
+  {value:'inventory',label:'Inventory',icon:Package},
+  {value:'catalog',label:'Product catalog',icon:BookOpen},
+  {value:'history',label:'Order history',icon:History},
+  {value:'suppliers',label:'Suppliers & automation',icon:Truck},
+  ...(role==='owner'?[{value:'payments',label:'Payment methods',icon:CreditCard},{value:'setup',label:'Setup & register',icon:Check}]:[]),
+];
+const activeLabel=navigation.find(item=>item.value===tab)?.label||'Workspace';
 const [removing,setRemoving]=useState<Order|null>(null);
 useEffect(()=>{onDirtyChange(Object.values(qty).some(n=>n>0));},[qty,onDirtyChange]);
 async function load(){setLoading(true);setError('');try{const d=await request(companyId);setProducts(d.products);setOrders(d.orders);}catch(e){setError((e as Error).message);}finally{setLoading(false);}}
@@ -33,8 +44,31 @@ async function saveProduct(e:React.FormEvent){e.preventDefault();if(!editing||bu
 async function removeOrder(){if(!removing||lock.current)return;lock.current=true;setBusy(true);setError('');try{await request(companyId,{action:'remove',id:removing.id});setOrders(o=>o.filter(x=>x.id!==removing.id));if(detail?.id===removing.id)setDetail(null);setRemoving(null);setNotice('Prepared order removed from this company’s history.');}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}}
 function download(o:Order,supplier:string){const rows=[['PREPARED ORDER — NOT SENT'],['Supplier',supplier],['Order reference',o.id],['Created',o.created],['Prices are estimates; tax and delivery excluded'],['Product','SKU','Pack size','Unit','Quantity','Estimated unit price','Estimated line total'],...o.items.filter(p=>p.supplier===supplier).map(p=>[p.name,p.sku,p.pack,p.unit,p.quantity,money(p.price),money(p.price*p.quantity)])];const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/^[=+@-]/,"'$&").replaceAll('"','""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='prepared-order-'+supplier.replace(/[^a-z0-9]/gi,'-')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 const summary=(list:typeof items)=>[...new Set(list.map(p=>p.supplier))].map(s=>{const lines=list.filter(p=>p.supplier===s),subtotal=lines.reduce((a,p)=>a+p.quantity*p.price,0),minimum=suppliers.find(x=>x.name===s)?.minimum;return <section className="supplier-summary" key={s}><div className="between"><strong>{s}</strong><span>{money(subtotal)}</span></div>{lines.map(p=><div className="review-line" key={p.id}><span>{p.name}<small>{p.sku} · {p.pack}</small></span><strong>{p.quantity} {p.unit}{p.quantity!==1?'s':''}</strong></div>)}{minimum&&subtotal<minimum*100?<p className="warning">Below sample minimum of {money(minimum*100)}.</p>:null}<small>Not connected · price and availability unverified</small></section>;});
-return <div className="app"><header className="topbar"><a className="brand" href="/"><span><Package size={22}/></span>pantrack<span className="brand-period">.</span></a><div className="workspace-name">{companyName} <span>Purchasing workspace</span></div><span className="account" title={email}>{email.split('@')[0]} <span className="avatar">{email.slice(0,1).toUpperCase()}</span></span></header>
-<Tabs value={tab} onValueChange={setTab}><div className="nav-wrap"><TabsList className="main-nav" variant="line"><TabsTrigger value="order"><ShoppingBag/>New order</TabsTrigger><TabsTrigger value="inventory"><Package/>Inventory</TabsTrigger><TabsTrigger value="catalog"><BookOpen/>Product catalog</TabsTrigger><TabsTrigger value="history"><History/>Order history{orders.length>0&&<span className="count">{orders.length}</span>}</TabsTrigger><TabsTrigger value="suppliers"><Truck/>Suppliers & automation</TabsTrigger>{role==='owner'&&<TabsTrigger value="payments"><CreditCard/>Payment methods</TabsTrigger>}{role==='owner'&&<TabsTrigger value="setup"><Check/>Setup & register</TabsTrigger>}</TabsList><span className="pilot-label">PILOT WORKSPACE</span></div>
+return <div className="app sidebar-workspace">
+<header className="topbar">
+  <a className="brand" href="/"><span><Package size={22}/></span>pantrack<span className="brand-period">.</span></a>
+  <div className="workspace-name">{companyName}<ChevronRight size={14}/><span>{activeLabel}</span></div>
+  <span className="account" title={email}>{email.split('@')[0]} <span className="avatar">{email.slice(0,1).toUpperCase()}</span></span>
+</header>
+<Tabs className="workspace-shell" orientation="vertical" value={tab} onValueChange={setTab}>
+  <aside className="workspace-sidebar">
+    <div className="sidebar-label">WORKSPACE</div>
+    <TabsList aria-label="Workspace sections" className="sidebar-navigation" variant="line">
+      {navigation.map(({value,label,icon:Icon})=><TabsTrigger key={value} value={value}><Icon size={18}/><span>{label}</span>{value==='history'&&orders.length>0&&<span className="count">{orders.length}</span>}</TabsTrigger>)}
+    </TabsList>
+    <div className="sidebar-foot"><span className="sidebar-status-dot"/>Purchasing workspace<small>Prepare. Review. Order with care.</small></div>
+  </aside>
+  <div className="workspace-body">
+    <div className="mobile-workspace-nav">
+      <Sheet open={navigationOpen} onOpenChange={setNavigationOpen}>
+        <SheetTrigger asChild><Button variant="outline" aria-label="Open workspace navigation"><Menu size={18}/>Menu</Button></SheetTrigger>
+        <SheetContent side="left" className="workspace-navigation-sheet">
+          <SheetTitle>Pantrack workspace</SheetTitle><SheetDescription>{companyName}</SheetDescription>
+          <nav aria-label="Workspace sections">{navigation.map(({value,label,icon:Icon})=><button key={value} type="button" aria-current={tab===value?'page':undefined} onClick={()=>{setTab(value);setNavigationOpen(false);}}><Icon size={18}/>{label}</button>)}</nav>
+        </SheetContent>
+      </Sheet>
+      <span>{activeLabel}</span>
+    </div>
 <main><div className="demo-banner"><Leaf size={17}/><span><strong>Start with a practice order.</strong> Sample products and suppliers are fictional. Real purchasing requires configured connections and enabled automation.</span></div>
 {error&&<div role="alert" className="error">{error} <button onClick={()=>void load()}>Retry loading</button></div>}{notice&&<div className="notice" role="status">{notice}<button aria-label="Dismiss notification" onClick={()=>setNotice('')}>×</button></div>}
 <TabsContent value="order"><div className="page-heading"><div><div className="eyebrow">YOUR WEEKLY RESTOCK</div><h1>A fresh start, fully stocked.</h1><p>Your regular products. All your suppliers. One order list.</p></div><div className="step-label"><span>1</span> Select products <i>—</i> 2 Review</div></div>
@@ -46,7 +80,7 @@ return <div className="app"><header className="topbar"><a className="brand" href
 <TabsContent value="setup"><SetupRegister companyId={companyId} products={products} onNavigate={setTab}/></TabsContent>
 <TabsContent value="suppliers">{role==='owner'?<VendorAutomation companyId={companyId} products={products}/>:<ManagerOperations companyId={companyId}/>}</TabsContent>
 <TabsContent value="inventory"><InventoryPanel companyId={companyId} products={products} role={role} hasDraft={items.length>0} onStage={q=>{setQty(q);key.current='';setTab('order');setNotice('Replenishment plan loaded. Review quantities, prices, and suppliers before saving.');}}/></TabsContent><TabsContent value="payments"><PaymentMethods companyId={companyId} companyName={companyName} hasDraft={items.length>0}/></TabsContent>
-<footer>pantrack. <span>Prepared with care. Ordered with confidence.</span><a href="/auth/signout" target="_top">Sign out</a></footer></main></Tabs>
+<footer>pantrack. <span>Prepared with care. Ordered with confidence.</span><a href="/auth/signout" target="_top">Sign out</a></footer></main></div></Tabs>
 <AlertDialog open={!!removing} onOpenChange={open=>!open&&!busy&&setRemoving(null)}><AlertDialogContent><AlertDialogTitle>Remove prepared order?</AlertDialogTitle><AlertDialogDescription>Order {removing?.id.slice(0,8).toUpperCase()} will be removed from {companyName}’s history. This cannot be undone. Nothing has been sent to a supplier.</AlertDialogDescription>{error&&<p className="error" role="alert">{error}</p>}<AlertDialogFooter><AlertDialogCancel disabled={busy}>Keep order</AlertDialogCancel><Button variant="destructive" disabled={busy} onClick={removeOrder}>{busy?'Removing…':'Remove order'}</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>
 <Dialog open={review} onOpenChange={v=>!busy&&setReview(v)}><DialogContent className="order-dialog"><DialogTitle>Review your order</DialogTitle><DialogDescription>Check quantities and pack sizes. Saving prepares an order; it does not send it or charge you.</DialogDescription>{summary(items)}<div className="between total"><span>Estimated subtotal</span><strong>{money(total)}</strong></div><p className="muted">Tax, delivery, stock, and supplier cutoffs are unverified. Sample minimums are guidance only.</p>{error&&<p className="error" role="alert">{error}</p>}<Button disabled={busy||!items.length} onClick={prepare}>{busy?'Saving…':'Save prepared order'}</Button></DialogContent></Dialog>
 <Dialog open={!!detail} onOpenChange={v=>!v&&setDetail(null)}><DialogContent className="order-dialog"><DialogTitle>Order {detail?.id.slice(0,8).toUpperCase()}</DialogTitle><DialogDescription>Prepared — not sent. Download one file per supplier for review and manual ordering.</DialogDescription>{detail&&summary(detail.items)}{detail&&[...new Set(detail.items.map(p=>p.supplier))].map(s=><Button variant="outline" key={s} onClick={()=>download(detail,s)}><Download size={16}/>Export {s}</Button>)}</DialogContent></Dialog>
