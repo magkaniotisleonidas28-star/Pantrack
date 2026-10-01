@@ -4,7 +4,7 @@ export const legacyInventorySections = [
 ] as const;
 export const exactInventorySections = [
   {id:'stock',label:'Exact stock'}, {id:'recipes',label:'Recipe versions'},
-  {id:'modifiers',label:'Modifiers'}, {id:'legacy',label:'Older-data review'},
+  {id:'legacy',label:'Older-data review'},
   {id:'sales',label:'Sales & exceptions'}, {id:'plan',label:'Planning explanation'},
   {id:'history',label:'Count history'}, {id:'clover-plan',label:'Clover review'},
 ] as const;

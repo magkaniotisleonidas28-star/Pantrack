@@ -165,6 +165,14 @@ assert.equal((await call('sales/events','GET',null,cookies.employee)).status,200
 const exactRecipeId=crypto.randomUUID(),exactDraftId=crypto.randomUUID();
 assert.equal((await call('inventory','POST',{companyId:'company-a',action:'saveRecipeDraftExact',recipeId:exactRecipeId,draftId:exactDraftId,name:'Exact milk',ingredients:[{productId:'milk',amount:'1',unitId:'mL'}]},cookies.manager)).status,200,'Manager can save exact recipe draft.');
 assert.equal((await call('inventory','POST',{companyId:'company-a',action:'activateRecipeExact',recipeId:exactRecipeId,versionId:exactDraftId,expectedActiveVersionId:null},cookies.manager)).status,200,'Manager can activate exact recipe.');
+const reusableModifier={companyId:'company-a',action:'saveModifierDraftExact',recipeId:exactRecipeId,modifierId:crypto.randomUUID(),draftId:crypto.randomUUID(),name:'Fictional reusable milk rule',deltas:[{productId:'milk',amount:'0.001',unitId:'L',signed:false}]};
+assert.equal((await call('inventory','POST',reusableModifier)).status,401,'Anonymous modifier setup is denied.');
+assert.equal((await call('inventory','POST',reusableModifier,cookies.other)).status,403,'Wrong-company modifier setup is denied.');
+assert.equal((await call('inventory','POST',reusableModifier,cookies.employee)).status,403,'Employees cannot set up reusable modifier rules.');
+assert.equal((await call('inventory','POST',reusableModifier,cookies.manager,{Origin:'https://evil.test'})).status,403,'Modifier setup rejects cross-site requests.');
+const balanceBeforeRule=sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor;
+assert.equal((await call('inventory','POST',reusableModifier,cookies.manager)).status,200,'Managers can use a compatible standard unit in a modifier draft.');
+assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor,balanceBeforeRule,'Modifier setup has no stock effect.');
 const confirmedSaleTime=new Date().toISOString();
 const privateReference='fictional-customer@example.test',privateReason='Fictional private note: redacted@example.test';
 const exactSale=await call('sales','POST',{companyId:'company-a',action:'import',source:'manual',reference:privateReference,occurredAt:confirmedSaleTime,lines:[{recipeId:exactRecipeId,quantity:1}]},cookies.manager);

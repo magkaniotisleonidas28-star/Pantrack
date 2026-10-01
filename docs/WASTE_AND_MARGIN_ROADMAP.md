@@ -1,6 +1,6 @@
 # Quick waste recording and menu analysis roadmap
 
-Prepared and updated: 2026-09-30. Status: W1/W2 implemented for local review;
+Prepared: 2026-09-30. Updated: 2026-10-01. Status: W1/W2 implemented for local review;
 W3 and P1–P4 remain planned. The owner approved a roadmap alongside
 [C3 Baldor preparation](C3_BALDOR_PREPARATION.md).
 
@@ -108,6 +108,12 @@ the complete pipeline passed. Fictional Safari evidence includes purchased
 items, recipe effects, sold classification, delayed-sale review, shared drafts,
 staff restrictions, themes and phone/tablet layouts. No hosted/provider or pilot
 acceptance is claimed.
+
+The 2026-10-01 [W2 usability refinement](W2_LOCAL_EVIDENCE.md#w2-usability-refinement--2026-10-01)
+centers Waste content, removes repeated inventory summary cards, and places
+modifier setup inside recipes. Managers can copy an active ingredient rule
+into an independent draft instead of retyping it. Local verification passed;
+POS modifier import and worker acceptance remain separate follow-ups.
 
 - [x] Implement café-item setup, atomic waste and sold-unit allocation locally.
 - [x] Verify route security, retry/rollback contracts and fictional served screens.

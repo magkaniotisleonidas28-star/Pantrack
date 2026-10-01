@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { build } from 'esbuild';
 const mode = process.argv[2];
-assert.ok(['seed', 'verify', 'role', 'sale'].includes(mode), 'Use seed, verify, role owner|manager|employee, or sale.');
+assert.ok(['seed', 'verify', 'role', 'sale', 'modifiers'].includes(mode), 'Use seed, verify, role owner|manager|employee, sale, or modifiers.');
 const directory = '.sites-runtime/w2-review-state/v3/d1/miniflare-D1DatabaseObject';
 const files = readdirSync(directory).filter(name => name.endsWith('.sqlite') && name !== 'metadata.sqlite');
 assert.equal(files.length, 1);
@@ -24,7 +24,7 @@ const db = { prepare(query) { let values = []; return { bind(...v) { values = v;
         throw e;
     } } };
 mkdirSync('.sites-runtime', { recursive: true });
-if (mode === 'seed' || mode === 'sale')
+if (mode === 'seed' || mode === 'sale' || mode === 'modifiers')
     await build({ entryPoints: ['src/lib/d1-menu-waste.ts', 'src/lib/d1-inventory-management.ts', 'src/lib/d1-sales-runtime.ts'], bundle: true, platform: 'node', format: 'esm', outdir: '.sites-runtime/w2-fixture' });
 async function sale() { const { ingestLocalSale, localUserActor } = await import('../.sites-runtime/w2-fixture/d1-sales-runtime.js'); return ingestLocalSale({ db, companyId, source: 'manual', reference: 'fictional-w2-' + crypto.randomUUID(), occurredAt: new Date().toISOString(), lines: [{ recipeId: 'latte', quantity: 1 }], actor: localUserActor({ userId: person }, companyId, 'owner') }); }
 if (mode === 'seed') {
@@ -47,6 +47,23 @@ if (mode === 'seed') {
     const applied = await sale();
     assert.equal(applied.state, 'applied');
     console.log('PASS: isolated fictional café, purchased croissants, unconfigured bagel, latte/shot recipe and one local manual sale. No provider accessed.');
+}
+else if (mode === 'modifiers') {
+    const { D1InventoryManagementService } = await import('../.sites-runtime/w2-fixture/d1-inventory-management.js');
+    const stock = new D1InventoryManagementService(db);
+    const before = sql.prepare('SELECT * FROM inventory_balances_exact WHERE company_id=? ORDER BY product_id').all(companyId);
+    assert.equal(sql.prepare('SELECT name FROM companies WHERE id=?').get(companyId)?.name, 'W2 fictional café — menu waste');
+    const id = 'oat-milk';
+    if (!sql.prepare('SELECT id FROM products WHERE owner=? AND id=?').get(companyId, id))
+        sql.prepare('INSERT INTO products VALUES (?,?,?)').run(companyId, id, JSON.stringify({id, name:'Oat milk (fictional)', supplier:'Fictional supplier', sku:'W2-oat-milk', pack:'practice carton', unit:'carton', price:0, category:'Test only', url:'', sample:true}));
+    if (!sql.prepare('SELECT product_id FROM inventory_balances_exact WHERE company_id=? AND product_id=?').get(companyId, id))
+        await stock.configure({companyId,productId:id,operationId:'modifier-review-oat',actor:person,stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'3000',effectiveAt:'2026-01-01T00:00:00Z'});
+    if (!sql.prepare('SELECT id FROM recipe_lineages WHERE company_id=? AND id=?').get(companyId,'modifier-copy-latte')) {
+        await stock.saveRecipeDraft({companyId,recipeId:'modifier-copy-latte',draftId:'modifier-copy-latte-v1',actor:person,name:'Copy review latte (fictional)',ingredients:[{productId:'milk',amount:'200',unitId:'mL'},{productId:'beans',amount:'18',unitId:'g'},{productId:'cups',amount:'1',unitId:'each'}]});
+        await stock.activateRecipe({companyId,recipeId:'modifier-copy-latte',versionId:'modifier-copy-latte-v1',actor:person,expectedActiveVersionId:null});
+    }
+    for (const balance of before) assert.deepEqual(sql.prepare('SELECT * FROM inventory_balances_exact WHERE company_id=? AND product_id=?').get(companyId,balance.product_id),balance,'Existing stock is preserved.');
+    console.log('PASS: local modifier-copy recipe and fictional oat milk are ready; existing stock, sales and waste were preserved.');
 }
 else if (mode === 'role') {
     const role = process.argv[3];

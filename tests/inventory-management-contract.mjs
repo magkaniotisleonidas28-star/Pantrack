@@ -12,6 +12,9 @@ await build({
   outfile:'.sites-runtime/inventory-management-contract.mjs',
 });
 const {D1InventoryManagementService}=await import('../.sites-runtime/inventory-management-contract.mjs');
+await build({entryPoints:['src/lib/modifier-editor.ts','src/lib/waste-client.ts'],bundle:true,platform:'node',format:'esm',outdir:'.sites-runtime/modifier-editor-test'});
+const {modifierChanges,modifierDraftRequest}=await import('../.sites-runtime/modifier-editor-test/modifier-editor.js');
+const {sendSaveRequest}=await import('../.sites-runtime/modifier-editor-test/waste-client.js');
 
 class Statement{
   constructor(database,query,values=[]){this.database=database;this.query=query;this.values=values;}
@@ -156,5 +159,46 @@ assert.equal(view.recipes.find(version=>version.versionId==='latte-v1').status,'
 assert.equal(view.modifiers[0].status,'archived');
 assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[]);
 
+// Copying an ingredient rule never reuses its source identity or an old custom
+// conversion. A later edit to the copy must leave the source and stock intact.
+for(const recipeId of ['copy-source','copy-target'])await service.saveRecipeDraft({companyId:'company-a',recipeId,draftId:recipeId+'-v1',actor:'manager-a',name:recipeId,ingredients:[{productId:'milk',amount:'100',unitId:'mL'}]});
+const sourceInput={companyId:'company-a',recipeId:'copy-source',modifierId:'source-swap',draftId:'source-swap-v1',actor:'manager-a',name:'Milk and shot change',deltas:[{productId:'milk',amount:'10',unitId:'mL',signed:true},{productId:'beans',amount:'1',unitId:'scoop',signed:false}]};
+await service.saveModifierDraft(sourceInput);
+const source=await service.activateModifier({companyId:'company-a',recipeId:'copy-source',modifierId:'source-swap',versionId:'source-swap-v1',actor:'manager-a',expectedActiveVersionId:null});
+await configure({productId:'beans',operationId:'beans-later-scoop',stockUnit:{kind:'custom',id:'scoop',label:'18 g scoop',dimension:'mass',numerator:'18',denominator:'1'},purchaseUnitLabel:'bag',purchaseAmount:'10',openingAmount:undefined,effectiveAt:'2026-01-05T00:00:00Z'});
+const balancesBeforeCopy=sql.prepare('SELECT * FROM inventory_balances_exact ORDER BY company_id,product_id').all();
+const copiedChanges=modifierChanges(source);
+assert.deepEqual(copiedChanges,[{productId:'milk',amount:'10',unitId:'mL',direction:'remove'},{productId:'beans',amount:'7',unitId:'g',direction:'add'}]);
+assert.equal(copiedChanges[1].amount,'7','A historical 7 g scoop must not become the current 18 g scoop when copied.');
+const identity={modifierId:'copied-swap',draftId:'copied-swap-v1',existing:false,changes:copiedChanges};
+const body=modifierDraftRequest('company-a','copy-target',identity,source.name,copiedChanges);
+assert.deepEqual(Object.keys(body).sort(),['action','companyId','deltas','draftId','modifierId','name','recipeId'].sort(),'Editor-only fields must not escape into the strict API.');
+const {action,...copyInput}=body;
+await rejectsCode(service.saveModifierDraft({...copyInput,recipeId:'missing-recipe',actor:'manager-a'}),'not_found');
+assert.equal(sql.prepare("SELECT count(*) AS n FROM product_unit_versions WHERE company_id='company-a' AND product_id='beans' AND unit_id='g'").get().n,0,'Rejected copies do not leave unit definitions behind.');
+await service.saveModifierDraft({...copyInput,actor:'manager-a'});
+await service.saveModifierDraft({...copyInput,actor:'manager-a'});
+assert.equal(sql.prepare("SELECT count(*) AS n FROM recipe_modifier_versions WHERE company_id='company-a' AND recipe_id='copy-target'").get().n,1,'Retry retains one draft identity.');
+copiedChanges[1].amount='8';
+await service.saveModifierDraft({...modifierDraftRequest('company-a','copy-target',identity,source.name,copiedChanges),actor:'manager-a'});
+const afterCopy=await service.read('company-a');
+assert.deepEqual(afterCopy.modifiers.find(row=>row.recipeId==='copy-source').deltas,source.deltas,'Editing a copy does not alter its source.');
+assert.equal(afterCopy.modifiers.find(row=>row.recipeId==='copy-target').deltas[1].quantity.minor,'8000000');
+assert.deepEqual(sql.prepare('SELECT * FROM inventory_balances_exact ORDER BY company_id,product_id').all(),balancesBeforeCopy,'Modifier setup never deducts stock.');
+for(const changes of [[{productId:'milk',amount:'0',unitId:'mL',direction:'add'}],[{productId:'milk',amount:'-10',unitId:'mL',direction:'remove'}],[...copiedChanges,copiedChanges[0]]])assert.throws(()=>modifierDraftRequest('company-a','copy-target',identity,source.name,changes));
+const sent=[];
+assert.equal((await sendSaveRequest('/api/inventory',body,async(_,init)=>{sent.push(init.body);throw new Error('lost acknowledgement');})).kind,'uncertain');
+assert.equal((await sendSaveRequest('/api/inventory',body,async(_,init)=>{sent.push(init.body);return Response.json({ok:true});},true)).kind,'saved');
+assert.equal(sent[0],sent[1],'A retry submits exactly the same recipe, draft identity and ingredient effects.');
+assert.deepEqual(await companyB.read('company-b'),{records:[],reconciliations:[],legacyRecipeIds:[],recipes:[],modifiers:[],legacyReview:{products:[],recipes:[]}},'Copied rules remain company scoped.');
+const failedDraft=new D1InventoryManagementService({prepare:query=>database.prepare(query),batch:statements=>database.batch([...statements,new Statement(sql,'INSERT INTO missing_modifier_test_table VALUES (1)')])},{clock});
+await assert.rejects(failedDraft.saveModifierDraft({...copyInput,modifierId:'failed-copy',draftId:'failed-copy-v1',actor:'manager-a',deltas:[{productId:'beans',amount:'0.008',unitId:'kg',signed:false}]}),/no such table/);
+assert.equal(sql.prepare("SELECT count(*) AS n FROM product_unit_versions WHERE company_id='company-a' AND product_id='beans' AND unit_id='kg'").get().n,0,'Unit definitions roll back with a failed draft transaction.');
+assert.equal(sql.prepare("SELECT count(*) AS n FROM recipe_modifier_versions WHERE company_id='company-a' AND modifier_id='failed-copy'").get().n,0,'A failed batch leaves no partial modifier.');
+await rejectsCode(service.saveModifierDraft({...copyInput,modifierId:'bad-unit',draftId:'bad-unit-v1',actor:'manager-a',deltas:[{productId:'beans',amount:'1',unitId:'mL',signed:false}]}),'unit_incompatible');
+await rejectsCode(service.saveModifierDraft({...copyInput,companyId:'company-b',actor:'manager-a'}),'unit_unclassified');
+await configure({productId:'beans',operationId:'reserved-custom-unit',stockUnit:{kind:'custom',id:'g',label:'Misnamed scoop',dimension:'mass',numerator:'18',denominator:'1'},purchaseUnitLabel:'bag',purchaseAmount:'1',openingAmount:undefined,effectiveAt:'2026-01-06T00:00:00Z'});
+await rejectsCode(service.saveModifierDraft({...copyInput,modifierId:'ambiguous-copy',draftId:'ambiguous-copy-v1',actor:'manager-a'}),'unit_incompatible');
+
 sql.close();
-console.log('PASS: A4 D1 inventory management preserves exact quantities, idempotency, count cutoffs, immutable version history, custom units, legacy projections, restart durability, and company isolation.');
+console.log('PASS: A4 D1 inventory management and W2 modifier reuse preserve exact quantities, signed changes, draft identity, independent copies, immutable history, stock, and company isolation.');

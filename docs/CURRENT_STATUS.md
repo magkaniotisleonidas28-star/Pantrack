@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-09-30
+Updated: 2026-10-01
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -167,7 +167,12 @@ Waste page supports bought ready-made food counts, recipe/modifier ingredients,
 already-counted sale classification, additional replacements and manager review
 for missing sales. Migration `0019` was applied locally only; the full pipeline
 and fictional Safari walkthroughs passed. Worker usability, full accessibility
-and owner acceptance remain open. Margin features remain planned. The next
+and owner acceptance remain open. The local W2 usability refinement centers
+all Waste subsections, removes repeated exact-inventory summary cards, and
+moves modifier setup/copying into recipe details. Its complete local pipeline
+and Safari desktop/phone/tablet checks passed on 2026-10-01; see the
+[refinement evidence](W2_LOCAL_EVIDENCE.md#w2-usability-refinement--2026-10-01).
+Margin features remain planned. The next
 unblocked step is a W1/W2 usability review, then a separate P1 cost foundation.
 Supplier submission remains disabled.
 

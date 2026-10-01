@@ -182,3 +182,69 @@ remain open. Automated retry proof and the bounded keyboard check above do not
 substitute for those reviews. W3 history/corrections/cost summaries and P1 costing
 remain future outcomes. Next unblocked step: a brief worker usability review of
 this local flow, then the separately planned P1 cost foundation.
+
+## W2 usability refinement — 2026-10-01
+
+Workstream A, W2 outcome: center the Waste containers and simplify modifier
+setup during local review. Record waste, Item setup and Needs review share a
+centered 860px maximum-width container; text remains left-aligned and the quick
+drawer retains its layout. The three repeated exact-inventory summary cards
+are removed, while product-level classification/count warnings remain.
+
+The standalone Modifiers navigation entry is removed. Recipe details now show
+their active/draft rules and collapsed history. Owner/manager controls generate
+IDs, edit drafts or prepare replacement versions, and support multiple Add or
+Remove ingredient changes. Copy from another recipe pre-fills an active rule
+into an independent draft; it does not copy POS mappings or activate it. The
+original identity and historical sales/waste are retained. Unsaved modifier
+edits participate in the company-switch/reload warning. An uncertain response
+freezes the request for an identical retry in the mounted editor; keep that
+recipe open until confirmed. Modifier retries are not an offline queue and are
+not restored after closing the editor/tab.
+
+There is no schema migration, new route, or changed request/response shape.
+The existing inventory draft API now accepts compatible standard ingredient
+units even when that standard unit has not previously been selected for stock.
+The unit definition and draft are saved in one D1 batch. Stock classification,
+balances and historical conversions remain unchanged. Copies use the stored
+canonical quantity, so an old 7g scoop cannot silently become a current 18g
+scoop. Unconfigured/incompatible ingredients, invalid unit definitions, and
+custom units that reuse standard unit IDs are rejected for new drafts. A → B
+consumption types and Clover mappings are unchanged; newly copied rules need
+their own reviewed provider mapping before that provider can use them.
+
+Verification run successfully in this branch:
+
+- `pnpm test:focused inventory-management-contract m2-security menu-waste`
+  passed all three suites.
+- `pnpm typecheck`, `pnpm test` (36 suites), `pnpm db:check` (20 migrations and
+  fresh database), `pnpm build`, `pnpm db:migrate:local` (none pending), and
+  `VINEXT_NO_DEV_LOCK=1 pnpm test:local` passed.
+- Automated cases prove signed multi-ingredient copying, source/copy
+  independence, stable draft identity after lost acknowledgments, preservation
+  of historical custom-unit quantities, unit/draft transaction rollback,
+  unchanged stock during setup, and anonymous/wrong-company/employee/CSRF
+  rejection. Existing sale and Waste consumption contracts passed.
+- Safari at `http://127.0.0.1:5176/` verified copying the original 18g extra-shot
+  rule as 20g, editing its replacement draft from 21g to 22g, activation, a
+  two-row dairy-to-oat substitution, archival, and retained history. The
+  original 18g rule was unchanged.
+- Safari desktop/light/dark, phone 390×844 and tablet 820×844 checks showed
+  centered Waste content, removed sidebar/statistics clutter, stacked phone
+  modifier controls, and content movement with the expanded/collapsed sidebar.
+  Responsive mode was exited, light mode restored, and no editor draft left
+  open. Full accessibility and real-worker timing remain unverified.
+
+The optional `node scripts/w2-review-fixture.mjs modifiers` extends only the
+isolated W2 café with a fictional oat-milk count and a second recipe for copy
+review; it refuses to alter existing stock rows. The walkthrough changed no
+existing stock: bagel 22, beans 892g, croissant 18, cups 95, milk 4000mL; the new
+oat-milk fixture remained 3000mL. No new sale, Waste entry or purchasing order
+was created during this refinement. The user's separate W1 catalog at port
+5175 was preserved.
+
+Rollback is a code revert with no schema removal. Retain any saved draft/unit
+metadata and version history; do not delete active rules or provider mappings.
+No remote migration, deployment, supplier contact or provider request occurred.
+Next unblocked checklist outcome remains W1/W2 worker usability and owner
+review; POS-assisted modifier import and P1 costing are separate tasks.

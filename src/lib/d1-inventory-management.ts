@@ -1,5 +1,6 @@
 import {defaultSettings, type InventoryRecord} from './inventory';
 import {
+  CURATED_UNIT_IDS,
   curatedUnit,
   customUnit,
   readCanonical,
@@ -388,8 +389,32 @@ export class D1InventoryManagementService implements InventoryManagementService 
   private async recipeAmounts(companyId:string,values:RecipeAmountInput[],signed=false){
     if(!values.length||values.length>50||new Set(values.map(v=>v.productId)).size!==values.length)throw new InventoryManagementError('invalid_recipe','Recipes require one entry per ingredient.');
     const result=[];
-    for(const value of values){await this.product(companyId,value.productId);const unit=await this.unit(companyId,value.productId,value.unitId);const quantity=toCanonical(value.amount,unit,{companyId,productId:value.productId},{signed});if(!signed&&readCanonical(quantity)<=ZERO)throw new InventoryManagementError('invalid_quantity','Recipe quantities must be positive.');result.push({...value,unit,quantity});}
+    for(const value of values){
+      await this.product(companyId,value.productId);
+      const balance=await this.balance(companyId,value.productId);
+      if(!balance)throw new InventoryManagementError('unit_unclassified','Configure this ingredient and its opening count first.');
+      let unit:UnitDefinition;
+      try{unit=await this.unit(companyId,value.productId,value.unitId);}
+      catch(error){
+        if(!(error instanceof InventoryManagementError)||error.code!=='unit_unclassified')throw error;
+        if(await this.db.prepare('SELECT 1 AS found FROM product_unit_versions WHERE company_id=? AND product_id=? AND unit_id=?').bind(companyId,value.productId,value.unitId).first())throw error;
+        // Stable curated units can express a copied historical quantity without
+        // reinterpreting a custom unit. Persist their definitions with the draft.
+        unit=curatedUnit(value.unitId);
+      }
+      if(unit.kind==='custom'&&CURATED_UNIT_IDS.some(id=>id===unit.id))throw new InventoryManagementError('unit_incompatible','This custom unit uses a standard unit ID. Give it a distinct ID in stock setup before using it in a new rule.');
+      if(unit.dimension!==balance.dimension)throw new InventoryManagementError('unit_incompatible','Choose a unit compatible with this ingredient.');
+      const quantity=toCanonical(value.amount,unit,{companyId,productId:value.productId},{signed});
+      if(!signed&&readCanonical(quantity)<=ZERO)throw new InventoryManagementError('invalid_quantity','Recipe quantities must be positive.');
+      result.push({...value,unit,quantity});
+    }
     return result;
+  }
+
+  private recipeUnitStatement(companyId:string,value:{productId:string;unit:UnitDefinition},actor:string,at:string){
+    const unit=value.unit;
+    return this.db.prepare(`INSERT OR IGNORE INTO product_unit_versions(company_id,product_id,unit_id,version,kind,dimension,label,numerator,denominator,created_by,created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(companyId,value.productId,unit.id,unit.version,unit.kind,unit.dimension,unit.label,unit.numerator,unit.denominator,actor,at);
   }
 
   async saveRecipeDraft(input: RecipeDraftInput): Promise<RecipeVersionView> {
@@ -400,7 +425,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const statements:D1PreparedStatement[]=[this.db.prepare('INSERT OR IGNORE INTO recipe_lineages(company_id,id,created_by,created_at) VALUES (?,?,?,?)').bind(input.companyId,input.recipeId,input.actor,at)];
     if(existing){if(existing.status!=='draft')throw new InventoryManagementError('immutable_version','Activated recipe versions cannot be edited.');statements.push(this.db.prepare('DELETE FROM recipe_version_ingredients WHERE company_id=? AND recipe_id=? AND version_id=?').bind(input.companyId,input.recipeId,input.draftId),this.db.prepare("UPDATE recipe_versions SET name=? WHERE company_id=? AND recipe_id=? AND id=? AND status='draft'").bind(input.name.trim(),input.companyId,input.recipeId,input.draftId));}
     else statements.push(this.db.prepare(`INSERT INTO recipe_versions(company_id,recipe_id,id,version,status,name,active_from,active_to,legacy,created_by,created_at) VALUES (?,?,?,?,'draft',?,NULL,NULL,0,?,?)`).bind(input.companyId,input.recipeId,input.draftId,nextVersion,input.name.trim(),input.actor,at));
-    amounts.forEach((value,index)=>statements.push(this.db.prepare(`INSERT INTO recipe_version_ingredients(company_id,recipe_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id,legacy_unit_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)`).bind(input.companyId,input.recipeId,input.draftId,index,value.productId,value.unit.id,value.unit.version,value.quantity.dimension,value.quantity.minor,value.amount,value.unitId)));
+    amounts.forEach((value,index)=>statements.push(this.recipeUnitStatement(input.companyId,value,input.actor,at),this.db.prepare(`INSERT INTO recipe_version_ingredients(company_id,recipe_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id,legacy_unit_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)`).bind(input.companyId,input.recipeId,input.draftId,index,value.productId,value.unit.id,value.unit.version,value.quantity.dimension,value.quantity.minor,value.amount,value.unitId)));
     await this.db.batch(statements);return this.requiredRecipe(input.companyId,input.recipeId,input.draftId);
   }
 
@@ -450,7 +475,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const statements:D1PreparedStatement[]=[this.db.prepare('INSERT OR IGNORE INTO recipe_modifier_lineages(company_id,recipe_id,id,name,created_by,created_at) VALUES (?,?,?,?,?,?)').bind(input.companyId,input.recipeId,input.modifierId,input.name.trim(),input.actor,at)];
     if(existing){if(existing.status!=='draft')throw new InventoryManagementError('immutable_version','Activated modifier versions cannot be edited.');statements.push(this.db.prepare('DELETE FROM recipe_modifier_deltas WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=?').bind(input.companyId,input.recipeId,input.modifierId,input.draftId));}
     else statements.push(this.db.prepare(`INSERT INTO recipe_modifier_versions(company_id,recipe_id,modifier_id,id,version,status,active_from,active_to,created_by,created_at) VALUES (?,?,?,?,?,'draft',NULL,NULL,?,?)`).bind(input.companyId,input.recipeId,input.modifierId,input.draftId,nextVersion,input.actor,at));
-    amounts.forEach((value,index)=>statements.push(this.db.prepare(`INSERT INTO recipe_modifier_deltas(company_id,recipe_id,modifier_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).bind(input.companyId,input.recipeId,input.modifierId,input.draftId,index,value.productId,value.unit.id,value.unit.version,value.quantity.dimension,value.quantity.minor,value.amount,value.unitId)));
+    amounts.forEach((value,index)=>statements.push(this.recipeUnitStatement(input.companyId,value,input.actor,at),this.db.prepare(`INSERT INTO recipe_modifier_deltas(company_id,recipe_id,modifier_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).bind(input.companyId,input.recipeId,input.modifierId,input.draftId,index,value.productId,value.unit.id,value.unit.version,value.quantity.dimension,value.quantity.minor,value.amount,value.unitId)));
     await this.db.batch(statements);return this.requiredModifier(input.companyId,input.recipeId,input.modifierId,input.draftId);
   }
 
