@@ -4,6 +4,10 @@
   "account_id": "46a94b92309dd488dadd02f6ae70e0ff",
   "compatibility_date": "2026-05-15",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "PANTRACK_EXACT_INVENTORY_PREVIEW": "enabled",
+    "PANTRACK_CLOVER_SYNC_ENABLED": "disabled"
+  },
   "main": "vinext/server/fetch-handler",
   "assets": {
     "directory": "dist/client",
