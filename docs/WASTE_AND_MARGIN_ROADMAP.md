@@ -120,6 +120,10 @@ modifier edits when switching Inventory views. It remains local only. The [recip
 adds reviewed atomic recipe/option saves, required milk selection, compact recipe
 rows and inline stock creation. Its normal-login local site isolates practice
 data from hosted D1; migration `0020` has not been applied remotely.
+The [package-unit improvement](W2_PACK_UNIT_USABILITY.md) adds separately
+configured purchase containers and recipe measurements, package receiving,
+whole-container/remainder counts, and atomic audited conversion receipts.
+All 39 local suites and the full pipeline passed; `0021` is local only.
 
 - [x] Implement café-item setup, atomic waste and sold-unit allocation locally.
 - [x] Verify route security, retry/rollback contracts and fictional served screens.

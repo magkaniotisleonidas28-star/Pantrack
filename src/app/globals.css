@@ -507,6 +507,9 @@ body[data-workspace-theme=dark] .waste-error { background: #4b2928; color: #ffce
 .compact-recipe-detail { padding: 0 18px 18px; display: grid; gap: 12px; }
 .compact-recipe-detail ul,.builder-review ul { padding-left: 20px; list-style: disc; font-size: 14px; }
 .recipe-pagination { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 13px; margin-top: 20px; }
+.stock-package-fields { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+.stock-calculation { padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); font-size: 14px; }
+@media(max-width:640px) { .stock-package-fields { grid-template-columns: minmax(0,1fr); } }
 @media(max-width:640px) { .recipe-amount-fields { grid-template-columns: minmax(0,1fr); } .compact-recipe > summary { padding: 12px; } .compact-recipe > summary .sample-tag { font-size: 11px; } }
 .inventory-view-switch button[aria-pressed=true] { background: var(--accent); color: var(--primary); border-color: var(--primary); }
 .inventory-review-details { margin-top: 24px; border: 1px solid var(--border); border-radius: 8px; padding: 16px; min-width: 0; }

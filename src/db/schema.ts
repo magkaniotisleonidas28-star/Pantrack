@@ -65,6 +65,8 @@ export const inventoryConfigVersions=sqliteTable('inventory_config_versions',{
  stockUnitVersion:integer('stock_unit_version').notNull(),
  purchaseUnitLabel:text('purchase_unit_label').notNull(),
  purchaseQuantityMinor:text('purchase_quantity_minor'),
+ purchaseEnteredAmount:text('purchase_entered_amount'),
+ purchaseEnteredUnitId:text('purchase_entered_unit_id'),
  legacyUnitsPerPack:text('legacy_units_per_pack'),
  effectiveFrom:text('effective_from').notNull(),
  replacedAt:text('replaced_at'),

@@ -180,8 +180,12 @@ compact recipes, one reviewed save for required milk choices and extras, and
 Stock list/Add stock views with inline item creation. A separate normal-login
 local site is available at `http://127.0.0.1:5177`; its data stays local. Migration
 `0020` is local only. Missing/conflicting milk choices deduct no stock. Owner
-usability and accessibility acceptance remain open. Margin features remain
-planned. The next
+usability and accessibility acceptance remain open. The
+[package-unit improvement](W2_PACK_UNIT_USABILITY.md) now separates purchase
+containers from recipe measurements, with package receiving and counts,
+exact conversions and audited retries. All 39 local suites and the complete
+pipeline passed; migration `0021` and Safari layout checks are local only.
+Margin features remain planned. The next
 unblocked step is a W1/W2 usability review, then a separate P1 cost foundation.
 Supplier submission remains disabled.
 

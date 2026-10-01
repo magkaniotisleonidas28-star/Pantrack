@@ -89,8 +89,9 @@ assert.notEqual(wasteStorageKey('a','staff'),wasteStorageKey('b','staff'));asser
 // Existing events survive the additive migration with no invented reason.
 const old=new DatabaseSync(':memory:');old.exec('PRAGMA foreign_keys=ON');for(const entry of journal.entries.filter(entry=>entry.idx<18))old.exec(readFileSync('drizzle/'+entry.tag+'.sql','utf8'));
 old.exec("INSERT INTO companies VALUES ('legacy','Legacy','now'); INSERT INTO products VALUES ('legacy','milk','{}');");
-const oldManagement=new D1InventoryManagementService(new Database(old));await oldManagement.configure({companyId:'legacy',productId:'milk',operationId:'old-config',actor:'manager',stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'1000',effectiveAt:'2026-01-01T00:00:00Z'});
-const oldConfig=old.prepare('SELECT config_id FROM inventory_balances_exact').get().config_id;
+// Seed the historical schema directly; today's service requires today's migrations.
+old.exec("INSERT INTO product_unit_versions(company_id,product_id,unit_id,version,kind,dimension,label,numerator,denominator,created_by,created_at) VALUES('legacy','milk','mL',1,'curated','volume','mL','1','1','manager','2026-01-01'); INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,effective_from,created_by,created_at) VALUES('legacy','milk','old-config',1,'active','mL',1,'carton','1000000000','2026-01-01','manager','2026-01-01');");
+const oldConfig='old-config';
 old.prepare(`INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note) VALUES ('legacy','old-waste','milk',?,'waste','volume','-1','0.000001','mL',1,2,'2026-02-01','2026-02-01','manager','old')`).run(oldConfig);
 old.exec(readFileSync('drizzle/'+journal.entries.find(entry=>entry.idx===18).tag+'.sql','utf8'));assert.equal(old.prepare('SELECT waste_reason FROM inventory_events_exact').get().waste_reason,null);old.close();sql.close();
 console.log('PASS: W1 exact waste, structured reasons, concurrency, unknown outcomes, shortcuts, unit projections, privacy, browser retry contracts, and additive migration compatibility.');

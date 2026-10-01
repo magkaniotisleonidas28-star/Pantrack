@@ -8,6 +8,7 @@ import {exactInventoryPreviewEnabled} from '@/lib/exact-inventory-gate';
 import {CURATED_UNIT_IDS,QuantityError} from '@/lib/inventory-quantities';
 import {z} from 'zod';
 import {publishRecipe} from '@/lib/d1-recipe-publisher';
+import {recordPackageStock} from '@/lib/d1-stock-pack';
 const amount=z.number().finite().min(0).max(10000000).multipleOf(.001);
 const settings=z.object({targetStock:amount.nullable().optional().default(null),variancePct:z.number().min(0).max(100),unit:z.string().trim().min(1).max(40),unitsPerPack:z.number().finite().positive().max(1000000),dailyUse:amount,leadDays:z.number().int().min(0).max(365),safety:amount,reviewDays:z.number().int().min(1).max(365),countEveryDays:z.number().int().min(1).max(365),location:z.string().trim().min(1).max(100),capacity:amount.nullable(),shelfDays:z.number().int().min(1).max(3650).nullable(),expiry:z.string().refine(v=>v===''||(/^\d{4}-\d{2}-\d{2}$/.test(v)&&!isNaN(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v))});
 const identity=z.string().trim().min(1).max(200);
@@ -21,11 +22,13 @@ const exactUnit=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('curated'),id:z.enum(CURATED_UNIT_IDS)}).strict(),
  z.object({kind:z.literal('custom'),id:identity,label:z.string().trim().min(1).max(200),dimension:z.enum(['count','mass','volume']),numerator:z.string().regex(/^[1-9]\d*$/).max(128),denominator:z.string().regex(/^[1-9]\d*$/).max(128)}).strict(),
 ]);
+const packageQuantity=z.object({packages:z.string().trim().regex(/^(?:0|[1-9]\d{0,6})$/).refine(v=>BigInt(v)<=BigInt(1000000)),remainder:decimal,remainderUnitId:identity}).strict();
 const recipeAmount=z.object({productId:identity,amount:decimal,unitId:identity}).strict();
 const exactMutation=z.discriminatedUnion('action',[
- z.object({action:z.literal('createStockExact'),companyId:identity,productId:identity,operationId:identity,name:z.string().trim().min(1).max(150),supplier:z.string().trim().max(100).optional(),sku:z.string().trim().max(100).optional(),stockUnit:exactUnit,purchaseUnitLabel:z.string().trim().min(1).max(100),purchaseAmount:decimal,openingAmount:decimal,effectiveAt:occurrence}).strict(),
+ z.object({action:z.literal('packageStockExact'),companyId:identity,productId:identity,operationId:identity,configId:identity,expectedVersion:z.number().int().min(0),movement:z.enum(['receive','incoming','count']),quantity:packageQuantity,effectiveAt:occurrence,note:z.string().trim().max(300),fromIncoming:z.boolean().optional()}).strict(),
+ z.object({action:z.literal('createStockExact'),companyId:identity,productId:identity,operationId:identity,name:z.string().trim().min(1).max(150),supplier:z.string().trim().max(100).optional(),sku:z.string().trim().max(100).optional(),stockUnit:exactUnit,purchaseUnitLabel:z.string().trim().min(1).max(100),purchaseAmount:decimal,purchaseContentUnitId:identity.optional(),openingAmount:decimal.optional(),openingPackages:packageQuantity.optional(),effectiveAt:occurrence}).strict(),
  z.object({action:z.literal('publishRecipeExact'),companyId:identity,operationId:identity,recipeId:identity,versionId:identity,name:z.string().trim().min(1).max(100),expectedActiveVersionId:identity.nullable(),expectedModifiers:z.record(identity,identity),ingredients:z.array(recipeAmount).min(1).max(50),choices:z.array(z.object({id:identity,name:z.string().trim().min(1).max(100),modifierIds:z.array(identity).min(2).max(20)}).strict()).max(10),modifiers:z.array(z.object({modifierId:identity,versionId:identity,name:z.string().trim().min(1).max(100),deltas:z.array(recipeAmount.extend({signed:z.boolean()})).min(1).max(50)}).strict()).max(16)}).strict(),
- z.object({action:z.literal('configureExact'),companyId:identity,productId:identity,operationId:identity,stockUnit:exactUnit,purchaseUnitLabel:z.string().trim().min(1).max(200),purchaseAmount:decimal,openingAmount:decimal.optional(),effectiveAt:occurrence}).strict(),
+ z.object({action:z.literal('configureExact'),companyId:identity,productId:identity,operationId:identity,stockUnit:exactUnit,purchaseUnitLabel:z.string().trim().min(1).max(200),purchaseAmount:decimal,purchaseContentUnitId:identity.optional(),expectedConfigId:identity.optional(),openingAmount:decimal.optional(),openingPackages:packageQuantity.optional(),effectiveAt:occurrence}).strict(),
  z.object({action:z.literal('movementExact'),companyId:identity,productId:identity,operationId:identity,expectedVersion:z.number().int().min(0),movement:z.enum(['receive','use','waste','incoming']),amount:decimal,unitId:identity,effectiveAt:occurrence,note:z.string().trim().max(300),fromIncoming:z.boolean().optional()}).strict(),
  z.object({action:z.literal('countExact'),companyId:identity,productId:identity,operationId:identity,expectedVersion:z.number().int().min(0),amount:decimal,unitId:identity,effectiveAt:occurrence,note:z.string().trim().max(300)}).strict(),
  z.object({action:z.literal('saveRecipeDraftExact'),companyId:identity,recipeId:identity,draftId:identity,name:z.string().trim().min(1).max(100),ingredients:z.array(recipeAmount).min(1).max(50)}).strict(),
@@ -53,7 +56,8 @@ async function handlePOST(req:Request){
   const member=await companyAccess(u.userId,b.companyId);if(!member||!['owner','manager'].includes(member.role))return Response.json({error:'You cannot update this company’s inventory.'},{status:403});
   const db=database(),service=new D1InventoryManagementService(db);
   let result;
-  if(b.action==='publishRecipeExact')result=await publishRecipe(db,{...b,actor:u.email});
+  if(b.action==='packageStockExact')result=await recordPackageStock(db,{...b,action:b.movement,actor:u.email});
+  else if(b.action==='publishRecipeExact')result=await publishRecipe(db,{...b,actor:u.email});
   else if(b.action==='createStockExact')result=await service.createStock({...b,actor:u.email});
   else if(b.action==='configureExact')result=await service.configure({...b,actor:u.email});
   else if(b.action==='movementExact')result=await service.recordMovement({companyId:b.companyId,productId:b.productId,operationId:b.operationId,expectedVersion:b.expectedVersion,actor:u.email,action:b.movement,amount:b.amount,unitId:b.unitId,effectiveAt:b.effectiveAt,note:b.note,fromIncoming:b.fromIncoming});

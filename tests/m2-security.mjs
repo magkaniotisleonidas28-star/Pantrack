@@ -60,7 +60,7 @@ sql.prepare('INSERT INTO orders VALUES (?,?,?,?)').run('company-a','private-orde
 sql.prepare('INSERT INTO sales_imports(company_id,reference,data,created) VALUES (?,?,?,?)').run('company-a','fictional-legacy-reference',JSON.stringify({reference:'fictional-legacy-reference'}),'now');
 sql.prepare('INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?)').run('company-a','fictional-register-reference',JSON.stringify({key:'fictional-register-reference'}));
 const families=['workspace','inventory','sales','register','clover','payments','automation','members'];
-const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','publishRecipeExact','createStockExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
+const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','publishRecipeExact','createStockExact','packageStockExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
 for(const family of families){
  assert.equal((await call(family)).status,401,family+' anonymous read');
  assert.equal((await call(family,'POST',{companyId:'company-a'})).status,401,family+' anonymous write');
@@ -129,11 +129,23 @@ assert.equal((await call('inventory','POST',{...stockBody,companyId:'company-b'}
 assert.equal((await call('inventory','POST',stockBody,cookies.manager)).status,200);
 assert.equal((await call('inventory','POST',stockBody,cookies.manager)).status,200);
 assert.equal((await call('workspace','POST',{companyId:'company-a',action:'prepare',id:crypto.randomUUID(),items:[{id:stockBody.productId,quantity:1}]},cookies.owner)).status,400,'Stock items with unknown prices and supplier details cannot become purchasing orders.');
+const packageBody={companyId:'company-a',action:'packageStockExact',productId:stockBody.productId,operationId:crypto.randomUUID(),configId:stockBody.operationId,expectedVersion:1,movement:'receive',quantity:{packages:'2',remainder:'0',remainderUnitId:'each'},effectiveAt:'2026-02-01T00:00:00Z',note:''};
+for(const cookie of [undefined,cookies.other,cookies.employee])assert.equal((await call('inventory','POST',packageBody,cookie)).status,cookie?403:401);
+assert.equal((await call('inventory','POST',{...packageBody,companyId:'company-b'},cookies.manager)).status,403);
+assert.equal((await call('inventory','POST',packageBody,cookies.manager,{Origin:'https://evil.test'})).status,403);
+assert.equal((await call('inventory','POST',packageBody,cookies.manager)).status,200);
+assert.equal((await call('inventory','POST',packageBody,cookies.manager)).status,200);
+assert.equal(sql.prepare('SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id=? AND product_id=?').get('company-a',stockBody.productId).on_hand_minor,'24');
+assert.equal((await call('inventory','POST',{...packageBody,quantity:{...packageBody.quantity,packages:'3'}},cookies.manager)).status,409);
+const packageConfig={companyId:'company-a',action:'configureExact',productId:stockBody.productId,operationId:crypto.randomUUID(),expectedConfigId:stockBody.operationId,stockUnit:{kind:'curated',id:'each'},purchaseUnitLabel:'box',purchaseAmount:'8',purchaseContentUnitId:'each',effectiveAt:'2026-03-01T00:00:00Z'};
+assert.equal((await call('inventory','POST',{...packageConfig,purchaseContentUnitId:'mL'},cookies.manager)).status,409,'Package contents cannot cross mass/volume/count dimensions.');
+assert.equal((await call('inventory','POST',packageConfig,cookies.manager)).status,200);
+assert.equal((await call('inventory','POST',packageBody,cookies.manager)).status,200,'A saved package entry confirms after a package edit without using the new size.');
 const publishBody={companyId:'company-a',action:'publishRecipeExact',operationId:'atomic-security',recipeId:crypto.randomUUID(),versionId:crypto.randomUUID(),name:'Atomic milk',expectedActiveVersionId:null,expectedModifiers:{},ingredients:[{productId:'milk',amount:'1',unitId:'mL'}],choices:[],modifiers:[]};
 for(const cookie of [undefined,cookies.other,cookies.employee])assert.equal((await call('inventory','POST',publishBody,cookie)).status,cookie?403:401);
 assert.equal((await call('inventory','POST',{...publishBody,companyId:'company-b'},cookies.manager)).status,403);
 assert.equal((await call('inventory','POST',publishBody,cookies.manager)).status,200);
-assert.equal(sql.prepare("SELECT count(*) AS count FROM security_audit WHERE company_id='company-a' AND action='inventory.succeeded' AND target='configureExact'").get().count,1,'Exact inventory mutation is audited.');
+assert.equal(sql.prepare("SELECT count(*) AS count FROM security_audit WHERE company_id='company-a' AND action='inventory.succeeded' AND target='configureExact'").get().count,2,'Both stock configurations are audited.');
 assert.equal((await(await call('inventory','GET',null,cookies.employee)).json()).exact.records.length,2,'Employees can read their company exact inventory.');
 const a8Preview=await call('replenishment/review','GET',null,cookies.manager);
 assert.equal(a8Preview.status,200,'Manager may request a read-only A8 review.');

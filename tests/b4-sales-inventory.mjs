@@ -19,7 +19,7 @@ for(const company of ['company-a','company-b'])sql.prepare('INSERT INTO companie
 function stock(productId,dimension,onHand,version){
  sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a',productId,JSON.stringify({id:productId,name:productId}));
  sql.prepare(`INSERT INTO product_unit_versions VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)`).run('company-a',productId,'canonical',1,'curated',dimension,'canonical','1','1','fixture',cutoff);
- sql.prepare(`INSERT INTO inventory_config_versions VALUES (?,?,?,?,?,?,?,?,?,NULL,?,NULL,?,?)`).run('company-a',productId,'active',1,'active','canonical',1,'unit','1',cutoff,'fixture',cutoff);
+ sql.prepare(`INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,legacy_units_per_pack,effective_from,replaced_at,created_by,created_at) VALUES (?,?,?,?,?,?,?,?,?,NULL,?,NULL,?,?)`).run('company-a',productId,'active',1,'active','canonical',1,'unit','1',cutoff,'fixture',cutoff);
  const display=dimension==='count'?Number(onHand):Number(onHand)/1_000_000;
  sql.prepare('INSERT INTO inventory VALUES (?,?,?,?)').run('company-a',productId,JSON.stringify({productId,settings:{unit:'canonical'},onHand:display,incoming:0,lastCount:cutoff,updated:cutoff,version,estimatedUsed:0}),version);
  sql.prepare(`INSERT INTO inventory_balances_exact VALUES (?,?,?,?,?,'0','0',?,?,?)`).run('company-a',productId,'active',dimension,onHand,version,cutoff,cutoff);

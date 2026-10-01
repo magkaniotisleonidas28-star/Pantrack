@@ -1,4 +1,4 @@
-import type {CuratedUnitId} from './inventory-quantities';
+import type {CuratedUnitId,UnitDefinition} from './inventory-quantities';
 import type {ExactQuantity, UnitDimension} from './inventory-consumption-contract';
 
 export type ManagedUnitInput =
@@ -13,8 +13,18 @@ export type ConfigureInventoryInput = {
   stockUnit: ManagedUnitInput;
   purchaseUnitLabel: string;
   purchaseAmount: string;
+  purchaseContentUnitId?: string;
+  expectedConfigId?: string;
   openingAmount?: string;
+  openingPackages?: PackageQuantityInput;
   effectiveAt: string;
+};
+
+export type PackageQuantityInput = {packages:string;remainder:string;remainderUnitId:string};
+export type PackageStockInput = {
+  companyId:string;productId:string;operationId:string;actor:string;configId:string;
+  expectedVersion:number;action:'receive'|'incoming'|'count';quantity:PackageQuantityInput;
+  effectiveAt:string;note:string;fromIncoming?:boolean;
 };
 
 export type WasteReason = 'end_of_day' | 'spilled' | 'spoiled' | 'preparation_error' | 'other';
@@ -99,6 +109,8 @@ export type ManagedInventoryRecord = {
   dimension: UnitDimension;
   stockUnitId: string;
   stockUnitLabel: string;
+  measurementUnit?: UnitDefinition;
+  purchase?: {label:string;quantity:ExactQuantity;enteredAmount:string|null;enteredUnitId:string|null};
   onHand: ExactQuantity;
   incoming: ExactQuantity;
   estimatedUsed: ExactQuantity;
