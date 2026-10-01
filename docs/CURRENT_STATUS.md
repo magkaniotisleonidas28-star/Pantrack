@@ -175,7 +175,13 @@ and Safari desktop/phone/tablet checks passed on 2026-10-01; see the
 The local Inventory menu now shares four sections in both modes: Stock,
 Recipes & sales, Purchasing plan, and Activity. Specialist reviews are inside
 those pages; see the [navigation evidence](W2_LOCAL_EVIDENCE.md#w2-inventory-navigation--2026-10-01).
-Margin features remain planned. The next
+The [recipe and stock usability preview](W2_RECIPE_STOCK_USABILITY.md) now adds
+compact recipes, one reviewed save for required milk choices and extras, and
+Stock list/Add stock views with inline item creation. A separate normal-login
+local site is available at `http://127.0.0.1:5177`; its data stays local. Migration
+`0020` is local only. Missing/conflicting milk choices deduct no stock. Owner
+usability and accessibility acceptance remain open. Margin features remain
+planned. The next
 unblocked step is a W1/W2 usability review, then a separate P1 cost foundation.
 Supplier submission remains disabled.
 

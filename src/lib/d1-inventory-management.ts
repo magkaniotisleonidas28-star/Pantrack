@@ -1,3 +1,4 @@
+import type {Product} from './pantry';
 import {defaultSettings, type InventoryRecord} from './inventory';
 import {
   CURATED_UNIT_IDS,
@@ -197,8 +198,23 @@ export class D1InventoryManagementService implements InventoryManagementService 
     return record;
   }
 
+  async createStock(input: ConfigureInventoryInput & {name:string;supplier?:string;sku?:string}) {
+    const fingerprint=JSON.stringify(input),result={productId:input.productId};
+    const receipt=async()=>{const row=await this.db.prepare('SELECT kind,fingerprint,result_json FROM inventory_setup_operations WHERE company_id=? AND operation_id=?').bind(input.companyId,input.operationId).first<{kind:string;fingerprint:string;result_json:string}>();if(!row)return null;if(row.kind!=='stock_create'||row.fingerprint!==fingerprint)throw new InventoryManagementError('operation_conflict','This stock save reference has different details.');return JSON.parse(row.result_json) as typeof result;};
+    const saved=await receipt();if(saved)return saved;
+    if(await this.db.prepare('SELECT 1 AS found FROM products WHERE owner=? AND id=?').bind(input.companyId,input.productId).first())throw new InventoryManagementError('operation_conflict','This product already exists. Choose it from the stock list.');
+    if(!validId(input.companyId)||!validId(input.productId)||!input.name.trim()||input.name.length>150||input.openingAmount===undefined)throw new InventoryManagementError('invalid_input','Enter a stock item name, units, and opening count.');
+    const product:Product={id:input.productId,name:input.name.trim(),supplier:input.supplier?.trim()??'',sku:input.sku?.trim()??'',pack:input.purchaseUnitLabel,unit:input.purchaseUnitLabel,price:0,priceKnown:false,category:'Stock',url:'',sample:false};
+    const prefix=[this.db.prepare(`INSERT INTO inventory_setup_operations(company_id,operation_id,kind,fingerprint,result_json,write_guard,created_at) VALUES (?,?,'stock_create',?,?,CASE WHEN NOT EXISTS(SELECT 1 FROM products WHERE owner=? AND id=?) THEN 1 ELSE 0 END,?)`).bind(input.companyId,input.operationId,fingerprint,JSON.stringify(result),input.companyId,input.productId,this.now()),this.db.prepare('INSERT INTO products(owner,id,data) VALUES(?,?,?)').bind(input.companyId,input.productId,JSON.stringify(product))];
+    try{await this.configureInternal(input,prefix);}catch(error){const replay=await receipt();if(replay)return replay;if(String(error).includes('inventory_setup_write_guard'))throw new InventoryManagementError('operation_conflict','This product already exists. Choose it from the stock list.');throw error;}
+    return result;
+  }
+
   async configure(input: ConfigureInventoryInput): Promise<ManagedInventoryRecord> {
     await this.product(input.companyId,input.productId);
+    return this.configureInternal(input);
+  }
+  private async configureInternal(input:ConfigureInventoryInput,prefix:D1PreparedStatement[]=[]):Promise<ManagedInventoryRecord>{
     if (!validId(input.operationId) || !validId(input.actor) || !input.purchaseUnitLabel.trim()) throw new InventoryManagementError('invalid_input','Configuration identity, actor, and purchase unit are required.');
     const effectiveAt = this.normalizedTime(input.effectiveAt);
     const at = this.now();
@@ -258,7 +274,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const unitStatement = this.db.prepare(`INSERT OR IGNORE INTO product_unit_versions(
       company_id,product_id,unit_id,version,kind,dimension,label,numerator,denominator,created_by,created_at,retired_at
     ) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)`).bind(input.companyId,input.productId,unit.id,unitVersion,unit.kind,unit.dimension,unit.label,unit.numerator,unit.denominator,input.actor,at);
-    const statements: D1PreparedStatement[]=[
+    const statements: D1PreparedStatement[]=[...prefix,
       this.db.prepare("DELETE FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status='pending' AND NOT EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)").bind(input.companyId,input.productId,input.operationId,input.companyId,input.productId,input.operationId),
       unitStatement,
       this.db.prepare(`INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,legacy_units_per_pack,effective_from,replaced_at,created_by,created_at)
@@ -386,7 +402,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const updated=await this.balance(input.companyId,input.productId);if(!updated)throw new InventoryManagementError('corrupt_store','Updated inventory is missing.');return this.record(updated);
   }
 
-  private async recipeAmounts(companyId:string,values:RecipeAmountInput[],signed=false){
+  async recipeAmounts(companyId:string,values:RecipeAmountInput[],signed=false){
     if(!values.length||values.length>50||new Set(values.map(v=>v.productId)).size!==values.length)throw new InventoryManagementError('invalid_recipe','Recipes require one entry per ingredient.');
     const result=[];
     for(const value of values){
@@ -411,13 +427,20 @@ export class D1InventoryManagementService implements InventoryManagementService 
     return result;
   }
 
-  private recipeUnitStatement(companyId:string,value:{productId:string;unit:UnitDefinition},actor:string,at:string){
+  recipeUnitStatement(companyId:string,value:{productId:string;unit:UnitDefinition},actor:string,at:string){
     const unit=value.unit;
     return this.db.prepare(`INSERT OR IGNORE INTO product_unit_versions(company_id,product_id,unit_id,version,kind,dimension,label,numerator,denominator,created_by,created_at)
       VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(companyId,value.productId,unit.id,unit.version,unit.kind,unit.dimension,unit.label,unit.numerator,unit.denominator,actor,at);
   }
 
+  private async requireBuilderForChoices(companyId:string,recipeId:string,modifierId?:string){
+    const row=await this.db.prepare("SELECT c.groups_json FROM recipe_version_choices c JOIN recipe_versions r ON r.company_id=c.company_id AND r.recipe_id=c.recipe_id AND r.id=c.version_id WHERE r.company_id=? AND r.recipe_id=? AND r.status='active'").bind(companyId,recipeId).first<{groups_json:string}>();
+    const groups=row?JSON.parse(row.groups_json) as Array<{modifierIds:string[]}>:[];
+    if(groups.length&&(!modifierId||groups.some(g=>g.modifierIds.includes(modifierId))))throw new InventoryManagementError('invalid_recipe','Use Edit recipe to save required choices and their ingredient rules together.');
+  }
+
   async saveRecipeDraft(input: RecipeDraftInput): Promise<RecipeVersionView> {
+    await this.requireBuilderForChoices(input.companyId,input.recipeId);
     if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.draftId)||!validId(input.actor)||!input.name.trim())throw new InventoryManagementError('invalid_recipe','Recipe identity, name, and actor are required.');
     const amounts=await this.recipeAmounts(input.companyId,input.ingredients),at=this.now();
     const existing=await this.db.prepare('SELECT status FROM recipe_versions WHERE company_id=? AND recipe_id=? AND id=?').bind(input.companyId,input.recipeId,input.draftId).first<{status:string}>();
@@ -430,6 +453,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
   }
 
   async activateRecipe(input: ActivationInput) {
+    await this.requireBuilderForChoices(input.companyId,input.recipeId);
     if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.versionId)||!validId(input.actor))throw new InventoryManagementError('invalid_recipe','Recipe identity, version, and actor are required.');
     const at=this.now();
     const draft=await this.requiredRecipe(input.companyId,input.recipeId,input.versionId);
@@ -465,6 +489,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
   }
 
   async saveModifierDraft(input: ModifierDraftInput): Promise<ModifierVersionView> {
+    await this.requireBuilderForChoices(input.companyId,input.recipeId,input.modifierId);
     if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.modifierId)||!validId(input.draftId)||!validId(input.actor)||!input.name.trim())throw new InventoryManagementError('invalid_modifier','Modifier identity, name, and actor are required.');
     const amounts=await this.recipeAmounts(input.companyId,input.deltas.map(v=>({...v,amount:v.signed&&!v.amount.startsWith('-')?`-${v.amount}`:v.amount})),true),at=this.now();
     const recipe=await this.db.prepare('SELECT 1 AS found FROM recipe_lineages WHERE company_id=? AND id=?').bind(input.companyId,input.recipeId).first();if(!recipe)throw new InventoryManagementError('not_found','Recipe lineage was not found.');
@@ -480,6 +505,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
   }
 
   async activateModifier(input: ModifierActivationInput) {
+    await this.requireBuilderForChoices(input.companyId,input.recipeId,input.modifierId);
     if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.modifierId)||!validId(input.versionId)||!validId(input.actor))throw new InventoryManagementError('invalid_modifier','Modifier identity, version, and actor are required.');
     const at=this.now(),statements:D1PreparedStatement[]=[];
     const draft=await this.requiredModifier(input.companyId,input.recipeId,input.modifierId,input.versionId);
@@ -495,6 +521,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
   }
 
   async archiveModifier(input: ArchiveInput & {modifierId:string}) {
+    await this.requireBuilderForChoices(input.companyId,input.recipeId,input.modifierId);
     if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.modifierId)||!validId(input.versionId)||!validId(input.actor))throw new InventoryManagementError('invalid_modifier','Modifier identity, version, and actor are required.');
     const at=this.now();
     await this.db.prepare("UPDATE recipe_modifier_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='active'").bind(at,input.companyId,input.recipeId,input.modifierId,input.versionId).run();
@@ -511,12 +538,13 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const balances=await this.db.prepare(`SELECT b.product_id,b.config_id,b.dimension,b.on_hand_minor,b.incoming_minor,b.estimated_used_minor,b.version,b.latest_count_effective_at,b.updated_at,c.stock_unit_id,c.stock_unit_version,u.label AS stock_unit_label FROM inventory_balances_exact b JOIN inventory_config_versions c ON c.company_id=b.company_id AND c.product_id=b.product_id AND c.id=b.config_id JOIN product_unit_versions u ON u.company_id=c.company_id AND u.product_id=c.product_id AND u.unit_id=c.stock_unit_id AND u.version=c.stock_unit_version WHERE b.company_id=? ORDER BY b.product_id`).bind(companyId).all<BalanceRow>();
     const reconciliations=await this.db.prepare(`SELECT id,product_id,dimension,measured_minor,estimate_before_minor,variance_minor,effective_at,recorded_at,actor,note,opening FROM inventory_reconciliations WHERE company_id=? AND dimension IS NOT NULL AND measured_minor IS NOT NULL ORDER BY effective_at DESC,id`).bind(companyId).all<{id:string;product_id:string;dimension:UnitDimension;measured_minor:string;estimate_before_minor:string|null;variance_minor:string|null;effective_at:string;recorded_at:string;actor:string;note:string;opening:number}>();
     const recipes=await this.db.prepare("SELECT recipe_id,id,version,status,name,active_from,active_to FROM recipe_versions WHERE company_id=? AND legacy=0 ORDER BY recipe_id,version DESC").bind(companyId).all<RecipeRow>();
-    const legacyRecipes=await this.db.prepare("SELECT recipe_id FROM recipe_versions WHERE company_id=? AND legacy=1 AND status='active' ORDER BY recipe_id").bind(companyId).all<{recipe_id:string}>();
+    const legacyRecipes=await this.db.prepare("SELECT recipe_id,id,name FROM recipe_versions WHERE company_id=? AND legacy=1 AND status='active' ORDER BY recipe_id").bind(companyId).all<{recipe_id:string;id:string;name:string}>();
+    const choiceRows=await this.db.prepare('SELECT recipe_id,version_id,groups_json FROM recipe_version_choices WHERE company_id=?').bind(companyId).all<{recipe_id:string;version_id:string;groups_json:string}>();
     const recipeViews:RecipeVersionView[]=[];
-    for(const row of recipes.results){const ingredients=await this.db.prepare('SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_version_ingredients WHERE company_id=? AND recipe_id=? AND version_id=? ORDER BY position').bind(companyId,row.recipe_id,row.id).all<{product_id:string;entered_amount:string;entered_unit_id:string;dimension:UnitDimension;quantity_minor:string}>();recipeViews.push({recipeId:row.recipe_id,versionId:row.id,version:row.version,status:row.status,name:row.name,activeFrom:row.active_from,activeTo:row.active_to,ingredients:ingredients.results.map(i=>({productId:i.product_id,amount:i.entered_amount,unitId:i.entered_unit_id,quantity:exact(i.dimension,i.quantity_minor)}))});}
+    for(const row of recipes.results){const ingredients=await this.db.prepare('SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_version_ingredients WHERE company_id=? AND recipe_id=? AND version_id=? ORDER BY position').bind(companyId,row.recipe_id,row.id).all<{product_id:string;entered_amount:string;entered_unit_id:string;dimension:UnitDimension;quantity_minor:string}>();recipeViews.push({recipeId:row.recipe_id,versionId:row.id,version:row.version,status:row.status,name:row.name,activeFrom:row.active_from,activeTo:row.active_to,choices:JSON.parse(choiceRows.results.find(c=>c.recipe_id===row.recipe_id&&c.version_id===row.id)?.groups_json??'[]'),ingredients:ingredients.results.map(i=>({productId:i.product_id,amount:i.entered_amount,unitId:i.entered_unit_id,quantity:exact(i.dimension,i.quantity_minor)}))});}
     const modifiers=await this.db.prepare(`SELECT v.recipe_id,v.modifier_id,v.id,v.version,v.status,v.active_from,v.active_to,l.name FROM recipe_modifier_versions v JOIN recipe_modifier_lineages l ON l.company_id=v.company_id AND l.recipe_id=v.recipe_id AND l.id=v.modifier_id WHERE v.company_id=? ORDER BY v.recipe_id,v.modifier_id,v.version DESC`).bind(companyId).all<ModifierRow>();
     const modifierViews:ModifierVersionView[]=[];
     for(const row of modifiers.results){const deltas=await this.db.prepare('SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_modifier_deltas WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=? ORDER BY position').bind(companyId,row.recipe_id,row.modifier_id,row.id).all<{product_id:string;entered_amount:string;entered_unit_id:string;dimension:UnitDimension;quantity_minor:string}>();modifierViews.push({recipeId:row.recipe_id,modifierId:row.modifier_id,versionId:row.id,version:row.version,status:row.status,name:row.name,activeFrom:row.active_from,activeTo:row.active_to,deltas:deltas.results.map(i=>({productId:i.product_id,amount:i.entered_amount,unitId:i.entered_unit_id,quantity:exact(i.dimension,i.quantity_minor)}))});}
-    return {records:balances.results.map(row=>this.record(row)),reconciliations:reconciliations.results.map(row=>({id:row.id,productId:row.product_id,measured:exact(row.dimension,row.measured_minor),estimateBefore:row.estimate_before_minor===null?null:exact(row.dimension,row.estimate_before_minor),variance:row.variance_minor===null?null:exact(row.dimension,row.variance_minor),effectiveAt:row.effective_at,recordedAt:row.recorded_at,actor:row.actor,note:row.note,opening:Boolean(row.opening)})),legacyRecipeIds:legacyRecipes.results.map(row=>row.recipe_id),recipes:recipeViews,modifiers:modifierViews,legacyReview:await legacyM3Review(this.db,companyId)};
+    return {records:balances.results.map(row=>this.record(row)),reconciliations:reconciliations.results.map(row=>({id:row.id,productId:row.product_id,measured:exact(row.dimension,row.measured_minor),estimateBefore:row.estimate_before_minor===null?null:exact(row.dimension,row.estimate_before_minor),variance:row.variance_minor===null?null:exact(row.dimension,row.variance_minor),effectiveAt:row.effective_at,recordedAt:row.recorded_at,actor:row.actor,note:row.note,opening:Boolean(row.opening)})),legacyRecipeIds:legacyRecipes.results.map(row=>row.recipe_id),legacyRecipes:legacyRecipes.results.map(row=>({recipeId:row.recipe_id,versionId:row.id,name:row.name})),recipes:recipeViews,modifiers:modifierViews,legacyReview:await legacyM3Review(this.db,companyId)};
   }
 }

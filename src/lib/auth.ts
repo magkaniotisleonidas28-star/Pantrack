@@ -9,7 +9,7 @@ export function appOrigin() {
   const value=settings().APP_ORIGIN;
   if(!value)throw new Error('Authentication is not configured.');
   const url=new URL(value);
-  if(url.origin!==value || (url.protocol!=='https:' && !['http://localhost:5173','http://127.0.0.1:5173'].includes(value)))throw new Error('Invalid application origin.');
+  if(url.origin!==value || (url.protocol!=='https:' && !['http://localhost:5173','http://127.0.0.1:5173',...(settings().PANTRACK_USABILITY_PREVIEW==='enabled'?['http://127.0.0.1:5177']:[])].includes(value)))throw new Error('Invalid application origin.');
   return value;
 }
 export function csrf(req:Request) {

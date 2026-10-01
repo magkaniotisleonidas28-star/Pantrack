@@ -34,6 +34,7 @@ export type HeldReason =
   | 'recipe_version_not_found'
   | 'modifier_version_not_found'
   | 'negative_modifier_result'
+  | 'required_choice_missing'
   | 'invalid_quantity'
   | 'invalid_occurrence_time'
   | 'ambiguous_occurrence_time'

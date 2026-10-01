@@ -40,7 +40,8 @@ export type ConsumptionHoldCode =
   | 'unit_incompatible'
   | 'recipe_version_not_found'
   | 'modifier_version_not_found'
-  | 'negative_modifier_result';
+  | 'negative_modifier_result'
+  | 'required_choice_missing';
 
 export type ConsumptionRejectCode =
   | 'invalid_contract'

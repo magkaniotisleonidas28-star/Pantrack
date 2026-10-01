@@ -30,6 +30,31 @@ Ordinary `/auth` authentication uses Supabase. Follow [M2 setup](M2_SETUP.md)
 before testing real email sign-in, confirmation, or recovery. A successful local
 build does not make the application ready for public deployment.
 
+## Normal-login usability preview
+
+For the recipe/stock/Waste usability work, run:
+
+```text
+pnpm dev:usability
+```
+
+Open <http://127.0.0.1:5177> and sign in with your existing Pantrack account.
+This profile uses ordinary Supabase sign-in and a separate persistent local D1
+workspace. It does not load your hosted company data. The existing ignored
+Supabase URL and publishable key must already be configured using [M2 setup](M2_SETUP.md).
+No password or provider token belongs in source control or chat.
+
+The script applies migrations locally to `.sites-runtime/usability-state`,
+keeps private runtime configuration under `.sites-runtime/usability-preview`,
+and copies no POS/supplier/payment credentials. It enables exact inventory,
+disables mock sign-in and remote bindings, and binds only to loopback port 5177.
+Stop that server with Ctrl+C before restarting the same command. Restarting
+preserves the local companies and stock. Do not reset its state to resolve a
+layout issue. Other local preview databases and ports remain separate.
+
+See [W2 recipe and stock usability evidence](W2_RECIPE_STOCK_USABILITY.md) for
+navigation, milk choices, verification and recovery limits.
+
 ## Local data and variables
 
 `wrangler.local.jsonc` uses a placeholder D1 identifier. Every database command

@@ -1,3 +1,4 @@
+import type {RecipeChoiceGroup} from './inventory-management-contract';
 import { z } from 'zod';
 import type { WasteReason } from './inventory-management-contract';
 import type { SelectedRecipeVersion } from './inventory-consumption-contract';
@@ -29,6 +30,7 @@ export type MenuWasteItem = {
     issue: string | null;
     offered: boolean;
     revision: number;
+    choices?:RecipeChoiceGroup[];
     modifiers: Array<{
         id: string;
         versionId: string;

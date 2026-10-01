@@ -13,6 +13,7 @@ export default defineConfig(async ({ command }) => {
   const a5LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_A5_REVIEW === "enabled";
   const w1LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_W1_REVIEW === "enabled";
   const w2LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_W2_REVIEW === "enabled";
+  const usabilityReview = command === "serve" && !managedLinux && process.env.PANTRACK_USABILITY_REVIEW === "enabled";
   const exactLocalReview = a5LocalReview || w1LocalReview || w2LocalReview;
   return {
     server: {
@@ -22,16 +23,17 @@ export default defineConfig(async ({ command }) => {
     },
     plugins: [
       vinext(),
-      sites({ mockAuth: !managedLinux }),
+      sites({ mockAuth: !managedLinux && !usabilityReview }),
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
+        ...(usabilityReview ? { persistState:{path:".sites-runtime/usability-state"}, remoteBindings:false } : {}),
         ...(exactLocalReview ? { persistState: { path: w2LocalReview ? ".sites-runtime/w2-review-state" : w1LocalReview ? ".sites-runtime/w1-review-state" : ".sites-runtime/a5-review-state" } } : {}),
         // Development uses an isolated placeholder binding. Production builds
         // read the real development binding from the checked-in Wrangler file.
         ...(command === "serve"
           ? {
-              configPath: "wrangler.local.jsonc",
+              configPath: usabilityReview ? ".sites-runtime/usability-preview/wrangler.jsonc" : "wrangler.local.jsonc",
               config: { main: "vinext/server/fetch-handler", ...(exactLocalReview ? { vars: { PANTRACK_EXACT_INVENTORY_PREVIEW: "enabled" } } : {})},
             }
           : {}),

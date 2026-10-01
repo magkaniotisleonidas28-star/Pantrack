@@ -597,6 +597,29 @@ export const salesEventCorrectionResults=sqliteTable('sales_event_correction_res
  foreignKey({columns:[t.companyId,t.correctionId],foreignColumns:[salesEventCorrections.companyId,salesEventCorrections.correctionId]}),
 ]);
 
+export const recipeVersionChoices=sqliteTable('recipe_version_choices',{
+ companyId:text('company_id').notNull(),
+ recipeId:text('recipe_id').notNull(),
+ versionId:text('version_id').notNull(),
+ groupsJson:text('groups_json').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.recipeId,t.versionId]}),
+ foreignKey({columns:[t.companyId,t.recipeId,t.versionId],foreignColumns:[recipeVersions.companyId,recipeVersions.recipeId,recipeVersions.id]}),
+]);
+
+export const inventorySetupOperations=sqliteTable('inventory_setup_operations',{
+ companyId:text('company_id').notNull(),
+ operationId:text('operation_id').notNull(),
+ kind:text('kind').notNull(),
+ fingerprint:text('fingerprint').notNull(),
+ resultJson:text('result_json').notNull(),
+ writeGuard:integer('write_guard').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId],foreignColumns:[companies.id]}),
+]);
+
 export const salesEventCorrectionAdjustments=sqliteTable('sales_event_correction_adjustments',{
  companyId:text('company_id').notNull(),
  correctionId:text('correction_id').notNull(),

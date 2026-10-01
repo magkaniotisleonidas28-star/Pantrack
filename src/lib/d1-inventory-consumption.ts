@@ -1,3 +1,5 @@
+import {choiceIssues} from './recipe-choices';
+import type {RecipeChoiceGroup} from './inventory-management-contract';
 import {
   INVENTORY_CONSUMPTION_CONTRACT,
   type ConsumptionIssue,
@@ -396,6 +398,8 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
         issues.push({code: 'recipe_version_not_found', message: 'No recipe version covers the occurrence time.', lineId: line.lineId, recipeId: line.recipeId});
         continue;
       }
+      const choiceRow=await this.db.prepare('SELECT groups_json FROM recipe_version_choices WHERE company_id=? AND recipe_id=? AND version_id=?').bind(request.companyId,line.recipeId,recipe.id).first<{groups_json:string}>();
+      issues.push(...choiceIssues(choiceRow?parseJson<RecipeChoiceGroup[]>(choiceRow.groups_json,'recipe choices'):[],line));
       const selected: SelectedRecipeVersion = {
         lineId: line.lineId,
         recipeId: line.recipeId,

@@ -52,6 +52,14 @@ export type RecipeAmountInput = {
   unitId: string;
 };
 
+export type RecipeChoiceGroup = {id:string; name:string; modifierIds:string[]};
+export type RecipePublishInput = {
+  companyId:string; operationId:string; actor:string; recipeId:string; versionId:string;
+  name:string; expectedActiveVersionId:string|null; expectedModifiers:Record<string,string>;
+  ingredients:RecipeAmountInput[]; choices:RecipeChoiceGroup[];
+  modifiers:Array<{modifierId:string; versionId:string; name:string; deltas:Array<RecipeAmountInput & {signed:boolean}>}>;
+};
+
 export type RecipeDraftInput = {
   companyId: string;
   recipeId: string;
@@ -120,6 +128,7 @@ export type RecipeVersionView = {
   activeFrom: string | null;
   activeTo: string | null;
   ingredients: Array<RecipeAmountInput & {quantity: ExactQuantity}>;
+  choices?:RecipeChoiceGroup[];
 };
 
 export type ModifierVersionView = {
@@ -143,6 +152,7 @@ export type InventoryManagementView = {
   records: ManagedInventoryRecord[];
   reconciliations: InventoryReconciliationView[];
   legacyRecipeIds: string[];
+  legacyRecipes?: Array<{recipeId:string;versionId:string;name:string}>;
   recipes: RecipeVersionView[];
   modifiers: ModifierVersionView[];
   legacyReview: LegacyM3Review;

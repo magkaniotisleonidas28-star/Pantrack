@@ -87,12 +87,13 @@ export class D1MenuWasteService {
         const items: MenuWasteItem[] = products.results.filter(p => manager || p.offered === 1).map(p => { const ready = p.status === 'active' && p.stock_unit_id === 'each' && p.unit_kind === 'curated' && p.dimension === 'count' && p.numerator === '1' && p.denominator === '1' && !!p.latest_count_effective_at; return { kind: 'product', id: p.id, name: json<{
                 name?: string;
             }>(p.data).name || p.id, version: p.config_id || 'unconfigured', ready: p.offered === 1 && ready, issue: p.offered !== 1 ? 'Choose Bought ready-made to offer this café item.' : !ready ? 'Needs inventory setup: count individual items using each.' : null, offered: p.offered === 1, revision: p.revision ?? 0, modifiers: [] }; });
+        const choiceRows=await this.db.prepare('SELECT recipe_id,version_id,groups_json FROM recipe_version_choices WHERE company_id=?').bind(companyId).all<{recipe_id:string;version_id:string;groups_json:string}>();
         const seen = new Set<string>();
         for (const r of recipes.results) {
             if (seen.has(r.recipe_id))
                 continue;
             seen.add(r.recipe_id);
-            items.push({ kind: 'recipe', id: r.recipe_id, name: r.name, version: r.id, ready: r.ready === 1, issue: r.ready === 1 ? null : 'Needs an active recipe and ingredient opening counts.', offered: true, revision: 0, modifiers: modifiers.results.filter(m => m.recipe_id === r.recipe_id).map(m => ({ id: m.modifier_id, versionId: m.id, name: m.name })) });
+            items.push({ kind: 'recipe', id: r.recipe_id, name: r.name, version: r.id, ready: r.ready === 1, issue: r.ready === 1 ? null : 'Needs an active recipe and ingredient opening counts.', offered: true, revision: 0, choices:JSON.parse(choiceRows.results.find(c=>c.recipe_id===r.recipe_id&&c.version_id===r.id)?.groups_json??'[]'), modifiers: modifiers.results.filter(m => m.recipe_id === r.recipe_id).map(m => ({ id: m.modifier_id, versionId: m.id, name: m.name })) });
         }
         return { enabled: true, serverNow: new Date().toISOString(), items: items.sort((a, b) => a.name.localeCompare(b.name)) };
     }

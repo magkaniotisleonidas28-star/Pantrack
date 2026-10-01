@@ -116,7 +116,10 @@ into an independent draft instead of retyping it. Local verification passed;
 POS modifier import and worker acceptance remain separate follow-ups.
 The later [Inventory navigation refinement](W2_LOCAL_EVIDENCE.md#w2-inventory-navigation--2026-10-01)
 groups the same tools into four sidebar sections and preserves unfinished
-modifier edits when switching Inventory views. It remains local only.
+modifier edits when switching Inventory views. It remains local only. The [recipe/stock builder preview](W2_RECIPE_STOCK_USABILITY.md)
+adds reviewed atomic recipe/option saves, required milk selection, compact recipe
+rows and inline stock creation. Its normal-login local site isolates practice
+data from hosted D1; migration `0020` has not been applied remotely.
 
 - [x] Implement café-item setup, atomic waste and sold-unit allocation locally.
 - [x] Verify route security, retry/rollback contracts and fictional served screens.
@@ -125,7 +128,8 @@ modifier edits when switching Inventory views. It remains local only.
 
 Common flow: **Waste → café item → count → reason → Save**. For newly added
 croissants/bagels, a manager uses **Item setup → Bought ready-made café item**,
-then **Set up stock count** with `each`, quantity per box and an opening count.
+then **Inventory → Stock → Add stock** with `each`, quantity per box and an
+opening count.
 Already counted sales are classified without another deduction; extra
 replacements are additional use. Missing sales go to **Needs review**.
 

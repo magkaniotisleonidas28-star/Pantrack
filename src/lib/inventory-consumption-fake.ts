@@ -1,3 +1,5 @@
+import {choiceIssues} from './recipe-choices';
+import type {RecipeChoiceGroup} from './inventory-management-contract';
 import {
   INVENTORY_CONSUMPTION_CONTRACT,
   type ConsumptionIssue,
@@ -39,6 +41,7 @@ export type FakeRecipeVersion = {
   activeFrom: string | null;
   activeTo: string | null;
   ingredients: FakeRecipeIngredient[];
+  choices?:RecipeChoiceGroup[];
 };
 
 export type FakeModifierVersion = {
@@ -310,6 +313,7 @@ export class FakeInventoryConsumptionPort implements InventoryConsumptionPort {
         continue;
       }
 
+      issues.push(...choiceIssues(recipe.choices??[],line));
       const selected: SelectedRecipeVersion = {
         lineId: line.lineId,
         recipeId: line.recipeId,

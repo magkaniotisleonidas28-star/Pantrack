@@ -1,6 +1,6 @@
 import {database} from '@/db/raw';
 import type {InventoryRecord} from '@/lib/inventory';
-type Recipe={id:string;name:string;ingredients:{productId:string;quantity:number;unit:string}[]};
+type Recipe={id:string;name:string;requiresChoices?:boolean;ingredients:{productId:string;quantity:number;unit:string}[]};
 export type SalesLine={recipeId?:string;mappingKey?:string;quantity:number};
 export async function importSales(companyId:string,reference:string,lines:SalesLine[],actor:string){
  const db=database(),rows=await db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(companyId).all<{data:string}>(),records=rows.results.map(x=>JSON.parse(x.data) as InventoryRecord);
@@ -11,7 +11,7 @@ export async function importSales(companyId:string,reference:string,lines:SalesL
  const mappings=mapped.results.map(x=>JSON.parse(x.data) as {key:string;recipeId:string});
  const resolvedLines=lines.map(line=>{const recipeId=line.recipeId||mappings.find(m=>m.key===line.mappingKey)?.recipeId;if(!recipeId)throw new Error('Unmapped register item. Map every item before importing; no stock was deducted.');return {...line,recipeId};});
  const rs=await db.prepare('SELECT data FROM recipes WHERE company_id=?').bind(companyId).all<{data:string}>(),recipes=rs.results.map(x=>JSON.parse(x.data) as Recipe),usage=new Map<string,number>();
- for(const line of resolvedLines){const recipe=recipes.find(r=>r.id===line.recipeId);if(!recipe)throw new Error('Recipe not found.');
+ for(const line of resolvedLines){const recipe=recipes.find(r=>r.id===line.recipeId);if(!recipe)throw new Error('Recipe not found.');if(recipe.requiresChoices)throw new Error('This recipe needs customer choices. Enable exact inventory and record the choices before importing; no stock was deducted.');
  for(const i of recipe.ingredients){const record=records.find(r=>r.productId===i.productId);if(!record||record.settings.unit!==i.unit)throw new Error('An ingredient unit changed. Update the recipe first.');usage.set(i.productId,(usage.get(i.productId)||0)+i.quantity*line.quantity);}}
  if(usage.size>20)throw new Error('Import at most 20 distinct ingredients per batch.');
  const used=[...usage].map(([id,quantity])=>({record:records.find(r=>r.productId===id)!,quantity}));for(const i of used){if(!i.record.lastCount)throw new Error('Record an opening count for every ingredient first.');if(i.quantity>10000000)throw new Error('Sales quantities are too large.');}

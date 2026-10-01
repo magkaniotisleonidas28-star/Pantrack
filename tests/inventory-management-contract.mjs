@@ -150,7 +150,7 @@ assert.equal(sql.prepare("SELECT count(*) AS count FROM recipes WHERE company_id
 assert.equal((await service.archiveModifier({companyId:'company-a',recipeId:'latte',modifierId:'less-milk',versionId:'less-milk-v1',actor:'manager-a'})).status,'archived');
 
 const companyB=new D1InventoryManagementService(database,{clock});
-assert.deepEqual(await companyB.read('company-b'),{records:[],reconciliations:[],legacyRecipeIds:[],recipes:[],modifiers:[],legacyReview:{products:[],recipes:[]}});
+assert.deepEqual(await companyB.read('company-b'),{records:[],reconciliations:[],legacyRecipeIds:[],legacyRecipes:[],recipes:[],modifiers:[],legacyReview:{products:[],recipes:[]}});
 const restarted=new D1InventoryManagementService(database,{clock});
 const view=await restarted.read('company-a');
 assert.equal(view.records.length,3);
@@ -190,7 +190,7 @@ const sent=[];
 assert.equal((await sendSaveRequest('/api/inventory',body,async(_,init)=>{sent.push(init.body);throw new Error('lost acknowledgement');})).kind,'uncertain');
 assert.equal((await sendSaveRequest('/api/inventory',body,async(_,init)=>{sent.push(init.body);return Response.json({ok:true});},true)).kind,'saved');
 assert.equal(sent[0],sent[1],'A retry submits exactly the same recipe, draft identity and ingredient effects.');
-assert.deepEqual(await companyB.read('company-b'),{records:[],reconciliations:[],legacyRecipeIds:[],recipes:[],modifiers:[],legacyReview:{products:[],recipes:[]}},'Copied rules remain company scoped.');
+assert.deepEqual(await companyB.read('company-b'),{records:[],reconciliations:[],legacyRecipeIds:[],legacyRecipes:[],recipes:[],modifiers:[],legacyReview:{products:[],recipes:[]}},'Copied rules remain company scoped.');
 const failedDraft=new D1InventoryManagementService({prepare:query=>database.prepare(query),batch:statements=>database.batch([...statements,new Statement(sql,'INSERT INTO missing_modifier_test_table VALUES (1)')])},{clock});
 await assert.rejects(failedDraft.saveModifierDraft({...copyInput,modifierId:'failed-copy',draftId:'failed-copy-v1',actor:'manager-a',deltas:[{productId:'beans',amount:'0.008',unitId:'kg',signed:false}]}),/no such table/);
 assert.equal(sql.prepare("SELECT count(*) AS n FROM product_unit_versions WHERE company_id='company-a' AND product_id='beans' AND unit_id='kg'").get().n,0,'Unit definitions roll back with a failed draft transaction.');

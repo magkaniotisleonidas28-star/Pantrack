@@ -12,6 +12,11 @@ export const CURATED_UNIT_IDS = [
 ] as const;
 export type CuratedUnitId = typeof CURATED_UNIT_IDS[number];
 
+/** Friendly display names; persisted unit identities and factors stay fixed. */
+export function unitLabel(id:string):string {
+  return ({oz_mass:'oz (weight)',tsp_us:'tsp (US)',tbsp_us:'tbsp (US)',fl_oz_us:'fl oz (US)',cup_us:'cup (US)',pint_us:'pint (US)',quart_us:'quart (US)',gallon_us:'gallon (US)'} as Record<string,string>)[id]??id;
+}
+
 type QuantityErrorCode = 'invalid_quantity' | 'invalid_unit' | 'unit_unclassified' | 'unit_incompatible';
 export class QuantityError extends Error {
   constructor(public readonly code: QuantityErrorCode, message: string) {

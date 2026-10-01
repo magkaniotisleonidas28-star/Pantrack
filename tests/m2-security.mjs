@@ -60,7 +60,7 @@ sql.prepare('INSERT INTO orders VALUES (?,?,?,?)').run('company-a','private-orde
 sql.prepare('INSERT INTO sales_imports(company_id,reference,data,created) VALUES (?,?,?,?)').run('company-a','fictional-legacy-reference',JSON.stringify({reference:'fictional-legacy-reference'}),'now');
 sql.prepare('INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?)').run('company-a','fictional-register-reference',JSON.stringify({key:'fictional-register-reference'}));
 const families=['workspace','inventory','sales','register','clover','payments','automation','members'];
-const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
+const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','publishRecipeExact','createStockExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
 for(const family of families){
  assert.equal((await call(family)).status,401,family+' anonymous read');
  assert.equal((await call(family,'POST',{companyId:'company-a'})).status,401,family+' anonymous write');
@@ -114,12 +114,27 @@ for(const body of [a8Edit,a8Cancel]){
 assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.manager,{Origin:'https://evil.test'})).status,403,'Proposal writes reject cross-site origins.');
 assert.equal((await call('replenishment/proposals','GET',null,cookies.manager)).status,404,'Saved proposals stay dark with exact preview off.');
 globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
+assert.equal(modules.authlib.appOrigin(),'https://test');
+globalThis.m2env.APP_ORIGIN='http://127.0.0.1:5177';assert.throws(()=>modules.authlib.appOrigin(),/Invalid application origin/);
+globalThis.m2env.PANTRACK_USABILITY_PREVIEW='enabled';assert.equal(modules.authlib.appOrigin(),'http://127.0.0.1:5177');
+globalThis.m2env.APP_ORIGIN='http://192.168.1.1:5177';assert.throws(()=>modules.authlib.appOrigin(),/Invalid application origin/);
+delete globalThis.m2env.PANTRACK_USABILITY_PREVIEW;globalThis.m2env.APP_ORIGIN='https://test';
 const exactConfigure={companyId:'company-a',action:'configureExact',productId:'milk',operationId:'config-milk',stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'10',effectiveAt:'2026-01-01T00:00:00Z'};
 assert.equal((await call('inventory','POST',exactConfigure,cookies.employee)).status,403,'Employees cannot mutate exact inventory.');
 assert.equal((await call('inventory','POST',{...exactConfigure,companyId:'company-b'},cookies.manager)).status,403,'Managers cannot mutate another company.');
 assert.equal((await call('inventory','POST',exactConfigure,cookies.manager)).status,200,'Managers can classify company inventory when the preview is enabled.');
+const stockBody={companyId:'company-a',action:'createStockExact',productId:crypto.randomUUID(),operationId:crypto.randomUUID(),name:'New fictional croissant',stockUnit:{kind:'curated',id:'each'},purchaseUnitLabel:'box',purchaseAmount:'6',openingAmount:'12',effectiveAt:'2026-01-01T00:00:00Z'};
+for(const cookie of [undefined,cookies.other,cookies.employee])assert.equal((await call('inventory','POST',stockBody,cookie)).status,cookie?403:401);
+assert.equal((await call('inventory','POST',{...stockBody,companyId:'company-b'},cookies.manager)).status,403);
+assert.equal((await call('inventory','POST',stockBody,cookies.manager)).status,200);
+assert.equal((await call('inventory','POST',stockBody,cookies.manager)).status,200);
+assert.equal((await call('workspace','POST',{companyId:'company-a',action:'prepare',id:crypto.randomUUID(),items:[{id:stockBody.productId,quantity:1}]},cookies.owner)).status,400,'Stock items with unknown prices and supplier details cannot become purchasing orders.');
+const publishBody={companyId:'company-a',action:'publishRecipeExact',operationId:'atomic-security',recipeId:crypto.randomUUID(),versionId:crypto.randomUUID(),name:'Atomic milk',expectedActiveVersionId:null,expectedModifiers:{},ingredients:[{productId:'milk',amount:'1',unitId:'mL'}],choices:[],modifiers:[]};
+for(const cookie of [undefined,cookies.other,cookies.employee])assert.equal((await call('inventory','POST',publishBody,cookie)).status,cookie?403:401);
+assert.equal((await call('inventory','POST',{...publishBody,companyId:'company-b'},cookies.manager)).status,403);
+assert.equal((await call('inventory','POST',publishBody,cookies.manager)).status,200);
 assert.equal(sql.prepare("SELECT count(*) AS count FROM security_audit WHERE company_id='company-a' AND action='inventory.succeeded' AND target='configureExact'").get().count,1,'Exact inventory mutation is audited.');
-assert.equal((await(await call('inventory','GET',null,cookies.employee)).json()).exact.records.length,1,'Employees can read their company exact inventory.');
+assert.equal((await(await call('inventory','GET',null,cookies.employee)).json()).exact.records.length,2,'Employees can read their company exact inventory.');
 const a8Preview=await call('replenishment/review','GET',null,cookies.manager);
 assert.equal(a8Preview.status,200,'Manager may request a read-only A8 review.');
 assert.deepEqual(await a8Preview.json(),{kind:'unavailable',reason:'settings_missing'},'Missing planning settings remain a reviewable unavailable result.');

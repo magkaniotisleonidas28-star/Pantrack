@@ -3,7 +3,7 @@ import {D1SalesEventStore} from '@/lib/d1-sales-event-store';
 import {SALES_EVENT_CONTRACT,SalesIngestionService,type SalesActor,type SalesEventDraftV1,type SalesMappingPort,type SalesSourceBinding} from '@/lib/sales-ingestion';
 
 export type LocalSalesSource='manual'|'recipe_csv'|'mapped_csv'|'bridge';
-export type LocalSalesLine={recipeId?:string;mappingKey?:string;quantity:number};
+export type LocalSalesLine={recipeId?:string;mappingKey?:string;quantity:number;modifiers?:Array<{modifierId:string;perItem:number}>};
 
 const bindings:Record<LocalSalesSource,(companyId:string)=>SalesSourceBinding>={
  manual:companyId=>({kind:'manual',provider:'pantrack-manual',environment:'internal',connectionId:'manual-entry',merchantId:companyId,locationId:'default'}),
@@ -25,6 +25,10 @@ export class D1SalesMappingPort implements SalesMappingPort{
   try{const parsed=JSON.parse(row.data) as {recipeId?:unknown};return typeof parsed.recipeId==='string'&&parsed.recipeId?{status:'mapped' as const,recipeId:parsed.recipeId}:{status:'unknown_item' as const};}catch{return {status:'unknown_item' as const};}
  }
  async resolveModifier(input:{companyId:string;source:SalesSourceBinding;externalItemId:string;externalVariationId?:string;externalModifierId:string}){
+  if(input.source.provider==='pantrack-manual'){
+   const row=await this.db.prepare('SELECT 1 AS found FROM recipe_modifier_lineages WHERE company_id=? AND recipe_id=? AND id=?').bind(input.companyId,input.externalItemId,input.externalModifierId).first();
+   return row?{status:'mapped' as const,modifierId:input.externalModifierId}:{status:'unknown_modifier' as const};
+  }
   if(input.source.kind==='native'&&input.source.provider==='clover'){
    const row=await this.db.prepare('SELECT inventory_modifier_id FROM clover_modifier_mappings WHERE company_id=? AND environment=? AND merchant_id=? AND item_id=? AND modifier_id=?').bind(input.companyId,input.source.environment,input.source.merchantId,input.externalItemId,input.externalModifierId).first<{inventory_modifier_id:string}>();
    if(row)return {status:'mapped' as const,modifierId:row.inventory_modifier_id};
@@ -40,9 +44,17 @@ export async function ingestLocalSale(input:{db:D1Database;companyId:string;sour
  for(const reference of legacyReferences){if(await input.db.prepare('SELECT 1 AS found FROM sales_imports WHERE company_id=? AND reference=?').bind(input.companyId,reference).first())return {ok:true,replayed:true,legacy:true};}
  const source=bindings[input.source](input.companyId),service=d1SalesService(input.db),receivedAt=new Date();
  const occurrence=input.occurredAt??receivedAt.toISOString();
- const grouped=new Map<string,{externalItemId:string;quantity:bigint}>();
- for(const line of input.lines){const externalItemId=line.recipeId??line.mappingKey;if(!externalItemId)throw new Error('Every sale line requires a recipe or mapping identity.');const key=`${line.recipeId?'recipe':'mapping'}:${externalItemId}`,current=grouped.get(key);grouped.set(key,{externalItemId,quantity:(current?.quantity??BigInt(0))+BigInt(line.quantity)});}
- const normalizedLines=[...grouped].sort(([left],[right])=>left.localeCompare(right)).map(([,line],index)=>({externalLineId:`line-${index+1}`,externalItemId:line.externalItemId,quantity:String(line.quantity),modifiers:[]}));
+ const grouped=new Map<string,{externalItemId:string;quantity:bigint;modifiers:Array<{modifierId:string;perItem:number}>}>();
+ for(const line of input.lines){
+  const externalItemId=line.recipeId??line.mappingKey;
+  if(!externalItemId)throw new Error('Every sale line requires a recipe or mapping identity.');
+  const modifiers=[...(line.modifiers??[])].sort((a,b)=>a.modifierId.localeCompare(b.modifierId));
+  if(modifiers.length&&input.source!=='manual')throw new Error('Choices are supported in manual sales only.');
+  if(new Set(modifiers.map(m=>m.modifierId)).size!==modifiers.length||modifiers.some(m=>!Number.isInteger(m.perItem)||m.perItem<1||m.perItem>5))throw new Error('Check the choices for this sale.');
+  const key=JSON.stringify([line.recipeId?'recipe':'mapping',externalItemId,modifiers]),current=grouped.get(key);
+  grouped.set(key,{externalItemId,quantity:(current?.quantity??BigInt(0))+BigInt(line.quantity),modifiers});
+ }
+ const normalizedLines=[...grouped].sort(([left],[right])=>left.localeCompare(right)).map(([,line],index)=>({externalLineId:`line-${index+1}`,externalItemId:line.externalItemId,quantity:String(line.quantity),modifiers:line.modifiers.map((m,n)=>({externalModifierLineId:`modifier-${n+1}`,externalModifierId:m.modifierId,quantity:String(line.quantity*BigInt(m.perItem))}))}));
  const draft:SalesEventDraftV1={schemaVersion:SALES_EVENT_CONTRACT,externalEventId:input.reference,externalOrderId:input.reference,revision:1,eventType:'sale',orderStatus:'completed',preparationStatus:'fulfilled',occurredAt:occurrence,timeQuality:input.occurredAt?(input.source==='bridge'?'provider':'confirmed'):'inferred',lines:normalizedLines};
  const receipt=await service.receive({companyId:input.companyId,source,actor:input.actor},draft);
  if(receipt.kind==='created')await service.process(input.companyId,receipt.eventKey);
