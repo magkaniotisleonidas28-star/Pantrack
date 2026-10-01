@@ -12,7 +12,8 @@ const managedLinux = readExecutionProfile() === "managed-linux";
 export default defineConfig(async ({ command }) => {
   const a5LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_A5_REVIEW === "enabled";
   const w1LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_W1_REVIEW === "enabled";
-  const exactLocalReview = a5LocalReview || w1LocalReview;
+  const w2LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_W2_REVIEW === "enabled";
+  const exactLocalReview = a5LocalReview || w1LocalReview || w2LocalReview;
   return {
     server: {
       host: "127.0.0.1",
@@ -25,7 +26,7 @@ export default defineConfig(async ({ command }) => {
       cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
-        ...(exactLocalReview ? { persistState: { path: w1LocalReview ? ".sites-runtime/w1-review-state" : ".sites-runtime/a5-review-state" } } : {}),
+        ...(exactLocalReview ? { persistState: { path: w2LocalReview ? ".sites-runtime/w2-review-state" : w1LocalReview ? ".sites-runtime/w1-review-state" : ".sites-runtime/a5-review-state" } } : {}),
         // Development uses an isolated placeholder binding. Production builds
         // read the real development binding from the checked-in Wrangler file.
         ...(command === "serve"

@@ -6,7 +6,7 @@ mkdirSync('.sites-runtime',{recursive:true});
 for(const [name,path] of [['waste','src/lib/d1-waste.ts'],['management','src/lib/d1-inventory-management.ts'],['client','src/lib/waste-client.ts']])await build({entryPoints:[path],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/w1-'+name+'.mjs'});
 const {D1WasteService}=await import('../.sites-runtime/w1-waste.mjs');
 const {D1InventoryManagementService}=await import('../.sites-runtime/w1-management.mjs');
-const {sendWasteSave,wasteStorageKey}=await import('../.sites-runtime/w1-client.mjs');
+const {sendWasteSave,sendSaveRequest,wasteStorageKey}=await import('../.sites-runtime/w1-client.mjs');
 class Statement{
  constructor(db,query,values=[]){Object.assign(this,{db,query,values});}
  bind(...values){return new Statement(this.db,this.query,values);}
@@ -83,12 +83,14 @@ assert.equal((await sendWasteSave(pending,async()=>Response.json({error:'access 
 assert.equal((await sendWasteSave(pending,async()=>Response.json({code:'preview_disabled'},{status:404}))).kind,'uncertain');
 assert.equal((await sendWasteSave(pending,async()=>Response.json({error:'audit failed',uncertain:true},{status:503}))).kind,'uncertain');
 assert.equal((await sendWasteSave(pending,async()=>Response.json({code:'concurrent_update'},{status:409}))).refresh,true);
+for(const status of [400,404,409])assert.equal((await sendSaveRequest('/api/waste/entries',base,async(_,init)=>{assert.equal(init.body,JSON.stringify(base));return Response.json({error:'setup changed'},{status});},true)).kind,'uncertain','A later validation rejection cannot abandon an earlier ambiguous W2 identity.');
+const malformedClientAck=await sendSaveRequest('/api/waste/entries',base,async()=>new Response('not json',{status:200}));assert.equal(malformedClientAck.kind,'uncertain');
 assert.notEqual(wasteStorageKey('a','staff'),wasteStorageKey('b','staff'));assert.notEqual(wasteStorageKey('a','staff'),wasteStorageKey('a','other'));
 // Existing events survive the additive migration with no invented reason.
-const old=new DatabaseSync(':memory:');old.exec('PRAGMA foreign_keys=ON');for(const entry of journal.entries.slice(0,-1))old.exec(readFileSync('drizzle/'+entry.tag+'.sql','utf8'));
+const old=new DatabaseSync(':memory:');old.exec('PRAGMA foreign_keys=ON');for(const entry of journal.entries.filter(entry=>entry.idx<18))old.exec(readFileSync('drizzle/'+entry.tag+'.sql','utf8'));
 old.exec("INSERT INTO companies VALUES ('legacy','Legacy','now'); INSERT INTO products VALUES ('legacy','milk','{}');");
 const oldManagement=new D1InventoryManagementService(new Database(old));await oldManagement.configure({companyId:'legacy',productId:'milk',operationId:'old-config',actor:'manager',stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'1000',effectiveAt:'2026-01-01T00:00:00Z'});
 const oldConfig=old.prepare('SELECT config_id FROM inventory_balances_exact').get().config_id;
 old.prepare(`INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note) VALUES ('legacy','old-waste','milk',?,'waste','volume','-1','0.000001','mL',1,2,'2026-02-01','2026-02-01','manager','old')`).run(oldConfig);
-old.exec(readFileSync('drizzle/'+journal.entries.at(-1).tag+'.sql','utf8'));assert.equal(old.prepare('SELECT waste_reason FROM inventory_events_exact').get().waste_reason,null);old.close();sql.close();
+old.exec(readFileSync('drizzle/'+journal.entries.find(entry=>entry.idx===18).tag+'.sql','utf8'));assert.equal(old.prepare('SELECT waste_reason FROM inventory_events_exact').get().waste_reason,null);old.close();sql.close();
 console.log('PASS: W1 exact waste, structured reasons, concurrency, unknown outcomes, shortcuts, unit projections, privacy, browser retry contracts, and additive migration compatibility.');

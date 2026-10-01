@@ -2,6 +2,7 @@ import {z} from 'zod';
 import type {WasteReason} from './inventory-management-contract';
 
 export const WASTE_REASONS: ReadonlyArray<{id:WasteReason;label:string}> = [
+  {id:'end_of_day',label:'End of day / unsold'},
   {id:'spilled',label:'Spilled'},
   {id:'spoiled',label:'Spoiled / expired'},
   {id:'preparation_error',label:'Preparation error'},
@@ -13,7 +14,7 @@ export const wasteSubmission=z.object({
   companyId:identity,productId:identity,operationId:z.string().uuid(),
   expectedVersion:z.number().int().nonnegative().safe(),amount,unitId:identity,
   effectiveAt:z.string().min(20).max(35),
-  reason:z.enum(['spilled','spoiled','preparation_error','other']),
+  reason:z.enum(['end_of_day','spilled','spoiled','preparation_error','other']),
   note:z.string().trim().max(300),
 }).strict();
 export type WasteSubmission=z.infer<typeof wasteSubmission>;

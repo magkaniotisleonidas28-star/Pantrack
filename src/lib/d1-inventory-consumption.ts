@@ -9,6 +9,16 @@ import {
   type SelectedRecipeVersion,
   type UnitDimension,
 } from '@/lib/inventory-consumption-contract';
+import type {WasteReason} from './inventory-management-contract';
+
+/** Internal atomic waste adapter. The public sales port and v1 wire contract
+ * remain unchanged. Only trusted server code supplies these batch statements. */
+export type WasteInventoryContext={
+  actor:string;reason:WasteReason;fingerprint:string;
+  directProductId?:string;
+  guards?:Array<{sql:string;values:unknown[]}>;
+  statements(result:InventoryConsumptionApplied,claimToken:string):D1PreparedStatement[];
+};
 
 const ZERO = BigInt(0);
 const ONE = BigInt(1);
@@ -299,7 +309,12 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     return this.consumeAttempt(request, 0);
   }
 
-  private async consumeAttempt(request: InventoryConsumptionRequest, retryCount: number): Promise<InventoryConsumptionResult> {
+  async consumeWaste(request:InventoryConsumptionRequest,context:WasteInventoryContext):Promise<InventoryConsumptionResult>{
+    if(!request.idempotencyKey.startsWith('waste:')||!context.actor||!context.fingerprint)throw new InventoryConsumptionPersistenceError('Waste context identity is invalid.');
+    return this.consumeAttempt(request,0,context);
+  }
+
+  private async consumeAttempt(request: InventoryConsumptionRequest, retryCount: number, waste?:WasteInventoryContext): Promise<InventoryConsumptionResult> {
     const base = this.base(request);
     if (request.contract !== INVENTORY_CONSUMPTION_CONTRACT) {
       return this.rejected(request, {code: 'invalid_contract', message: 'Unsupported inventory consumption contract.'});
@@ -345,7 +360,7 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
       }
     }
 
-    const fingerprint = await sha256(canonicalRequest(request, normalizedOccurredAt));
+    const fingerprint = await sha256(canonicalRequest(request, normalizedOccurredAt)+(waste?JSON.stringify({waste:waste.fingerprint}):''));
     const alreadyApplied = await this.existing(request, fingerprint);
     if (alreadyApplied) return alreadyApplied;
 
@@ -372,7 +387,10 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
       target.set(productId, {dimension: quantity.dimension, minor: next, lineId: prior?.lineId ?? lineId});
     };
 
-    for (const line of request.lines) {
+    if(waste?.directProductId){
+      add(aggregates,waste.directProductId,{dimension:'count',minor:request.lines[0].quantity},ONE,request.lines[0].lineId);
+    }
+    for (const line of waste?.directProductId?[]:request.lines) {
       const recipe = await this.selectedVersion('recipe_versions', request, line.recipeId, occurredAt);
       if (!recipe) {
         issues.push({code: 'recipe_version_not_found', message: 'No recipe version covers the occurrence time.', lineId: line.lineId, recipeId: line.recipeId});
@@ -440,6 +458,7 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
       if (occurredAt <= cutoff) {
         issues.push({code: 'before_count_cutoff', message: 'Sale occurred at or before the latest physical count.', lineId: aggregate.lineId, productId});
       }
+      if(waste&&aggregate.minor>balance.onHand)return this.rejected(request,{code:'invalid_quantity',message:'Quantity exceeds recorded stock. Ask a manager to check the stock count.',productId});
     }
     if (issues.length) return {...base, status: 'held', issues};
 
@@ -485,6 +504,7 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     const appliedAt = now.toISOString();
     const guardSql: string[] = [];
     const guardValues: unknown[] = [];
+    for(const guard of waste?.guards??[]){guardSql.push(guard.sql);guardValues.push(...guard.values);}
     for (const change of changes) {
       guardSql.push('EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=?)');
       guardValues.push(request.companyId, change.productId, change.versionBefore);
@@ -515,13 +535,13 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
         ),
         this.db.prepare(`INSERT INTO inventory_events_exact(
           company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,
-          balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key
-        ) SELECT ?,?,?,?,?,?,?,NULL,NULL,?,?,?,?,?,?,? WHERE EXISTS(
+          balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason
+        ) SELECT ?,?,?,?,?,?,?,NULL,NULL,?,?,?,?,?,?,?,? WHERE EXISTS(
           SELECT 1 FROM inventory_consumption_applications WHERE company_id=? AND idempotency_key=? AND result_json=?
         )`).bind(
-          request.companyId,this.idFactory(),change.productId,balance.config_id,'sale_consumption',change.consumed.dimension,
+          request.companyId,this.idFactory(),change.productId,balance.config_id,waste?'waste':'sale_consumption',change.consumed.dimension,
           `-${change.consumed.minor}`,change.versionBefore,change.versionAfter,normalizedOccurredAt,appliedAt,
-          'sales-ingestion','',request.idempotencyKey,request.companyId,request.idempotencyKey,resultJson,
+          waste?.actor??'sales-ingestion','',request.idempotencyKey,waste?.reason??null,request.companyId,request.idempotencyKey,resultJson,
         ),
       );
       const legacy = legacyUpdates.get(change.productId);
@@ -535,13 +555,15 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
         ));
       }
     }
+    if(waste)statements.push(...waste.statements(result,claimToken));
     await this.db.batch(statements);
 
     const stored = await this.db.prepare(`SELECT request_fingerprint,result_json FROM inventory_consumption_applications
       WHERE company_id=? AND idempotency_key=?`).bind(request.companyId, request.idempotencyKey).first<ApplicationRow>();
     if (!stored) {
+      if(waste)throw new InventoryConsumptionPersistenceError('Waste stock changed before commit. Confirm this same entry again.');
       if (retryCount >= 2) throw new InventoryConsumptionPersistenceError('Inventory kept changing while consumption was being applied.');
-      return this.consumeAttempt(request, retryCount + 1);
+      return this.consumeAttempt(request, retryCount + 1,waste);
     }
     if (stored.request_fingerprint !== fingerprint) {
       return this.rejected(request, {code: 'idempotency_conflict', message: 'Idempotency key was already applied with different input.'});

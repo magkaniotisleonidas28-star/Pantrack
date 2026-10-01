@@ -32,6 +32,8 @@ this file concise; detailed workflow and prompt templates live in
 - Never expose or commit secrets, tokens, payment details, or customer data.
 - Make schema changes through new migrations. Never rewrite a used migration.
   Only one schema-bearing change may use the migration merge queue at a time.
+- For scripted source edits, check match counts and inspect the changed block
+  before verification.
 - Prefer a focused module and focused test over unrelated refactoring. Identify
   handoffs before changing another workstream's files, self-review the diff, and
   verify affected contracts. Coordinate shared-file merges; a second person's

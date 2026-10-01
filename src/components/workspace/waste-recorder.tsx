@@ -8,7 +8,7 @@ import {AlertDialog,AlertDialogContent,AlertDialogTitle,AlertDialogDescription,A
 import {WASTE_REASONS,shortcutSubmission,wasteSubmission,type WasteOptions,type WasteShortcut} from '@/lib/waste-contract';
 import {sendWasteSave,wasteStorageKey,type PendingWasteSave} from '@/lib/waste-client';
 
-export default function WasteRecorder({companyId,email,role,onDirtyChange,onSaved}:{companyId:string;email:string;role:string;onDirtyChange:(dirty:boolean)=>void;onSaved?:()=>void}){
+export default function WasteRecorder({companyId,email,role,onDirtyChange,onSaved,launchCount=0,showButton=true}:{companyId:string;email:string;role:string;onDirtyChange:(dirty:boolean)=>void;onSaved?:()=>void;launchCount?:number;showButton?:boolean}){
   const [enabled,setEnabled]=useState(false),[open,setOpen]=useState(false),[options,setOptions]=useState<WasteOptions|null>(null),[loading,setLoading]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [search,setSearch]=useState(''),[productId,setProductId]=useState(''),[amount,setAmount]=useState(''),[reason,setReason]=useState(''),[note,setNote]=useState('');
   const [favorites,setFavorites]=useState<string[]>([]),[recent,setRecent]=useState<string[]>([]),[pending,setPending]=useState<PendingWasteSave|null>(null),[busy,setBusy]=useState(false),[saved,setSaved]=useState(false),[discard,setDiscard]=useState(false);
@@ -50,6 +50,7 @@ export default function WasteRecorder({companyId,email,role,onDirtyChange,onSave
     }catch{/* Invalid browser data is never submitted to the server. */}
   },[companyId,email]);
   useEffect(()=>{onDirtyChange(dirty);},[dirty,onDirtyChange]);
+  useEffect(()=>{if(launchCount>0)close(true);},[launchCount]);
   useEffect(()=>{if(!dirty)return;const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty]);
   function remember(favoriteIds:string[],recentIds:string[]){setFavorites(favoriteIds);setRecent(recentIds);try{localStorage.setItem(storageKey,JSON.stringify({favorites:favoriteIds,recent:recentIds}));}catch{}}
   function freeze(save:PendingWasteSave){
@@ -86,7 +87,7 @@ export default function WasteRecorder({companyId,email,role,onDirtyChange,onSave
   const recentItems=recent.map(id=>visible.find(i=>i.productId===id)).filter(i=>i&&!favorites.includes(i.productId));
   function ingredientButtons(items:typeof visible){return items.map(i=><div className="waste-ingredient" key={i.productId}><button type="button" onClick={()=>{setProductId(i.productId);setAmount('');setError('');}}>{i.name}<small>{i.unitLabel}</small></button><button type="button" aria-label={(favorites.includes(i.productId)?'Unfavorite ':'Favorite ')+i.name} aria-pressed={favorites.includes(i.productId)} onClick={()=>remember(favorites.includes(i.productId)?favorites.filter(id=>id!==i.productId):[...favorites,i.productId],recent)}><Star size={18} fill={favorites.includes(i.productId)?'currentColor':'none'}/></button></div>);}
   return <>
-    <Button type="button" variant="outline" className="waste-entry-button" onClick={()=>close(true)}><Trash2 size={17}/>Record waste</Button>
+    {showButton&&<Button type="button" variant="outline" className="waste-entry-button" onClick={()=>close(true)}><Trash2 size={17}/>Record ingredient waste</Button>}
     <Sheet open={open} onOpenChange={close}><SheetContent className="waste-sheet" showCloseButton={!frozen}>
       <SheetTitle>Record waste</SheetTitle><SheetDescription>Ingredients only · stock is updated when your save is confirmed.</SheetDescription>
       {notice&&<p role="status">{notice}</p>}

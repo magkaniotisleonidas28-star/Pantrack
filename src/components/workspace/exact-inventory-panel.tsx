@@ -23,13 +23,13 @@ const formatPlanningValue=(value:number)=>{
 };
 const occurrence=(value:string)=>new Date(value).toISOString();
 
-export default function ExactInventoryPanel({companyId,products,role,view,legacyRecords,now,hasDraft,onStage,loading,onReload,section}:{
-  section:InventorySection;companyId:string;products:Product[];role:string;view:InventoryManagementView;legacyRecords:InventoryRecord[];now:number;hasDraft:boolean;
+export default function ExactInventoryPanel({companyId,products,role,view,legacyRecords,now,hasDraft,onStage,loading,onReload,section,focusProductId}:{
+  section:InventorySection;focusProductId?:string;companyId:string;products:Product[];role:string;view:InventoryManagementView;legacyRecords:InventoryRecord[];now:number;hasDraft:boolean;
   onStage:(quantities:Record<string,number>)=>void;loading:boolean;onReload:()=>Promise<void>;
 }){
   const canManage=role==='owner'||role==='manager';
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
-  const [productId,setProductId]=useState(products[0]?.id||''),[unitId,setUnitId]=useState<CuratedUnitId>('each');
+  const [productId,setProductId]=useState(focusProductId||products[0]?.id||''),[unitId,setUnitId]=useState<CuratedUnitId>('each');
   const [custom,setCustom]=useState(false),[customId,setCustomId]=useState(''),[customLabel,setCustomLabel]=useState(''),[dimension,setDimension]=useState<'count'|'mass'|'volume'>('count'),[numerator,setNumerator]=useState('1'),[denominator,setDenominator]=useState('1');
   const [purchaseLabel,setPurchaseLabel]=useState('case'),[purchaseAmount,setPurchaseAmount]=useState('1'),[openingAmount,setOpeningAmount]=useState(''),[effectiveAt,setEffectiveAt]=useState(localNow());
   const [movementProduct,setMovementProduct]=useState(view.records[0]?.productId||''),[movement,setMovement]=useState<'count'|'receive'|'use'|'waste'|'incoming'>('count'),[movementAmount,setMovementAmount]=useState(''),[movementAt,setMovementAt]=useState(localNow()),[note,setNote]=useState('');

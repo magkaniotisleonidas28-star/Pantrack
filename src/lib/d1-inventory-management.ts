@@ -312,7 +312,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
     if(!validId(input.operationId)||!validId(input.actor)||!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<0)throw new InventoryManagementError('invalid_input','Operation identity, actor, and expected version are required.');
     const effectiveAt=this.normalizedTime(input.effectiveAt);
     const eventId=`movement:${input.operationId}`;
-    if(input.wasteReason!==undefined&&(input.action!=='waste'||!['spilled','spoiled','preparation_error','other'].includes(input.wasteReason)))throw new InventoryManagementError('invalid_input','Select a valid waste reason.');
+    if(input.wasteReason!==undefined&&(input.action!=='waste'||!['end_of_day','spilled','spoiled','preparation_error','other'].includes(input.wasteReason)))throw new InventoryManagementError('invalid_input','Select a valid waste reason.');
     const storedMovement=()=>this.db.prepare(`SELECT product_id,action,entered_amount,entered_unit_id,balance_version_before,effective_at,actor,note,waste_reason
       FROM inventory_events_exact WHERE company_id=? AND id=?`).bind(input.companyId,eventId).first<StoredMovementRow>();
     const verifyMovement=(stored:StoredMovementRow)=>{

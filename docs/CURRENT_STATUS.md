@@ -149,7 +149,7 @@ supplier credentials, or payment details into chat or source control.
 
 ## What you need to do next
 
-Current focus: **W1 quick ingredient-waste local review** and
+Current focus: **W1/W2 café-item waste local review** and
 **C3 Baldor supplier preparation**. The
 [waste/menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md) now has a
 [working W1 local preview](W1_LOCAL_EVIDENCE.md): staff can record a quantity
@@ -162,8 +162,13 @@ review and sending. The owner reports a NYC café with an existing Baldor
 account for a later pilot; it has not been accessed or independently verified.
 **B8 is on hold while Toast reviews the application submitted on 2026-09-30.**
 Resume B8 on a request for information or an approved testing-access handoff.
-Prepared-item waste and margin features remain planned. The next unblocked
-step is the W1 usability review, then a separate W2 prepared-item waste outcome.
+[W2 café-item waste](W2_LOCAL_EVIDENCE.md) is now implemented locally: a dedicated
+Waste page supports bought ready-made food counts, recipe/modifier ingredients,
+already-counted sale classification, additional replacements and manager review
+for missing sales. Migration `0019` was applied locally only; the full pipeline
+and fictional Safari walkthroughs passed. Worker usability, full accessibility
+and owner acceptance remain open. Margin features remain planned. The next
+unblocked step is a W1/W2 usability review, then a separate P1 cost foundation.
 Supplier submission remains disabled.
 
 1. C2's [development closeout](C2_M2_CLOSEOUT.md) now records the owner's
@@ -324,6 +329,7 @@ limited automation.
 - [C3 Baldor supplier preparation](C3_BALDOR_PREPARATION.md)
 - [Quick waste recording and menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md)
 - [W1 quick ingredient-waste local evidence](W1_LOCAL_EVIDENCE.md)
+- [W2 café-item waste local evidence](W2_LOCAL_EVIDENCE.md)
 - [September 19 readiness snapshot and approved M2 permissions](MILESTONE_READINESS.md)
 - [Full milestone roadmap](PANTRACK_MILESTONES.md)
 - [Branch consolidation record](BRANCH_CONSOLIDATION.md)

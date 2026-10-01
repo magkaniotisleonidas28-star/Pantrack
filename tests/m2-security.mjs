@@ -11,7 +11,7 @@ globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
 const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review','replenishment/proposals','waste','waste/shortcuts'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
+for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review','replenishment/proposals','waste','waste/shortcuts','waste/items','waste/entries','waste/sales','waste/setup','waste/review'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
  const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
@@ -243,6 +243,42 @@ assert.equal(wasteEvent.waste_reason,'spilled');
 assert.equal(sql.prepare("SELECT count(*) AS n FROM security_audit WHERE company_id='company-a' AND action='waste.succeeded'").get().n,2,'Waste mutations are audited.');
 assert.equal((await call('waste','POST',wasteRequest,'expired-cookie')).status,401,'Expired session never claims success.');
 assert.equal((await call('inventory','POST',{companyId:'company-a',action:'movementExact',movement:'waste'},cookies.employee)).status,403,'Broad inventory writes remain forbidden.');
+
+// W2 reuses narrow staff waste access, never broader inventory or finance access.
+for(const [route,methods] of [['waste/items',['GET']],['waste/sales',['GET']],['waste/entries',['POST']],['waste/setup',['POST']],['waste/review',['GET','POST']]]) {
+ for(const method of methods) {
+  const body=method==='POST'?{companyId:'company-a'}:null;
+  assert.equal((await call(route,method,body)).status,401,route+' anonymous '+method);
+  assert.equal((await call(route,method,body,cookies.other)).status,403,route+' wrong company '+method);
+  if(method==='POST')assert.equal((await call(route,method,body,cookies.owner,{Origin:'https://evil.test'})).status,403,route+' CSRF');
+  if(route==='waste/setup'||route==='waste/review')assert.equal((await call(route,method,body,cookies.employee)).status,403,route+' forbidden employee '+method);
+  globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='';
+  assert.equal((await call(route,method,body,cookies.owner)).status,404,route+' preview off');
+  globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
+ }
+}
+const menuOptionsResponse=await call('waste/items','GET',null,cookies.employee);
+assert.equal(menuOptionsResponse.status,200);assert.match(menuOptionsResponse.headers.get('Cache-Control'),/no-store/);
+const menuOptions=await menuOptionsResponse.json();
+assert.ok(!/price|cost|actor|email|payment|audit|onHand|supplier/.test(JSON.stringify(menuOptions)));
+const menuRecipe=menuOptions.items.find(i=>i.kind==='recipe'&&i.id===exactRecipeId);
+const menuRequest={companyId:'company-a',operationId:crypto.randomUUID(),sourceKind:'recipe',sourceId:exactRecipeId,sourceVersion:menuRecipe.version,quantity:1,reason:'end_of_day',note:'',mode:'unsold',effectiveAt:new Date().toISOString(),modifiers:[]};
+for(const changed of [{actor:accounts.owner.id},{quantity:0.5},{reason:'unknown'},{mode:'receive'}])assert.equal((await call('waste/entries','POST',{...menuRequest,...changed},cookies.employee)).status,400,'Invalid/privileged menu fields rejected.');
+const menuSaved=await call('waste/entries','POST',menuRequest,cookies.employee);
+assert.equal(menuSaved.status,200,await menuSaved.clone().text());assert.match(menuSaved.headers.get('Cache-Control'),/no-store/);
+assert.equal((await menuSaved.json()).result.status,'deducted');
+assert.equal((await call('waste/entries','POST',menuRequest,cookies.employee)).status,200,'Menu retry applies once.');
+assert.equal((await call('waste/entries','POST',{...menuRequest,note:'changed'},cookies.employee)).status,409);
+assert.equal(sql.prepare('SELECT actor FROM waste_entries WHERE company_id=? AND id=?').get('company-a',menuRequest.operationId).actor,accounts.employee.id);
+assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company-a' AND action='waste.succeeded' AND target=?").get(menuRequest.operationId).n,2,'Menu save/retry audited by operation reference.');
+assert.equal((await call('waste/entries','POST',menuRequest,'expired-cookie')).status,401,'Expired menu save cannot claim success.');
+const menuSetup={companyId:'company-a',productId:'milk',offered:true,expectedRevision:0,operationId:crypto.randomUUID()};
+assert.equal((await call('waste/setup','POST',menuSetup,cookies.manager)).status,200);
+assert.equal((await call('waste/setup','POST',menuSetup,cookies.manager)).status,200);
+assert.equal((await call('waste/review','GET',null,cookies.manager)).status,200);
+const narrowSalesReq=req('waste/sales','GET',null,cookies.employee);const narrowSalesUrl=new URL(narrowSalesReq.url);narrowSalesUrl.searchParams.set('sourceKind','recipe');narrowSalesUrl.searchParams.set('sourceId',exactRecipeId);
+const narrowSales=await modules['waste/sales'].GET(new Request(narrowSalesUrl,{headers:narrowSalesReq.headers}));assert.equal(narrowSales.status,200);
+assert.ok(!JSON.stringify(await narrowSales.json()).includes(privateReference),'Sale choices do not expose provider references.');
 
 // Direct hostile hosting headers never create identity.
 assert.equal((await call('companies','GET',null,'',{'oai-authenticated-user-id':accounts.owner.id,'oai-authenticated-user-email':accounts.owner.email,'x-pantrack-local-stamp':String(Date.now()),'x-pantrack-local-signature':'ab'.repeat(32)})).status,401);

@@ -326,7 +326,7 @@ body[data-workspace-theme=light] .membership-details [data-variant=default] {
 }
 body[data-workspace-theme=light] .membership-details [data-variant=default]:hover { background: #2b6b51; }
 
-.sidebar-workspace[data-workspace-theme=dark] {
+:is(.sidebar-workspace,.employee-workspace)[data-workspace-theme=dark] {
   color-scheme: dark;
   --background: var(--workspace-dark-canvas); --foreground: #eaf3ec;
   --card: #1d2a23; --card-foreground: #eaf3ec;
@@ -454,4 +454,42 @@ body[data-workspace-theme=dark] .waste-error { background: #4b2928; color: #ffce
   .topbar { flex-wrap: wrap; }
   .sidebar-workspace .topbar { height: auto; min-height: 60px; padding: 8px 16px; row-gap: 8px; }
   .topbar .waste-entry-button { order: 3; margin: 4px 0; }
+}
+
+/* One shared recorder serves the Waste page and the quick drawer. */
+.menu-waste-content { display: grid; gap: 16px; max-width: 860px; }
+.menu-waste-content :is(h2,h3,p) { margin: 0; }
+.menu-waste-content h2 { font-size: 22px; font-weight: 650; }
+.menu-waste-content h3 { font-size: 15px; font-weight: 650; margin-bottom: 12px; }
+.menu-waste-content label { display: grid; gap: 8px; font-size: 14px; font-weight: 550; }
+.menu-waste-content :is(input,textarea,select) { min-height: 46px; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--foreground); }
+.menu-waste-content fieldset { display: grid; gap: 16px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.menu-waste-content legend { margin-bottom: 10px; font-size: 14px; font-weight: 550; }
+.menu-waste-item { display: flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: var(--background); }
+.menu-waste-item button { min-height: 52px; padding: 12px; border-radius: 10px; }
+.menu-waste-item button:first-child { flex: 1; text-align: left; min-width: 180px; }
+.menu-waste-item small { display: block; color: var(--muted-foreground); font-size: 12px; margin-top: 4px; }
+.menu-waste-item button:hover { background: var(--accent); }
+.menu-waste-content button:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.menu-waste-content button[aria-pressed=true] { background: var(--accent); border-color: var(--primary); color: var(--primary); }
+.menu-waste-setup { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
+.menu-waste-setup article, .menu-waste-review { display: grid; gap: 14px; border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: var(--background); }
+.menu-waste-setup button { white-space: normal; height: auto; min-height: 46px; }
+.menu-waste-page .waste-actions { bottom: 0; border-top: 1px solid var(--border); z-index: 1; }
+.menu-waste-content .waste-shortcuts { grid-template-columns: repeat(3,1fr); }
+.employee-section-nav { display: flex; gap: 8px; margin-bottom: 16px; }
+@media(max-width:640px) { .menu-waste-setup { grid-template-columns: 1fr; } .menu-waste-item button:first-child { min-width: 150px; } }
+
+.menu-waste-content button:not([data-variant=default]) { background: var(--background); color: var(--foreground); border-color: var(--border); }
+.menu-waste-content button[data-variant=default] { background: var(--primary); color: var(--primary-foreground); }
+.menu-waste-content button[aria-pressed=true] { background: var(--accent); color: var(--primary); border-color: var(--primary); }
+body[data-workspace-theme=dark] .waste-entry-button { background: #1d2a23; color: #eaf3ec; border-color: #45604c; }
+:is(.sidebar-workspace,.employee-workspace)[data-workspace-theme=light] {
+  color-scheme: light; --background: #f0f2f1; --foreground: #172c26;
+  --primary: #215743; --primary-foreground: #fff;
+  --secondary: #edf0ee; --secondary-foreground: #172c26;
+  --muted: #edf0ee; --muted-foreground: #66736b;
+  --accent: #eaf2ed; --accent-foreground: #215743;
+  --border: #dce5df; --input: #dce5df; --ring: #215743;
+  background: var(--background); color: var(--foreground);
 }

@@ -220,6 +220,48 @@ export const wasteShortcuts=sqliteTable('waste_shortcuts',{
  foreignKey({columns:[t.companyId,t.productId,t.configId],foreignColumns:[inventoryConfigVersions.companyId,inventoryConfigVersions.productId,inventoryConfigVersions.id]}),
 ]);
 
+export const wasteMenuProducts=sqliteTable('waste_menu_products',{
+ companyId:text('company_id').notNull(),productId:text('product_id').notNull(),
+ offered:integer('offered').notNull(),revision:integer('revision').notNull(),
+ operationId:text('operation_id').notNull(),updatedBy:text('updated_by').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.productId]}),
+ uniqueIndex('waste_menu_product_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+]);
+
+export const wasteEntries=sqliteTable('waste_entries',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
+ fingerprint:text('fingerprint').notNull(),requestJson:text('request_json').notNull(),
+ sourceKind:text('source_kind').notNull(),sourceId:text('source_id').notNull(),itemName:text('item_name').notNull(),
+ quantity:integer('quantity').notNull(),reason:text('reason').notNull(),mode:text('mode').notNull(),
+ actor:text('actor').notNull(),occurredAt:text('occurred_at').notNull(),recordedAt:text('recorded_at').notNull(),
+ status:text('status').notNull(),resultJson:text('result_json').notNull(),claimToken:text('claim_token').notNull(),
+ consumptionKey:text('consumption_key'),
+},t=>[
+ primaryKey({columns:[t.companyId,t.id]}),index('waste_entry_company_time').on(t.companyId,t.recordedAt),
+ foreignKey({columns:[t.companyId,t.consumptionKey],foreignColumns:[inventoryConsumptionApplications.companyId,inventoryConsumptionApplications.idempotencyKey]}),
+]);
+
+export const wasteSaleAllocations=sqliteTable('waste_sale_allocations',{
+ companyId:text('company_id').notNull(),applicationKey:text('application_key').notNull(),lineId:text('line_id').notNull(),
+ capacity:integer('capacity').notNull(),claimed:integer('claimed').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.applicationKey,t.lineId]}),
+ foreignKey({columns:[t.companyId,t.applicationKey],foreignColumns:[inventoryConsumptionApplications.companyId,inventoryConsumptionApplications.idempotencyKey]}),
+]);
+
+export const wasteSaleLinks=sqliteTable('waste_sale_links',{
+ companyId:text('company_id').notNull(),entryId:text('entry_id').notNull(),
+ applicationKey:text('application_key').notNull(),lineId:text('line_id').notNull(),
+ operationId:text('operation_id').notNull(),fingerprint:text('fingerprint').notNull(),
+ resultJson:text('result_json').notNull(),claimToken:text('claim_token').notNull(),linkedBy:text('linked_by').notNull(),linkedAt:text('linked_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.entryId]}),uniqueIndex('waste_sale_link_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.entryId],foreignColumns:[wasteEntries.companyId,wasteEntries.id]}),
+ foreignKey({columns:[t.companyId,t.applicationKey,t.lineId],foreignColumns:[wasteSaleAllocations.companyId,wasteSaleAllocations.applicationKey,wasteSaleAllocations.lineId]}),
+]);
+
 export const recipeLineages=sqliteTable('recipe_lineages',{
  companyId:text('company_id').notNull().references(()=>companies.id),
  id:text('id').notNull(),

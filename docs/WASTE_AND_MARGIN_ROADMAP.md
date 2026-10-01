@@ -1,7 +1,7 @@
 # Quick waste recording and menu analysis roadmap
 
-Prepared and updated: 2026-09-30. Status: W1 implemented for local review;
-W2/W3 and P1–P4 remain planned. The owner approved a roadmap alongside
+Prepared and updated: 2026-09-30. Status: W1/W2 implemented for local review;
+W3 and P1–P4 remain planned. The owner approved a roadmap alongside
 [C3 Baldor preparation](C3_BALDOR_PREPARATION.md).
 
 ## Goal and starting point
@@ -42,8 +42,8 @@ not rename the existing A/B/C milestone checklist or reopen accepted M3/M4 work.
 | P3 — Sales and waste analysis | B revenue handoff; A reporting; C price-source handoff | Popularity, contribution estimates, price trends, waste trends | Validated revenue and coverage before actual period results; waste is not charged twice |
 | P4 — Business profitability | Owner chooses expense sources; A/C implement | Labor, rent, utilities, other expenses | Separate scope and accounting rules agreed before implementation |
 
-While supplier access is pending, W1 usability review is the next unblocked
-product step, followed by a separate W2 outcome. Keep
+While supplier access is pending, W1/W2 worker usability review is the next
+unblocked product step, followed by a separate P1 cost-foundation outcome. Keep
 Baldor inquiry preparation and local development independent. M7/A8 acceptance
 and approved supplier access still gate C5/M8; this roadmap bypasses no existing
 pilot or production requirement.
@@ -99,7 +99,26 @@ panel open to confirmed save, aiming for roughly 10 seconds. Review keyboard,
 touch, loading/empty/error/success states, light/dark themes, and phone/tablet
 layouts. Record actual timings; the target is not proof of usability yet.
 
-## W2 — Prepared items without duplicate ingredient use
+## W2 — Café items without duplicate ingredient use
+
+**Local status:** [W2 implementation and evidence](W2_LOCAL_EVIDENCE.md) cover a
+dedicated Waste page, bought ready-made item setup/counts, immutable recipe and
+modifier waste, and guarded sold-unit classification. All 36 local suites and
+the complete pipeline passed. Fictional Safari evidence includes purchased
+items, recipe effects, sold classification, delayed-sale review, shared drafts,
+staff restrictions, themes and phone/tablet layouts. No hosted/provider or pilot
+acceptance is claimed.
+
+- [x] Implement café-item setup, atomic waste and sold-unit allocation locally.
+- [x] Verify route security, retry/rollback contracts and fictional served screens.
+- [ ] Complete worker usability and full accessibility/recovery walkthroughs.
+- [ ] Record owner acceptance of the reviewed W2 scope.
+
+Common flow: **Waste → café item → count → reason → Save**. For newly added
+croissants/bagels, a manager uses **Item setup → Bought ready-made café item**,
+then **Set up stock count** with `each`, quantity per box and an opening count.
+Already counted sales are classified without another deduction; extra
+replacements are additional use. Missing sales go to **Needs review**.
 
 Use active recipe and modifier versions to explain the ingredients for an
 unsold or additionally prepared wasted item. Save all ingredient effects and
@@ -174,8 +193,8 @@ ingredient-only calculations.
 
 - W1 introduces narrow company-scoped waste access and additive migration
   `0018`; its local contracts and compatibility are in the evidence record.
-  W2 coordinates consumption
-  identities with B; P1 adds dated cost records; P3 publishes a revenue contract.
+  W2 adds migration `0019` and coordinates consumption identities and the
+  correction exclusion guard with B; P1 adds dated cost records; P3 publishes a revenue contract.
 - Preserve accepted inventory/sales semantics. New persisted records use new
   additive migrations through the single schema merge queue, never reserved
   migration numbers or rewritten used migrations.
