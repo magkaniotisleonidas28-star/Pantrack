@@ -85,8 +85,10 @@ passed, and viewing it changed no stock or recipe. The complete local pipeline
 passed again for A5.
 This opened M3's prerequisite for B5; M4's subsequent local acceptance is
 recorded below. Development D1 and the Worker now have separate
-[hosted validation evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview is
-off again after the fictional walkthrough. The owner authorized a `main` push
+[hosted validation evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview was
+off again after that fictional walkthrough; the [W1/W2 release](C2_W2_HOSTED_RELEASE.md)
+now enables it for hosted development usability review. The owner authorized
+a `main` push
 even if the replacement Cloudflare connection auto-deploys.
 
 ## M4 local-development acceptance
@@ -104,9 +106,18 @@ walkthrough found and fixed a D1 batch-acknowledgment defect during held-event
 replay. Native Clover authentication and signatures and Clover sandbox cases
 remain unverified. Development D1 `0012` and a fictional hosted Worker
 walkthrough have now been verified separately in
-[C2 evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview is off remotely.
+[C2 evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview is now enabled
+for the [W1/W2 hosted release](C2_W2_HOSTED_RELEASE.md); Clover sync stays off.
 
 ## Deployment health
+
+On 2026-10-01, the [C2 W1/W2 release](C2_W2_HOSTED_RELEASE.md) deployed
+Waste, recipe/stock setup and package measurements through `d84078e` to
+`pantrack-dev`. Development D1 now has `0000`–`0021` applied, with a private
+backup, verified trigger-import recovery and unchanged inventory/history.
+Exact inventory is enabled for hosted usability review; Clover sales sync,
+supplier submission and automatic purchasing remain disabled. The complete
+local pipeline and signed-in fictional hosted form/theme checks passed.
 
 On 2026-09-23, the new development D1 database in Cloudflare account
 `46a94b92309dd488dadd02f6ae70e0ff` was migrated through `0011`. Wrangler
@@ -141,7 +152,7 @@ environment until separately reviewed release evidence exists.
 | --- | --- | --- |
 | GitHub | Repository connected; milestone branches consolidated into `main`; earlier Ubuntu and Windows CI runs passed. | Keep `main` as the only long-lived branch. Preserve required checks on new commits. |
 | Supabase | The owner accepted the development-provider manual walkthrough using fictional accounts and reports completing the authentication and migration review. The [C2 closeout](C2_M2_CLOSEOUT.md) records that report and an agent inspection. Automated provider tests remain separate. | Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
-| Cloudflare | The earlier replacement build report is owner-attested. Development D1 has advanced through B7 `0015`; the deployed `pantrack-dev` Worker passed a fictional hosted walkthrough and the later C2 read-only smoke. See [C2 evidence](C2_HOSTED_DEV_EVIDENCE.md) and [closeout](C2_M2_CLOSEOUT.md). | Keep the exact preview off. Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
+| Cloudflare | The earlier replacement build report is owner-attested. Development D1 has advanced through `0021`; the [W1/W2 release](C2_W2_HOSTED_RELEASE.md) passed the full local pipeline and hosted fictional form/theme checks with data preserved. | Exact inventory is enabled for hosted review; keep Clover sync and purchasing disabled. Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
 | Custom domain | The user reports that the domain is already in Cloudflare. No Worker route has been verified. | Decide whether to attach the domain after the development `workers.dev` validation; the current hosted evidence uses that URL. |
 
 Never send, commit, or paste Supabase keys, Cloudflare API tokens, OAuth secrets,
@@ -156,7 +167,8 @@ Current focus: **W1/W2 café-item waste local review** and
 and reason, use favorites and manager shortcuts, and confirm an uncertain save
 without deducting stock twice. Local automated checks and fictional Safari
 phone/tablet walkthroughs passed. Manual keyboard and real-worker usability
-review remain open; W1 has not been deployed or accepted for a pilot. The
+review remain open; W1 is now deployed for
+[hosted usability review](C2_W2_HOSTED_RELEASE.md), with no pilot acceptance. The
 [Baldor packet](C3_BALDOR_PREPARATION.md) includes an inquiry ready for owner
 review and sending. The owner reports a NYC café with an existing Baldor
 account for a later pilot; it has not been accessed or independently verified.
@@ -194,8 +206,10 @@ Supplier submission remains disabled.
    A and B may use the M2 development gate. Keep hosted signup/recovery and
    independent security review on the release follow-up list.
 2. Use the [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md) for the completed
-   development D1 `0012` and Worker walkthrough. Keep the exact inventory
-   preview disabled. The earlier replacement build report remains owner-attested.
+   development D1 `0012` and Worker walkthrough. The later
+   [W1/W2 release](C2_W2_HOSTED_RELEASE.md) enables exact inventory for hosted
+   review with D1 through `0021`; keep Clover sync and purchasing disabled.
+   The earlier replacement build report remains owner-attested.
 3. A5/M3, B5/M4, and B6's Clover adapter are accepted for local development.
    B7 hosted preparation applied development D1 `0013` and deployed B6 to
    `pantrack-dev`; see [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md). The dedicated
@@ -289,8 +303,9 @@ Supplier submission remains disabled.
    multi-page provider scans, and Clover-side app revocation remain outside
    that acceptance. Pilot and production approval are separate.
    Concurrent local-only A7 migrations were moved to `0016` and `0017` in
-   the merge; development D1 remains at `0015` until A7's separate remote
-   gate is authorized.
+   the merge; development D1 subsequently advanced through `0021` in the
+   [W1/W2 release](C2_W2_HOSTED_RELEASE.md). A7/A8 hosted workflow
+   acceptance remains a separate outcome.
 4. Keep production data and real users out of this environment while these
    gates remain open. Hosted sign-in worked at the development `workers.dev`
    URL; signup and recovery callback configuration there still needs a
@@ -308,11 +323,11 @@ behavior.
 | Milestone | Status | Main work still required |
 | --- | --- | --- |
 | M2 — authentication and RBAC | C1/M2 accepted by owner and C2 evidence closed for development; replacement Cloudflare build remains owner-attested | The [C2 closeout](C2_M2_CLOSEOUT.md) records the reported review, local pipeline and read-only Worker smoke. Hosted signup/recovery callbacks and independent security verification remain release follow-ups. |
-| M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the exact preview is off again. |
+| M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the [W1/W2 release](C2_W2_HOSTED_RELEASE.md) now enables the exact preview for usability review. |
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
 | M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; paid latte, modifier/replay, duplicate/polling, unpaid deletion, full refund, missed-sale polling recovery, natural token refresh, lost-response recovery, disconnect/reconnect, later paid revision, and controlled webhook-failure cases recorded; owner-accepted on 2026-09-29 for tested development sandbox scope | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records nine paid latte deductions across sandbox cases, one held sale with zero partial use and an audited recovery replay, a simulated duplicate and owner poll, an unpaid deletion dismissed without stock use, one linked full $5 refund with zero additional stock use, two sales recovered by owner polling, one OAuth rotation and one controlled lost-response recovery, same-merchant reauthorization with history and stock retained, and one paid order revision that used only the added latte's ingredients. One authenticated webhook received a controlled `503`; owner polling recovered the sale once, while native retry was not observed in 20 minutes. Clover rejected a paid-order DELETE with HTTP 400. See the [bounded acceptance decision](M5_B7_ACCEPTANCE_REVIEW.md) for all excluded provider cases. Sync remains off; pilot and production approval are separate. |
 | M6 — second POS | B8 on hold at owner's request awaiting Toast approval/testing access; adapter foundation preserved; M6 not accepted | Toast received the owner's application on 2026-09-30. The [local foundation](M6_B8_ADAPTER_FOUNDATION.md) is implemented locally; native Toast remains unimplemented. Resume on Toast's request for information or an approved [access handoff](M6_TOAST_ACCESS.md), then validate a read-only sandbox connection before sales cases. |
-| M7 — replenishment proposals | A6/A7 local core and lifecycle, C4's fake consumer, and A8 local sale, sales-health reader, v2 handoff, durable source safety, gated preview, and manager save/edit/cancel flow passed locally; M7 not accepted | The [served local HTTP check](M7_A8_SERVED_LOCAL_EVIDENCE.md) passed the positive proposal flow and fixed false D1 change-count failures. The manager flow uses server-derived Clover health and fictional supplier details, with supplier submission disabled. A8 still needs browser visual review, a reviewed sales-freshness policy, and hosted end-to-end and concurrency evidence. Development D1 has not applied A7 `0016`/`0017`. See [manager flow evidence](M7_A8_MANAGER_FLOW_EVIDENCE.md), [preview evidence](M7_A8_PREVIEW_API_UI_EVIDENCE.md), and [durable safety evidence](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md). |
+| M7 — replenishment proposals | A6/A7 local core and lifecycle, C4's fake consumer, and A8 local sale, sales-health reader, v2 handoff, durable source safety, gated preview, and manager save/edit/cancel flow passed locally; M7 not accepted | The [served local HTTP check](M7_A8_SERVED_LOCAL_EVIDENCE.md) passed the positive proposal flow and fixed false D1 change-count failures. The manager flow uses server-derived Clover health and fictional supplier details, with supplier submission disabled. A8 still needs browser visual review, a reviewed sales-freshness policy, and hosted end-to-end and concurrency evidence. Development D1 applied A7 `0016`/`0017` with the [W1/W2 release](C2_W2_HOSTED_RELEASE.md); that does not prove A8 hosted behavior. See [manager flow evidence](M7_A8_MANAGER_FLOW_EVIDENCE.md), [preview evidence](M7_A8_PREVIEW_API_UI_EVIDENCE.md), and [durable safety evidence](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md). |
 | M8 — supplier adapter | C3 preparation ready; Baldor selected as candidate; real adapter not started | The [Baldor packet](C3_BALDOR_PREPARATION.md) contains public research and an unsent inquiry. The owner reports a NYC café/account for a later pilot. Approved channel, testing access, terms, and café permission remain pending. Preserve M7 acceptance and the sandbox/failure gates before any authorized real order. |
 | M9 — operations | Prototype endpoint only | Provision scheduler/queue, retries, alert channels, operations page, and recovery runbooks. |
 | M10 — financial controls | Partial prototype | Confirm supplier payment model, limits, eligibility, owner reauthentication, and financial audit/testing. |

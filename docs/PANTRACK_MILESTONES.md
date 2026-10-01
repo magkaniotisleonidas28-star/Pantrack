@@ -397,6 +397,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   agent's migration/auth inspection, the complete local pipeline, and the
   remaining hosted and production limits. M2 is open to A and B for development;
   no production acceptance is claimed.
+  **2026-10-01 hosted release:** [W1/W2 C2 evidence](C2_W2_HOSTED_RELEASE.md)
+  records development D1 `0016`–`0021`, private backup/data-preservation checks,
+  the deployed Waste/recipe/package forms and both themes. Exact inventory is
+  enabled for usability review; Clover sync and purchasing remain disabled.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   ordering channel, account/location/SKUs/terms, scheduler/queue, notification
