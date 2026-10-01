@@ -44,7 +44,7 @@ const navigation=[
   {value:'suppliers',label:'Suppliers & automation',icon:Truck},
   ...(role==='owner'?[{value:'payments',label:'Payment methods',icon:CreditCard},{value:'setup',label:'Setup & register',icon:Check}]:[]),
 ];
-const subsections=tab==='inventory'?(inventoryMode==='exact'?exactInventorySections.filter(item=>(item.id!=='legacy'&&item.id!=='clover-plan')||role==='owner'||role==='manager'):legacyInventorySections):tab==='waste'?[{id:'record',label:'Record waste'},{id:'setup',label:'Item setup'},{id:'review',label:'Needs review'}]:tab==='suppliers'&&role==='owner'?supplierSections:[];
+const subsections=tab==='inventory'?(inventoryMode==='exact'?exactInventorySections:legacyInventorySections):tab==='waste'?[{id:'record',label:'Record waste'},{id:'setup',label:'Item setup'},{id:'review',label:'Needs review'}]:tab==='suppliers'&&role==='owner'?supplierSections:[];
 const activeSubsection=tab==='inventory'?inventorySection:tab==='waste'?wasteSection:supplierSection;
 const activeLabel=[navigation.find(item=>item.value===tab)?.label,subsections.find(item=>item.id===activeSubsection)?.label].filter(Boolean).join(' / ');
 function chooseSubsection(id:string){if(tab==='inventory')setInventorySection(id as InventorySection);else if(tab==='waste')setWasteSection(id as WasteSection);else setSupplierSection(id as SupplierSection);setNavigationOpen(false);}

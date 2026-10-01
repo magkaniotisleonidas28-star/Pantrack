@@ -114,6 +114,9 @@ centers Waste content, removes repeated inventory summary cards, and places
 modifier setup inside recipes. Managers can copy an active ingredient rule
 into an independent draft instead of retyping it. Local verification passed;
 POS modifier import and worker acceptance remain separate follow-ups.
+The later [Inventory navigation refinement](W2_LOCAL_EVIDENCE.md#w2-inventory-navigation--2026-10-01)
+groups the same tools into four sidebar sections and preserves unfinished
+modifier edits when switching Inventory views. It remains local only.
 
 - [x] Implement café-item setup, atomic waste and sold-unit allocation locally.
 - [x] Verify route security, retry/rollback contracts and fictional served screens.

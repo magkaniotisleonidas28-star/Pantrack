@@ -172,6 +172,9 @@ all Waste subsections, removes repeated exact-inventory summary cards, and
 moves modifier setup/copying into recipe details. Its complete local pipeline
 and Safari desktop/phone/tablet checks passed on 2026-10-01; see the
 [refinement evidence](W2_LOCAL_EVIDENCE.md#w2-usability-refinement--2026-10-01).
+The local Inventory menu now shares four sections in both modes: Stock,
+Recipes & sales, Purchasing plan, and Activity. Specialist reviews are inside
+those pages; see the [navigation evidence](W2_LOCAL_EVIDENCE.md#w2-inventory-navigation--2026-10-01).
 Margin features remain planned. The next
 unblocked step is a W1/W2 usability review, then a separate P1 cost foundation.
 Supplier submission remains disabled.

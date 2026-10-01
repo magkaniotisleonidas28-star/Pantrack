@@ -248,3 +248,59 @@ metadata and version history; do not delete active rules or provider mappings.
 No remote migration, deployment, supplier contact or provider request occurred.
 Next unblocked checklist outcome remains W1/W2 worker usability and owner
 review; POS-assisted modifier import and P1 costing are separate tasks.
+
+## W2 Inventory navigation — 2026-10-01
+
+Workstream A, W2 outcome: simplify the local Inventory menu to the four-section
+layout selected by the owner. Legacy and exact modes share Stock, Recipes &
+sales, Purchasing plan, and Activity. Stock contains a collapsed Older data to
+review disclosure; Purchasing plan contains a collapsed Clover review.
+Both disclosures retain their owner/manager restriction and existing server
+authorization. Activity shows the existing physical-count history, clearly
+labeled; broader waste reporting is still a W3 outcome.
+
+Exact Recipes & sales has two labeled buttons within the page. Recipe content
+stays mounted when hidden. Sales content loads on its first visit and then
+stays mounted within Inventory. This preserves unfinished modifier forms and
+the pending-request state used by existing retry handling. It does not add
+recovery after closing Inventory, reloads, or offline work. The Inventory
+heading and purchasing description use plain language, and Waste setup now
+points to Inventory → Recipes & sales → Recipes.
+
+Only workspace components, navigation types, CSS and documentation changed.
+No public API, database migration, authorization policy, feature gate,
+calculation, supplier submission or provider behavior changed. The narrowed
+InventorySection type is internal UI state; there are no stored section IDs
+or URL parameters to migrate. Shared shell changes are ready for the merge
+owner; no A → B or A → C contract handoff is required.
+
+Verification in `workstream-a/w2-inventory-menu`:
+
+- `pnpm typecheck`, `pnpm test` (36 suites), `pnpm db:check` (20 migrations and
+  fresh SQLite), `pnpm build`, `pnpm db:migrate:local` (none pending), and
+  `VINEXT_NO_DEV_LOCK=1 pnpm test:local` passed. Existing tests cover company
+  and role isolation, uncertain-save retries, sale/Waste consumption and
+  supplier gates. No new API behavior was introduced.
+- Safari at `http://127.0.0.1:5176/` showed four Inventory entries, both
+  specialist disclosures, existing count history, recipe/modifier controls,
+  Sales controls, and the separate Waste page.
+- An unsaved modifier quantity of 19g survived Recipes → Sales → Recipes and
+  Activity → Recipes. It was canceled without saving; the active rule remains
+  18g. An unsaved Sales reference survived the same view switching and was
+  cleared. Pending-request behavior is covered by existing automated tests;
+  no browser network failure was injected in this walkthrough.
+- Desktop/light, phone 390×844/dark, tablet 820×844/light and both sidebar
+  widths were inspected. Mobile navigation listed four entries; the selector
+  fit without clipping, and tablet content moved with the expanded sidebar.
+  Responsive mode was exited and light mode restored. Full accessibility and
+  real-worker usability remain open.
+- `node scripts/w2-review-fixture.mjs verify` confirmed clean foreign keys,
+  zero purchasing orders, the existing six waste entries/two allocation claims,
+  and unchanged balances: bagel 22, beans 892g, croissant 18, cups 95, milk
+  4000mL, oat milk 3000mL. The separate W1 review database was not changed.
+- `git diff --check` passed; changed documentation links were verified.
+
+Rollback is a code revert; there is no data cleanup or schema reversal.
+No remote migration, deployment, provider request or supplier contact occurred.
+Next unblocked outcome remains W1/W2 worker usability and owner acceptance;
+P1 costing is separate. These checks establish local behavior only.

@@ -485,6 +485,13 @@ body[data-workspace-theme=dark] .waste-error { background: #4b2928; color: #ffce
 .menu-waste-content button[data-variant=default] { background: var(--primary); color: var(--primary-foreground); }
 .menu-waste-content button[aria-pressed=true] { background: var(--accent); color: var(--primary); border-color: var(--primary); }
 .recipe-modifier-details { margin-top: 16px; border-top: 1px solid var(--border); padding-top: 12px; min-width: 0; }
+.inventory-view-switch { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.inventory-view-switch button { min-height: 42px; }
+.inventory-view-switch button[aria-pressed=true] { background: var(--accent); color: var(--primary); border-color: var(--primary); }
+.inventory-review-details { margin-top: 24px; border: 1px solid var(--border); border-radius: 8px; padding: 16px; min-width: 0; }
+.inventory-review-details > summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+.inventory-review-details > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.inventory-review-details > .inventory-section-heading { margin-top: 16px; }
 .recipe-modifier-details summary, .modifier-history summary { cursor: pointer; font-weight: 600; padding: 8px 0; }
 .recipe-modifier-details summary:focus-visible, .modifier-history summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 .recipe-modifiers { display: grid; gap: 16px; padding-top: 12px; min-width: 0; }
