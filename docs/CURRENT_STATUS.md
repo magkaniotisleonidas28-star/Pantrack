@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-01
+Updated: 2026-10-02
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -312,6 +312,19 @@ Supplier submission remains disabled.
    separate check. Preserve the local Supabase callback configuration while
    reviewing any hosted URL change.
 
+The [A8 migration review and repair](M7_A8_MIGRATION_REVIEW.md) found a nullable
+invalidation reason that bypasses `0017`'s SQL transition guard. Forward
+migration `0022` rejects both false and NULL transition expressions. Packaging
+found newer remote `main` with used migrations through `0021`, so Drizzle
+regenerated the unpublished repair as `0022`. On 2026-10-02, the integrated
+source passed all 41 suites, typecheck, the 23-migration check, build, isolated
+fresh/upgrade local D1 application, HTTP smoke, and the positive A8 served
+proposal check. Existing proposal history, inventory/settings data, prior
+migrations, unrelated pending work, and the owner's local D1 state were
+preserved. The accepted ten-minute freshness policy is unchanged. A8/M7
+acceptance remains open; preparing the separately authorized development
+migration and hosted evidence packet is the next A8 item.
+
 Other workstreams can continue local-only work under their individual
 [roadmap checklists](PANTRACK_MILESTONES.md#step-by-step-checklist-for-each-person)
 and the [AI development playbook](AI_DEVELOPMENT.md). M4's acceptance is limited
@@ -327,7 +340,7 @@ behavior.
 | M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
 | M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; paid latte, modifier/replay, duplicate/polling, unpaid deletion, full refund, missed-sale polling recovery, natural token refresh, lost-response recovery, disconnect/reconnect, later paid revision, and controlled webhook-failure cases recorded; owner-accepted on 2026-09-29 for tested development sandbox scope | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records nine paid latte deductions across sandbox cases, one held sale with zero partial use and an audited recovery replay, a simulated duplicate and owner poll, an unpaid deletion dismissed without stock use, one linked full $5 refund with zero additional stock use, two sales recovered by owner polling, one OAuth rotation and one controlled lost-response recovery, same-merchant reauthorization with history and stock retained, and one paid order revision that used only the added latte's ingredients. One authenticated webhook received a controlled `503`; owner polling recovered the sale once, while native retry was not observed in 20 minutes. Clover rejected a paid-order DELETE with HTTP 400. See the [bounded acceptance decision](M5_B7_ACCEPTANCE_REVIEW.md) for all excluded provider cases. Sync remains off; pilot and production approval are separate. |
 | M6 — second POS | B8 on hold at owner's request awaiting Toast approval/testing access; adapter foundation preserved; M6 not accepted | Toast received the owner's application on 2026-09-30. The [local foundation](M6_B8_ADAPTER_FOUNDATION.md) is implemented locally; native Toast remains unimplemented. Resume on Toast's request for information or an approved [access handoff](M6_TOAST_ACCESS.md), then validate a read-only sandbox connection before sales cases. |
-| M7 — replenishment proposals | A6/A7 local core and lifecycle, C4's fake consumer, and A8 local sale, sales-health reader, v2 handoff, durable source safety, gated preview, and manager save/edit/cancel flow passed locally; M7 not accepted | The [served local HTTP check](M7_A8_SERVED_LOCAL_EVIDENCE.md) passed the positive proposal flow and fixed false D1 change-count failures. The manager flow uses server-derived Clover health and fictional supplier details, with supplier submission disabled. A8 still needs browser visual review, a reviewed sales-freshness policy, and hosted end-to-end and concurrency evidence. Development D1 applied A7 `0016`/`0017` with the [W1/W2 release](C2_W2_HOSTED_RELEASE.md); that does not prove A8 hosted behavior. See [manager flow evidence](M7_A8_MANAGER_FLOW_EVIDENCE.md), [preview evidence](M7_A8_PREVIEW_API_UI_EVIDENCE.md), and [durable safety evidence](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md). |
+| M7 — replenishment proposals | A6/A7 local core and lifecycle, C4's fake consumer, and A8 local sale, sales-health reader, v2 handoff, durable source safety, gated preview, and manager save/edit/cancel flow passed locally; owner reports the local browser walkthrough works and accepted the ten-minute development freshness policy; M7 not accepted | The [served local HTTP check and owner browser report](M7_A8_SERVED_LOCAL_EVIDENCE.md) record the positive proposal flow, false D1 change-count fixes, and expected `review_required`/`inventory_changed` stock invalidation. [Decision 0004](decisions/0004-m7-development-sales-freshness.md) records the accepted development policy. The manager flow uses server-derived Clover health and fictional supplier details, with supplier submission disabled. A8 still needs hosted browser, end-to-end, and concurrency evidence. The local walkthrough used fixture sign-in and synthetic health; it does not verify provider signup or sync. Development D1 applied A7 `0016`/`0017` with the [W1/W2 release](C2_W2_HOSTED_RELEASE.md); the guard repair `0022` is local only. See [manager flow evidence](M7_A8_MANAGER_FLOW_EVIDENCE.md), [preview evidence](M7_A8_PREVIEW_API_UI_EVIDENCE.md), and [durable safety evidence](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md). |
 | M8 — supplier adapter | C3 preparation ready; Baldor selected as candidate; real adapter not started | The [Baldor packet](C3_BALDOR_PREPARATION.md) contains public research and an unsent inquiry. The owner reports a NYC café/account for a later pilot. Approved channel, testing access, terms, and café permission remain pending. Preserve M7 acceptance and the sandbox/failure gates before any authorized real order. |
 | M9 — operations | Prototype endpoint only | Provision scheduler/queue, retries, alert channels, operations page, and recovery runbooks. |
 | M10 — financial controls | Partial prototype | Confirm supplier payment model, limits, eligibility, owner reauthentication, and financial audit/testing. |

@@ -65,6 +65,8 @@ assert.equal(sql.prepare("SELECT kind FROM replenishment_proposal_events WHERE c
 assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM replenishment_proposal_states WHERE company_id='b'").get().n,2);
 assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM replenishment_proposal_events WHERE company_id='b'").get().n,2);
 
+for(const entry of entries.filter(entry=>entry.idx>17))sql.exec(readFileSync(`drizzle/${entry.tag}.sql`,'utf8'));
+
 const lifecycle=new D1ReplenishmentLifecycle(database,{clock:{now:()=>new Date(at)}});
 const rejects=(promise,code)=>assert.rejects(promise,error=>error?.code===code);
 await rejects(lifecycle.get('a','proposal-1',null),'forbidden');

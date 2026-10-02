@@ -122,9 +122,11 @@ Verification for this policy record and UI wording in the current checkout:
 
 ## Remaining A8 acceptance work
 
-- Apply development D1 migrations `0016` and `0017` only under a separate,
-  explicit remote-migration authorization, then run hosted manager and
-  concurrent-source-change checks with approved fictional sandbox data.
+- The later [W1/W2 hosted release](C2_W2_HOSTED_RELEASE.md) applied development
+  D1 through `0021`, including `0016`/`0017`. The local guard repair is now
+  `0022`; apply it only under separate explicit remote-migration authorization,
+  then run hosted manager and concurrent-source-change checks with approved
+  fictional sandbox data.
 - Capture hosted browser evidence for the manager flow; the local owner report
   above does not replace hosted end-to-end or concurrency checks.
 
