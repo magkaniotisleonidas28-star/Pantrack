@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
 import {spawn, spawnSync} from 'node:child_process';
 import {once} from 'node:events';
-import {readFileSync, readdirSync} from 'node:fs';
+import {readFileSync} from 'node:fs';
 import {createServer} from 'node:net';
-import {join} from 'node:path';
 import {DatabaseSync} from 'node:sqlite';
 import {fileURLToPath} from 'node:url';
+import {findLocalD1Database} from './local-d1-database.mjs';
 
 process.chdir(fileURLToPath(new URL('../', import.meta.url)));
 const vars = readFileSync('.dev.vars', 'utf8');
@@ -13,9 +13,6 @@ for (const gate of ['PANTRACK_EXACT_INVENTORY_PREVIEW', 'PANTRACK_CLOVER_SYNC_EN
   assert.match(vars, new RegExp(`^${gate}=enabled\\s*$`, 'm'), `${gate} must be enabled in local .dev.vars`);
 }
 const stateDir = '.wrangler/state/v3/d1/miniflare-D1DatabaseObject';
-const files = readdirSync(stateDir).filter(name => name.endsWith('.sqlite') && name !== 'metadata.sqlite');
-assert.equal(files.length, 1, 'Expected one isolated local D1 database; run local migrations first');
-const dbPath = join(stateDir, files[0]);
 const probe = createServer();
 probe.listen(0, '127.0.0.1');
 await once(probe, 'listening');
@@ -75,6 +72,7 @@ try {
     operationId: crypto.randomUUID(), stockUnit: {kind: 'curated', id: 'mL'},
     purchaseUnitLabel: 'case', purchaseAmount: '1000', openingAmount: '10', effectiveAt: at});
 
+  const dbPath = findLocalD1Database(stateDir, {companyId, productId});
   db = new DatabaseSync(dbPath);
   const config = db.prepare("SELECT id,version FROM inventory_config_versions WHERE company_id=? AND product_id=? AND status='active'").get(companyId, productId);
   assert.ok(config, 'Exact inventory configuration must exist');
