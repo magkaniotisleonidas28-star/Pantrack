@@ -266,8 +266,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   [gated manager flow](M7_A8_MANAGER_FLOW_EVIDENCE.md) exposes durable v2
   list/create/edit/cancel actions. A [served local HTTP check](M7_A8_SERVED_LOCAL_EVIDENCE.md)
   now exercises the positive flow and found and fixed false change-count
-  failures in conditional D1 writes. Browser visual review, the sales-freshness
-  decision, and hosted end-to-end evidence remain open.
+  failures in conditional D1 writes. The owner reported that the local browser
+  walkthrough works on 2026-09-30, including `review_required` with
+  `inventory_changed` after a stock change; this is owner-reported local
+  evidence. The owner accepted the ten-minute development sales-freshness
+  policy on 2026-09-30 in [decision 0004](decisions/0004-m7-development-sales-freshness.md).
+  Hosted browser, end-to-end, and concurrency evidence remain open.
 - [ ] **A9 — Execute A's M11 slice.** Configure approved pilot units, recipes,
   counts, targets, and pack conversions; measure inventory variance and proposal
   accuracy through two reviewed count-to-delivery cycles. Investigate variance

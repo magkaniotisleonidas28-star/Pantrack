@@ -5,6 +5,8 @@ import {build} from 'esbuild';
 
 await build({entryPoints:['src/lib/d1-replenishment-sales-readiness.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/a8-sales-readiness-d1.mjs'});
 const {D1ReplenishmentSalesReadiness}=await import('../.sites-runtime/a8-sales-readiness-d1.mjs');
+await build({entryPoints:['src/lib/d1-replenishment-clover-source.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/a8-clover-source-policy.mjs'});
+const {cloverSourceGuard}=await import('../.sites-runtime/a8-clover-source-policy.mjs');
 const sql=new DatabaseSync(':memory:');
 sql.exec('PRAGMA foreign_keys=ON');
 for(const entry of JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8')).entries){
@@ -38,6 +40,32 @@ assert.equal(current.heldEventCount,0);
 assert.deepEqual(current.reasons,[]);
 assert.equal(current.checkpointAt,new Date(checkpoint).toISOString());
 assert.equal(sql.prepare('SELECT total_changes() AS n').get().n,changesBefore,'A8 health reads must not write D1.');
+for(const [checkpointAge,successAge,status,reason] of [
+  [10*minute-1,10*minute-1,'current',null],
+  [10*minute,10*minute,'current',null],
+  [10*minute,minute,'current',null],
+  [minute,10*minute,'current',null],
+  [10*minute+1,minute,'degraded','sync_stale'],
+  [minute,10*minute+1,'degraded','sync_stale'],
+  [-1,minute,'unknown','invalid_sync_state'],
+  [minute,-1,'unknown','invalid_sync_state'],
+]){
+  sql.prepare('UPDATE clover_sync_state SET checkpoint=?,last_success=? WHERE company_id=?')
+    .run(now-checkpointAge,new Date(now-successAge).toISOString(),'a');
+  const health=await read();
+  assert.equal(health.status,status,`Checkpoint age ${checkpointAge}, success age ${successAge}`);
+  assert.deepEqual(health.reasons,reason===null?[]:[reason]);
+  const guard=cloverSourceGuard(health,options,new Date(now));
+  assert.equal(sql.prepare(`SELECT ${guard.sql} AS allowed`).get(...guard.args).allowed,
+    status==='current'?1:0,'The database write guard must enforce the same freshness rule');
+  if(status==='current'&&(checkpointAge===10*minute||successAge===10*minute)){
+    const expired=cloverSourceGuard(health,options,new Date(now+1));
+    assert.equal(sql.prepare(`SELECT ${expired.sql} AS allowed`).get(...expired.args).allowed,0,
+      'A current snapshot must be rejected if it expires before the write');
+  }
+}
+sql.prepare('UPDATE clover_sync_state SET checkpoint=?,last_success=? WHERE company_id=?')
+  .run(checkpoint,new Date(checkpoint).toISOString(),'a');
 assert.equal((await new D1ReplenishmentSalesReadiness(db,{...options,syncEnabled:false}).read('a',actor)).status,'degraded');
 assert.deepEqual((await new D1ReplenishmentSalesReadiness(db,{...options,syncEnabled:false}).read('a',actor)).reasons,['sync_disabled']);
 sql.prepare('UPDATE clover_sync_state SET checkpoint=?,last_success=? WHERE company_id=?')

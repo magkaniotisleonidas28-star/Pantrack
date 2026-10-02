@@ -58,7 +58,7 @@ export default function A8ReviewPreview({companyId, products}: {companyId: strin
       <p>Sales checkpoint: {sales?.source === 'clover_sync' ? sales.checkpointAt ?? 'missing' : 'fictional'} · held events: {sales?.heldEventCount}</p>
       {sales?.source === 'clover_sync' && <p>Sales warnings: {sales.reasons.join(', ') || 'none'}.</p>}
       <p>Review reasons: {explain.reviewReasons.join(', ') || 'none'}.</p>
-      <small>Supplier SKU, account, delivery, and price are unverified. Sales freshness uses a provisional 10-minute local preview rule. Recalculate after any stock, settings, or sync change.</small>
+      <small>Supplier SKU, account, delivery, and price are unverified. Saving or editing requires a successful sales sync and checkpoint within the last 10 minutes. Recalculate after any stock, settings, or sync change.</small>
     </article>}
   </section><A8SavedReviews companyId={companyId} products={products}/></>;
 }
