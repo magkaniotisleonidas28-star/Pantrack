@@ -5,8 +5,15 @@ import {mkdirSync,readFileSync,readdirSync} from 'node:fs';
 
 mkdirSync('.sites-runtime',{recursive:true});
 const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
-for(const file of readdirSync('drizzle').filter(f=>f.endsWith('.sql')).sort())sql.exec(readFileSync('drizzle/'+file,'utf8'));
-globalThis.m2db={prepare(query){let values=[];return {bind(...v){values=v;return this;},async first(){return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},async run(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};}};},async batch(statements){sql.exec('BEGIN');try{const out=[];for(const s of statements)out.push(await s.run());sql.exec('COMMIT');return out;}catch(e){sql.exec('ROLLBACK');throw e;}}};
+const journal=JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8'));
+for(const entry of journal.entries)sql.exec(readFileSync('drizzle/'+entry.tag+'.sql','utf8'));
+function deferred(){let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};}
+function barrier(){return {entered:deferred(),release:deferred()};}
+let sessionBatchBarrier;
+globalThis.m2db={prepare(query){let values=[];return {query,bind(...v){values=v;return this;},async first(){return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){return this.execute();}};},async batch(statements){
+ if(sessionBatchBarrier&&statements.some(s=>/^INSERT INTO auth_sessions\b/.test(s.query))){const gate=sessionBatchBarrier;sessionBatchBarrier=undefined;gate.entered.resolve();await gate.release.promise;}
+ sql.exec('BEGIN');try{const out=statements.map(s=>s.execute());sql.exec('COMMIT');return out;}catch(e){sql.exec('ROLLBACK');throw e;}
+}};
 globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public-test',AUTH_ENCRYPTION_KEY:'ab'.repeat(32)};
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
@@ -16,6 +23,9 @@ for(const [name,path] of [...['companies','workspace','inventory','sales','sales
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
 const tokens=new Map(),providerRequests=new Map();let failProvider=false;
+const passwords=new Map(Object.values(accounts).map(user=>[user.id,'existingpassword']));
+const tokenBarriers=new Map();let nextTokenBarrier;
+async function issueToken(user){const access_token=crypto.randomUUID();tokens.set(access_token,user);if(nextTokenBarrier){const gate=nextTokenBarrier;tokenBarriers.set(access_token,gate);nextTokenBarrier=undefined;if(gate.pauseAt==='exchange'){gate.entered.resolve();await gate.release.promise;}}return Response.json({access_token,expires_in:3600});}
 globalThis.fetch=async(url,init={})=>{
  assert.ok(String(url).startsWith('https://test.supabase.co/auth/v1/'),'Only fake Supabase requests are allowed');
  assert.equal(init.redirect,'manual','Supabase requests must not follow redirects in Workers');
@@ -24,23 +34,26 @@ globalThis.fetch=async(url,init={})=>{
  providerRequests.set(path,(providerRequests.get(path)||0)+1);
  if(path.endsWith('/user')){
    if(!tokens.has(token))return Response.json({error:'expired'},{status:401});
+   if(init.method==='PUT'){passwords.set(tokens.get(token).id,body.password);return Response.json(tokens.get(token));}
+   const gate=tokenBarriers.get(token);
+   if(gate&&++gate.calls===gate.pauseAt){gate.entered.resolve();await gate.release.promise;}
    return Response.json(tokens.get(token));
  }
  if(path.endsWith('/token')){
    const user=Object.values(accounts).find(u=>u.email===body.email);
-   if(!user||body.password!=='existingpassword')return Response.json({error:'bad'},{status:400});
-   const access_token=crypto.randomUUID();tokens.set(access_token,user);return Response.json({access_token,expires_in:3600});
+   if(!user||body.password!==passwords.get(user.id))return Response.json({error:'bad'},{status:400});
+   return issueToken(user);
  }
  if(path.endsWith('/verify')){
-   if(body.token_hash!=='valid-recovery')return Response.json({error:'replay'},{status:400});
-   tokens.set('recovery-token',accounts.owner);return Response.json({access_token:'recovery-token',expires_in:3600});
+   if(!['valid-recovery','valid-signup'].includes(body.token_hash))return Response.json({error:'replay'},{status:400});
+   return issueToken(accounts.owner);
  }
  if(path.endsWith('/logout'))return new Response(null,{status:204});
  return Response.json({});
 };
 function req(name,method='GET',body, cookie='',extra={}){const headers=new Headers({'Content-Type':'application/json',Origin:'https://test',...extra});if(cookie)headers.set('Cookie',cookie);globalThis.m2headers=headers;return new Request('https://test/api/'+name+(method==='GET'?'?companyId=company-a'+(name.startsWith('replenishment/')?'&productId=milk':''):''),{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{})});}
 async function call(name,method='GET',body,cookie='',extra={}){return modules[name][method](req(name,method,body,cookie,extra));}
-async function login(name){const r=await call('auth','POST',{action:'signin',email:accounts[name].email,password:'existingpassword'});assert.equal(r.status,200,await r.clone().text());const cookie=r.headers.get('set-cookie');assert.match(cookie,/__Host-pantrack=[a-f0-9]{64}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=3600; Secure/);return cookie.split(';')[0];}
+async function login(name){const r=await call('auth','POST',{action:'signin',email:accounts[name].email,password:passwords.get(accounts[name].id)});assert.equal(r.status,200,await r.clone().text());const cookie=r.headers.get('set-cookie');assert.match(cookie,/__Host-pantrack=[a-f0-9]{64}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=3600; Secure/);return cookie.split(';')[0];}
 const cookies={};for(const name of Object.keys(accounts))cookies[name]=await login(name);
 assert.equal(modules.passwordPolicy.isValidNewPassword('short!'),false,'New passwords require 12 characters.');
 assert.equal(modules.passwordPolicy.isValidNewPassword('longpasswordonly'),false,'New passwords require a special character.');
@@ -382,5 +395,41 @@ accounts.other.email_confirmed_at=new Date().toISOString();accounts.other.is_ano
 assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'existingpassword'})).status,400,'Anonymous provider identity rejected');
 delete accounts.other.is_anonymous;
 assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'wrong'})).status,400,'Wrong password rejected');
+// BUG-01: the real route must fence proofs acquired before recovery, even if the
+// fake provider keeps every issued token valid after password PUT/global logout.
+async function recoveryLink(){const r=await call('auth','POST',{action:'verify',type:'recovery',token_hash:'valid-recovery'});assert.equal(r.status,200,await r.clone().text());return r.headers.get('set-cookie').split(';')[0];}
+async function recoveryRace(flow,stage){
+ const predecessor=await login('owner'),recoveryCookie=await recoveryLink();
+ const gate=barrier();
+ if(stage==='insert')sessionBatchBarrier=gate;
+ else nextTokenBarrier={...gate,pauseAt:stage,calls:0};
+ const body=flow==='signin'?{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)}
+  :flow==='reauthenticate'?{action:'reauthenticate',password:passwords.get(accounts.owner.id)}
+  :{action:'verify',type:flow,token_hash:flow==='signup'?'valid-signup':'valid-recovery'};
+ // Route headers stay request-local while the company-route harness uses m2headers.
+ const pending=call('auth','POST',body,flow==='reauthenticate'?predecessor:'');
+ await Promise.race([gate.entered.promise,pending.then(async r=>{throw new Error('Race barrier was not reached: '+await r.text());})]);
+ const auditBefore=sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action IN ('session.created','recovery.started')").get(accounts.owner.id).n;
+ const reset=await call('auth','POST',{action:'password',password:'race-replacement-password!'},recoveryCookie);
+ assert.equal(reset.status,200,await reset.clone().text());
+ assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,0,'Recovery revoked the predecessor before releasing '+flow+'/'+stage);
+ gate.release.resolve();const stale=await pending;
+ const staleCookie=stale.headers.get('set-cookie')?.split(';')[0];
+ const usable=staleCookie?await modules.authlib.sessionFromHeaders(new Headers({Cookie:staleCookie})):null;
+ assert.equal(stale.status,400,`${flow}/${stage}: delayed auth returned ${stale.status}; authenticatable=${!!usable}`);
+ assert.equal(usable,null,flow+'/'+stage+' cannot create a usable stale session');
+ assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,0);
+ assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action IN ('session.created','recovery.started')").get(accounts.owner.id).n,auditBefore,'Rejected stale creation is not audited as success');
+ assert.equal((await call('companies','GET',null,predecessor)).status,401,'Reauthentication cannot resurrect a revoked predecessor');
+ const fresh=await login('owner');assert.equal((await call('companies','GET',null,fresh)).status,200,'Fresh new-password signin works');
+}
+const raceFailures=[];
+for(const flow of ['signin','reauthenticate','signup','recovery']){
+ for(const stage of ['exchange',1,...(flow==='reauthenticate'?[2]:[]),'insert']){
+  try{await recoveryRace(flow,stage);console.log(`PASS: BUG-01 ${flow}/${stage}`);}
+  catch(e){raceFailures.push(e);console.error(e.message);}
+ }
+}
+if(raceFailures.length)throw new AggregateError(raceFailures,'BUG-01 stale authentication regressions');
 assert.equal(sql.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
 console.log('PASS: M2 verified sessions, all API families, role/company isolation, CSRF, invitations/replay/concurrency, ownership protection, audit, logout, expiry and recovery. Supabase responses mocked; real provider setup remains a separate acceptance step.');
