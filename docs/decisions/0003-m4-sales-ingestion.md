@@ -78,7 +78,7 @@ Reserved identifiers are versioned constants, never empty strings or user-facing
 
 - An exact repeat of the same identity and source-payload hash returns the existing result. It may increment receipt telemetry, but it creates neither another event nor another processing attempt and cannot consume inventory again.
 - The same event identity, or the same order revision, with a different payload hash is retained in a separate immutable conflict receipt linked to the canonical event. The conflict carries `identity_conflict` for owner/manager review but does not replace or transition the canonical event, including when that event is terminal.
-- A newer complete revision may supersede an older revision only while the older revision is unapplied and in an allowed non-processing state.
+- A newer complete revision may supersede an older revision only while the older revision is unapplied and in an allowed non-processing state. A failed or missing attempt reply requires authoritative fenced inventory outcome reconciliation first; see the [BUG-02 recovery contract](../BUG02_SALES_OUTCOME_RECOVERY.md).
 - An applied event is immutable. It cannot be superseded, rewritten, or replayed for another deduction.
 - An adapter without a native revision uses deterministic revision `1`. Receipt timestamps must not be used as event identity or revision.
 - Manual, CSV, bridge, and native batch references occupy separate source namespaces, so identical legacy references cannot collide across sources.
@@ -95,6 +95,8 @@ stateDiagram-v2
     processing --> held: resolvable business exception
     processing --> failed: processing failure
     failed --> received: explicit retry, same identity
+    failed --> applied: fenced durable outcome confirmation
+    received --> applied: confirmation after uncertain-save retry
     held --> received: audited replay after resolution
     held --> dismissed: owner/manager + reason
     received --> superseded: newer complete revision
@@ -110,7 +112,8 @@ stateDiagram-v2
 | `received` | `processing` | A worker obtains an exclusive, expiring lease and creates a new immutable application-attempt record. |
 | `processing` | `applied` | The whole revision is atomically consumed once, or the policy calls for an applied no-op. The result is recorded on the attempt. |
 | `processing` | `held` | A typed held reason prevents any line from applying. The attempt and reason are recorded. |
-| `processing` | `failed` | A technical processing failure is recorded. An expired lease becomes `failed` with reason `interrupted`; expiry never implies application. |
+| `processing` | `failed` | A technical processing failure is recorded. Expired-lease recovery fences the attempt and reconciles inventory: proven absence becomes `failed`/`interrupted`, while a durable application becomes `applied`. Expiry alone never proves either outcome. |
+| `failed` or retried `received` | `applied` | Fenced reconciliation confirms the original durable application. Recovery evidence is appended; the original failed reply, mapping, selected versions and inventory history remain unchanged. |
 | `failed` | `received` | An explicit retry reuses the same event identity and adds an audit record. A later processing claim creates a distinct attempt. |
 | `held` | `received` | An owner or manager resolves the cause and initiates an audited replay. A later processing claim creates a distinct attempt. |
 | `held` | `dismissed` | An owner or manager supplies a nonempty reason. Dismissal is audited. |
@@ -118,7 +121,7 @@ stateDiagram-v2
 
 `applied`, `dismissed`, and `superseded` are terminal. A processing event must first reach `held` or `failed`; it is never superseded mid-attempt. Every application attempt is an immutable record. A duplicate receipt creates no attempt.
 
-Processing is serialized per company/provider/environment/merchant/order lineage. When a newer revision arrives while an older revision is processing, the newer event remains `received` and cannot obtain a lease. If the older event becomes `held` or `failed`, it is atomically superseded before the newer event may process. If the older event becomes `applied`, the newer event is evaluated against that applied consumption snapshot. A lower revision arriving after a higher revision is recorded as terminal `superseded` without an application attempt. A second claimant for the same revision follows the identity-conflict rule above. These ordering checks and the processing lease must be committed transactionally so concurrent workers cannot apply two revisions out of order.
+Processing is serialized per company/provider/environment/merchant/order lineage. When a newer revision arrives while an older revision is processing, the newer event remains `received` and cannot obtain a lease. If the older event becomes `held`, or becomes `failed` with a safely fenced unapplied outcome, it is atomically superseded before the newer event may process. An unresolved failed/missing reply blocks supersession and claims until reconciliation. If the older event becomes `applied`, the newer event is evaluated against that applied consumption snapshot. A lower revision arriving after a higher revision is recorded as terminal `superseded` without an application attempt. A second claimant for the same revision follows the identity-conflict rule above. These ordering checks and the processing lease must be committed transactionally so concurrent workers cannot apply two revisions out of order.
 
 Held reasons are:
 

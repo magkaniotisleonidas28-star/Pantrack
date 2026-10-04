@@ -1,4 +1,5 @@
 export const INVENTORY_CONSUMPTION_CONTRACT = 'pantrack.inventory-consumption.v1' as const;
+export const INVENTORY_CONSUMPTION_RECOVERY_CONTRACT = 'pantrack.inventory-consumption-recovery.v1' as const;
 
 export type UnitDimension = 'count' | 'mass' | 'volume';
 
@@ -112,6 +113,19 @@ export type InventoryConsumptionResult =
   | InventoryConsumptionHeld
   | InventoryConsumptionRejected;
 
+export type InventoryConsumptionRecoveryRequest = {
+  contract: typeof INVENTORY_CONSUMPTION_RECOVERY_CONTRACT;
+  companyId: string;
+  idempotencyKey: string;
+  /** Immutable worker-attempt identity, separate from the semantic application key. */
+  attemptId: string;
+};
+
+export type InventoryConsumptionRecoveryResult = InventoryConsumptionRecoveryRequest & (
+  | {status: 'applied'; application: InventoryConsumptionApplied}
+  | {status: 'not_applied'}
+);
+
 /**
  * Company authorization and provider authentication happen before this port.
  * An implementation must apply every returned change atomically or apply none.
@@ -123,5 +137,16 @@ export type InventoryConsumptionResult =
  * configuration are repaired.
  */
 export interface InventoryConsumptionPort {
-  consume(request: InventoryConsumptionRequest): Promise<InventoryConsumptionResult>;
+  consume(request: InventoryConsumptionRequest, attempt?: {attemptId: string}): Promise<InventoryConsumptionResult>;
+  /**
+   * Atomically fence this attempt against future commits and read the original
+   * company/application outcome. Never consumes, selects current mappings, or
+   * rewrites history. `not_applied` is proof only AFTER the durable fence.
+   * Retries keep the application key and use a new attempt identity. Fences
+   * must also stop pre-extension workers with no attempt identity for that key.
+   * Any read/validation error leaves the outcome unresolved; never infer absence.
+   * Optional for v1 consumers. Recovery requires this capability and fails closed
+   * when it is unavailable. Authorization belongs to the trusted caller.
+   */
+  reconcile?(request: InventoryConsumptionRecoveryRequest): Promise<InventoryConsumptionRecoveryResult>;
 }

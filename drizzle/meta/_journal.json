@@ -169,6 +169,13 @@
       "when": 1791138561076,
       "tag": "0023_auth_recovery_fence",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1791142693265,
+      "tag": "0024_safe_bromley",
+      "breakpoints": true
     }
   ]
 }

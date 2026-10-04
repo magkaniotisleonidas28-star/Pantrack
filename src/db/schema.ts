@@ -487,6 +487,28 @@ export const salesEventAttemptResults=sqliteTable('sales_event_attempt_results',
  foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
 ]);
 
+// Recovery evidence is append-only; failed attempt results remain historical facts.
+export const salesEventInventoryOutcomes=sqliteTable('sales_event_inventory_outcomes',{
+ companyId:text('company_id').notNull(),
+ attemptId:text('attempt_id').notNull(),
+ eventKey:text('event_key').notNull(),
+ recordedAt:text('recorded_at').notNull(),
+ status:text('status').notNull(),
+ inventoryResultJson:text('inventory_result_json'),
+},t=>[
+ primaryKey({columns:[t.companyId,t.attemptId]}),
+ index('sales_event_inventory_outcome_history').on(t.companyId,t.eventKey,t.recordedAt),
+ foreignKey({columns:[t.companyId,t.attemptId],foreignColumns:[salesEventAttempts.companyId,salesEventAttempts.attemptId]}),
+ foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
+]);
+
+export const inventoryConsumptionFences=sqliteTable('inventory_consumption_fences',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ idempotencyKey:text('idempotency_key').notNull(),
+ attemptId:text('attempt_id').notNull(),
+ fencedAt:text('fenced_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.idempotencyKey,t.attemptId]})]);
+
 export const salesEventConflicts=sqliteTable('sales_event_conflicts',{
  companyId:text('company_id').notNull(),
  conflictId:text('conflict_id').notNull(),

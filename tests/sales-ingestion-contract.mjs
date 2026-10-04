@@ -467,8 +467,9 @@ const lastAttempt=store=>store.snapshot().attempts.at(-1);
  const h=harness({afterInventoryApply:()=>{if(crash)throw new Error('simulated process crash')}});
  const receipt=await h.service.receive(nativeContext(),baseDraft({externalEventId:'crash',externalOrderId:'crash'}));
  await assert.rejects(()=>h.service.process('company-a',receipt.eventKey),/simulated process crash/);assert.equal(await h.store.state('company-a',receipt.eventKey),'processing');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'190000000');
- h.setNow('2026-03-01T00:06:00Z');assert.deepEqual(await h.service.recoverExpiredLeases('company-a'),[receipt.eventKey]);assert.equal(await h.store.state('company-a',receipt.eventKey),'failed');assert.equal(lastAttempt(h.store).errorCode,'interrupted');
- await h.service.retry('company-a',receipt.eventKey,owner,'Worker restarted');crash=false;await h.service.process('company-a',receipt.eventKey);assert.equal(await h.store.state('company-a',receipt.eventKey),'applied');assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'190000000');assert.equal(lastAttempt(h.store).inventoryResult.replayed,true);
+ h.setNow('2026-03-01T00:06:00Z');assert.deepEqual(await h.service.recoverExpiredLeases('company-a'),[receipt.eventKey]);assert.equal(await h.store.state('company-a',receipt.eventKey),'applied');assert.equal(lastAttempt(h.store).outcome,'applied');
+ assert.deepEqual(await h.service.recoverExpiredLeases('company-a'),[]);assert.equal(h.inventory.getBalance('company-a','milk').onHandMinor,'190000000');assert.equal(lastAttempt(h.store).inventoryResult.replayed,true);
+ await assert.rejects(()=>h.service.retry('company-a',receipt.eventKey,owner,'Worker restarted'),error=>error.code==='invalid_state');
  const keys=h.store.snapshot().attempts.map(attempt=>attempt.inventoryResult?.idempotencyKey).filter(Boolean);assert.equal(new Set(keys).size,1);
 }
 

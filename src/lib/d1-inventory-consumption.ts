@@ -2,12 +2,15 @@ import {choiceIssues} from './recipe-choices';
 import type {RecipeChoiceGroup} from './inventory-management-contract';
 import {
   INVENTORY_CONSUMPTION_CONTRACT,
+  INVENTORY_CONSUMPTION_RECOVERY_CONTRACT,
   type ConsumptionIssue,
   type ExactQuantity,
   type InventoryConsumptionApplied,
   type InventoryConsumptionPort,
   type InventoryConsumptionRequest,
   type InventoryConsumptionResult,
+  type InventoryConsumptionRecoveryRequest,
+  type InventoryConsumptionRecoveryResult,
   type SelectedRecipeVersion,
   type UnitDimension,
 } from '@/lib/inventory-consumption-contract';
@@ -35,6 +38,14 @@ type Clock = {now(): Date};
 type ApplicationRow = {
   request_fingerprint: string;
   result_json: string;
+};
+
+type RecoveryRow = {
+  fenced_attempt_id: string;
+  contract: string | null;
+  occurred_at: string | null;
+  request_fingerprint: string | null;
+  result_json: string | null;
 };
 
 type VersionRow = {
@@ -79,7 +90,7 @@ type LoadedBalance = BalanceRow & {
   legacyData: Record<string, unknown> | null;
 };
 
-type PersistedApplication = InventoryConsumptionApplied & {_claimToken: string};
+type PersistedApplication = InventoryConsumptionApplied & {_claimToken: string; _attemptId?: string};
 
 export class InventoryConsumptionPersistenceError extends Error {
   constructor(message: string) {
@@ -185,6 +196,21 @@ function validateStoredResult(value: unknown, companyId: string, idempotencyKey:
     typeof result.occurredAt !== 'string' || instant(result.occurredAt) === null ||
     !Array.isArray(result.selectedVersions) || !Array.isArray(result.changes)
   ) return false;
+  const lineIds = new Set<string>();
+  if (!result.selectedVersions.every(line => {
+    if (!line || typeof line.lineId !== 'string' || !line.lineId || lineIds.has(line.lineId) ||
+        typeof line.recipeId !== 'string' || !line.recipeId || typeof line.recipeVersionId !== 'string' || !line.recipeVersionId ||
+        typeof line.quantity !== 'string' || positiveInteger(line.quantity) === null || !Array.isArray(line.modifiers)) return false;
+    lineIds.add(line.lineId);
+    const modifierIds = new Set<string>();
+    return line.modifiers.every(modifier => {
+      if (!modifier || typeof modifier.modifierId !== 'string' || !modifier.modifierId || modifierIds.has(modifier.modifierId) ||
+          typeof modifier.modifierVersionId !== 'string' || !modifier.modifierVersionId ||
+          typeof modifier.quantity !== 'string' || positiveInteger(modifier.quantity) === null) return false;
+      modifierIds.add(modifier.modifierId);
+      return true;
+    });
+  })) return false;
   return result.changes.every(change =>
     change && typeof change.productId === 'string' && change.productId.length > 0 &&
     dimension(change.consumed?.dimension) && signedMinor(change.consumed.minor) !== null &&
@@ -195,8 +221,9 @@ function validateStoredResult(value: unknown, companyId: string, idempotencyKey:
 }
 
 function publicResult(value: PersistedApplication, replayed: boolean): InventoryConsumptionApplied {
-  const {_claimToken, ...result} = value;
+  const {_claimToken, _attemptId, ...result} = value;
   void _claimToken;
+  void _attemptId;
   return {...structuredClone(result), replayed};
 }
 
@@ -307,8 +334,40 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     return {...row, onHand, estimatedUsed, legacyData};
   }
 
-  async consume(request: InventoryConsumptionRequest): Promise<InventoryConsumptionResult> {
-    return this.consumeAttempt(request, 0);
+  async consume(request: InventoryConsumptionRequest, attempt?: {attemptId: string}): Promise<InventoryConsumptionResult> {
+    if (attempt && (typeof attempt.attemptId !== 'string' || !attempt.attemptId || attempt.attemptId.length > 200)) {
+      throw new InventoryConsumptionPersistenceError('Inventory attempt identity is invalid.');
+    }
+    return this.consumeAttempt(request, 0, undefined, attempt?.attemptId);
+  }
+
+  async reconcile(request: InventoryConsumptionRecoveryRequest): Promise<InventoryConsumptionRecoveryResult> {
+    if (request.contract !== INVENTORY_CONSUMPTION_RECOVERY_CONTRACT ||
+        ![request.companyId, request.idempotencyKey, request.attemptId].every(value => typeof value === 'string' && value.length > 0 && value.length <= 200)) {
+      throw new InventoryConsumptionPersistenceError('Inventory recovery identity is invalid.');
+    }
+    // This batch orders every possible commit against the permanent fence. A
+    // missing row from an independent SELECT would not stop a paused worker.
+    const results = await this.db.batch([
+      this.db.prepare(`INSERT OR IGNORE INTO inventory_consumption_fences(company_id,idempotency_key,attempt_id,fenced_at)
+        VALUES (?,?,?,?)`).bind(request.companyId, request.idempotencyKey, request.attemptId, this.clock.now().toISOString()),
+      this.db.prepare(`SELECT f.attempt_id AS fenced_attempt_id,i.contract,i.occurred_at,i.request_fingerprint,i.result_json
+        FROM inventory_consumption_fences f LEFT JOIN inventory_consumption_applications i
+          ON i.company_id=f.company_id AND i.idempotency_key=f.idempotency_key
+        WHERE f.company_id=? AND f.idempotency_key=? AND f.attempt_id=?`).bind(request.companyId, request.idempotencyKey, request.attemptId),
+    ]);
+    const row = (results[1]?.results as RecoveryRow[] | undefined)?.[0];
+    const acknowledged = (value: {success?: boolean} | undefined) => value !== undefined && value.success !== false;
+    if (!acknowledged(results[0]) || !acknowledged(results[1]) ||
+        !row || row.fenced_attempt_id !== request.attemptId) throw new InventoryConsumptionPersistenceError('Inventory recovery fence/read was not acknowledged.');
+    if (row.result_json === null && row.contract === null && row.occurred_at === null && row.request_fingerprint === null) return {...request, status: 'not_applied'};
+    if (row.result_json === null) throw new InventoryConsumptionPersistenceError('Persisted inventory recovery outcome is incomplete.');
+    const persisted = parseJson<unknown>(row.result_json, 'inventory application');
+    if (row.contract !== INVENTORY_CONSUMPTION_CONTRACT || typeof row.request_fingerprint !== 'string' || !/^[a-f0-9]{64}$/.test(row.request_fingerprint) ||
+        !validateStoredResult(persisted, request.companyId, request.idempotencyKey) || persisted.occurredAt !== row.occurred_at) {
+      throw new InventoryConsumptionPersistenceError('Persisted inventory recovery outcome failed validation.');
+    }
+    return {...request, status: 'applied', application: publicResult(persisted, true)};
   }
 
   async consumeWaste(request:InventoryConsumptionRequest,context:WasteInventoryContext):Promise<InventoryConsumptionResult>{
@@ -316,7 +375,7 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     return this.consumeAttempt(request,0,context);
   }
 
-  private async consumeAttempt(request: InventoryConsumptionRequest, retryCount: number, waste?:WasteInventoryContext): Promise<InventoryConsumptionResult> {
+  private async consumeAttempt(request: InventoryConsumptionRequest, retryCount: number, waste?:WasteInventoryContext, attemptId?: string): Promise<InventoryConsumptionResult> {
     const base = this.base(request);
     if (request.contract !== INVENTORY_CONSUMPTION_CONTRACT) {
       return this.rejected(request, {code: 'invalid_contract', message: 'Unsupported inventory consumption contract.'});
@@ -503,7 +562,7 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     };
     const claimToken = this.idFactory();
     if (!claimToken) throw new InventoryConsumptionPersistenceError('Application claim identity is missing.');
-    const persisted: PersistedApplication = {...result, _claimToken: claimToken};
+    const persisted: PersistedApplication = {...result, _claimToken: claimToken, ...(attemptId ? {_attemptId: attemptId} : {})};
     const resultJson = JSON.stringify(persisted);
     const appliedAt = now.toISOString();
     const guardSql: string[] = [];
@@ -567,7 +626,7 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     if (!stored) {
       if(waste)throw new InventoryConsumptionPersistenceError('Waste stock changed before commit. Confirm this same entry again.');
       if (retryCount >= 2) throw new InventoryConsumptionPersistenceError('Inventory kept changing while consumption was being applied.');
-      return this.consumeAttempt(request, retryCount + 1,waste);
+      return this.consumeAttempt(request, retryCount + 1,waste,attemptId);
     }
     if (stored.request_fingerprint !== fingerprint) {
       return this.rejected(request, {code: 'idempotency_conflict', message: 'Idempotency key was already applied with different input.'});
