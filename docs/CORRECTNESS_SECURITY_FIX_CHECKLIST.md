@@ -307,7 +307,7 @@ or enable purchasing. Finish with the required evidence/rollback/handoff record.
 
 ## BUG-02 — Newer sales revision deducts committed inventory again
 
-- [ ] **BUG-02 fixed locally** — a lost inventory outcome cannot cause a newer
+- [x] **BUG-02 fixed locally** — a lost inventory outcome cannot cause a newer
   revision or recovered attempt to consume previously applied items again.
 
 **Severity and confidence:** High. Confirmed through real D1-backed services with
@@ -398,8 +398,89 @@ migration rather than editing 0010.
 **Focused check:** `pnpm test:focused sales-ingestion-contract
 sales-event-store-contract inventory-consumption-d1 clover-b6-local b4-sales-inventory`.
 
-**Closure record:** Pending — fixing commit, fault-injection regressions,
-contracts/migrations, verification, repair limits, rollback and BUG-05 handoff.
+**Closure record (2026-10-04): Complete locally — B5 / M4, B7 / M5, A2; BUG-02 only.**
+
+- **Checkout and fixing commit:** Started from `main` at
+  `f9849750b539c51e163fea6fd1cfd865b5cb538d`. The original modified
+  `docs/README.md`, untracked `docs/APPLICATION_DATA_FLOW.md`, and owner's local
+  databases were preserved. Work is isolated in `/private/tmp/pantrack-bug02-20261004`,
+  branch `workstream-b/bug02-outcome-fence`, fixing commit
+  `a2c42c639bc9688e5bd920d9acaebc23ad593d47`. Mainline remained at the starting
+  HEAD; no concurrent schema integration was present when `0024` was generated.
+  No merge, push, deployment, live integration, remote-data change, or purchasing
+  enablement occurred.
+- **Reproduction and result:** The five existing focused suites passed first.
+  The new [real D1-store/inventory and mocked-Clover regression](../tests/sales-outcome-recovery.mjs)
+  then failed before implementation with `'7' !== '8'`: the second matching
+  application lookup threw after commit, leaving stock 9 and a failed sales reply;
+  the newer revision deducted both lines. With the fix, stock is **10 → 9 → 8**,
+  each application consumes one line, there are exactly two movements, and repeated
+  syncs add no deduction. Deterministic gates also cover no-commit failure,
+  same-key retry, crash after commit, successive lost replies, and late terminal
+  completion. Eight before-commit schedules cover token-aware and legacy workers,
+  revision arrival before/after recovery, and resumption before/after the new commit.
+- **Changed behavior and contracts:** [Sales ingestion](../src/lib/sales-ingestion.ts)
+  reconciles unresolved original company/application/attempt identities through
+  [A's versioned recovery port](../src/lib/inventory-consumption-contract.ts) before
+  lineage advancement. The [real producer](../src/lib/d1-inventory-consumption.ts)
+  and [fake producer](../src/lib/inventory-consumption-fake.ts) fence the attempt
+  before reporting absence; fences also reject pre-extension workers without an
+  attempt token. Durable applications retain their original mappings, selected
+  versions and fingerprints. B appends outcomes without rewriting failed replies
+  or historical terminal states. [The D1 store](../src/lib/d1-sales-event-store.ts)
+  blocks uncertain receipt/claim supersession, uses recovered applications as the
+  next revision's baseline, and atomically completes bounded expired-lease recovery.
+  [Correction review](../src/lib/d1-sales-corrections.ts) can read a reconciled
+  applied deduction without modifying stock. Producer/consumer contract tests and
+  [the M4 decision](decisions/0003-m4-sales-ingestion.md) describe the same behavior.
+- **Additive schema and compatibility:** [0024_safe_bromley.sql](../drizzle/0024_safe_bromley.sql),
+  [schema](../src/db/schema.ts), generated snapshot and journal add immutable
+  `inventory_consumption_fences` and `sales_event_inventory_outcomes`, the A commit
+  fence and B evidence/claim guards. The migration additively replaces the `0010`
+  receipt trigger; all older migration SQL and the transition-history trigger remain
+  unchanged. Existing snapshot table definitions are unchanged. Fresh application
+  and a populated pre-extension upgrade pass, preserving stock/projections,
+  applications/movements, sales facts/states/history, replies, mappings and versions.
+  Historical double deductions are not repaired; those require a separate reviewed,
+  audited correction or physical reconciliation.
+
+Final verification used **Node 22.23.2**, **pnpm 11.25.0**, fictional fixtures,
+mocked providers and this worktree's isolated `.wrangler/state`. The Node 22 bin
+directory was explicitly prepended to `PATH` for the final commands. Earlier
+Node 26 checks also passed; dependencies were copied locally without changing
+the lockfile or using the owner's credential files.
+
+| Command | Result |
+| --- | --- |
+| `pnpm test:focused sales-ingestion-contract sales-event-store-contract inventory-consumption-d1 clover-b6-local b4-sales-inventory sales-outcome-recovery inventory-consumption-contract` | PASS — seven suites, including the new lost-result and deterministic fencing regressions. |
+| `pnpm typecheck` | PASS. |
+| `pnpm test` | PASS — all 42 suites. |
+| `pnpm db:check` | PASS — 25 ordered migrations, schema/snapshot/journal agreement and fresh SQLite application. |
+| `pnpm build` | PASS — Worker build; no deployment. |
+| `pnpm local:setup` | PASS — isolated local-only variables, no owner credentials reused. |
+| `pnpm db:migrate:local` | PASS — fresh isolated D1 applied `0000`–`0024`; pinned-runtime repeat reported no pending migrations. |
+| `pnpm test:local` | PASS — fictional localhost HTTP smoke, anonymous/forged-header rejection, fixture sign-in/out, company creation, catalog, tenant isolation and CSRF. |
+| `git diff --check` | PASS — full diff reviewed for scope, secrets, authorization and external effects; changed relative links verified. |
+
+The first sandbox migration command hit `listen EPERM`; the approved loopback-only
+rerun succeeded. Final ignored logs are `.sites-runtime/bug02-node22-*.log`.
+No required local check remains blocked. Local evidence does not prove hosted
+multi-Worker D1 concurrency, native Clover behavior, CI, sandbox, pilot or production
+acceptance. No runtime configuration gate was changed.
+
+**Failure policy, rollback and BUG-05 handoff:**
+[The tested recovery handoff](BUG02_SALES_OUTCOME_RECOVERY.md) defines the original
+identity, A2 fence, append-only evidence, bounded company/source-scoped internal
+entrypoint and consumer requirements. Missing capability, failed reads/acknowledgment,
+identity mismatch or failed evidence writes leave the outcome unresolved and claims
+blocked. An absent application alone never releases a lease. Keep fences, guards
+and history if repair is needed; pause the affected ingestion/recovery path with
+native sync off and forward-fix additively. Never drop the fence or restore the
+unsafe receipt trigger. Serialize the shared schema/contract merge and rebase
+BUG-03/BUG-05 consumers before editing shared B files. The next unblocked consumer
+task is BUG-05's explicitly authorized, bounded runtime caller with company/role
+tests and truthful partial-failure reporting. Its endpoint/poll wiring remains open
+and is not implemented here; no whole milestone acceptance was changed.
 
 ### BUG-02 agent prompt
 
