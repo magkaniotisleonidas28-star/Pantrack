@@ -1,31 +1,52 @@
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {DatabaseSync} from 'node:sqlite';
-import {mkdirSync,readFileSync,readdirSync} from 'node:fs';
+import {mkdirSync,readFileSync} from 'node:fs';
 
 mkdirSync('.sites-runtime',{recursive:true});
 const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
 const journal=JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8'));
 for(const entry of journal.entries)sql.exec(readFileSync('drizzle/'+entry.tag+'.sql','utf8'));
+// A populated upgrade deliberately expires sessions that lack a fence, without
+// changing any other persisted company, membership, identity or audit record.
+const upgrade=new DatabaseSync(':memory:');upgrade.exec('PRAGMA foreign_keys=ON');
+const fenceMigration=journal.entries.findIndex(entry=>entry.tag.endsWith('_auth_recovery_fence'));assert.ok(fenceMigration>=0);
+for(const entry of journal.entries.slice(0,fenceMigration))upgrade.exec(readFileSync('drizzle/'+entry.tag+'.sql','utf8'));
+upgrade.prepare('INSERT INTO companies VALUES (?,?,?)').run('upgrade-company','Fictional upgrade café','now');
+upgrade.prepare('INSERT INTO auth_users VALUES (?,?,?)').run('upgrade-user','upgrade@example.test',123);
+upgrade.prepare('INSERT INTO memberships VALUES (?,?,?)').run('upgrade-user','upgrade-company','owner');
+upgrade.prepare('INSERT INTO products VALUES (?,?,?)').run('upgrade-company','upgrade-product','{"name":"Fictional milk"}');
+upgrade.prepare('INSERT INTO orders VALUES (?,?,?,?)').run('upgrade-company','upgrade-order','{"id":"upgrade-order"}','now');
+upgrade.prepare('INSERT INTO security_audit VALUES (?,?,?,?,?,?)').run('upgrade-audit','upgrade-company','upgrade-user','session.created','',123);
+upgrade.prepare('INSERT INTO auth_sessions VALUES (?,?,?,?,?,?)').run('legacy-hash','upgrade-user','legacy-encrypted-token',Date.now()+3600000,123,0);
+const preservedTables=upgrade.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('auth_users','auth_sessions') ORDER BY name").all().map(r=>r.name);
+const beforeUpgrade=preservedTables.map(name=>upgrade.prepare(`SELECT * FROM "${name}"`).all());
+upgrade.exec(readFileSync('drizzle/'+journal.entries[fenceMigration].tag+'.sql','utf8'));
+assert.deepEqual(preservedTables.map(name=>upgrade.prepare(`SELECT * FROM "${name}"`).all()),beforeUpgrade);
+assert.deepEqual({...upgrade.prepare('SELECT * FROM auth_users').get()},{id:'upgrade-user',email:'upgrade@example.test',verified_at:123,session_epoch:0,recovery_id:null,recovery_until:0});
+assert.equal(upgrade.prepare('SELECT COUNT(*) AS n FROM auth_sessions').get().n,0);
+assert.equal(upgrade.prepare('SELECT epoch FROM auth_fence WHERE id=1').get().epoch,0);
+assert.deepEqual(upgrade.prepare('PRAGMA foreign_key_check').all(),[]);upgrade.close();
 function deferred(){let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};}
 function barrier(){return {entered:deferred(),release:deferred()};}
-let sessionBatchBarrier;
+let sessionBatchBarrier,completionFailures=0;const recoveryClaimBarriers=[];
 globalThis.m2db={prepare(query){let values=[];return {query,bind(...v){values=v;return this;},async first(){return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){return this.execute();}};},async batch(statements){
  if(sessionBatchBarrier&&statements.some(s=>/^INSERT INTO auth_sessions\b/.test(s.query))){const gate=sessionBatchBarrier;sessionBatchBarrier=undefined;gate.entered.resolve();await gate.release.promise;}
- sql.exec('BEGIN');try{const out=statements.map(s=>s.execute());sql.exec('COMMIT');return out;}catch(e){sql.exec('ROLLBACK');throw e;}
+ if(recoveryClaimBarriers.length&&statements.some(s=>s.query.startsWith('DELETE FROM auth_sessions WHERE user_id='))){const gate=recoveryClaimBarriers.shift();gate.entered.resolve();await gate.release.promise;}
+ sql.exec('BEGIN');try{const out=statements.map(s=>s.execute());if(completionFailures&&statements.some(s=>s.query.includes('recovery_until=CASE'))){completionFailures--;throw new Error('Fictional completion commit failure');}sql.exec('COMMIT');return out;}catch(e){sql.exec('ROLLBACK');throw e;}
 }};
 globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public-test',AUTH_ENCRYPTION_KEY:'ab'.repeat(32)};
 globalThis.m2headers=new Headers();
 const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
 const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review','replenishment/proposals','waste','waste/shortcuts','waste/items','waste/entries','waste/sales','waste/setup','waste/review'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
+for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review','replenishment/proposals','waste','waste/shortcuts','waste/items','waste/entries','waste/sales','waste/setup','waste/review'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['fence','src/lib/auth-session-fence.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
  const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
 }
 const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
 const tokens=new Map(),providerRequests=new Map();let failProvider=false;
 const passwords=new Map(Object.values(accounts).map(user=>[user.id,'existingpassword']));
-const tokenBarriers=new Map();let nextTokenBarrier;
-async function issueToken(user){const access_token=crypto.randomUUID();tokens.set(access_token,user);if(nextTokenBarrier){const gate=nextTokenBarrier;tokenBarriers.set(access_token,gate);nextTokenBarrier=undefined;if(gate.pauseAt==='exchange'){gate.entered.resolve();await gate.release.promise;}}return Response.json({access_token,expires_in:3600});}
+const tokenBarriers=new Map();let nextTokenBarrier,passwordPutBarrier,passwordFailure,logoutFailure=false,providerLifetime=3600,passwordUpdates=0;
+async function issueToken(user){const access_token=crypto.randomUUID();tokens.set(access_token,user);if(nextTokenBarrier){const gate=nextTokenBarrier;tokenBarriers.set(access_token,gate);nextTokenBarrier=undefined;if(gate.pauseAt==='exchange'){gate.entered.resolve();await gate.release.promise;}}return Response.json({access_token,expires_in:providerLifetime,refresh_token:'fictional-unused-refresh-token'});}
 globalThis.fetch=async(url,init={})=>{
  assert.ok(String(url).startsWith('https://test.supabase.co/auth/v1/'),'Only fake Supabase requests are allowed');
  assert.equal(init.redirect,'manual','Supabase requests must not follow redirects in Workers');
@@ -34,7 +55,16 @@ globalThis.fetch=async(url,init={})=>{
  providerRequests.set(path,(providerRequests.get(path)||0)+1);
  if(path.endsWith('/user')){
    if(!tokens.has(token))return Response.json({error:'expired'},{status:401});
-   if(init.method==='PUT'){passwords.set(tokens.get(token).id,body.password);return Response.json(tokens.get(token));}
+   if(init.method==='PUT'){
+     passwordUpdates++;const failure=passwordFailure,gate=passwordPutBarrier;passwordFailure=undefined;passwordPutBarrier=undefined;
+     if(failure==='rejected')return Response.json({error:'rejected'},{status:400});
+     if(failure==='unavailable')return Response.json({error:'unavailable'},{status:503});
+     if(failure==='timeout')throw new DOMException('Fictional provider timeout','TimeoutError');
+     passwords.set(tokens.get(token).id,body.password);
+     if(gate){gate.entered.resolve();await gate.release.promise;}
+     if(failure==='lost-response')throw new DOMException('Fictional lost password response','TimeoutError');
+     return Response.json(tokens.get(token));
+   }
    const gate=tokenBarriers.get(token);
    if(gate&&++gate.calls===gate.pauseAt){gate.entered.resolve();await gate.release.promise;}
    return Response.json(tokens.get(token));
@@ -48,7 +78,7 @@ globalThis.fetch=async(url,init={})=>{
    if(!['valid-recovery','valid-signup'].includes(body.token_hash))return Response.json({error:'replay'},{status:400});
    return issueToken(accounts.owner);
  }
- if(path.endsWith('/logout'))return new Response(null,{status:204});
+ if(path.endsWith('/logout'))return logoutFailure?Response.json({error:'unavailable'},{status:503}):new Response(null,{status:204});
  return Response.json({});
 };
 function req(name,method='GET',body, cookie='',extra={}){const headers=new Headers({'Content-Type':'application/json',Origin:'https://test',...extra});if(cookie)headers.set('Cookie',cookie);globalThis.m2headers=headers;return new Request('https://test/api/'+name+(method==='GET'?'?companyId=company-a'+(name.startsWith('replenishment/')?'&productId=milk':''):''),{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{})});}
@@ -398,19 +428,26 @@ assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.ema
 // BUG-01: the real route must fence proofs acquired before recovery, even if the
 // fake provider keeps every issued token valid after password PUT/global logout.
 async function recoveryLink(){const r=await call('auth','POST',{action:'verify',type:'recovery',token_hash:'valid-recovery'});assert.equal(r.status,200,await r.clone().text());return r.headers.get('set-cookie').split(';')[0];}
+async function reached(gate,pending){await Promise.race([gate.entered.promise,pending.then(async r=>{throw new Error('Race barrier was not reached: '+await r.text());})]);}
+const ownerState=()=>sql.prepare('SELECT session_epoch,recovery_id,recovery_until FROM auth_users WHERE id=?').get(accounts.owner.id);
+const auditCount=action=>sql.prepare('SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action=?').get(accounts.owner.id,action).n;
+const preservedCompanyTables=['companies','memberships','products','orders','inventory_balances_exact','inventory_events_exact','inventory_reconciliations'];
+const companyRecords=()=>preservedCompanyTables.map(name=>sql.prepare(`SELECT * FROM "${name}"`).all());
+const companyRecordsBefore=companyRecords();
 async function recoveryRace(flow,stage){
  const predecessor=await login('owner'),recoveryCookie=await recoveryLink();
+ const oldPassword=passwords.get(accounts.owner.id),replacementPassword=`race-${flow}-${stage}-replacement!`;
  const gate=barrier();
  if(stage==='insert')sessionBatchBarrier=gate;
  else nextTokenBarrier={...gate,pauseAt:stage,calls:0};
- const body=flow==='signin'?{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)}
-  :flow==='reauthenticate'?{action:'reauthenticate',password:passwords.get(accounts.owner.id)}
+ const body=flow==='signin'?{action:'signin',email:accounts.owner.email,password:oldPassword}
+  :flow==='reauthenticate'?{action:'reauthenticate',password:oldPassword}
   :{action:'verify',type:flow,token_hash:flow==='signup'?'valid-signup':'valid-recovery'};
  // Route headers stay request-local while the company-route harness uses m2headers.
  const pending=call('auth','POST',body,flow==='reauthenticate'?predecessor:'');
- await Promise.race([gate.entered.promise,pending.then(async r=>{throw new Error('Race barrier was not reached: '+await r.text());})]);
+ await reached(gate,pending);
  const auditBefore=sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action IN ('session.created','recovery.started')").get(accounts.owner.id).n;
- const reset=await call('auth','POST',{action:'password',password:'race-replacement-password!'},recoveryCookie);
+ const reset=await call('auth','POST',{action:'password',password:replacementPassword},recoveryCookie);
  assert.equal(reset.status,200,await reset.clone().text());
  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,0,'Recovery revoked the predecessor before releasing '+flow+'/'+stage);
  gate.release.resolve();const stale=await pending;
@@ -421,6 +458,7 @@ async function recoveryRace(flow,stage){
  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,0);
  assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action IN ('session.created','recovery.started')").get(accounts.owner.id).n,auditBefore,'Rejected stale creation is not audited as success');
  assert.equal((await call('companies','GET',null,predecessor)).status,401,'Reauthentication cannot resurrect a revoked predecessor');
+ assert.equal((await call('auth','POST',{action:'signin',email:accounts.owner.email,password:oldPassword})).status,400,'The old password cannot start a fresh session');
  const fresh=await login('owner');assert.equal((await call('companies','GET',null,fresh)).status,200,'Fresh new-password signin works');
 }
 const raceFailures=[];
@@ -431,5 +469,108 @@ for(const flow of ['signin','reauthenticate','signup','recovery']){
  }
 }
 if(raceFailures.length)throw new AggregateError(raceFailures,'BUG-01 stale authentication regressions');
+// Two requests have both validated their recovery sessions before either claim.
+// Only the committed winner can call the provider, including the same cookie.
+async function concurrentRecovery(sameCookie){
+ const firstCookie=await recoveryLink(),secondCookie=sameCookie?firstCookie:await recoveryLink();
+ const firstGate=barrier(),secondGate=barrier(),putGate=barrier();recoveryClaimBarriers.push(firstGate,secondGate);
+ const before={attempt:auditCount('password.recovery_attempt'),success:auditCount('password.recovered'),puts:passwordUpdates};
+ const first=call('auth','POST',{action:'password',password:'first-concurrent-password!'},firstCookie);await reached(firstGate,first);
+ const second=call('auth','POST',{action:'password',password:'second-concurrent-password!'},secondCookie);await reached(secondGate,second);
+ passwordPutBarrier=putGate;firstGate.release.resolve();await reached(putGate,first);
+ secondGate.release.resolve();assert.equal((await second).status,400,'A verified but revoked recovery predecessor loses the atomic claim');
+ assert.equal((await call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)})).status,400,'Normal sessions cannot be created during recovery');
+ assert.equal((await call('auth','POST',{action:'verify',type:'recovery',token_hash:'valid-recovery'})).status,400,'Email exchanges cannot bypass the active lease');
+ const other=await login('other');assert.equal((await call('companies','GET',null,other)).status,200,'Another user remains available during recovery');
+ assert.equal((await call('workspace','GET',null,other)).status,403,'Concurrent recovery preserves company isolation');
+ logoutFailure=true;putGate.release.resolve();const winner=await first;logoutFailure=false;
+ assert.equal(winner.status,200,'Provider logout failure does not affect durable revocation');assert.match(winner.headers.get('set-cookie'),/Max-Age=0/);
+ assert.equal(passwordUpdates,before.puts+1);assert.equal(auditCount('password.recovery_attempt'),before.attempt+1);assert.equal(auditCount('password.recovered'),before.success+1);
+ assert.equal(ownerState().recovery_id,null);assert.equal(ownerState().recovery_until,0);
+ assert.equal((await call('auth','POST',{action:'password',password:'replayed-password!'},firstCookie)).status,403,'Recovery claim cannot replay');
+ assert.equal((await call('companies','GET',null,await login('owner'))).status,200);
+}
+await concurrentRecovery(true);await concurrentRecovery(false);
+console.log('PASS: BUG-01 concurrent reset claims, per-user isolation and provider logout failure');
+
+async function failedRecovery(mode){
+ const oldCookie=await login('owner'),recoveryCookie=await recoveryLink(),gate=barrier();
+ nextTokenBarrier={...gate,pauseAt:'exchange',calls:0};
+ const pending=call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)});await reached(gate,pending);
+ const outcome=mode==='rejected'?'password.recovery_failed':'password.recovery_unknown';
+ const before={attempt:auditCount('password.recovery_attempt'),success:auditCount('password.recovered'),outcome:auditCount(outcome)};
+ passwordFailure=mode;assert.equal((await call('auth','POST',{action:'password',password:'failure-replacement-password!'},recoveryCookie)).status,400);
+ assert.equal(ownerState().recovery_id,null);assert.equal(ownerState().recovery_until,0,'Failures do not leave a permanent recovery lock');
+ gate.release.resolve();assert.equal((await pending).status,400,'Failure also fences the delayed old proof');
+ assert.equal(auditCount('password.recovery_attempt'),before.attempt+1);assert.equal(auditCount('password.recovered'),before.success);assert.equal(auditCount(outcome),before.outcome+1);
+ assert.equal((await call('companies','GET',null,oldCookie)).status,401);
+ assert.equal((await call('auth','POST',{action:'password',password:'replayed-password!'},recoveryCookie)).status,403);
+ assert.equal((await call('companies','GET',null,await login('owner'))).status,200,'Fresh provider-approved credentials work after any failed/unknown outcome');
+ const freshLink=await recoveryLink();assert.equal((await call('auth','POST',{action:'reauthenticate',password:passwords.get(accounts.owner.id)},freshLink)).status,401,'Recovery cannot reauthenticate into company access');
+ assert.equal((await call('auth','POST',{action:'password',password:'fresh-retry-password!'},freshLink)).status,200,'A fresh recovery can retry');
+}
+for(const mode of ['rejected','unavailable','timeout','lost-response'])await failedRecovery(mode);
+console.log('PASS: BUG-01 rejected/unknown/timeout/lost-response recovery, audit outcomes and fresh retry');
+
+// A company authentication that already read its row must recheck revocation
+// after the delayed provider response, using its own captured cookie headers.
+const validationCookie=await login('owner'),validationRecovery=await recoveryLink();
+const validationUser=await modules.authlib.sessionFromHeaders(new Headers({Cookie:validationCookie})),validationGate=barrier();
+tokenBarriers.set(validationUser.accessToken,{...validationGate,pauseAt:1,calls:0});
+const validationPending=call('companies','GET',null,validationCookie);await reached(validationGate,validationPending);
+assert.equal((await call('auth','POST',{action:'password',password:'validation-reset-password!'},validationRecovery)).status,200);
+validationGate.release.resolve();assert.equal((await validationPending).status,401,'Provider verification cannot revive a session revoked during that GET');
+
+// A deleted predecessor must fail even without a recovery epoch change.
+const deletedCookie=await login('owner'),deletedGate=barrier();sessionBatchBarrier=deletedGate;
+const deletedPending=call('auth','POST',{action:'reauthenticate',password:passwords.get(accounts.owner.id)},deletedCookie);await reached(deletedGate,deletedPending);
+assert.equal((await call('auth','POST',{action:'signout'},deletedCookie)).status,200);deletedGate.release.resolve();
+assert.equal((await deletedPending).status,400,'A missing oldHash cannot bypass the insertion fence');
+console.log('PASS: BUG-01 delayed company authentication and deleted reauthentication predecessor');
+
+// Advance a fake clock rather than sleeping. Expiration invalidates proofs
+// captured during the lease; late completion cannot clear a newer reset's lease.
+const realNow=Date.now;let clock=realNow();Date.now=()=>clock;
+try{
+ const firstCookie=await recoveryLink(),firstPut=barrier();passwordPutBarrier=firstPut;
+ const first=call('auth','POST',{action:'password',password:'abandoned-reset-password!'},firstCookie);await reached(firstPut,first);
+ const expiredId=ownerState().recovery_id,duringGate=barrier();sessionBatchBarrier=duringGate;
+ const during=call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)});await reached(duringGate,during);
+ clock+=modules.fence.RECOVERY_LEASE_MS+1;
+ const afterExpiry=await login('owner');assert.equal((await call('companies','GET',null,afterExpiry)).status,200,'Abandoned recovery unlocks only through a fresh fence');
+ assert.equal(sql.prepare('SELECT action,target FROM security_audit WHERE id=?').get(expiredId+':expired').action,'password.recovery_unknown');
+ duringGate.release.resolve();assert.equal((await during).status,400,'Lease expiration cannot admit a proof started during recovery');
+ const secondCookie=await recoveryLink(),secondPut=barrier();passwordPutBarrier=secondPut;
+ const second=call('auth','POST',{action:'password',password:'newer-reset-password!'},secondCookie);await reached(secondPut,second);
+ const newer=ownerState();firstPut.release.resolve();assert.equal((await first).status,200);
+ assert.equal(ownerState().recovery_id,newer.recovery_id);assert.equal(ownerState().recovery_until,newer.recovery_until,'Late completion must not unlock a newer recovery');
+ assert.equal((await call('companies','GET',null,afterExpiry)).status,401);
+ secondPut.release.resolve();assert.equal((await second).status,200);assert.equal(ownerState().recovery_id,null);
+ assert.equal((await call('companies','GET',null,await login('owner'))).status,200);
+ const commitCookie=await recoveryLink();completionFailures=1;
+ const successes=auditCount('password.recovered');
+ assert.equal((await call('auth','POST',{action:'password',password:'commit-failure-password!'},commitCookie)).status,400);
+ assert.equal(auditCount('password.recovered'),successes,'A rolled-back completion cannot claim audited success');
+ assert.ok(ownerState().recovery_id);clock+=modules.fence.RECOVERY_LEASE_MS+1;
+ assert.equal((await call('companies','GET',null,await login('owner'))).status,200,'A completion DB failure does not leave a permanent lock');
+}finally{Date.now=realNow;}
+console.log('PASS: BUG-01 abandoned/late recovery, fenced lease expiry and completion rollback');
+
+// Preserve the provider lifetime cap, token encryption and recovery isolation.
+for(const lifetime of [30,7200]){
+ providerLifetime=lifetime;
+ const r=await call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)});
+ assert.equal(r.status,200);const cookie=r.headers.get('set-cookie'),digest=await modules.authlib.hash(cookie.split(';')[0].split('=')[1]);
+ assert.match(cookie,new RegExp('Max-Age='+Math.min(lifetime,3600)+'; Secure'));
+ const row=sql.prepare('SELECT * FROM auth_sessions WHERE hash=?').get(digest);
+ assert.ok(Math.abs(row.expires-Date.now()-Math.min(lifetime,3600)*1000)<2000);
+ assert.ok(!row.token.includes('fictional-unused-refresh-token'));assert.ok(!tokens.has(row.token),'Only encrypted access tokens are retained');
+ const normalHeaders=new Headers({Cookie:cookie.split(';')[0]});assert.ok(await modules.authlib.sessionFromHeaders(normalHeaders));
+ sql.prepare('UPDATE auth_sessions SET token=? WHERE hash=?').run('tampered',digest);
+ assert.equal(await modules.authlib.sessionFromHeaders(normalHeaders),null,'Encrypted token tampering fails closed');
+}
+providerLifetime=3600;
+assert.deepEqual(companyRecords(),companyRecordsBefore,'BUG-01 never changes company roles, stock or history');
+assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[]);
 assert.equal(sql.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
 console.log('PASS: M2 verified sessions, all API families, role/company isolation, CSRF, invitations/replay/concurrency, ownership protection, audit, logout, expiry and recovery. Supabase responses mocked; real provider setup remains a separate acceptance step.');

@@ -162,6 +162,13 @@
       "when": 1790921940049,
       "tag": "0022_repair_replenishment_state_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1791138561076,
+      "tag": "0023_auth_recovery_fence",
+      "breakpoints": true
     }
   ]
 }
