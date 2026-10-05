@@ -48,12 +48,52 @@ requires coordinated schema/code release without mixed unfenced auth code.
 Migration 0023 intentionally clears existing sessions once, requiring fresh
 sign-in while preserving identities, memberships, business data and history.
 
-No remote mutation or deployment has occurred in this preflight. Publishing
-current main must wait for the owner to authorize that development schema cutover
-and its fresh-sign-in effect. The proposed release uses a private D1 backup,
-temporary maintenance response during cutover, the two unchanged migrations,
-fenced main build, unchanged exact-preview/sync settings, and hosted HTTP checks.
-No purchasing or Clover sync gate will be enabled.
+The preflight made no remote mutations. The owner subsequently authorized both
+development migrations and deployment, including fresh sign-in. The executed
+release used a private D1 backup, temporary maintenance response during cutover,
+the two unchanged migrations, fenced main build, unchanged exact-preview/sync
+settings, and hosted HTTP checks. No purchasing or Clover sync gate was enabled.
+
+## Completed hosted release
+
+- UI source commit `65373b308af702c2a9922a2109280568202a95a8` was pushed to
+  remote `main`. [Repository CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/37256510295)
+  completed successfully. The later release-record commit changes documentation
+  only; the deployed application comes from `65373b3`.
+- Private backup: Git-ignored `.sites-runtime/ui-release-20261004/before.sql`
+  in the release checkout, protected by directory mode 700/file mode 600.
+  SHA-256: `5a51d2bf54dd099181689bb1b54df2217869823d557c1f7eacc528525baf71d8`.
+  Loading it into SQLite passed integrity and foreign-key checks. Applying both
+  migrations to that copy preserved all original columns except the migration
+  ledger and intentionally cleared sessions.
+- The fenced main build was uploaded before maintenance as Worker version
+  `ed5e9c65-31b7-432f-bff9-bf4df45e9b68`, tagged `ui-65373b3`. Deployment dry
+  run passed; scanning built artifacts found no private local variable values.
+- Temporary maintenance version `4de7ba71-0a6e-4fd4-af5e-e279e9f538f3` returned
+  503 with no-store and Retry-After before schema mutation. Migration 0022 was
+  applied through unchanged SQL file import (the established trigger-safe path).
+  Its remote trigger matched the tested upgrade before its ledger row was added.
+  Normal migration apply then completed 0023.
+- A post-migration private export passed integrity and foreign-key checks. Comparing
+  every original column confirmed **63 existing tables unchanged**, including
+  company/catalog/inventory/recipes/sales/history and identity fields. The only
+  original-table differences were two migration ledger entries and clearance of
+  26 existing sessions. All 24 migration names exist exactly once; the fence and
+  default user cutoffs are initialized, and no sessions remained at cutover.
+- The uploaded main version was activated at 100% traffic on
+  `2026-10-05T02:50:23.415Z` (October 4 local time). Final deployment metadata
+  confirms its version ID. All nine prior secret bindings remain present;
+  exact inventory is enabled and Clover sync disabled. No cron, queue, supplier
+  connection, purchasing or payment behavior was enabled or exercised.
+
+Hosted checks passed: `/` and `/auth` returned 200; anonymous company, inventory,
+waste and sales-events GETs returned 401; anonymous waste-entry POST returned 401;
+forged identity headers returned 401; the local fixture sign-in path returned 404.
+The served stylesheet contains the new catalog row and content-width rules.
+An initial Python urllib request returned 403; curl-based checks succeeded and
+are the recorded HTTP evidence. No hosted stock, recipe, waste, sale or order was
+created. A new signed-in browser walkthrough remains owner work after fresh login;
+these HTTP checks do not prove provider authentication or hosted concurrency.
 
 ## Recovery and next step
 
@@ -61,5 +101,6 @@ Before remote migration, the existing Worker remains the recovery point. After
 0023, do not restore old sessions or roll back to unfenced authentication; use
 the [auth forward-repair instructions](CORRECTNESS_SECURITY_FIX_CHECKLIST.md#bug-01--password-recovery-misses-concurrent-session-creation).
 UI rollback can revert the UI commit while retaining the fenced main baseline.
-Next unblocked release step: owner approval for the documented development
-schema/code cutover. No milestone checkboxes changed.
+Next unblocked step: owner fresh sign-in and hosted UI usability review. No
+milestone checkboxes changed. The original purchasing checkout remains intact
+on its workstream branch; the clean release checkout holds local `main`.
