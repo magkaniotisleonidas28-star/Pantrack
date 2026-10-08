@@ -169,6 +169,13 @@
       "when": 1791138561076,
       "tag": "0023_auth_recovery_fence",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1791430359342,
+      "tag": "0024_supplier_simulation",
+      "breakpoints": true
     }
   ]
 }
