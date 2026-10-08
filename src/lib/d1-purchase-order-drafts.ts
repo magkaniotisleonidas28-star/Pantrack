@@ -5,19 +5,19 @@ import {cloverSourceGuard, type CloverReviewPolicy} from './d1-replenishment-clo
 import {canonicalJson, frozenCopy, supplierSource} from './supplier-simulation-contract';
 import {D1PurchasingSuppliers} from './d1-purchasing-suppliers';
 import {SupplierRegistryError} from './purchasing-supplier-contract';
-import {cancelPoSchema, createPoSchema, poFail, poId, type PurchaseOrderLine,
-  type PurchaseOrderSnapshot, type PurchaseOrderView, type CreatePoInput} from './purchase-order-contract';
+import {cancelPoSchema, createPoSchema, editPoSchema, reviewPoSchema, poFail, poId, type PurchaseOrderLine,
+  type PurchaseOrderSnapshot, type PurchaseOrderView, type CreatePoInput, type EditPoInput} from './purchase-order-contract';
 
 type Guard = {sql: string; args: (string | number)[]};
 type Clock = {now(): Date};
-type Row = {company_id: string; id: string; number: string; status: 'draft' | 'canceled';
+type Row = {company_id: string; id: string; number: string; status: PurchaseOrderView['status'];
   revision: number; snapshot_json: string; created_at: string};
 type Config = {id: string; version: number; purchase_unit_label: string;
   purchase_quantity_minor: string | null; dimension: 'count' | 'mass' | 'volume'};
 const MEMBER = "EXISTS (SELECT 1 FROM memberships WHERE company_id=? AND user_id=? AND role IN ('owner','manager'))";
 const MAX_MINOR = BigInt('9223372036854775807');
 
-/** Review-only foundation. No network, approval, reservation, source hold or stock writer. */
+/** Review-only drafts. No network, purchase approval, reservation, source hold or stock writer. */
 export class D1PurchaseOrderDrafts {
   constructor(private readonly db: D1Database, private readonly options: {
     identity: () => Promise<string | null>; clock?: Clock; salesPolicy?: CloverReviewPolicy;
@@ -71,7 +71,7 @@ export class D1PurchaseOrderDrafts {
       const estimatedLineMinor = line.estimatedUnitMinor === null ? null :
         (BigInt(line.packs) * BigInt(line.estimatedUnitMinor)).toString();
       const base = {id:`line-${index+1}`,kind:line.kind,sku:line.sku,description:line.description,
-        packs:line.packs,estimatedLineMinor,proposal:null};
+        packs:line.packs,estimatedUnitMinor:line.estimatedUnitMinor,estimatedLineMinor,proposal:null};
       if (line.kind === 'non_stock') {
         lines.push({...base,productId:null,unitLabel:line.unitLabel,stockUnitsPerPack:null,stockQuantity:null,configId:null,configVersion:null});
         continue;
@@ -171,7 +171,7 @@ export class D1PurchaseOrderDrafts {
       }
       return {lines,guards:sources.guards,supplier:{id:sources.profile.id,name:sources.profile.profile.name,email:sources.profile.profile.email,
         accountId:sources.account.reference,locationId:sources.location.reference,deliveryAddress:sources.location.address},
-        registry:{profile:sources.profile,mappings:sources.projections}};
+        registry:{profile:sources.profile,mappings:sources.projections,group:{accountId:ref.accountId,locationId:ref.locationId}}};
     }catch(error){if(error instanceof SupplierRegistryError)poFail(error.code,error.message);throw error;}
   }
   private async commit(input: {companyId:string;operationId:string}, actor: string, fingerprint: string,
@@ -238,24 +238,30 @@ export class D1PurchaseOrderDrafts {
   }
   private async view(row: Row, actor: string): Promise<PurchaseOrderView> {
     const events = await this.db.prepare(`SELECT revision,kind,actor,reason,at FROM purchase_order_draft_events
-      WHERE company_id=? AND order_id=? AND ${MEMBER} ORDER BY revision`)
-      .bind(row.company_id,row.id,row.company_id,actor).all<PurchaseOrderView['events'][number]>();
+      WHERE company_id=? AND order_id=? AND revision<=? AND ${MEMBER} ORDER BY revision`)
+      .bind(row.company_id,row.id,row.revision,row.company_id,actor).all<PurchaseOrderView['events'][number]>();
     if (events.results.length !== row.revision) poFail('forbidden','PO history is unavailable for this membership.');
-    return frozenCopy({snapshot:JSON.parse(row.snapshot_json) as PurchaseOrderSnapshot,status:row.status,revision:row.revision,events:events.results});
+    const last=events.results.at(-1)!;
+    return frozenCopy({snapshot:JSON.parse(row.snapshot_json) as PurchaseOrderSnapshot,status:row.status,revision:row.revision,events:events.results,
+      ...(row.status==='reviewed'?{review:{contentRevision:row.revision-1,actor:last.actor,at:last.at}}:{})});
   }
-  async get(companyId: string, orderId: string): Promise<PurchaseOrderView> {
+  async get(companyId: string, orderId: string, revision?:number): Promise<PurchaseOrderView> {
     const actor = await this.actor(companyId);
     if (!poId.safeParse(orderId).success) poFail('invalid_request','Choose a PO.');
-    const row = await this.db.prepare(`SELECT * FROM purchase_order_drafts WHERE company_id=? AND id=? AND ${MEMBER}`)
-      .bind(companyId,orderId,companyId,actor).first<Row>();
+    if(revision!==undefined&&(!Number.isSafeInteger(revision)||revision<1))poFail('invalid_request','Invalid draft revision.');
+    const row = await this.db.prepare(`SELECT h.company_id,h.id,h.number,r.status,r.revision,r.snapshot_json,h.created_at
+      FROM purchase_order_drafts h JOIN purchase_order_draft_revisions r ON r.company_id=h.company_id AND r.order_id=h.id
+      WHERE h.company_id=? AND h.id=? AND r.revision=COALESCE(?,h.revision) AND ${MEMBER}`)
+      .bind(companyId,orderId,revision??null,companyId,actor).first<Row>();
     if (!row) poFail('missing','PO draft not found.');
     return this.view(row,actor);
   }
   async list(companyId: string, offset = 0) {
     const actor = await this.actor(companyId);
     if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) poFail('invalid_request','Invalid history offset.');
-    const rows = await this.db.prepare(`SELECT id,number,supplier_id,json_extract(snapshot_json,'$.supplier.name') AS supplier_name,status,revision,created_at FROM purchase_order_drafts
-      WHERE company_id=? AND ${MEMBER} ORDER BY created_at DESC,id DESC LIMIT 21 OFFSET ?`)
+    const rows = await this.db.prepare(`SELECT h.id,h.number,h.supplier_id,json_extract(r.snapshot_json,'$.supplier.name') AS supplier_name,h.status,h.revision,h.created_at
+      FROM purchase_order_drafts h JOIN purchase_order_draft_revisions r ON r.company_id=h.company_id AND r.order_id=h.id AND r.revision=h.revision
+      WHERE h.company_id=? AND ${MEMBER} ORDER BY h.created_at DESC,h.id DESC LIMIT 21 OFFSET ?`)
       .bind(companyId,companyId,actor,offset).all<{id:string;number:string;supplier_id:string;supplier_name:string;status:string;revision:number;created_at:string}>();
     return frozenCopy({orders:rows.results.slice(0,20),hasMore:rows.results.length > 20});
   }
@@ -285,19 +291,92 @@ export class D1PurchaseOrderDrafts {
     if (stocks.results.length > 500 || proposals.results.length > 500) poFail('invalid_request','Preview supports up to 500 stock items and proposals.');
     return frozenCopy({stocks:stocks.results,proposals:proposals.results});
   }
+  private registryInput(snapshot:PurchaseOrderSnapshot):Extract<CreatePoInput,{source:'registry'}> {
+    const saved=snapshot.registry??poFail('source_changed','Saved supplier versions are missing.');
+    const group=saved.group??saved.mappings[0];
+    const accounts=saved.profile.profile.accounts.filter(a=>group?a.id===group.accountId:a.reference===snapshot.supplier.accountId);
+    const locations=saved.profile.profile.locations.filter(l=>l.accountId===accounts[0]?.id&&(group?l.id===group.locationId:l.reference===snapshot.supplier.locationId));
+    if(accounts.length!==1||locations.length!==1)poFail('source_changed','Saved supplier group is ambiguous or unavailable; create a replacement draft.');
+    const [account]=accounts,[location]=locations;
+    return {action:'create',companyId:snapshot.companyId,operationId:'validate',source:'registry',
+      supplierRef:{id:saved.profile.id,version:saved.profile.version,accountId:account.id,locationId:location.id},
+      capMinor:snapshot.capMinor,notes:snapshot.notes,lines:snapshot.lines.map(l=>l.kind==='stock'?
+        {kind:'stock',mappingId:l.mappingId!,mappingVersion:l.mappingVersion!,packs:l.packs}:
+        {kind:'non_stock',sku:l.sku,description:l.description,unitLabel:l.unitLabel,packs:l.packs,estimatedUnitMinor:this.unitPrice(l)})};
+  }
+  private unitPrice(line:PurchaseOrderLine):string|null {
+    return line.estimatedUnitMinor!==undefined?line.estimatedUnitMinor:line.estimatedLineMinor===null?null:
+      (BigInt(line.estimatedLineMinor)/BigInt(line.packs)).toString();
+  }
+  private async sourceGuards(snapshot:PurchaseOrderSnapshot,actor:string):Promise<Guard[]> {
+    if(snapshot.source==='registry')return (await this.registry(this.registryInput(snapshot))).guards;
+    if(snapshot.source==='proposals')return (await this.proposals({action:'create',companyId:snapshot.companyId,operationId:'validate',
+      source:'proposals',supplier:{...snapshot.supplier,email:snapshot.supplier.email!},capMinor:snapshot.capMinor,notes:snapshot.notes,
+      proposals:snapshot.lines.map(l=>({id:l.proposal!.proposalId,revision:l.proposal!.revision}))},actor)).guards;
+    return (await this.manual({action:'create',companyId:snapshot.companyId,operationId:'validate',source:'manual',
+      supplier:{...snapshot.supplier,email:snapshot.supplier.email!},capMinor:snapshot.capMinor,notes:snapshot.notes,
+      lines:snapshot.lines.map(l=>l.kind==='stock'?{kind:'stock',productId:l.productId!,expectedConfigId:l.configId!,expectedConfigVersion:l.configVersion!,
+        sku:l.sku,description:l.description,packs:l.packs,estimatedUnitMinor:this.unitPrice(l)}:
+        {kind:'non_stock',sku:l.sku,description:l.description,unitLabel:l.unitLabel,packs:l.packs,estimatedUnitMinor:this.unitPrice(l)})})).guards;
+  }
+  private change(input:{companyId:string;operationId:string;orderId:string;expectedRevision:number},actor:string,fingerprint:string,
+    current:PurchaseOrderView,status:PurchaseOrderView['status'],kind:'edit'|'review'|'cancel',reason:string,
+    snapshot=current.snapshot,guards:Guard[]=[]):Promise<PurchaseOrderView> {
+    const at=(this.options.clock?.now()??new Date()).toISOString(),revision=current.revision+1;
+    const result:PurchaseOrderView={snapshot,status,revision,
+      events:[...current.events,{revision,kind,actor,reason,at}],
+      ...(kind==='review'?{review:{contentRevision:current.revision,actor,at}}:{})};
+    const guard:Guard={sql:'EXISTS (SELECT 1 FROM purchase_order_drafts WHERE company_id=? AND id=? AND revision=? AND status=?)',
+      args:[input.companyId,input.orderId,input.expectedRevision,current.status]};
+    return this.commit(input,actor,fingerprint,result,[guard,...guards],[this.db.prepare(`UPDATE purchase_order_drafts
+      SET status=?,revision=revision+1 WHERE company_id=? AND id=? AND revision=? AND status=?`)
+      .bind(status,input.companyId,input.orderId,input.expectedRevision,current.status)],false);
+  }
+  async edit(value:unknown):Promise<PurchaseOrderView> {
+    const input=this.parse<EditPoInput>(editPoSchema,value),actor=await this.actor(input.companyId);
+    const fingerprint=canonicalJson({actor,input}),prior=await this.replay(input.companyId,input.operationId,fingerprint);if(prior)return prior;
+    const current=await this.get(input.companyId,input.orderId),saved=current.snapshot;
+    if(current.status==='canceled'||current.revision!==input.expectedRevision)poFail('conflict','Draft status or revision changed.');
+    if(input.source!==saved.source)poFail('invalid_request','Create a new draft to change its source.');
+    let snapshot:PurchaseOrderSnapshot,guards:Guard[];
+    if(input.source==='registry'){
+      const ref=this.registryInput(saved).supplierRef;
+      if(canonicalJson(ref)!==canonicalJson(input.supplierRef))poFail('invalid_request','Create a new draft to change supplier details or grouping.');
+      const resolved=await this.registry({...input,action:'create'});
+      snapshot={...saved,lines:resolved.lines,capMinor:input.capMinor,notes:input.notes};guards=resolved.guards;
+      // Explicit mapping replacements update only the saved mapping projections, never the supplier profile.
+      snapshot={...snapshot,registry:{...saved.registry!,mappings:resolved.registry.mappings}};
+    }else{
+      if(input.supplier.id!==saved.supplier.id||input.supplier.accountId!==saved.supplier.accountId||input.supplier.locationId!==saved.supplier.locationId)
+        poFail('invalid_request','Create a new draft to change the supplier/account/location group.');
+      if(input.source==='manual'){
+        const resolved=await this.manual({...input,action:'create'});guards=resolved.guards;
+        snapshot={...saved,supplier:input.supplier,lines:resolved.lines,capMinor:input.capMinor,notes:input.notes};
+      }else{
+        guards=await this.sourceGuards(saved,actor);
+        snapshot={...saved,supplier:input.supplier,capMinor:input.capMinor,notes:input.notes};
+      }
+    }
+    const subtotal=snapshot.lines.reduce((sum,l)=>sum+BigInt(l.estimatedLineMinor??'0'),BigInt(0));
+    if(subtotal>BigInt(input.capMinor))poFail('invalid_request','Draft spending cap is below the known estimated subtotal.');
+    snapshot={...snapshot,knownSubtotalMinor:subtotal.toString(),pricesComplete:snapshot.lines.every(l=>l.estimatedLineMinor!==null)};
+    if(canonicalJson(snapshot)===canonicalJson(saved))poFail('invalid_request','Change at least one draft field before saving.');
+    return this.change(input,actor,fingerprint,current,'draft','edit',input.reason,snapshot,guards);
+  }
+  async review(value:unknown):Promise<PurchaseOrderView> {
+    const input=this.parse(reviewPoSchema,value),actor=await this.actor(input.companyId);
+    const fingerprint=canonicalJson({actor,input}),prior=await this.replay(input.companyId,input.operationId,fingerprint);if(prior)return prior;
+    const current=await this.get(input.companyId,input.orderId);
+    if(current.status!=='draft'||current.revision!==input.expectedRevision)poFail('conflict','Draft status or revision changed.');
+    const guards=await this.sourceGuards(current.snapshot,actor);
+    return this.change(input,actor,fingerprint,current,'reviewed','review','Reviewed warnings and draft details — not approved or sent',current.snapshot,guards);
+  }
   async cancel(value: unknown): Promise<PurchaseOrderView> {
     const input = this.parse(cancelPoSchema,value), actor = await this.actor(input.companyId);
     const fingerprint = canonicalJson({actor,input});
     const replay = await this.replay(input.companyId,input.operationId,fingerprint); if (replay) return replay;
     const current = await this.get(input.companyId,input.orderId);
-    if (current.status !== 'draft' || current.revision !== input.expectedRevision) poFail('conflict','Draft status or revision changed.');
-    const at = (this.options.clock?.now() ?? new Date()).toISOString();
-    const result: PurchaseOrderView = {...current,status:'canceled',revision:current.revision+1,
-      events:[...current.events,{revision:current.revision+1,kind:'cancel',actor,reason:input.reason,at}]};
-    const guard = {sql:"EXISTS (SELECT 1 FROM purchase_order_drafts WHERE company_id=? AND id=? AND revision=? AND status='draft')",
-      args:[input.companyId,input.orderId,input.expectedRevision]};
-    return this.commit(input,actor,fingerprint,result,[guard],[this.db.prepare(`UPDATE purchase_order_drafts
-      SET status='canceled',revision=revision+1 WHERE company_id=? AND id=? AND revision=? AND status='draft'`)
-      .bind(input.companyId,input.orderId,input.expectedRevision)],false);
+    if (current.status === 'canceled' || current.revision !== input.expectedRevision) poFail('conflict','Draft status or revision changed.');
+    return this.change(input,actor,fingerprint,current,'canceled','cancel',input.reason);
   }
 }

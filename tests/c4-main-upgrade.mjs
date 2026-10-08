@@ -22,7 +22,8 @@ try {
   const before=snapshot();
   const schema=f.sql.prepare("SELECT type,name,sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type,name").all();
   const pending=entries.filter(e=>e.idx>=simulationMigration.idx);
-  assert.equal(pending.length,3,'Expected simulation, PO draft and supplier registry migrations');
+  assert.deepEqual(pending.slice(0,3).map(e=>e.tag),['0024_supplier_simulation','0025_purchase_order_drafts','0026_purchasing_supplier_registry'],
+    'Preserve the original C4 integration baseline and exercise later additive migrations too');
   for(const entry of pending){
     f.sql.exec(readFileSync(`drizzle/${entry.tag}.sql`,'utf8'));
     assert.deepEqual(snapshot(),before,`${entry.tag} rewrote existing main data`);
@@ -36,5 +37,5 @@ try {
   for(const table of ['supplier_simulation_orders','purchase_order_drafts','purchasing_suppliers']){
     assert.equal(f.sql.prepare(`SELECT count(*) n FROM ${table}`).get().n,0,'Upgrade must not infer purchasing records');
   }
-  console.log(`PASS: three C4 migrations preserve all ${tables.length} existing main tables and schema objects, including fenced sessions, recovery state, stock, recipes and proposal history.`);
+  console.log(`PASS: ${pending.length} C4 migrations preserve all ${tables.length} existing main tables and schema objects, including fenced sessions, recovery state, stock, recipes and proposal history.`);
 } finally {f.sql.close();}

@@ -449,8 +449,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   company supplier/account/location profiles, supplier-specific exact mappings
   and frozen registry-backed drafts; migration `0026` is local only. Production
   A proposal integration remains separate from the review-only mapping projection.
-  Audited draft editing/approval is next; PDF/XLSX, email and receiving remain
-  separate. Supplier acceptance, scheduler/job, alerts and production budget
+  [Audited draft editing and review](C4_PO_REVIEW_LOCAL_EVIDENCE.md) now pass
+  locally with immutable revisions and review invalidation; migration `0027`
+  is local only. True approval requires A/C quantity commitments and owner
+  spending controls. PDF/XLSX, email and receiving remain separate.
+  Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable
   manager drafts, supplier profiles/mappings, approval, PDF/XLSX, email and receiving
   as separate reviewable outcomes. C4 is not complete and purchasing stays disabled.
