@@ -735,3 +735,32 @@ export const supplierSimulationReservations=sqliteTable('supplier_simulation_res
  index('supplier_daily_exposure').on(t.companyId,t.currency,t.day,t.state),
  foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
 ]);
+
+// Durable PO drafts; no supplier submission or inventory authorization.
+export const purchaseOrderDrafts=sqliteTable('purchase_order_drafts',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
+ number:text('number').notNull(),supplierId:text('supplier_id').notNull(),
+ status:text('status').notNull(),revision:integer('revision').notNull(),
+ snapshotJson:text('snapshot_json').notNull(),createdAt:text('created_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),uniqueIndex('po_draft_number').on(t.companyId,t.number),
+ index('po_draft_history').on(t.companyId,t.createdAt,t.id)]);
+export const purchaseOrderDraftLines=sqliteTable('purchase_order_draft_lines',{
+ companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),id:text('id').notNull(),
+ kind:text('kind').notNull(),productId:text('product_id'),proposalId:text('proposal_id'),
+ sourceRevision:integer('source_revision'),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.orderId,t.id]}),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+ foreignKey({columns:[t.companyId,t.proposalId],foreignColumns:[replenishmentProposalOrigins.companyId,replenishmentProposalOrigins.id]})]);
+export const purchaseOrderDraftOperations=sqliteTable('purchase_order_draft_operations',{
+ companyId:text('company_id').notNull(),operationId:text('operation_id').notNull(),orderId:text('order_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),resultJson:text('result_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]})]);
+export const purchaseOrderDraftEvents=sqliteTable('purchase_order_draft_events',{
+ companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),revision:integer('revision').notNull(),
+ operationId:text('operation_id').notNull(),kind:text('kind').notNull(),actor:text('actor').notNull(),
+ reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.orderId,t.revision]}),uniqueIndex('po_draft_event_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
+ foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[purchaseOrderDraftOperations.companyId,purchaseOrderDraftOperations.operationId]})]);

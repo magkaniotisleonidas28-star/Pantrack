@@ -21,7 +21,8 @@
     "db:reset:local": "node scripts/reset-local-db.mjs",
     "db:check": "node scripts/check-migrations.mjs",
     "db:generate": "drizzle-kit generate",
-    "dev:usability": "node scripts/usability-preview.mjs"
+    "dev:usability": "node scripts/usability-preview.mjs",
+    "dev:order-draft": "node scripts/order-draft-preview.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
