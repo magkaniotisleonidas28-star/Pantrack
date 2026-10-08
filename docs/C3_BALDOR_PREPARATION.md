@@ -4,6 +4,26 @@ Prepared: 2026-09-30. Status: research packet and inquiry draft ready.
 This is one C3 preparation outcome. Baldor approval, testing access, a working
 supplier connection, and M8 acceptance remain pending.
 
+## PO-first direction — 2026-10-03
+
+The [adopted rollout](PURCHASE_ORDER_ROLLOUT.md) makes reviewed emailed POs the
+first purchasing method, with optional API/EDI integration at M13 after users.
+The historical API inquiry below remains unsent and is now a post-launch access
+preparation option, not a launch prerequisite. No supplier has been contacted.
+
+For C3/M8, obtain café permission, an accepted supplier ordering email/contact,
+account/location/product references, pack conversions, delivery rules, payment
+terms and explicit agreement on unknown-price spending caps. Record confirmations
+privately and keep only sanitized decision status here. Baldor's ordering guide,
+rechecked on 2026-10-03, describes website/telephone ordering and does not establish
+email PO acceptance. Until confirmed, keep email submission disabled and use its
+ordinary approved ordering process only under separate authorization.
+
+Replies will go to the café inbox for manual recording in Pantrack. Verify the
+Pantrack sending domain/Reply-To and private PDF storage later. Sending an email
+does not prove supplier acceptance; confirmed quantities/prices and delivery
+counts are separate evidence. Baldor browser automation remains outside scope.
+
 ## What the owner selected
 
 - Baldor is the first supplier candidate.
@@ -54,7 +74,7 @@ or unverified. Consume A's immutable proposal without recalculating its
 shortfall in the connector. Preserve manual order-list export when a supplier
 does not provide an approved automated route.
 
-## Inquiry draft — owner reviews and sends
+## Historical API inquiry draft — M13 preparation, owner reviews and sends
 
 **Status: unsent.** The owner can use Baldor's request form to ask for the
 integration team. Add any contact details privately. This draft does not
@@ -121,19 +141,19 @@ unknown codes or conversions for review. Do not invent real SKUs or prices.
 
 ## Sequence and handoff
 
-1. **C3:** owner reviews/sends the inquiry and supplies a sanitized reply.
-   Update only confirmed access decisions. Silence is not approval; distinguish
-   application acceptance from testing access.
-2. **C4:** plan one provider-neutral supplier contract/fake test outcome.
-   Exercise duplicate requests, sending-before-call, unknown timeouts,
-   reconciliation before retry, and preserved proposal quantities. Local fake
-   tests can proceed without Baldor access; they do not prove connectivity.
-3. **A8 / C5:** M7 acceptance and approved supplier access gate the real M8
-   implementation. Start with an explicitly authorized read-only development
-   catalog/connection check; do not use the café account during preparation.
-4. **Later café pilot:** obtain written business permission and account/location
-   authorization before café data is used. Review sandbox/failure evidence and
-   the M8/M11 requirements before authorizing one exact low-risk order.
+1. **C3:** obtain separately authorized supplier email PO and café/account
+   decisions. Silence is not approval. Record only confirmed sanitized terms.
+2. **C4:** complete one local PO-first outcome at a time; preserve exact proposals
+   and test draft/export, dispatch uncertainty, budget and delivery contracts
+   against fakes. Local checks prove no supplier connectivity.
+3. **A8 / C5:** accepted M7, approved email channel and provider/failure evidence
+   gate one separately authorized low-risk email PO. Use A's atomic incoming and
+   receiving port. No live café account use during preparation.
+4. **M11:** obtain written business/data permission and complete reviewed
+   count-to-delivery pilot cycles with every PO line accounted for.
+5. **M13:** after M12 and production users, prioritize actual supplier demand
+   and pursue the historical API inquiry if appropriate. API access/testing and
+   any real API order require their own evidence and explicit authorization.
 
 If Baldor offers no test account, record that limit. The shared engine can still
 be developed with fictional data, but direct Baldor validation requires a
@@ -145,6 +165,6 @@ available while automated access is pending.
 This preparation changes documentation only. No public API, runtime contract,
 schema, credential, deployment, schedule, or purchasing setting is changed.
 Documentation checks and external-evidence limits are recorded in the
-[feature roadmap handoff](WASTE_AND_MARGIN_ROADMAP.md#preparation-handoff).
+[feature roadmap handoff](WASTE_AND_MARGIN_ROADMAP.md#original-preparation-handoff).
 Revert the preparation commit to undo the documentation changes. No Baldor
 message, account change, order, payment, or café data import needs reversal.

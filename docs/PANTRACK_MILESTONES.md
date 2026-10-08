@@ -1,7 +1,7 @@
 # Pantrack Development Milestones
 
-Version: 1.1
-Updated: 2026-09-19
+Version: 1.2
+Updated: 2026-10-03
 Purpose: Working specification for developing Pantrack with Codex in VS Code
 Product goal: Estimate ingredient inventory from completed menu-item sales, calculate replenishment to manager-defined target levels, and safely submit supplier orders with minimal manual work.
 
@@ -16,8 +16,8 @@ Pantrack should let each business:
 5. Subtract calculated consumption from estimated inventory without double counting sales.
 6. Calculate the amount required to reach a manager-defined target stock level, considering confirmed incoming deliveries and supplier pack sizes.
 7. Create a purchasing proposal grouped by supplier.
-8. Submit approved proposals to real suppliers and track uncertain, rejected, accepted, partially fulfilled, and delivered orders.
-9. Run scheduled checks automatically with budgets, limits, alerts, audit records, and an emergency pause control.
+8. Create reviewed purchase orders from proposals or manual stock/non-stock lines; email through an agreed supplier channel, download PDF/Excel, retain order history and reconcile every delivered line.
+9. Run scheduled checks and reminders with budgets, limits, alerts, audit records and pause controls. Supplier APIs and unattended purchasing are optional post-launch outcomes.
 
 The system is an inventory estimate. Physical counts remain necessary for reconciliation because spills, over-pouring, theft, spoilage, unrecorded extras, and incorrect recipes cannot always be inferred from register data.
 
@@ -90,13 +90,15 @@ flowchart TD
     E --> F[Compare stock plus incoming to target]
     F --> G[Round shortfall to supplier packs]
     G --> H[Create supplier proposal]
-    H --> I{Ordering mode}
-    I -->|Review| J[Manager approval]
-    I -->|Automatic| K[Policy and budget checks]
-    J --> L[Submit to supplier]
-    K --> L
-    L --> M[Track confirmation and delivery]
-    M --> N[Receive and reconcile stock]
+    H --> I[Create PO; manual lines also supported]
+    I --> J[Manager review and spending cap]
+    J --> K[Immutable PO and PDF; approved supplier email]
+    K --> L[Record supplier confirmation separately]
+    L --> M[Order-linked incoming inventory]
+    M --> N[Staff record delivery; manager approves]
+    N --> O[Reconcile every line and stock atomically]
+    J -. M13 after users .-> P[Optional approved supplier API]
+    P --> L
 ```
 
 ## 5. Milestone roadmap
@@ -111,11 +113,15 @@ flowchart TD
 | M5 | Clover end-to-end pilot | M4 | Clover completed sales deduct inventory correctly in sandbox and pilot mode |
 | M6 | Additional POS adapter framework | M4–M5 | A second POS proves that integrations share one stable internal contract |
 | M7 | Replenishment and purchasing proposals | M3–M5 | Shortfalls produce explainable, safe proposals grouped by supplier |
-| M8 | First real supplier adapter | M7 | One supplier can quote, accept, reconcile, and confirm a real test order |
+| M8 | Purchase orders, email ordering and delivery reconciliation | M7 | One supplier accepts reviewed POs; durable history, PDF/Excel and every delivered line reconcile safely |
 | M9 | Scheduler, alerts, and operations | M5–M8 | Background work runs reliably with visible health and failure recovery |
-| M10 | Payments and financial controls | M2, M8 | Payment responsibilities and limits are secure and explicitly defined |
-| M11 | Pilot validation and controlled automation | M0–M10 | One business completes a measured sale-to-delivery pilot |
+| M10 | Purchasing limits and financial controls | M2, M8 | Supplier payment responsibilities, caps and budget exposure are secure and explicit |
+| M11 | Reviewed purchase-order pilot | M0–M10 | One business completes two measured count-to-delivery cycles without requiring supplier APIs or automation |
 | M12 | Multi-company production readiness | M11 | The system can onboard additional businesses safely and supportably |
+| M13 | Optional supplier API integrations | M12, active production users | Approved APIs share existing PO, approval, budget and receiving contracts |
+| M14 | Controlled purchasing automation | M12, chosen-channel pilot; M13 for API automation | Selected products operate within tested limits and pause/recovery controls |
+
+The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) records the adopted workflow and separately reviewable outcomes. M13/M14 do not block the first reviewed-mode launch. Unrelated POS prerequisites, including the pending M6 gate, remain explicit.
 
 ---
 
@@ -157,8 +163,13 @@ through the contracts below.
    this handoff; final M7 acceptance waits for M5's reliable inputs.
 3. **A → C: purchasing proposal.** A publishes an immutable proposal snapshot
    with versions, quantities, supplier SKU/pack data, limits, warnings, and an
-   explanation. C owns state beginning with external quote/submission and must
-   never recalculate A's inventory shortfall inside a supplier adapter.
+   explanation. C owns durable POs, review/approval and dispatch evidence and must
+   never recalculate A's shortfall. Existing fictional v1/v2 mappings do not
+   authorize real ordering; A/C publish a separate production mapping handoff.
+   A also owns the atomic multi-product PO confirmation/receiving port: order-linked
+   incoming, commitment transfer, frozen conversion, count-cutoff reconciliation
+   and idempotent receipt posting. C must not replace aggregate incoming or write
+   inventory through sequential movements.
 4. **B/C → operations.** B exposes idempotent sync/reconciliation jobs and C
    exposes idempotent supplier/proposal jobs. C owns scheduling, leases, retry
    policy, alerts, and operational status; scheduled code calls the same service
@@ -407,7 +418,7 @@ For every numbered item, the assigned person follows the same delivery loop:
   enabled for usability review; Clover sync and purchasing remain disabled.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
-  ordering channel, account/location/SKUs/terms, scheduler/queue, notification
+  accepted email PO channel/contact and cap process, account/location/SKUs/terms, scheduler/queue, notification
   owners, retry policy, payment responsibility, limits, and alert ownership.
   Missing decisions stay explicit blockers rather than guessed defaults.
   **Preparation outcome on 2026-09-30:** the owner selected Baldor and reports
@@ -425,20 +436,41 @@ For every numbered item, the assigned person follows the same delivery loop:
   retry, terminal failure, and concurrent budgets. Do not submit or schedule real
   work; validate A's proposal snapshot through the shared contract and tests.
   The [A7 fake consumer slice](C4_A7_HANDOFF_EVIDENCE.md) passed locally;
-  supplier delivery, scheduler/job, alert, and budget components remain open.
+  the [durable supplier simulation core](C4_SUPPLIER_ENGINE_LOCAL_EVIDENCE.md)
+  now passes local exact-quote approval, send claims, source/product holds,
+  spending limits, concurrency and uncertain-outcome recovery. Migration `0024`
+  is local only. The [fictional manager draft/export](C4_ORDER_DRAFT_LOCAL_EVIDENCE.md)
+  now preserves v1/v2 proposals as readable lists with copy/CSV controls in an
+  isolated localhost preview. Baldor's published access restrictions keep real
+  portal automation outside this slice. Integrating the draft into the authorized
+  manager workflow now has a [durable draft foundation](C4_PO_FOUNDATION_LOCAL_EVIDENCE.md)
+  behind a default-off preview, with migration `0025` local only. The
+  [versioned supplier registry](C4_SUPPLIER_REGISTRY_LOCAL_EVIDENCE.md) now adds
+  company supplier/account/location profiles, supplier-specific exact mappings
+  and frozen registry-backed drafts; migration `0026` is local only. Production
+  A proposal integration remains separate from the review-only mapping projection.
+  Audited draft editing/approval is next; PDF/XLSX, email and receiving remain
+  separate. Supplier acceptance, scheduler/job, alerts and production budget
+  policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable
+  manager drafts, supplier profiles/mappings, approval, PDF/XLSX, email and receiving
+  as separate reviewable outcomes. C4 is not complete and purchasing stays disabled.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
-  proposal without recalculating quantities; implement the selected supplier's
-  quote, validation, submission, status, incoming-stock, and delivery behavior.
-  Pass sandbox/failure tests before one separately approved low-risk real order.
+  proposal without recalculating quantities; implement reviewed email POs through
+  a supplier-agreed channel, immutable PDF, native XLSX/history, manual supplier
+  confirmation and staff-recorded/manager-approved receiving through A's atomic port.
+  Pass local/provider failure tests before one separately authorized low-risk real
+  email PO. API access is optional M13 after production users.
 - [ ] **C6 — Implement and accept M9.** After M5–M8, provision the selected
-  scheduler/queue and notification channel; connect B's sync jobs and C's supplier
-  jobs through their idempotent service entry points. Prove duplicate delivery,
+  scheduler/queue and notification channel; connect B's sync jobs and PO failure,
+  unconfirmed-order, overdue-delivery and discrepancy reminders through idempotent
+  service entry points. Keep automatic purchasing off until M14. Prove duplicate delivery,
   retry, terminal failure, alert delivery, status, and recovery with the browser
   closed.
 - [ ] **C7 — Implement and accept M10.** After M8 and the payment model decision,
-  finish hosted/tokenized setup where needed, owner authorization/reauthentication,
-  allowlists, per-order/day/month limits, unknown-order budget reservations, and
-  financial audit/reconciliation. Keep automatic purchasing disabled.
+  implement existing supplier account terms, owner authorization/reauthentication,
+  explicit caps, per-order/day/month limits, unknown-order exposure and financial
+  audit/reconciliation. Hosted payment setup is required only if separately chosen.
+  Move automatic eligibility/enablement to M14; keep it disabled.
 - [ ] **C8 — Coordinate M11 and execute C's slice.** Prepare the runbook and
   evidence report; operate reviewed supplier submissions, delivery reconciliation,
   alerts, and tested pause/recovery. Collect written manager sign-off before each
@@ -828,50 +860,49 @@ Then apply configured capacity, shelf-life, minimum-order, order-multiple, stale
 
 ---
 
-## M8 — First real supplier adapter
+## M8 — Purchase orders, email ordering and delivery reconciliation
 
-**Objective:** Submit one controlled order to one real supplier through a supported API or approved connector.
+**Objective:** Complete reviewed POs and delivery accounting through an agreed
+supplier email channel. APIs are optional M13 after Pantrack has production users.
 
-**Preparation only (2026-09-30):** Baldor is the selected supplier candidate;
-the owner reports an existing NYC café account for a later pilot. The
-[C3 packet](C3_BALDOR_PREPARATION.md) is ready, with approved channel, test
-access, terms, mappings, and pilot permission pending. M7 acceptance and M8's
-external validation gates remain in force. Supplier submission stays disabled.
+Existing [C3 preparation](C3_BALDOR_PREPARATION.md), [C4 simulation evidence](C4_SUPPLIER_ENGINE_LOCAL_EVIDENCE.md)
+and [fictional draft/export evidence](C4_ORDER_DRAFT_LOCAL_EVIDENCE.md) remain local
+preparation, not supplier email acceptance. See the [complete rollout](PURCHASE_ORDER_ROLLOUT.md).
+M7 acceptance and explicit live-order authorization remain required.
 
 ### Product decisions required
 
-- [ ] Select the supplier from the pilot café.
-- [ ] Confirm whether the supplier provides an API, EDI, marketplace app, punchout, approved integration service, or no automation channel.
-- [ ] Confirm account ownership, delivery locations, catalog IDs, order minimums, cutoffs, fees, and payment terms.
-- [ ] Define whether Pantrack pays or the supplier charges the business's existing account.
+- [ ] Confirm café/account/location authorization and supplier acceptance of emailed POs, ordering contact, cap process, terms, fees, minimums, cutoffs and delivery rules.
+- [ ] Configure verified Pantrack sender/Reply-To and private PDF storage; no café mailbox access is required.
+- [ ] Confirm supplier account payment responsibility; platform charging is not a prerequisite.
 
 ### Tasks
 
-- [ ] Implement supplier authorization and credential rotation.
-- [ ] Resolve Pantrack product IDs to exact supplier SKUs and pack units.
-- [ ] Fetch or validate current availability, price, fees, minimums, and delivery details before submission.
-- [ ] Require a quote snapshot and policy checks before purchase.
-- [ ] Send a stable idempotency key when supported; otherwise build an explicit duplicate-prevention strategy.
-- [ ] Persist sending before the external call.
-- [ ] Treat timeouts and ambiguous responses as unknown and reconcile through supplier status before retrying.
-- [ ] Record external order ID and immutable submission details.
-- [ ] Support rejected, canceled, substituted, partially fulfilled, and accepted responses.
-- [ ] Convert accepted quantities to incoming inventory once.
-- [ ] Close incoming quantities only when delivery receipt is recorded.
+- [ ] Add versioned company supplier/account/location/product mappings and the production A-to-C handoff.
+- [ ] Persist manual stock/non-stock and immutable proposal POs, revisions, exact conversions, history and audit.
+- [ ] Add manager review/approval, approval invalidation, explicit caps and atomic budget claims.
+- [ ] Add immutable PDF attachment/download and native Excel single-PO/filtered-history exports.
+- [ ] Persist durable outbox claims and permanent dispatch identities; handle signed, duplicate/out-of-order provider events.
+- [ ] Separate email status from supplier acceptance; hold unknown sends for review without automatic resend/channel fallback.
+- [ ] Record café-inbox replies manually, including supplier reference, confirmed prices/quantities, backorders, changes and cancellation confirmation.
+- [ ] Use A's atomic order-linked incoming port without double-counting proposal commitments or replacing other incoming stock.
+- [ ] Let staff record delivery counts and managers approve atomic receipts using frozen conversions.
+- [ ] Reconcile partial/damaged/substituted/excess deliveries and every non-stock line; require explicit final dispositions before closure.
 
 ### Acceptance criteria
 
-- [ ] Connector capability testing cannot place an order.
-- [ ] Review mode requires explicit manager approval.
-- [ ] A real low-risk test order uses the intended account, delivery location, SKU, pack count, and limits.
-- [ ] A simulated timeout produces unknown status and no automatic retry.
-- [ ] Reconciliation resolves unknown status without duplicate submission.
-- [ ] Price or quantity outside configured tolerance blocks purchase.
-- [ ] Supplier confirmation creates incoming inventory exactly once.
+- [ ] Anonymous, wrong-company and forbidden-role requests reveal no purchasing data; staff cannot approve or post inventory.
+- [ ] Manager review precedes dispatch; stale recipient, quantity or cap changes invalidate approval.
+- [ ] PDF/Excel show accurate references, revisions, exact quantities and unavailable estimates; historical documents remain unchanged.
+- [ ] Duplicate/concurrent saves, dispatches, confirmations and receipts are idempotent and auditable.
+- [ ] Simulated timeout remains unknown; no automatic resend or email-to-API fallback occurs.
+- [ ] A separately authorized real low-risk email PO reaches the agreed supplier contact with the intended account, location, SKUs, packs and cap; acceptance is recorded separately.
+- [ ] Confirmation adds order-linked incoming once; partial receipts reconcile every line and add only accepted stock once.
+- [ ] Multiple POs, count-cutoff conflicts and damaged/substituted quantities reconcile without unexplained stock changes.
 
 ### Codex prompt
 
-> Implement M8 for the selected supplier's supported integration method. Use review mode and sandbox/test facilities where available. Preserve the proposal snapshot and idempotency behavior. Build explicit unknown-outcome reconciliation and demonstrate it with a simulated timeout before any real test order.
+> Implement one PO-first C4/C5 outcome from the rollout. Preserve A's immutable quantities and use its atomic inventory port. Keep supplier submission disabled until recorded gates; local fakes do not authorize a real email/order, account access or deployment.
 
 ---
 
@@ -882,11 +913,12 @@ external validation gates remain in force. Supplier submission stays disabled.
 ### Tasks
 
 - [ ] Choose and document the scheduler/queue platform.
-- [ ] Add authenticated, idempotent scheduled jobs for POS sync, reconciliation, purchasing checks, and supplier status checks.
+- [ ] Add authenticated, idempotent POS sync/reconciliation and reviewed PO reminders; do not schedule automatic orders before M14.
 - [ ] Use per-company leases to prevent overlapping runs.
 - [ ] Add bounded retries with backoff and a terminal held/failed state.
 - [ ] Add an operations page with last success, last attempt, lag, failure reason, unresolved events/orders, and next run.
 - [ ] Add alerts for disconnected POS, expired credentials, sync lag, unmapped events, failed proposals, unknown supplier outcomes, spending-limit blocks, and stale inventory.
+- [ ] Add email failure, unconfirmed PO, overdue delivery and discrepancy alerts.
 - [ ] Add alert acknowledgement and escalation ownership.
 - [ ] Add structured logs and request/job correlation IDs without secrets.
 - [ ] Document recovery steps for every terminal job state.
@@ -905,7 +937,7 @@ external validation gates remain in force. Supplier submission stays disabled.
 
 ---
 
-## M10 — Payments and financial controls
+## M10 — Purchasing limits and financial controls
 
 **Objective:** Define and secure how supplier purchases are charged and limited.
 
@@ -916,8 +948,8 @@ external validation gates remain in force. Supplier submission stays disabled.
 - [ ] Complete provider-hosted payment setup where required.
 - [ ] Restrict payment setup and viewing to authorized owners.
 - [ ] Add per-order, per-day, and optional per-month company limits.
-- [ ] Add supplier/product allowlists and automatic-order eligibility.
-- [ ] Require reauthentication or an equivalent high-confidence action before enabling automatic mode or changing high-impact limits.
+- [ ] Reserve approved total caps, including unknown prices/fees, before sending; require renewed approval for above-cap confirmation. Automatic eligibility belongs to M14.
+- [ ] Require reauthentication or equivalent high-confidence action for high-impact limit changes. Automatic enablement belongs to M14.
 - [ ] Audit every limit, payment, and mode change.
 - [ ] Display estimated versus final supplier totals and reconciliation differences.
 
@@ -927,7 +959,8 @@ external validation gates remain in force. Supplier submission stays disabled.
 - [ ] Employees and unauthorized managers cannot access payment controls.
 - [ ] Orders exceeding any limit are blocked before submission.
 - [ ] Unresolved/unknown orders count against the budget until reconciled.
-- [ ] Automatic mode cannot be enabled without at least one verified supplier, eligible products, limits, and alert owner.
+- [ ] Unknown-price POs require an agreed supplier cap process; an emailed cap is not represented as an enforced supplier invoice limit.
+- [ ] Reviewed ordering works using existing supplier terms without requiring platform payment collection.
 
 ### Codex prompt
 
@@ -935,16 +968,16 @@ external validation gates remain in force. Supplier submission stays disabled.
 
 ---
 
-## M11 — Pilot validation and controlled automation
+## M11 — Reviewed purchase-order pilot
 
-**Objective:** Prove the complete workflow with one café before allowing unattended purchases.
+**Objective:** Prove manager-reviewed PO ordering and delivery reconciliation with one café before wider release; automation remains M14.
 
 ### Pilot stages
 
 1. **Shadow inventory:** Import real sales while the café continues its normal process. Compare Pantrack estimates with physical counts.
 2. **Recommendation only:** Generate purchasing suggestions; managers compare them with actual orders.
-3. **Reviewed submission:** Managers approve Pantrack proposals sent through the real supplier adapter.
-4. **Limited automation:** Allow only selected products with conservative budgets and alerts.
+3. **Reviewed email POs:** Managers approve POs, record supplier replies and approve staff delivery counts. Exercise partial delivery/discrepancy handling.
+4. **Reviewed release decision:** Accept two count-to-delivery cycles. API integration and limited automation remain M13/M14 follow-ups.
 
 ### Tasks
 
@@ -956,7 +989,7 @@ external validation gates remain in force. Supplier submission stays disabled.
 - [ ] Reconcile physical counts at an agreed frequency.
 - [ ] Investigate systematic recipe variance and adjust through reviewed configuration changes.
 - [ ] Keep an emergency global/company pause control visible and tested.
-- [ ] Obtain manager sign-off before each increase in automation.
+- [ ] Obtain manager sign-off on reviewed PO sending, confirmations, receiving and pilot results.
 
 ### Exit criteria
 
@@ -966,7 +999,7 @@ external validation gates remain in force. Supplier submission stays disabled.
 - [ ] Every submitted order has an audit trail from sales through calculation, approval, supplier response, and receipt.
 - [ ] Alerts reach the responsible person and recovery instructions work.
 - [ ] The business completes at least two successful count-to-delivery cycles in reviewed mode.
-- [ ] Limited automation remains within configured product and spending limits during a defined observation period.
+- [ ] At least one partial delivery or discrepancy is accounted for line by line; supplier API/automatic mode is not a pilot exit requirement.
 
 ### Codex prompt
 
@@ -1003,6 +1036,26 @@ external validation gates remain in force. Supplier submission stays disabled.
 ### Codex prompt
 
 > Implement M12 only after the pilot exit criteria are recorded. Focus on onboarding, tenant isolation, operational readiness, backup/restore, rate limiting, and security findings. Produce a release-readiness report with evidence for every acceptance criterion.
+
+## M13 — Optional supplier API integrations after users
+
+**Depends on:** M12 and at least one active production café. This does not block reviewed email launch.
+
+- [ ] Prioritize actual user supplier demand; obtain approved API/EDI documentation, testing access and account permission.
+- [ ] Implement capabilities behind the same PO, approval, budget, incoming and receiving contracts; no second purchasing engine or automatic channel fallback.
+- [ ] Prove sandbox duplicate, timeout, unknown, cancellation and status matching cases before one separately authorized real API order.
+- [ ] Record supplier-specific acceptance, operational limits and rollback; APIs stay optional per supplier.
+
+## M14 — Controlled purchasing automation
+
+**Depends on:** M12 and accepted chosen-channel reviewed pilot evidence; API automation additionally requires M13.
+
+- [ ] Define eligible suppliers/products, conservative limits, reauthentication, alert ownership and global/company pause controls.
+- [ ] Obtain written manager permission for a bounded observation period; automatic mode remains off by default.
+- [ ] Prove no duplicate order/inventory effect and no retry/fallback after an uncertain external outcome.
+- [ ] Record automation staying within product/spending limits during the agreed period before accepting expansion.
+
+---
 
 ## 6. Definition of done for every milestone
 

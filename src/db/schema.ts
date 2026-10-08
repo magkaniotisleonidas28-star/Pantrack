@@ -638,3 +638,159 @@ export const salesEventCorrectionAdjustments=sqliteTable('sales_event_correction
  foreignKey({columns:[t.companyId,t.correctionId],foreignColumns:[salesEventCorrections.companyId,salesEventCorrections.correctionId]}),
  foreignKey({columns:[t.companyId,t.inventoryEventId],foreignColumns:[inventoryEventsExact.companyId,inventoryEventsExact.id]}),
 ]);
+
+// C4 simulation only; these records never authorize the legacy purchasing path.
+export const supplierSimulationOrders=sqliteTable('supplier_simulation_orders',{
+ companyId:text('company_id').notNull(),
+ id:text('id').notNull(),
+ sourceJson:text('source_json').notNull(),
+ status:text('status').notNull(),
+ revision:integer('revision').notNull(),
+ quoteId:text('quote_id'),
+ approvalId:text('approval_id'),
+ sendOperationId:text('send_operation_id'),
+ externalId:text('external_id'),
+ createdAt:text('created_at').notNull(),
+ updatedAt:text('updated_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.id]}),
+ foreignKey({columns:[t.companyId],foreignColumns:[companies.id]}),
+]);
+export const supplierSimulationQuotes=sqliteTable('supplier_simulation_quotes',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ id:text('id').notNull(),
+ quoteJson:text('quote_json').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.id]}),
+ uniqueIndex('supplier_quote_order_identity').on(t.companyId,t.orderId,t.id),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
+]);
+export const supplierSimulationApprovals=sqliteTable('supplier_simulation_approvals',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ id:text('id').notNull(),
+ quoteId:text('quote_id').notNull(),
+ quoteFingerprint:text('quote_fingerprint').notNull(),
+ sourceFingerprint:text('source_fingerprint').notNull(),
+ actor:text('actor').notNull(),
+ approvedAt:text('approved_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.id]}),
+ foreignKey({columns:[t.companyId,t.orderId,t.quoteId],foreignColumns:[supplierSimulationQuotes.companyId,supplierSimulationQuotes.orderId,supplierSimulationQuotes.id]}),
+]);
+export const supplierSimulationOperations=sqliteTable('supplier_simulation_operations',{
+ companyId:text('company_id').notNull(),
+ operationId:text('operation_id').notNull(),
+ orderId:text('order_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),
+ resultJson:text('result_json').notNull(),
+ writeGuard:integer('write_guard').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
+]);
+export const supplierSimulationEvents=sqliteTable('supplier_simulation_events',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ revision:integer('revision').notNull(),
+ operationId:text('operation_id').notNull(),
+ kind:text('kind').notNull(),
+ status:text('status').notNull(),
+ actor:text('actor').notNull(),
+ detailJson:text('detail_json').notNull(),
+ at:text('at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.orderId,t.revision]}),
+ uniqueIndex('supplier_event_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[supplierSimulationOperations.companyId,supplierSimulationOperations.operationId]}),
+]);
+export const supplierSimulationSourceHolds=sqliteTable('supplier_simulation_source_holds',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ proposalId:text('proposal_id').notNull(),
+ productId:text('product_id').notNull(),
+ sourceRevision:integer('source_revision').notNull(),
+ active:integer('active').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.orderId,t.proposalId]}),
+ uniqueIndex('supplier_active_source_hold').on(t.companyId,t.proposalId).where(sql`${t.active}=1`),
+ uniqueIndex('supplier_active_product_hold').on(t.companyId,t.productId).where(sql`${t.active}=1`),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
+ foreignKey({columns:[t.companyId,t.proposalId],foreignColumns:[replenishmentProposalOrigins.companyId,replenishmentProposalOrigins.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+]);
+export const supplierSimulationReservations=sqliteTable('supplier_simulation_reservations',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ day:text('day').notNull(),
+ currency:text('currency').notNull(),
+ totalMinor:integer('total_minor').notNull(),
+ state:text('state').notNull(),
+ reservedAt:text('reserved_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.orderId]}),
+ index('supplier_daily_exposure').on(t.companyId,t.currency,t.day,t.state),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
+]);
+
+// Durable PO drafts; no supplier submission or inventory authorization.
+export const purchaseOrderDrafts=sqliteTable('purchase_order_drafts',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
+ number:text('number').notNull(),supplierId:text('supplier_id').notNull(),
+ status:text('status').notNull(),revision:integer('revision').notNull(),
+ snapshotJson:text('snapshot_json').notNull(),createdAt:text('created_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),uniqueIndex('po_draft_number').on(t.companyId,t.number),
+ index('po_draft_history').on(t.companyId,t.createdAt,t.id)]);
+export const purchaseOrderDraftLines=sqliteTable('purchase_order_draft_lines',{
+ companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),id:text('id').notNull(),
+ kind:text('kind').notNull(),productId:text('product_id'),proposalId:text('proposal_id'),
+ sourceRevision:integer('source_revision'),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.orderId,t.id]}),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+ foreignKey({columns:[t.companyId,t.proposalId],foreignColumns:[replenishmentProposalOrigins.companyId,replenishmentProposalOrigins.id]})]);
+export const purchaseOrderDraftOperations=sqliteTable('purchase_order_draft_operations',{
+ companyId:text('company_id').notNull(),operationId:text('operation_id').notNull(),orderId:text('order_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),resultJson:text('result_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]})]);
+export const purchaseOrderDraftEvents=sqliteTable('purchase_order_draft_events',{
+ companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),revision:integer('revision').notNull(),
+ operationId:text('operation_id').notNull(),kind:text('kind').notNull(),actor:text('actor').notNull(),
+ reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.orderId,t.revision]}),uniqueIndex('po_draft_event_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
+ foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[purchaseOrderDraftOperations.companyId,purchaseOrderDraftOperations.operationId]})]);
+
+// Company supplier registry: mutable heads, immutable versions/receipts/audit.
+export const purchasingSuppliers=sqliteTable('purchasing_suppliers',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
+ version:integer('version').notNull(),status:text('status').notNull(),name:text('name').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),index('purchasing_supplier_list').on(t.companyId,t.updatedAt,t.id)]);
+export const purchasingSupplierVersions=sqliteTable('purchasing_supplier_versions',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id,t.version]}),foreignKey({columns:[t.companyId,t.id],foreignColumns:[purchasingSuppliers.companyId,purchasingSuppliers.id]})]);
+export const purchasingMappings=sqliteTable('purchasing_mappings',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),status:text('status').notNull(),
+ supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),locationId:text('location_id').notNull(),
+ productId:text('product_id').notNull(),sku:text('sku').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),
+ foreignKey({columns:[t.companyId,t.supplierId],foreignColumns:[purchasingSuppliers.companyId,purchasingSuppliers.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+ uniqueIndex('purchasing_active_sku').on(t.companyId,t.supplierId,t.accountId,t.locationId,t.sku).where(sql`${t.status}='active'`),
+ index('purchasing_mapping_list').on(t.companyId,t.supplierId,t.updatedAt,t.id)]);
+export const purchasingMappingVersions=sqliteTable('purchasing_mapping_versions',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id,t.version]}),foreignKey({columns:[t.companyId,t.id],foreignColumns:[purchasingMappings.companyId,purchasingMappings.id]})]);
+export const purchasingRegistryOperations=sqliteTable('purchasing_registry_operations',{
+ companyId:text('company_id').notNull().references(()=>companies.id),operationId:text('operation_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),resultJson:text('result_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]})]);
+export const purchasingRegistryEvents=sqliteTable('purchasing_registry_events',{
+ companyId:text('company_id').notNull(),kind:text('kind').notNull(),entityId:text('entity_id').notNull(),version:integer('version').notNull(),
+ operationId:text('operation_id').notNull(),actor:text('actor').notNull(),reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.kind,t.entityId,t.version]}),uniqueIndex('purchasing_registry_event_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[purchasingRegistryOperations.companyId,purchasingRegistryOperations.operationId]})]);

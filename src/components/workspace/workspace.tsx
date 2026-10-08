@@ -4,6 +4,8 @@ import MenuWasteRecorder, {type WasteSection} from './menu-waste-recorder';
 import {useWorkspaceTheme} from './workspace-theme';
 import VendorAutomation from './vendor-automation';
 import ManagerOperations from './manager-operations';
+import PurchaseOrderDrafts from './purchase-order-drafts';
+import PurchasingSuppliers from './purchasing-suppliers';
 import InventoryPanel from './inventory-panel';
 import ProductCatalog from './product-catalog';
 import PaymentMethods from './payment-methods';
@@ -25,6 +27,8 @@ export default function Workspace({email,companyId,companyName,role,onDirtyChang
 const [tab,setTab]=useState('order'),[products,setProducts]=useState<Product[]>([]),[orders,setOrders]=useState<Order[]>([]),[qty,setQty]=useState<Record<string,number>>({}),[search,setSearch]=useState(''),[category,setCategory]=useState('All products'),[loading,setLoading]=useState(true),[error,setError]=useState(''),[busy,setBusy]=useState(false),[review,setReview]=useState(false),[editing,setEditing]=useState<Product|null>(null),[detail,setDetail]=useState<Order|null>(null),[notice,setNotice]=useState('');
 const key=useRef(''),lock=useRef(false);
 const [inventoryDirty,setInventoryDirty]=useState(false);
+const [poEnabled,setPoEnabled]=useState(false),[poDirty,setPoDirty]=useState(false);
+const [registryEnabled,setRegistryEnabled]=useState(false),[registryDirty,setRegistryDirty]=useState(false),[registryRefresh,setRegistryRefresh]=useState(0);
 const [wasteDirty,setWasteDirty]=useState(false),[inventoryRefresh,setInventoryRefresh]=useState(0);
 const [navigationOpen,setNavigationOpen]=useState(false);
 const [wasteEnabled,setWasteEnabled]=useState(false),[wasteLaunch,setWasteLaunch]=useState(0),[wasteSection,setWasteSection]=useState<WasteSection>('record'),[stockFocus,setStockFocus]=useState<string>();
@@ -42,6 +46,8 @@ const navigation=[
   ...(wasteEnabled?[{value:'waste',label:'Waste',icon:Trash2}]:[]),
   {value:'catalog',label:'Product catalog',icon:BookOpen},
   {value:'history',label:'Order history',icon:History},
+  ...(poEnabled?[{value:'purchasing',label:'Purchase-order drafts',icon:ShoppingBag}]:[]),
+  ...(registryEnabled?[{value:'purchasing-suppliers',label:'Purchasing suppliers',icon:Truck}]:[]),
   {value:'suppliers',label:'Suppliers & automation',icon:Truck},
   ...(role==='owner'?[{value:'payments',label:'Payment methods',icon:CreditCard},{value:'setup',label:'Setup & register',icon:Check}]:[]),
 ];
@@ -54,7 +60,7 @@ function renderNavigation(mobile=false){return <nav aria-label="Workspace sectio
   {tab===value&&subsections.length>0&&<div className="sidebar-subsections">{subsections.map(item=><button type="button" key={item.id} aria-current={activeSubsection===item.id?'page':undefined} onClick={()=>chooseSubsection(item.id)}>{item.label}</button>)}</div>}
 </div>)}</nav>;}
 const [removing,setRemoving]=useState<Order|null>(null);
-useEffect(()=>{onDirtyChange(inventoryDirty||wasteDirty||Object.values(qty).some(n=>n>0));},[qty,wasteDirty,inventoryDirty,onDirtyChange]);
+useEffect(()=>{onDirtyChange(inventoryDirty||wasteDirty||poDirty||registryDirty||Object.values(qty).some(n=>n>0));},[qty,wasteDirty,poDirty,registryDirty,inventoryDirty,onDirtyChange]);
 async function load(){setLoading(true);setError('');try{const d=await request(companyId);setProducts(d.products);setOrders(d.orders);}catch(e){setError((e as Error).message);}finally{setLoading(false);}}
 useEffect(()=>{void load();if(new URLSearchParams(location.search).has('payment_setup'))setTab('payments');if(new URLSearchParams(location.search).has('clover'))setTab('setup');},[]);
 function quantity(id:string,n:number){if(!Number.isInteger(n)||n<0||n>999)return;setQty(q=>({...q,[id]:n}));key.current='';}
@@ -94,6 +100,8 @@ return <div className="app sidebar-workspace" data-workspace-theme={theme}>
 <main data-workspace-page={tab}><div className="demo-banner"><Leaf size={17}/><span><strong>Start with a practice order.</strong> Sample products and suppliers are fictional. Real purchasing requires configured connections and enabled automation.</span></div>
 {error&&<div role="alert" className="error">{error} <button onClick={()=>void load()}>Retry loading</button></div>}{notice&&<div className="notice" role="status">{notice}<button aria-label="Dismiss notification" onClick={()=>setNotice('')}>×</button></div>}
 <MenuWasteRecorder companyId={companyId} email={email} role={role} page={tab==='waste'} section={wasteSection} launchCount={wasteLaunch} refreshKey={inventoryRefresh} onEnabledChange={setWasteEnabled} onDirtyChange={setWasteDirty} onSaved={()=>setInventoryRefresh(n=>n+1)} onSection={section=>{setWasteSection(section);setTab('waste');}} onSetup={id=>{setStockFocus(id);setInventorySection('stock');setInventoryRefresh(n=>n+1);setTab('inventory');}}/>
+<PurchaseOrderDrafts key={companyId} companyId={companyId} active={tab==='purchasing'} refreshKey={registryRefresh} onEnabledChange={setPoEnabled} onDirtyChange={setPoDirty}/>
+<PurchasingSuppliers key={companyId+'suppliers'} companyId={companyId} active={tab==='purchasing-suppliers'} onEnabledChange={setRegistryEnabled} onDirtyChange={setRegistryDirty} onSaved={()=>setRegistryRefresh(n=>n+1)}/>
 {tab==='order'&&<section className="order-section"><div className="page-heading"><div><h1>A fresh start, fully stocked.</h1><p>Your regular products. All your suppliers. One order list.</p></div><div className="step-label"><span>1</span> Select products <i>—</i> 2 Review</div></div>
 <div className="order-layout"><section className="product-panel"><div className="catalog-tools"><div className="search"><Search size={18}/><Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search products, suppliers, or SKUs" aria-label="Search products"/></div><div className="filters">{['All products','Dairy','Coffee & pantry','Packaging'].map(c=><button className={category===c?'active':''} key={c} onClick={()=>setCategory(c)}>{c}</button>)}</div></div>
 {loading?<div className="loading">{[1,2,3,4].map(i=><Skeleton key={i} className="h-16 w-full mb-4"/>)}</div>:<Table><TableHeader><TableRow><TableHead>Product / pack size</TableHead><TableHead>Est. price</TableHead><TableHead className="text-center">Quantity</TableHead><TableHead className="text-right">Subtotal</TableHead></TableRow></TableHeader><TableBody>{shown.map(p=><TableRow key={p.id} className={qty[p.id]?'selected-row':''}><TableCell><div className="product-name"><span className={'product-icon '+(p.category==='Dairy'?'blue':p.category==='Packaging'?'ochre':'green')}><Package size={20}/></span><div><strong>{p.name}</strong><span>{p.pack} / {p.unit}</span><small>{p.supplier} · {p.sku}</small></div></div></TableCell><TableCell><strong>{money(p.price)}</strong><small>per {p.unit}</small></TableCell><TableCell><div className="stepper"><button aria-label={'Decrease '+p.name} disabled={!qty[p.id]} onClick={()=>quantity(p.id,(qty[p.id]||0)-1)}><Minus size={14}/></button><input aria-label={'Quantity of '+p.name+' in '+p.unit+'s'} type="number" min="0" max="999" step="1" value={qty[p.id]||0} onChange={e=>quantity(p.id,Number(e.target.value))}/><button aria-label={'Increase '+p.name} disabled={qty[p.id]===999} onClick={()=>quantity(p.id,(qty[p.id]||0)+1)}><Plus size={14}/></button></div></TableCell><TableCell className="text-right">{qty[p.id]?money(p.price*qty[p.id]):<span className="muted">—</span>}</TableCell></TableRow>)}</TableBody></Table>}{!loading&&shown.length===0&&<div className="empty">No matching products. Try another search.</div>}<div className="table-foot">{shown.length} products <span>USD · prices are estimates</span></div></section>
