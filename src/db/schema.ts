@@ -764,3 +764,33 @@ export const purchaseOrderDraftEvents=sqliteTable('purchase_order_draft_events',
 },t=>[primaryKey({columns:[t.companyId,t.orderId,t.revision]}),uniqueIndex('po_draft_event_operation').on(t.companyId,t.operationId),
  foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
  foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[purchaseOrderDraftOperations.companyId,purchaseOrderDraftOperations.operationId]})]);
+
+// Company supplier registry: mutable heads, immutable versions/receipts/audit.
+export const purchasingSuppliers=sqliteTable('purchasing_suppliers',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
+ version:integer('version').notNull(),status:text('status').notNull(),name:text('name').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),index('purchasing_supplier_list').on(t.companyId,t.updatedAt,t.id)]);
+export const purchasingSupplierVersions=sqliteTable('purchasing_supplier_versions',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id,t.version]}),foreignKey({columns:[t.companyId,t.id],foreignColumns:[purchasingSuppliers.companyId,purchasingSuppliers.id]})]);
+export const purchasingMappings=sqliteTable('purchasing_mappings',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),status:text('status').notNull(),
+ supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),locationId:text('location_id').notNull(),
+ productId:text('product_id').notNull(),sku:text('sku').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),
+ foreignKey({columns:[t.companyId,t.supplierId],foreignColumns:[purchasingSuppliers.companyId,purchasingSuppliers.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+ uniqueIndex('purchasing_active_sku').on(t.companyId,t.supplierId,t.accountId,t.locationId,t.sku).where(sql`${t.status}='active'`),
+ index('purchasing_mapping_list').on(t.companyId,t.supplierId,t.updatedAt,t.id)]);
+export const purchasingMappingVersions=sqliteTable('purchasing_mapping_versions',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id,t.version]}),foreignKey({columns:[t.companyId,t.id],foreignColumns:[purchasingMappings.companyId,purchasingMappings.id]})]);
+export const purchasingRegistryOperations=sqliteTable('purchasing_registry_operations',{
+ companyId:text('company_id').notNull().references(()=>companies.id),operationId:text('operation_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),resultJson:text('result_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]})]);
+export const purchasingRegistryEvents=sqliteTable('purchasing_registry_events',{
+ companyId:text('company_id').notNull(),kind:text('kind').notNull(),entityId:text('entity_id').notNull(),version:integer('version').notNull(),
+ operationId:text('operation_id').notNull(),actor:text('actor').notNull(),reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.kind,t.entityId,t.version]}),uniqueIndex('purchasing_registry_event_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[purchasingRegistryOperations.companyId,purchasingRegistryOperations.operationId]})]);

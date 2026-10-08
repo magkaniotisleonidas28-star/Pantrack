@@ -133,4 +133,4 @@ The unpublished PO schema was regenerated as `0025` after simulation `0024`.
 Custom PO guards are unchanged. The schema and standalone preview are queued
 first; gated PO API/UI consumers are integrated with the dependent registry
 slice. Original evidence above predates integration; see the integration record
-for current-worktree verification. No remote migration is authorized here.
+for current-worktree verification: [C4 main integration](C4_MAIN_INTEGRATION_20261007.md). No remote migration is authorized here.

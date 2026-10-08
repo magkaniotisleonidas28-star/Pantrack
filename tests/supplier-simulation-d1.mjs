@@ -15,7 +15,7 @@ const snapshot=f=>Object.fromEntries(tables.map(t=>[t,f.sql.prepare(`SELECT * FR
   f.sql.close();
 }
 
-// Upgrade from 0021 preserves fictional stock, proposals and their history.
+// Upgrade from the current pre-simulation schema preserves stock and proposal history.
 {
   const f=await fixture({beforeNewMigration:true});await f.source();
   const before=snapshot(f);f.applyNewMigration();assert.deepEqual(snapshot(f),before);

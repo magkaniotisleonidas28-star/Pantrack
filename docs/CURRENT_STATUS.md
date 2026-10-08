@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-02
+Updated: 2026-10-07
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -171,6 +171,43 @@ Never send, commit, or paste Supabase keys, Cloudflare API tokens, OAuth secrets
 supplier credentials, or payment details into chat or source control.
 
 ## What you need to do next
+
+The [C4 main integration](C4_MAIN_INTEGRATION_20261007.md) now preserves the
+shipped UI and auth fixes while regenerating local-only purchasing migrations
+as `0024`–`0026`. All 49 suites and the full local pipeline passed in its isolated
+worktree, including a populated-main upgrade preserving 65 existing tables.
+Purchasing remains disabled; hosted CI and merge status are tracked separately.
+
+C4's [supplier engine backend](C4_SUPPLIER_ENGINE_LOCAL_EVIDENCE.md) now passes
+local simulation checks: exact quote approval, company/role guards, durable
+send claims, spending/source holds, duplicate prevention and uncertain-result
+reconciliation. Additive migration `0024` is local only. The original 41-suite verification
+predates main integration; current evidence is recorded separately. The separate
+[fictional manager order-draft preview](C4_ORDER_DRAFT_LOCAL_EVIDENCE.md) now
+consumes unchanged v1/v2 proposals and provides review, copy and CSV download at
+`http://127.0.0.1:5180` using `pnpm dev:order-draft`. Its original 42-suite local verification passed. It has no production application route, database access
+or supplier transport. Baldor's published access restrictions keep portal
+automation outside that fictional slice. Supplier replies are not a prerequisite
+for that demonstration.
+
+The adopted [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) now makes manager-reviewed
+email POs the M8 path; PDF/XLSX, searchable history and delivery reconciliation
+are required outcomes. Supplier APIs move to M13 after production users and
+controlled purchasing automation to M14. Unrelated POS/release gates remain.
+The new [C4 PO foundation](C4_PO_FOUNDATION_LOCAL_EVIDENCE.md) adds persistent
+manual stock/non-stock and immutable proposal drafts, company/manager guards,
+replay-safe creation/cancellation and history behind a default-off preview.
+Migration `0025` is local only. Run `pnpm dev:purchase-orders` for an isolated
+fictional workspace at `http://127.0.0.1:5179`. The
+[C4 supplier registry](C4_SUPPLIER_REGISTRY_LOCAL_EVIDENCE.md) now adds versioned
+company suppliers/accounts/locations, supplier-specific exact packs and immutable
+registry-backed drafts. Original local evidence covers 46 suites and
+Safari desktop/narrow review; migration `0026` is local only. The mapping
+projection is review-only; production A proposal integration remains separate.
+The next C4 outcome is audited draft editing and manager review/approval, followed
+by PDF/XLSX, safe email and A-owned atomic confirmation/receiving. No supplier
+email, approval, reservation, inventory change or real order is enabled.
+C4/M8 acceptance remains open and purchasing stays disabled.
 
 Current focus: **W1/W2 café-item waste local review** and
 **C3 Baldor supplier preparation**. The
@@ -353,23 +390,28 @@ behavior.
 | M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; paid latte, modifier/replay, duplicate/polling, unpaid deletion, full refund, missed-sale polling recovery, natural token refresh, lost-response recovery, disconnect/reconnect, later paid revision, and controlled webhook-failure cases recorded; owner-accepted on 2026-09-29 for tested development sandbox scope | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records nine paid latte deductions across sandbox cases, one held sale with zero partial use and an audited recovery replay, a simulated duplicate and owner poll, an unpaid deletion dismissed without stock use, one linked full $5 refund with zero additional stock use, two sales recovered by owner polling, one OAuth rotation and one controlled lost-response recovery, same-merchant reauthorization with history and stock retained, and one paid order revision that used only the added latte's ingredients. One authenticated webhook received a controlled `503`; owner polling recovered the sale once, while native retry was not observed in 20 minutes. Clover rejected a paid-order DELETE with HTTP 400. See the [bounded acceptance decision](M5_B7_ACCEPTANCE_REVIEW.md) for all excluded provider cases. Sync remains off; pilot and production approval are separate. |
 | M6 — second POS | B8 on hold at owner's request awaiting Toast approval/testing access; adapter foundation preserved; M6 not accepted | Toast received the owner's application on 2026-09-30. The [local foundation](M6_B8_ADAPTER_FOUNDATION.md) is implemented locally; native Toast remains unimplemented. Resume on Toast's request for information or an approved [access handoff](M6_TOAST_ACCESS.md), then validate a read-only sandbox connection before sales cases. |
 | M7 — replenishment proposals | A6/A7 local core and lifecycle, C4's fake consumer, and A8 local sale, sales-health reader, v2 handoff, durable source safety, gated preview, and manager save/edit/cancel flow passed locally; owner reports the local browser walkthrough works and accepted the ten-minute development freshness policy; M7 not accepted | The [served local HTTP check and owner browser report](M7_A8_SERVED_LOCAL_EVIDENCE.md) record the positive proposal flow, false D1 change-count fixes, and expected `review_required`/`inventory_changed` stock invalidation. [Decision 0004](decisions/0004-m7-development-sales-freshness.md) records the accepted development policy. The manager flow uses server-derived Clover health and fictional supplier details, with supplier submission disabled. A8 still needs hosted browser, end-to-end, and concurrency evidence. The local walkthrough used fixture sign-in and synthetic health; it does not verify provider signup or sync. Development D1 applied A7 `0016`/`0017` with the [W1/W2 release](C2_W2_HOSTED_RELEASE.md); the guard repair `0022` and auth fence `0023` were applied during the [C2 UI release](C2_UI_RELEASE_20261004.md). See [manager flow evidence](M7_A8_MANAGER_FLOW_EVIDENCE.md), [preview evidence](M7_A8_PREVIEW_API_UI_EVIDENCE.md), and [durable safety evidence](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md). |
-| M8 — supplier adapter | C3 preparation ready; Baldor selected as candidate; real adapter not started | The [Baldor packet](C3_BALDOR_PREPARATION.md) contains public research and an unsent inquiry. The owner reports a NYC café/account for a later pilot. Approved channel, testing access, terms, and café permission remain pending. Preserve M7 acceptance and the sandbox/failure gates before any authorized real order. |
-| M9 — operations | Prototype endpoint only | Provision scheduler/queue, retries, alert channels, operations page, and recovery runbooks. |
-| M10 — financial controls | Partial prototype | Confirm supplier payment model, limits, eligibility, owner reauthentication, and financial audit/testing. |
-| M11 — café pilot | Not started | Written business permission, one POS/supplier/location, measurements, two reviewed count-to-delivery cycles, alerts, pause test, and manager sign-offs. |
+| M8 — POs, email and delivery reconciliation | PO-first direction adopted; C4 local draft foundation only; M8 not accepted | [Rollout](PURCHASE_ORDER_ROLLOUT.md) requires supplier profiles/mappings, reviewed approval/caps, PDF/XLSX/history, safe dispatch, manual supplier confirmations and staff-counted/manager-approved atomic receiving. [Baldor preparation](C3_BALDOR_PREPARATION.md) keeps email acceptance, café authorization and terms pending; no supplier contact. Preserve M7 and provider/failure gates before an authorized real PO. |
+| M9 — operations | Prototype endpoint only | Provision scheduler/queue and PO email-failure, unconfirmed-order, overdue-delivery and discrepancy reminders; keep automatic purchasing off. |
+| M10 — financial controls | Partial prototype | Existing supplier terms are the first model; implement approved caps, budget exposure, owner limits/reauthentication and audit. Platform payments are optional; automatic eligibility belongs to M14. |
+| M11 — reviewed PO pilot | Not started | Written permission, one POS/supplier/location, two reviewed count-to-delivery cycles including partial delivery/discrepancy accounting, alerts, pause and manager sign-off. APIs/automation are not prerequisites. |
 | M12 — production readiness | Not started; requires M11 | Onboarding, backups/restores, export/deletion, rate limits, security review, monitoring, support, and tenant-isolation release testing. |
+| M13 — optional supplier APIs | Deferred until M12 and active production users | Prioritize user supplier demand; approved access and sandbox/real-test evidence; share the PO workflow. |
+| M14 — controlled purchasing automation | Deferred post-launch | Chosen-channel pilot, approved eligibility/limits, reauthentication, alerts, pause and bounded observation; API automation additionally requires M13. |
 
 ## Important dependencies
 
 ```text
 M2 → M3 → M4 → M5 → M6 / M7 → M8 → M9
                    M2 + M8 → M10
-M0 through M10 → M11 → M12
+M0 through M10 → M11 reviewed POs → M12
+M12 + active production users → M13 optional supplier APIs
+M12 + approved chosen-channel pilot → M14 automation (also M13 for API automation)
 ```
 
 M11 cannot be skipped. It provides the real-world sale-to-delivery evidence that
 must exist before Pantrack can safely onboard multiple companies or enable any
-limited automation.
+limited automation. M13/M14 do not block the first reviewed-mode launch; the
+pending M6 POS gate has not been removed.
 
 ## Evidence and detailed documents
 
@@ -385,6 +427,8 @@ limited automation.
 - [M6 B8 local adapter foundation](M6_B8_ADAPTER_FOUNDATION.md)
 - [M6 Toast access handoff](M6_TOAST_ACCESS.md)
 - [C3 Baldor supplier preparation](C3_BALDOR_PREPARATION.md)
+- [Purchase-order-first rollout](PURCHASE_ORDER_ROLLOUT.md)
+- [C4 persistent PO draft foundation](C4_PO_FOUNDATION_LOCAL_EVIDENCE.md)
 - [Quick waste recording and menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md)
 - [W1 quick ingredient-waste local evidence](W1_LOCAL_EVIDENCE.md)
 - [W2 café-item waste local evidence](W2_LOCAL_EVIDENCE.md)

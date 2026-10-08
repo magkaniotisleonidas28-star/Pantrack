@@ -3,7 +3,7 @@
 ## 1. Simulation contracts and storage
 
 - [x] 1.1 Add bounded quote/result/capability contracts and branded deterministic fake connector; verify malformed quotes, whole packs, grouping and transport exclusion in focused tests.
-- [x] 1.2 Add orders, immutable evidence, source holds and reservations in migration 0022; verify fresh schema, immutability, upgrade preservation and rollback/forward-repair documentation.
+- [x] 1.2 Add orders, immutable evidence, source holds and reservations in migration 0024; verify fresh schema, immutability, upgrade preservation and rollback/forward-repair documentation.
 
 ## 2. Durable engine
 

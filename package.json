@@ -22,7 +22,8 @@
     "db:check": "node scripts/check-migrations.mjs",
     "db:generate": "drizzle-kit generate",
     "dev:usability": "node scripts/usability-preview.mjs",
-    "dev:order-draft": "node scripts/order-draft-preview.mjs"
+    "dev:order-draft": "node scripts/order-draft-preview.mjs",
+    "dev:purchase-orders": "node scripts/purchase-order-preview.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

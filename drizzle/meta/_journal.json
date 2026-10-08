@@ -183,6 +183,13 @@
       "when": 1791430412685,
       "tag": "0025_purchase_order_drafts",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1791430460341,
+      "tag": "0026_purchasing_supplier_registry",
+      "breakpoints": true
     }
   ]
 }

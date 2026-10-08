@@ -78,7 +78,7 @@ All commands below ran successfully in this worktree:
 | `openspec validate supplier-simulation-engine --strict` | Passed. |
 | `git diff --check` and changed relative-link checks | Passed. |
 
-The new suites cover 0021-to-0024 preservation, immutable evidence/terminal state,
+The original suites cover pre-simulation upgrade preservation, immutable evidence/terminal state,
 50-line grouping, anonymous/wrong-company/employee denial, role revocation at
 commit, full quote approval/requote/expiry, stale inventory/settings/config and
 proposal revisions, v2 disabled/error/disconnected/stale/advanced Clover health,
@@ -124,19 +124,33 @@ A's handoff contract and proposal lifecycle were consumed without edits. Shared
 schema/journal edits are scoped to this C4 integration; the next schema-bearing
 branch must regenerate its next migration after this one merges.
 
-The next independent supplier outcome is a **portal feasibility investigation**
-using an authorized existing café account and its ordinary order workflow.
-Record the available catalog/quote/order/status evidence and channel constraints
-before connecting an adapter. Supplier permission to expose an API remains a
-separate access question. Do not assume silence grants access or proves a portal
-channel can be automated. This task did not access an account or contact anyone.
+The subsequent [fictional manager draft/export slice](C4_ORDER_DRAFT_LOCAL_EVIDENCE.md)
+now provides an isolated localhost demonstration without changing this engine.
+It records Baldor's published restrictions on automated retrieval and alternative
+interfaces; a real portal connector remains outside that slice. Any later supplier
+channel needs approved access and capability evidence. Supplier permission to
+expose an API remains a separate access question. Do not assume silence grants
+access or proves a portal channel can be automated. Neither slice accessed a
+café account or contacted anyone.
 
 **Manager-assisted ordering is the fallback:** Pantrack prepares an immutable
-proposal and reviewable order draft; the manager completes the supplier's normal
-workflow and records its confirmed reference and totals. Build that workflow as
-its own reviewed slice. Scheduling, alerts, receiving/delivery, payment controls,
+proposal and reviewable order draft; a later authorized manager workflow can use
+that draft in the supplier's normal interface. The next C4 outcome is integrating
+the demonstrated draft into Pantrack's authorized manager workflow. Confirmed
+reference/total tracking remains a separate slice. Scheduling, alerts,
+receiving/delivery, payment controls,
 hosted D1 behavior and a real supplier sandbox remain later gates. C4/M8 and
 supplier submission/automatic purchasing stay open/disabled.
+
+**Subsequent direction (2026-10-03):** the adopted
+[PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) makes reviewed email POs primary
+where the supplier agrees to that channel. Optional APIs move to M13 after
+users; approved normal-interface ordering remains available when email is not
+accepted. The [durable PO draft foundation](C4_PO_FOUNDATION_LOCAL_EVIDENCE.md)
+adds manager-only local persistence without changing this simulation or enabling
+submission. Supplier registry/mapping, approval, PDF/XLSX, email, confirmations
+and receiving remain separate outcomes. Historical simulation evidence above
+does not prove those features or a live supplier channel.
 
 ## Main integration — 2026-10-07
 
