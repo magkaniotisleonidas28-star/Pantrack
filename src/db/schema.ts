@@ -765,6 +765,13 @@ export const purchaseOrderDraftEvents=sqliteTable('purchase_order_draft_events',
  foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
  foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[purchaseOrderDraftOperations.companyId,purchaseOrderDraftOperations.operationId]})]);
 
+// Full snapshots for every edit/review/cancel; the original header/lines stay immutable.
+export const purchaseOrderDraftRevisions=sqliteTable('purchase_order_draft_revisions',{
+ companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),revision:integer('revision').notNull(),
+ status:text('status').notNull(),snapshotJson:text('snapshot_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.orderId,t.revision]}),
+ foreignKey({columns:[t.companyId,t.orderId,t.revision],foreignColumns:[purchaseOrderDraftEvents.companyId,purchaseOrderDraftEvents.orderId,purchaseOrderDraftEvents.revision]})]);
+
 // Company supplier registry: mutable heads, immutable versions/receipts/audit.
 export const purchasingSuppliers=sqliteTable('purchasing_suppliers',{
  companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),

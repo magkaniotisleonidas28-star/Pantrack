@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-07
+Updated: 2026-10-08
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -204,9 +204,14 @@ company suppliers/accounts/locations, supplier-specific exact packs and immutabl
 registry-backed drafts. Original local evidence covers 46 suites and
 Safari desktop/narrow review; migration `0026` is local only. The mapping
 projection is review-only; production A proposal integration remains separate.
-The next C4 outcome is audited draft editing and manager review/approval, followed
-by PDF/XLSX, safe email and A-owned atomic confirmation/receiving. No supplier
-email, approval, reservation, inventory change or real order is enabled.
+The [C4 draft review slice](C4_PO_REVIEW_LOCAL_EVIDENCE.md) now adds audited edits,
+immutable revision history and owner/manager review, including own-draft review.
+Saved edits invalidate review. Migration `0027` is local only; 50 suites, the full
+local pipeline and served desktop/mobile/recovery checks passed. Review does not
+approve a purchase. True approval next requires A/C quantity commitments,
+duplicate-source prevention and owner spending controls. PDF/XLSX, safe email and
+A-owned confirmation/receiving remain separate outcomes. No supplier email,
+purchase approval, reservation, inventory change or real order is enabled.
 C4/M8 acceptance remains open and purchasing stays disabled.
 
 Current focus: **W1/W2 café-item waste local review** and

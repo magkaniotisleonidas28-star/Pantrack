@@ -98,7 +98,8 @@ existing absolute incoming setter or by flooring unexplained discrepancies.
 | --- | --- | --- |
 | Foundation | C4, local | Roadmap adopted; durable review-only manual/proposal drafts, exact lines, audit and company isolation. |
 | Supplier registry | C4 with A handoff | Versioned company supplier/account/location/product mappings; real mapping contract distinct from existing fictional v1/v2 handoffs. |
-| PO review | C4 | Audited draft edits, approval invalidation, explicit cap and immutable approved snapshots. |
+| Draft editing/review | C4, local | Audited edits, review invalidation, proposed cap and immutable reviewed snapshots; no purchase approval. |
+| Purchase approval | C4 with A handoff | Atomic quantity commitments, duplicate-source prevention, owner spending controls and immutable approved snapshots. |
 | Documents/history | C4 | Searchable new/legacy history, inspected PDF and XLSX exports; private immutable issued documents. |
 | Email dispatch | C4 then C5 | Fake concurrency/unknown tests, durable outbox, verified provider events; live acceptance separately authorized. |
 | Supplier confirmation | A/C contract, C4 then C5 | Audited manual confirmation and atomic order-linked incoming ledger. |
@@ -111,9 +112,13 @@ The [foundation](C4_PO_FOUNDATION_LOCAL_EVIDENCE.md) and
 [supplier registry](C4_SUPPLIER_REGISTRY_LOCAL_EVIDENCE.md) are implemented locally
 behind the default-off preview. The registry freezes supplier-specific packs and
 profile/mapping versions into drafts; its A-facing projection remains review-only.
-Production A proposal integration is a separate handoff. Next is audited draft
-editing and manager review/approval. No budget/quantity reservation, approval,
-sending or receiving is enabled yet. Existing fictional handoffs remain explicitly
+Production A proposal integration is a separate handoff. The
+[draft editing/review slice](C4_PO_REVIEW_LOCAL_EVIDENCE.md) now passes locally:
+owners/managers can review their own drafts, and edits require another review.
+This review is separate from purchase approval. True approval next needs A/C
+atomic quantity commitments, duplicate-source prevention and owner spending
+controls. No budget/quantity reservation, purchase approval, sending or receiving
+is enabled yet. Existing fictional handoffs remain explicitly
 review-only; saving a draft never upgrades them to production mappings.
 C4/M8 acceptance and all later outcomes stay open until their evidence exists.
 

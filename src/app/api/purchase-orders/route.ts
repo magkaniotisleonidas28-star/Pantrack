@@ -25,7 +25,9 @@ async function handleGET(req: Request) {
     const store = service();
     if (params.get('view') === 'choices') return Response.json(await store.choices(companyId));
     const id = params.get('orderId');
-    return Response.json(id ? {order:await store.get(companyId,id)} : await store.list(companyId,Number(params.get('offset') ?? '0')));
+    const revision=params.has('revision')?Number(params.get('revision')):undefined;
+    if(revision!==undefined&&!id)return Response.json({error:'Choose a PO for revision history.'},{status:400});
+    return Response.json(id ? {order:await store.get(companyId,id,revision)} : await store.list(companyId,Number(params.get('offset') ?? '0')));
   } catch (error) {return failure(error);}
 }
 async function handlePOST(req: Request) {
@@ -34,8 +36,9 @@ async function handlePOST(req: Request) {
     const body: unknown = await req.json();
     if (!body || typeof body !== 'object' || !('action' in body)) return Response.json({error:'Choose a PO action.'},{status:400});
     const store = service();
-    if (body.action !== 'create' && body.action !== 'cancel') return Response.json({error:'Only draft creation and cancellation are available.'},{status:400});
-    return Response.json({order:body.action === 'create' ? await store.create(body) : await store.cancel(body)});
+    if (!['create','edit','review','cancel'].includes(String(body.action))) return Response.json({error:'Choose create, edit, review or cancel. Purchase approval and sending are unavailable.'},{status:400});
+    return Response.json({order:body.action === 'create' ? await store.create(body) : body.action==='edit'?await store.edit(body):
+      body.action==='review'?await store.review(body):await store.cancel(body)});
   } catch (error) {return failure(error);}
 }
 export const GET = withCompanyRoute('purchasing',handleGET);

@@ -31,7 +31,17 @@ export const createPoSchema = z.discriminatedUnion('source', [
 export const cancelPoSchema = z.object({action: z.literal('cancel'), companyId: poId,
   orderId: poId, operationId: poId, expectedRevision: z.number().int().positive(),
   reason: z.string().trim().min(4).max(500)}).strict();
+const editFields = {action:z.literal('edit'),orderId:poId,expectedRevision:z.number().int().positive(),
+  reason:z.string().trim().min(4).max(500)};
+export const editPoSchema = z.discriminatedUnion('source',[
+  createPoSchema.options[0].extend(editFields),
+  z.object({...common,...editFields,source:z.literal('proposals')}).strict(),
+  createPoSchema.options[2].extend(editFields),
+]);
+export const reviewPoSchema = z.object({action:z.literal('review'),companyId:poId,orderId:poId,operationId:poId,
+  expectedRevision:z.number().int().positive(),acknowledgeWarnings:z.literal(true)}).strict();
 export type CreatePoInput = z.infer<typeof createPoSchema>;
+export type EditPoInput = z.infer<typeof editPoSchema>;
 export type CancelPoInput = z.infer<typeof cancelPoSchema>;
 export type PurchaseOrderLine = Readonly<{
   id: string; kind: 'stock' | 'non_stock'; productId: string | null;
@@ -47,11 +57,12 @@ export type PurchaseOrderSnapshot = Readonly<{
   capMinor: string; notes: string; lines: readonly PurchaseOrderLine[];
   knownSubtotalMinor: string; pricesComplete: boolean; warnings: readonly string[];
   createdBy: string; createdAt: string;
-  registry?:Readonly<{profile:SupplierVersion;mappings:readonly MappingProjection[]}>;
+  registry?:Readonly<{profile:SupplierVersion;mappings:readonly MappingProjection[];group?:Readonly<{accountId:string;locationId:string}>}>;
 }>;
 export type PurchaseOrderView = Readonly<{
-  snapshot: PurchaseOrderSnapshot; revision: number; status: 'draft' | 'canceled';
-  events: readonly Readonly<{revision: number; kind: 'create' | 'cancel'; actor: string; reason: string; at: string}>[];
+  snapshot: PurchaseOrderSnapshot; revision: number; status: 'draft' | 'reviewed' | 'canceled';
+  review?:Readonly<{contentRevision:number;actor:string;at:string}>;
+  events: readonly Readonly<{revision: number; kind: 'create' | 'edit' | 'review' | 'cancel'; actor: string; reason: string; at: string}>[];
 }>;
 export class PurchaseOrderError extends Error {
   constructor(public readonly code: 'invalid_request' | 'forbidden' | 'missing' | 'source_changed' | 'conflict' | 'storage_failure', message: string) {
