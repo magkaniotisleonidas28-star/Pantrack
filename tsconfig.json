@@ -44,6 +44,7 @@
     "node_modules",
     ".sites-runtime",
     "dist",
-    "examples"
+    "examples",
+    "work"
   ]
 }
