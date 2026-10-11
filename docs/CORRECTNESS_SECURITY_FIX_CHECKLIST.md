@@ -560,8 +560,13 @@ live provider calls, remote-data changes or runtime purchasing/sync enablement.
 
 ## BUG-04 — Measurement changes reinterpret planning quantities
 
-- [ ] **BUG-04 fixed locally** — a measurement or custom-factor change preserves
+- [x] **BUG-04 fixed locally** — a measurement or custom-factor change preserves
   planning quantities' physical meaning or holds suggestions for explicit review.
+
+Local closure (2026-10-11): exact conversion, historical holds, actual stage
+button checks, 80-suite verification and repair limits are recorded in
+[BUG-04 planning evidence](BUG04_PLANNING_MEASUREMENTS.md). This is local
+acceptance only; no real data repair or main/remote integration was performed.
 
 **Severity and confidence:** Medium. Confirmed saved-record and recommendation
 defect. Exact stock is correct; supplier submission remains blocked. Context:
