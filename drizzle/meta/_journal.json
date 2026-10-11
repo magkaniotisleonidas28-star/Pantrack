@@ -239,6 +239,13 @@
       "when": 1791686541202,
       "tag": "0033_po_cart_reconciliation",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1791694384045,
+      "tag": "0034_sales_inventory_outcome_fence",
+      "breakpoints": true
     }
   ]
 }
