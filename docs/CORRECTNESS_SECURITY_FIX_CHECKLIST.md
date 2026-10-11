@@ -438,7 +438,7 @@ No deployment, push, live integration, remote-data change or purchasing enableme
 
 ## BUG-03 — Duplicate polling hides unapplied sales from readiness
 
-- [ ] **BUG-03 fixed locally** — unresolved applications cannot be presented as
+- [x] **BUG-03 fixed locally** — unresolved applications cannot be presented as
   current sales health or pass the durable replenishment source guard.
 
 **Severity and confidence:** High. Confirmed failed-event path using real D1
@@ -520,8 +520,19 @@ versioning. Keep the accepted ten-minute development freshness policy unchanged.
 **Focused check:** `pnpm test:focused clover-b6-local a8-sales-readiness-d1
 a8-clover-review-contract a8-sale-to-proposal-d1 c4-a7-supplier-handoff m2-security`.
 
-**Closure record:** Pending — fixing commit, unresolved-state policy, contract
-compatibility, regressions, verification, rollback and producer/consumer handoff.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`f1565adca0d5d1552172257633ce57d78d5e1ad7`, based on the local BUG-02 branch
+at `aadf9bb` above `main` at `161d08f`.
+[BUG-03 evidence](BUG03_UNRESOLVED_SALES_READINESS.md) records the shared
+company/provider outcome predicate, active/terminal/conflict policy, unchanged
+v1/v2 shapes and new compatible reason, producer/consumer/UI handoff, failing
+pre-fix duplicate-poll reproduction, passing live INSERT/edit races and immutable
+history checks. All 79 suites and the complete isolated local pipeline passed;
+an isolated mocked-API browser check verified the warning wording. Exact commands,
+rollback/forward repair and the BUG-05 dependency are recorded there. No new
+migration, automatic retry, recovery runtime wiring, push, merge, deployment or
+hosted/provider verification was performed. Other bugs and milestone acceptance
+remain open.
 
 ### BUG-03 agent prompt
 
