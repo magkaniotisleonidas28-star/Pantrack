@@ -4,6 +4,7 @@ import {spawnSync} from 'node:child_process';
 import {mkdirSync,writeFileSync,unlinkSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {fixtureCredential} from './credentials.mjs';
 import {writePrivate,readPrivate} from './private-files.mjs';
 export async function seedLocalBrowserJob({layout='rows',scenario='normal',enqueueJob=true,root='.sites-runtime/po-cart-workers/served-browser-'+randomUUID()}={}){
@@ -19,7 +20,7 @@ export async function seedLocalBrowserJob({layout='rows',scenario='normal',enque
  const connection={companyId,id:'browser-worker-local',version:1,supplierId:supplier.id,accountId:supplier.accountId,locationId:supplier.locationId,mode:'fictional',status:'active',paused:false};
  await execute(`INSERT INTO po_cart_connections VALUES(${quote(companyId)},${quote(connection.id)},1,${quote(JSON.stringify(connection))});\nINSERT INTO po_cart_budget_policies VALUES(${quote(companyId)},1,50000,100000);`);
  const output=resolve(root,'fixture-module.mjs');await build({stdin:{contents:"export * from './scripts/po-cart-worker/fixture-store.ts';export * from './scripts/cart-preview/fixture.ts';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',packages:'external',outfile:output,logLevel:'silent'});
- const {BrowserFixtureStore,catalog}=await import(output);
+ const {BrowserFixtureStore,catalog}=await import(pathToFileURL(output).href);
  let {order}=await request('/api/purchase-orders',{action:'create',companyId,operationId:randomUUID(),source:'manual',supplier,capMinor:'25000',notes:'Private fictional browser acceptance',lines:catalog.map((l,i)=>({kind:'non_stock',sku:l.sku,description:l.description,unitLabel:l.unitLabel,packs:String(i+1),estimatedUnitMinor:l.unitMinor}))});
  ({order}=await request('/api/purchase-orders',{action:'review',companyId,orderId:order.snapshot.id,expectedRevision:order.revision,operationId:randomUUID(),acknowledgeWarnings:true}));
  const permission=enqueueJob?await request('/api/po-cart-authorizations',{action:'authorize',companyId,orderId:order.snapshot.id,expectedRevision:order.revision,operationId:randomUUID()}):null;

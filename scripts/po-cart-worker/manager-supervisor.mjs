@@ -1,12 +1,13 @@
 import {build} from 'esbuild';
 import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {spawn} from 'node:child_process';
 import {readPrivate,writePrivate} from './private-files.mjs';
 
 export async function fixtureProvisioner(storefrontFile='.sites-runtime/po-cart-workers/local-storefront.json'){
   const output=resolve('.sites-runtime/po-cart-workers/modules/manager-fixture.mjs');
   await build({stdin:{contents:"export {BrowserFixtureStore} from './scripts/po-cart-worker/fixture-store.ts';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',packages:'external',outfile:output,logLevel:'silent'});
-  const {BrowserFixtureStore}=await import(output);
+  const {BrowserFixtureStore}=await import(pathToFileURL(output).href);
   const store=new BrowserFixtureStore(storefrontFile);
   return (current,fixtureFile)=>{
     const {id}=current.job,{browser,scope}=current;
