@@ -29,11 +29,21 @@ async function stop(){for(const p of children)if(p.exitCode===null&&p.signalCode
 function launch(name,{delay=0}={}){
   const credentialFile=`${root}/${name}-credential.json`,journalFile=`${root}/${name}-journal.json`;
   if(!existsSync(credentialFile))writePrivate(credentialFile,f.credential());
-  const p=spawn(process.execPath,['scripts/po-cart-worker.mjs','--credential',credentialFile,'--journal',journalFile,'--origin',origin,'--once','--fake-delay-ms',String(delay)],{stdio:['ignore','pipe','pipe'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
+  const p=spawn(process.execPath,['--import',new URL('./helpers/po-cart-worker-process-observer.mjs',import.meta.url).href,'scripts/po-cart-worker.mjs','--credential',credentialFile,'--journal',journalFile,'--origin',origin,'--once','--fake-delay-ms',String(delay)],{stdio:['ignore','pipe','pipe','ipc'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
+  const marker={calls:0};p.on('message',message=>{if(message?.type==='journal-saved')marker.calls=message.calls;});
   let output='';p.stdout.on('data',b=>{output+=b;});p.stderr.on('data',b=>{output+=b;});
-  const done=new Promise(ok=>p.on('exit',(code,signal)=>ok({code,signal,output})));children.push(p);return {p,done,journalFile,credentialFile};
+  const done=new Promise(ok=>p.on('exit',(code,signal)=>ok({code,signal,output})));p.workerOutput=()=>output;children.push(p);return {p,done,journalFile,credentialFile,marker};
 }
-async function until(check){const end=Date.now()+5000;while(!check()){if(Date.now()>end)throw Error('Acceptance condition timed out.');await pause(10);}}
+async function until(check){
+  // Allow Windows process startup and the worker's ten-second HTTP timeout.
+  // Wait for the durable marker itself; an exited worker fails immediately.
+  const worker=children.at(-1),end=Date.now()+20000;
+  while(!check()){
+    if(worker.exitCode!==null||worker.signalCode!==null)throw Error('Worker exited before the acceptance marker: '+worker.workerOutput());
+    if(Date.now()>end)throw Error('Acceptance condition timed out: '+worker.workerOutput());
+    await pause(10);
+  }
+}
 const effects=()=>tables(f.sql,['inventory','inventory_balances_exact','inventory_events_exact','po_cart_commitments','po_cart_reservations']);
 try{
   await start();
@@ -65,7 +75,7 @@ try{
 
   // Kill after attempted-write and fake-call marker, before the provider outcome is known.
   await start();await f.queued();const unknownInitial=effects(),crash=launch('crash-unknown',{delay:30000});
-  await until(()=>existsSync(crash.journalFile)&&readPrivate(crash.journalFile).calls.length===1);crash.p.kill('SIGKILL');await crash.done;
+  await until(()=>crash.marker.calls===1);crash.p.kill('SIGKILL');await crash.done;
   const resumed=launch('crash-unknown');assert.equal((await resumed.done).code,0);assert.equal(readPrivate(resumed.journalFile).calls.length,1);
   assert.equal(f.sql.prepare('SELECT outcome FROM po_cart_results').get().outcome,'uncertain');assert.equal(effects(),unknownInitial);await stop();
 
@@ -88,7 +98,7 @@ try{
 
   // Cancellation while the fake provider is pending fences a late publication.
   await start();const canceled=await f.queued(),late=launch('late',{delay:200});
-  await until(()=>existsSync(late.journalFile)&&readPrivate(late.journalFile).calls.length===1);
+  await until(()=>late.marker.calls===1);
   const current=await f.jobs().get({companyId:'a',jobId:canceled.current.job.id});await f.jobs().cancel(cancel(current.job));await late.done;
   assert.equal(f.sql.prepare('SELECT state FROM po_cart_jobs').get().state,'canceled');assert.equal(f.sql.prepare('SELECT count(*) n FROM po_cart_results').get().n,0);
   assert.equal(f.sql.prepare('SELECT state FROM po_cart_reservations').get().state,'reserved');await stop();

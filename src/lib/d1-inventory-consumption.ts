@@ -5,6 +5,7 @@ import {
   type ConsumptionIssue,
   type ExactQuantity,
   type InventoryConsumptionApplied,
+  type InventoryConsumptionLease,
   type InventoryConsumptionPort,
   type InventoryConsumptionRequest,
   type InventoryConsumptionResult,
@@ -79,7 +80,7 @@ type LoadedBalance = BalanceRow & {
   legacyData: Record<string, unknown> | null;
 };
 
-type PersistedApplication = InventoryConsumptionApplied & {_claimToken: string};
+type PersistedApplication = InventoryConsumptionApplied & {_claimToken: string; _salesAttemptId?: string};
 
 export class InventoryConsumptionPersistenceError extends Error {
   constructor(message: string) {
@@ -183,8 +184,23 @@ function validateStoredResult(value: unknown, companyId: string, idempotencyKey:
     result.companyId !== companyId || result.idempotencyKey !== idempotencyKey ||
     result.replayed !== false || typeof result._claimToken !== 'string' || !result._claimToken ||
     typeof result.occurredAt !== 'string' || instant(result.occurredAt) === null ||
-    !Array.isArray(result.selectedVersions) || !Array.isArray(result.changes)
+    !Array.isArray(result.selectedVersions) || !Array.isArray(result.changes) ||
+    (result._salesAttemptId !== undefined && (typeof result._salesAttemptId !== 'string' || !result._salesAttemptId))
   ) return false;
+  const lineIds = new Set<string>();
+  if (!result.selectedVersions.every(selected => {
+    if (!selected || typeof selected.lineId !== 'string' || !selected.lineId || lineIds.has(selected.lineId) ||
+        typeof selected.recipeId !== 'string' || !selected.recipeId || typeof selected.recipeVersionId !== 'string' ||
+        !selected.recipeVersionId || positiveInteger(selected.quantity) === null || !Array.isArray(selected.modifiers)) return false;
+    lineIds.add(selected.lineId);
+    const modifierIds = new Set<string>();
+    return selected.modifiers.every(modifier => {
+      if (!modifier || typeof modifier.modifierId !== 'string' || !modifier.modifierId || modifierIds.has(modifier.modifierId) ||
+          typeof modifier.modifierVersionId !== 'string' || !modifier.modifierVersionId || positiveInteger(modifier.quantity) === null) return false;
+      modifierIds.add(modifier.modifierId);
+      return true;
+    });
+  })) return false;
   return result.changes.every(change =>
     change && typeof change.productId === 'string' && change.productId.length > 0 &&
     dimension(change.consumed?.dimension) && signedMinor(change.consumed.minor) !== null &&
@@ -195,8 +211,9 @@ function validateStoredResult(value: unknown, companyId: string, idempotencyKey:
 }
 
 function publicResult(value: PersistedApplication, replayed: boolean): InventoryConsumptionApplied {
-  const {_claimToken, ...result} = value;
+  const {_claimToken, _salesAttemptId, ...result} = value;
   void _claimToken;
+  void _salesAttemptId;
   return {...structuredClone(result), replayed};
 }
 
@@ -257,6 +274,17 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     return publicResult(persisted, true);
   }
 
+  async lookupApplied(companyId: string, idempotencyKey: string): Promise<InventoryConsumptionApplied | null> {
+    const row = await this.db.prepare(`SELECT request_fingerprint,result_json FROM inventory_consumption_applications
+      WHERE company_id=? AND idempotency_key=?`).bind(companyId, idempotencyKey).first<ApplicationRow>();
+    if (!row) return null;
+    const persisted = parseJson<unknown>(row.result_json, 'inventory application');
+    if (!/^[a-f0-9]{64}$/.test(row.request_fingerprint) || !validateStoredResult(persisted, companyId, idempotencyKey)) {
+      throw new InventoryConsumptionPersistenceError('Persisted inventory application failed validation.');
+    }
+    return publicResult(persisted, true);
+  }
+
   private async selectedVersion(table: 'recipe_versions' | 'recipe_modifier_versions', request: InventoryConsumptionRequest, recipeId: string, occurredAt: number, modifierId?: string) {
     const modifierClause = modifierId === undefined ? '' : ' AND modifier_id=?';
     const legacyClause = table === 'recipe_versions' ? ' AND legacy=0' : '';
@@ -307,8 +335,9 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     return {...row, onHand, estimatedUsed, legacyData};
   }
 
-  async consume(request: InventoryConsumptionRequest): Promise<InventoryConsumptionResult> {
-    return this.consumeAttempt(request, 0);
+  async consume(request: InventoryConsumptionRequest, lease?: InventoryConsumptionLease): Promise<InventoryConsumptionResult> {
+    if (lease && (!lease.eventKey || !lease.attemptId)) throw new InventoryConsumptionPersistenceError('Sales lease identity is missing.');
+    return this.consumeAttempt(request, 0, undefined, lease);
   }
 
   async consumeWaste(request:InventoryConsumptionRequest,context:WasteInventoryContext):Promise<InventoryConsumptionResult>{
@@ -316,7 +345,7 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     return this.consumeAttempt(request,0,context);
   }
 
-  private async consumeAttempt(request: InventoryConsumptionRequest, retryCount: number, waste?:WasteInventoryContext): Promise<InventoryConsumptionResult> {
+  private async consumeAttempt(request: InventoryConsumptionRequest, retryCount: number, waste?:WasteInventoryContext, lease?: InventoryConsumptionLease): Promise<InventoryConsumptionResult> {
     const base = this.base(request);
     if (request.contract !== INVENTORY_CONSUMPTION_CONTRACT) {
       return this.rejected(request, {code: 'invalid_contract', message: 'Unsupported inventory consumption contract.'});
@@ -503,11 +532,17 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     };
     const claimToken = this.idFactory();
     if (!claimToken) throw new InventoryConsumptionPersistenceError('Application claim identity is missing.');
-    const persisted: PersistedApplication = {...result, _claimToken: claimToken};
+    const persisted: PersistedApplication = {...result, _claimToken: claimToken, ...(lease ? {_salesAttemptId: lease.attemptId} : {})};
     const resultJson = JSON.stringify(persisted);
     const appliedAt = now.toISOString();
     const guardSql: string[] = [];
     const guardValues: unknown[] = [];
+    if (lease) {
+      guardSql.push(`EXISTS(SELECT 1 FROM sales_events e JOIN sales_event_states s
+        ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id=? AND e.event_key=?
+        AND e.application_key=? AND s.state='processing' AND s.lease_attempt_id=?)`);
+      guardValues.push(request.companyId, lease.eventKey, request.idempotencyKey, lease.attemptId);
+    }
     for(const guard of waste?.guards??[]){guardSql.push(guard.sql);guardValues.push(...guard.values);}
     for (const change of changes) {
       guardSql.push('EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=?)');
@@ -567,7 +602,7 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     if (!stored) {
       if(waste)throw new InventoryConsumptionPersistenceError('Waste stock changed before commit. Confirm this same entry again.');
       if (retryCount >= 2) throw new InventoryConsumptionPersistenceError('Inventory kept changing while consumption was being applied.');
-      return this.consumeAttempt(request, retryCount + 1,waste);
+      return this.consumeAttempt(request, retryCount + 1,waste,lease);
     }
     if (stored.request_fingerprint !== fingerprint) {
       return this.rejected(request, {code: 'idempotency_conflict', message: 'Idempotency key was already applied with different input.'});

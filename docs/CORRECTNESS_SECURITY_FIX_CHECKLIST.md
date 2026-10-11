@@ -307,7 +307,7 @@ or enable purchasing. Finish with the required evidence/rollback/handoff record.
 
 ## BUG-02 — Newer sales revision deducts committed inventory again
 
-- [ ] **BUG-02 fixed locally** — a lost inventory outcome cannot cause a newer
+- [x] **BUG-02 fixed locally** — a lost inventory outcome cannot cause a newer
   revision or recovered attempt to consume previously applied items again.
 
 **Severity and confidence:** High. Confirmed through real D1-backed services with
@@ -398,8 +398,17 @@ migration rather than editing 0010.
 **Focused check:** `pnpm test:focused sales-ingestion-contract
 sales-event-store-contract inventory-consumption-d1 clover-b6-local b4-sales-inventory`.
 
-**Closure record:** Pending — fixing commit, fault-injection regressions,
-contracts/migrations, verification, repair limits, rollback and BUG-05 handoff.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`65ec1b1ecfdb48fd7e2004d222c3deb8b22a3fe2`, based on `main` at `161d08f`.
+[BUG-02 evidence](BUG02_SALES_OUTCOME_RECOVERY.md) records the changed sales
+store/service and A2 read/lease contract, new migration `0034`, the failing
+`10 → 9 → 7` reproduction and passing `10 → 9 → 8` regression, interrupted-worker
+fencing, immutable history and populated-upgrade checks. All 78 suites and the
+complete isolated local pipeline passed. The evidence also records exact commands,
+test-harness adjustments, compatibility, pause/forward-repair instructions and the
+safe BUG-05 recovery handoff. BUG-05 runtime wiring and historical stock repair
+remain separate; no hosted/provider verification, push, deployment or remote
+migration was performed. Other bugs and milestone acceptance remain open.
 
 ### BUG-02 agent prompt
 
@@ -429,7 +438,7 @@ No deployment, push, live integration, remote-data change or purchasing enableme
 
 ## BUG-03 — Duplicate polling hides unapplied sales from readiness
 
-- [ ] **BUG-03 fixed locally** — unresolved applications cannot be presented as
+- [x] **BUG-03 fixed locally** — unresolved applications cannot be presented as
   current sales health or pass the durable replenishment source guard.
 
 **Severity and confidence:** High. Confirmed failed-event path using real D1
@@ -511,8 +520,19 @@ versioning. Keep the accepted ten-minute development freshness policy unchanged.
 **Focused check:** `pnpm test:focused clover-b6-local a8-sales-readiness-d1
 a8-clover-review-contract a8-sale-to-proposal-d1 c4-a7-supplier-handoff m2-security`.
 
-**Closure record:** Pending — fixing commit, unresolved-state policy, contract
-compatibility, regressions, verification, rollback and producer/consumer handoff.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`f1565adca0d5d1552172257633ce57d78d5e1ad7`, based on the local BUG-02 branch
+at `aadf9bb` above `main` at `161d08f`.
+[BUG-03 evidence](BUG03_UNRESOLVED_SALES_READINESS.md) records the shared
+company/provider outcome predicate, active/terminal/conflict policy, unchanged
+v1/v2 shapes and new compatible reason, producer/consumer/UI handoff, failing
+pre-fix duplicate-poll reproduction, passing live INSERT/edit races and immutable
+history checks. All 79 suites and the complete isolated local pipeline passed;
+an isolated mocked-API browser check verified the warning wording. Exact commands,
+rollback/forward repair and the BUG-05 dependency are recorded there. No new
+migration, automatic retry, recovery runtime wiring, push, merge, deployment or
+hosted/provider verification was performed. Other bugs and milestone acceptance
+remain open.
 
 ### BUG-03 agent prompt
 
@@ -540,8 +560,13 @@ live provider calls, remote-data changes or runtime purchasing/sync enablement.
 
 ## BUG-04 — Measurement changes reinterpret planning quantities
 
-- [ ] **BUG-04 fixed locally** — a measurement or custom-factor change preserves
+- [x] **BUG-04 fixed locally** — a measurement or custom-factor change preserves
   planning quantities' physical meaning or holds suggestions for explicit review.
+
+Local closure (2026-10-11): exact conversion, historical holds, actual stage
+button checks, 80-suite verification and repair limits are recorded in
+[BUG-04 planning evidence](BUG04_PLANNING_MEASUREMENTS.md). This is local
+acceptance only; no real data repair or main/remote integration was performed.
 
 **Severity and confidence:** Medium. Confirmed saved-record and recommendation
 defect. Exact stock is correct; supplier submission remains blocked. Context:
@@ -619,8 +644,12 @@ module/test merge with BUG-06.
 **Focused check:** `pnpm test:focused inventory-management-contract inventory-sales
 inventory-quantities stock-pack-units stock-entry purchasing-safety replenishment-review-d1`.
 
-**Closure record:** Pending — fixing commit, conversion/review policy, regression
-results, existing-record handling, contracts/migrations, verification and rollback.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`e8cda755ea4deb7159ee556037b61d74aef3a06f`, based on local BUG-03 at `6f74236`.
+[BUG-04 evidence](BUG04_PLANNING_MEASUREMENTS.md) records exact conversions,
+historical/precision holds, no new migration, actual staging checks, the 80-suite
+pipeline, repair limits and rollback. Real planning repair and main/remote
+integration were not performed.
 
 ### BUG-04 agent prompt
 
@@ -649,8 +678,14 @@ alter remote data or enable purchasing.
 
 ## BUG-05 — Expired processing events have no runtime recovery path
 
-- [ ] **BUG-05 fixed locally** — expired processing is recoverable through a
+- [x] **BUG-05 fixed locally** — expired processing is recoverable through a
   bounded, authorized, audited runtime path using BUG-02's safe outcome handling.
+
+Local closure (2026-10-11): the manager API/button, real-store served race
+regressions, 81-suite verification and BUG-02 release dependency are recorded
+in [BUG-05 runtime recovery evidence](BUG05_RUNTIME_SALES_RECOVERY.md).
+This verifies local behavior; deployed recovery and real data repair remain
+outside this task's authorization.
 
 **Severity and confidence:** Medium. Confirmed missing runtime caller and
 state-machine blockage. Context: B5 / M4 recovery entrypoint, B7 / M5 polling.
@@ -721,8 +756,12 @@ Coordinate `clover-sync.ts`/sales-store changes with BUG-02/03.
 sales-event-store-contract b4-sales-inventory clover-b6-local m2-security` plus
 the new runtime/served regression.
 
-**Closure record:** Pending — fixing commit, BUG-02 handoff consumed, runtime
-entrypoint/role policy, bounded recovery tests, verification, rollback and limits.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`9073ee24515cde572bf57eefe349e86c9172a877`, based on local BUG-04 at `438cbad`.
+[BUG-05 evidence](BUG05_RUNTIME_SALES_RECOVERY.md) records the consumed BUG-02
+outcome/fence contract, owner/manager event-scoped runtime action, served races,
+real button check, 81-suite pipeline, no new migration and release/repair limits.
+Hosted recovery and main/remote integration were not performed.
 
 ### BUG-05 agent prompt
 
@@ -751,7 +790,7 @@ data changes or runtime sync/purchasing enablement. Report the consumed handoff.
 
 ## BUG-06 — Conflicting concurrent physical counts both report success
 
-- [ ] **BUG-06 fixed locally** — a conflicting reuse of a count identity is
+- [x] **BUG-06 fixed locally** — a conflicting reuse of a count identity is
   rejected after a race, while identical replay confirms the original count once.
 
 **Severity and confidence:** Medium. Confirmed real management-service race in
@@ -823,8 +862,13 @@ module/tests with BUG-04, then rebase and reverify the second merge.
 **Focused check:** `pnpm test:focused inventory-management-contract
 stock-pack-units stock-entry waste-recording m2-security`.
 
-**Closure record:** Pending — fixing commit, deterministic race/metadata regressions,
-receipt compatibility, API outcome, verification, rollback and BUG-04 integration.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`3dbe7c2021211f1e1173d3cf23169f55eec49ede`, based on local BUG-05 at `22a5919`
+and including BUG-04's serialized management-service change.
+[BUG-06 evidence](BUG06_COUNT_RECEIPT_RACES.md) records deterministic races,
+all identity fields and metadata cases, historical/custom/package compatibility,
+HTTP 409 and role tests, the 82-suite pipeline, repair/rollback and final stacked
+branch integration order. No new migration or main/remote change in this fix.
 
 ### BUG-06 agent prompt
 
