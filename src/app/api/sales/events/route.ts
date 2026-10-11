@@ -10,6 +10,7 @@ import {z} from 'zod';
 
 const id=z.string().min(1).max(200),reason=z.string().trim().min(1).max(500);
 const mutation=z.discriminatedUnion('action',[
+ z.object({companyId:id,action:z.literal('recover'),eventKey:id,reason}).strict(),
  z.object({companyId:id,action:z.literal('retry'),eventKey:id,reason}).strict(),
  z.object({companyId:id,action:z.literal('replay'),eventKey:id,reason}).strict(),
  z.object({companyId:id,action:z.literal('dismiss'),eventKey:id,reason}).strict(),
@@ -48,6 +49,7 @@ async function handlePOST(req:Request){
  try{
   const body=mutation.parse(await req.json()),member=await companyAccess(user.userId,body.companyId);if(!member||!['owner','manager'].includes(member.role))return Response.json({error:'Owner or manager permission is required.'},{status:403});
   const db=database(),service=d1SalesService(db),actor=localUserActor(user,body.companyId,member.role),corrections=new D1SalesCorrectionService(db);
+  if(body.action==='recover')return Response.json(await service.recover(body.companyId,body.eventKey,actor,body.reason));
   if(body.action==='retry'){await service.retry(body.companyId,body.eventKey,actor,body.reason);return Response.json(await service.process(body.companyId,body.eventKey));}
   if(body.action==='replay'){await service.replay(body.companyId,body.eventKey,actor,body.reason);return Response.json(await service.process(body.companyId,body.eventKey));}
   if(body.action==='dismiss'){await service.dismiss(body.companyId,body.eventKey,actor,body.reason);return Response.json({ok:true});}
@@ -58,7 +60,7 @@ async function handlePOST(req:Request){
   return Response.json({ok:true,correction:await corrections.apply(body.companyId,body.correctionId,correctionActor,body.items)});
  }catch(error){
   if(error instanceof z.ZodError)return Response.json({error:'Check the requested sales action and required fields.'},{status:400});
-  if(error instanceof SalesIngestionError){const status=error.code==='unauthenticated'?401:['forbidden_role','wrong_company'].includes(error.code)?403:error.code==='not_found'?404:['invalid_state','claim_conflict','stale_inventory'].includes(error.code)?409:400;return Response.json({error:error.message,code:error.code},{status});}
+  if(error instanceof SalesIngestionError){const status=error.code==='unauthenticated'?401:['forbidden_role','wrong_company'].includes(error.code)?403:error.code==='not_found'?404:error.code==='inventory_unavailable'?503:['invalid_state','claim_conflict','stale_inventory'].includes(error.code)?409:400;return Response.json({error:error.message,code:error.code},{status});}
   return Response.json({error:'Could not update the sales event.'},{status:503});
  }
 }
