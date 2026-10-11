@@ -7,7 +7,8 @@ const root='.sites-runtime/po-cart-workers/supervisor-test-'+randomUUID(),store=
 try{
  writePrivate(file,{version:1,origin:'http://127.0.0.1:5182',jobs:{}});
  const provision=await fixtureProvisioner(store),candidate={job:{id:randomUUID()},browser:{layout:'rows',scenario:'normal'},scope:{companyId:'a',supplierId:'supplier',accountId:'account'}};
- provision(candidate,file);const first=readPrivate(file),saved=readPrivate(store);assert.ok(first.jobs[candidate.job.id].token);assert.equal(statSync(file).mode&0o077,0);
+ provision(candidate,file);const first=readPrivate(file),saved=readPrivate(store);assert.ok(first.jobs[candidate.job.id].token);
+ if(process.platform!=='win32')assert.equal(statSync(file).mode&0o077,0);
  saved.fixtures[candidate.job.id].entries.push({sku:'AFTER-INTERRUPTION',unitLabel:'box',packs:'1',unitMinor:'100'});writePrivate(store,saved);
  provision(candidate,file);assert.deepEqual(readPrivate(store),saved);assert.deepEqual(readPrivate(file),first);
  // A crash between the private storefront and worker manifest writes must preserve the session and cart.
