@@ -32,6 +32,9 @@ this file concise; detailed workflow and prompt templates live in
 - Never expose or commit secrets, tokens, payment details, or customer data.
 - Make schema changes through new migrations. Never rewrite a used migration.
   Only one schema-bearing change may use the migration merge queue at a time.
+- Verify new trigger SQL through Wrangler's statement splitter and local migration
+  apply; use whitespace before `CASE` and after its `END` (before commas) so
+  Wrangler recognizes nested blocks and keeps each trigger as one statement.
 - For scripted source edits, check match counts and inspect the changed block
   before verification.
 - Use complete current lines as patch context; reread the target block after

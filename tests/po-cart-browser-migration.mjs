@@ -1,0 +1,32 @@
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync} from 'node:fs';
+import {randomUUID,createHash} from 'node:crypto';
+import {unstable_splitSqlQuery} from 'wrangler';
+import {entries,LocalD1} from './helpers/supplier-simulation.mjs';
+import {cartCore,configure,supplier,command} from './helpers/po-cart-authorizations.mjs';
+import {D1PoCartJobs,enqueue,operation,fenced} from './helpers/po-cart-jobs.mjs';
+const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
+try{
+ for(const e of entries.filter(e=>e.idx<31))sql.exec(readFileSync(`drizzle/${e.tag}.sql`,'utf8'));
+ sql.exec("INSERT INTO companies VALUES('a','Populated browser upgrade','2026-10-01');INSERT INTO memberships VALUES('manager','a','manager');INSERT INTO inventory VALUES('a','retained','{\"onHand\":42}',1)");configure(sql);
+ const db=new LocalD1(sql),options={identity:async()=>'manager',clock:{now:()=>new Date('2026-10-01T12:00:00.000Z')}},drafts=new cartCore.D1PurchaseOrderDrafts(db,options),auth=new cartCore.D1PoCartAuthorizations(db,options),jobs=new D1PoCartJobs(db,options),worker=new D1PoCartJobs(db,{...options,workerId:'retained-worker'});
+ let po=await drafts.create({action:'create',companyId:'a',operationId:randomUUID(),source:'manual',supplier,capMinor:'15000',notes:'Historical private record',lines:[{kind:'non_stock',sku:'OLD',description:'Old item',unitLabel:'case',packs:'1',estimatedUnitMinor:'100'}]});
+ po=await drafts.review({...command(po),action:'review',acknowledgeWarnings:true});const permission=await auth.authorize(command(po)),q=await jobs.enqueue(enqueue(permission.current.authorization)),j=q.current.job;
+ const claimed=await worker.claim(operation(j)),begun=await worker.beginAttempt({...fenced(j,claimed.receipt.fence),lineId:j.inputs.preflight.lines[0].lineId});
+ const ready=await worker.recordResult({...fenced(j,claimed.receipt.fence),attemptId:begun.receipt.attemptId,outcome:'verified',observation:j.inputs.preflight.lines[0]});
+ const secret='a'.repeat(43),hash=createHash('sha256').update(secret).digest('hex');
+ sql.exec("INSERT INTO po_cart_worker_identities VALUES('retained-worker','a','cart-demo-supplier','DEMO-CART',1,'active','2026-10-01')");
+ sql.prepare("INSERT INTO po_cart_worker_credentials VALUES('retained-credential','retained-worker',?,1,'active','2099-01-01','2026-10-01',NULL)").run(hash);
+ const tables=sql.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all().map(r=>({name:r.name,columns:sql.prepare(`PRAGMA table_info("${r.name}")`).all().map(c=>`"${c.name}"`).join(',')}));
+ const snapshot=()=>JSON.stringify(tables.map(t=>[t.name,sql.prepare(`SELECT ${t.columns} FROM "${t.name}"`).all()])),before=snapshot();assert.equal(tables.length,99);
+ const migration=entries.find(e=>e.idx===31);assert.equal(migration.tag,'0031_po_cart_local_browser');
+ for(const statement of unstable_splitSqlQuery(readFileSync('drizzle/'+migration.tag+'.sql','utf8')))sql.exec(statement);
+ assert.equal(snapshot(),before);assert.equal(sql.prepare('SELECT consumer_kind FROM po_cart_worker_identities').get().consumer_kind,'fake');
+ assert.equal(sql.prepare('SELECT browser_config_json FROM po_cart_jobs').get().browser_config_json,null);
+ assert.deepEqual(await jobs.get({companyId:'a',jobId:j.id}),ready.current);
+ assert.equal(sql.prepare("SELECT count(*) n FROM sqlite_schema WHERE type='trigger' AND name LIKE 'po_cart_browser_%'").get().n,9);
+ assert.throws(()=>sql.exec("UPDATE po_cart_worker_identities SET version=2,consumer_kind='local_browser'"));
+ assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[]);assert.equal(sql.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
+}finally{sql.close();}
+console.log('PASS: Wrangler-split 0031, all 99 populated tables/old columns preserved, fake identities/jobs/receipts compatible and kind immutable.');
