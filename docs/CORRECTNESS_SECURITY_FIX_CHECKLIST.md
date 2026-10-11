@@ -307,7 +307,7 @@ or enable purchasing. Finish with the required evidence/rollback/handoff record.
 
 ## BUG-02 — Newer sales revision deducts committed inventory again
 
-- [ ] **BUG-02 fixed locally** — a lost inventory outcome cannot cause a newer
+- [x] **BUG-02 fixed locally** — a lost inventory outcome cannot cause a newer
   revision or recovered attempt to consume previously applied items again.
 
 **Severity and confidence:** High. Confirmed through real D1-backed services with
@@ -398,8 +398,17 @@ migration rather than editing 0010.
 **Focused check:** `pnpm test:focused sales-ingestion-contract
 sales-event-store-contract inventory-consumption-d1 clover-b6-local b4-sales-inventory`.
 
-**Closure record:** Pending — fixing commit, fault-injection regressions,
-contracts/migrations, verification, repair limits, rollback and BUG-05 handoff.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`65ec1b1ecfdb48fd7e2004d222c3deb8b22a3fe2`, based on `main` at `161d08f`.
+[BUG-02 evidence](BUG02_SALES_OUTCOME_RECOVERY.md) records the changed sales
+store/service and A2 read/lease contract, new migration `0034`, the failing
+`10 → 9 → 7` reproduction and passing `10 → 9 → 8` regression, interrupted-worker
+fencing, immutable history and populated-upgrade checks. All 78 suites and the
+complete isolated local pipeline passed. The evidence also records exact commands,
+test-harness adjustments, compatibility, pause/forward-repair instructions and the
+safe BUG-05 recovery handoff. BUG-05 runtime wiring and historical stock repair
+remain separate; no hosted/provider verification, push, deployment or remote
+migration was performed. Other bugs and milestone acceptance remain open.
 
 ### BUG-02 agent prompt
 
