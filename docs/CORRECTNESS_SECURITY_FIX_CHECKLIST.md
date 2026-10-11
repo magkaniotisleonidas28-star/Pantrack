@@ -644,8 +644,12 @@ module/test merge with BUG-06.
 **Focused check:** `pnpm test:focused inventory-management-contract inventory-sales
 inventory-quantities stock-pack-units stock-entry purchasing-safety replenishment-review-d1`.
 
-**Closure record:** Pending — fixing commit, conversion/review policy, regression
-results, existing-record handling, contracts/migrations, verification and rollback.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`e8cda755ea4deb7159ee556037b61d74aef3a06f`, based on local BUG-03 at `6f74236`.
+[BUG-04 evidence](BUG04_PLANNING_MEASUREMENTS.md) records exact conversions,
+historical/precision holds, no new migration, actual staging checks, the 80-suite
+pipeline, repair limits and rollback. Real planning repair and main/remote
+integration were not performed.
 
 ### BUG-04 agent prompt
 
@@ -752,8 +756,12 @@ Coordinate `clover-sync.ts`/sales-store changes with BUG-02/03.
 sales-event-store-contract b4-sales-inventory clover-b6-local m2-security` plus
 the new runtime/served regression.
 
-**Closure record:** Pending — fixing commit, BUG-02 handoff consumed, runtime
-entrypoint/role policy, bounded recovery tests, verification, rollback and limits.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`9073ee24515cde572bf57eefe349e86c9172a877`, based on local BUG-04 at `438cbad`.
+[BUG-05 evidence](BUG05_RUNTIME_SALES_RECOVERY.md) records the consumed BUG-02
+outcome/fence contract, owner/manager event-scoped runtime action, served races,
+real button check, 81-suite pipeline, no new migration and release/repair limits.
+Hosted recovery and main/remote integration were not performed.
 
 ### BUG-05 agent prompt
 
@@ -782,7 +790,7 @@ data changes or runtime sync/purchasing enablement. Report the consumed handoff.
 
 ## BUG-06 — Conflicting concurrent physical counts both report success
 
-- [ ] **BUG-06 fixed locally** — a conflicting reuse of a count identity is
+- [x] **BUG-06 fixed locally** — a conflicting reuse of a count identity is
   rejected after a race, while identical replay confirms the original count once.
 
 **Severity and confidence:** Medium. Confirmed real management-service race in
@@ -854,8 +862,13 @@ module/tests with BUG-04, then rebase and reverify the second merge.
 **Focused check:** `pnpm test:focused inventory-management-contract
 stock-pack-units stock-entry waste-recording m2-security`.
 
-**Closure record:** Pending — fixing commit, deterministic race/metadata regressions,
-receipt compatibility, API outcome, verification, rollback and BUG-04 integration.
+**Closure record:** Fixed locally on 2026-10-11 by commit
+`3dbe7c2021211f1e1173d3cf23169f55eec49ede`, based on local BUG-05 at `22a5919`
+and including BUG-04's serialized management-service change.
+[BUG-06 evidence](BUG06_COUNT_RECEIPT_RACES.md) records deterministic races,
+all identity fields and metadata cases, historical/custom/package compatibility,
+HTTP 409 and role tests, the 82-suite pipeline, repair/rollback and final stacked
+branch integration order. No new migration or main/remote change in this fix.
 
 ### BUG-06 agent prompt
 
