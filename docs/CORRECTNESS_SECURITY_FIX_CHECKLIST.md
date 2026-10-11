@@ -674,8 +674,14 @@ alter remote data or enable purchasing.
 
 ## BUG-05 — Expired processing events have no runtime recovery path
 
-- [ ] **BUG-05 fixed locally** — expired processing is recoverable through a
+- [x] **BUG-05 fixed locally** — expired processing is recoverable through a
   bounded, authorized, audited runtime path using BUG-02's safe outcome handling.
+
+Local closure (2026-10-11): the manager API/button, real-store served race
+regressions, 81-suite verification and BUG-02 release dependency are recorded
+in [BUG-05 runtime recovery evidence](BUG05_RUNTIME_SALES_RECOVERY.md).
+This verifies local behavior; deployed recovery and real data repair remain
+outside this task's authorization.
 
 **Severity and confidence:** Medium. Confirmed missing runtime caller and
 state-machine blockage. Context: B5 / M4 recovery entrypoint, B7 / M5 polling.
