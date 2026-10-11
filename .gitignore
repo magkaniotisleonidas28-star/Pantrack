@@ -46,6 +46,7 @@ next-env.d.ts
 /.agents/
 /.codex/
 /outputs/
+/.impeccable/review/
 /work/
 
 *.tsbuildinfo

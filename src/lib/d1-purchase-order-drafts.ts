@@ -308,7 +308,8 @@ export class D1PurchaseOrderDrafts {
     return line.estimatedUnitMinor!==undefined?line.estimatedUnitMinor:line.estimatedLineMinor===null?null:
       (BigInt(line.estimatedLineMinor)/BigInt(line.packs)).toString();
   }
-  private async sourceGuards(snapshot:PurchaseOrderSnapshot,actor:string):Promise<Guard[]> {
+  /** Internal A/C boundary: reuse current source predicates inside the cart writer's atomic batch. */
+  async sourceGuards(snapshot:PurchaseOrderSnapshot,actor:string):Promise<Guard[]> {
     if(snapshot.source==='registry')return (await this.registry(this.registryInput(snapshot))).guards;
     if(snapshot.source==='proposals')return (await this.proposals({action:'create',companyId:snapshot.companyId,operationId:'validate',
       source:'proposals',supplier:{...snapshot.supplier,email:snapshot.supplier.email!},capMinor:snapshot.capMinor,notes:snapshot.notes,

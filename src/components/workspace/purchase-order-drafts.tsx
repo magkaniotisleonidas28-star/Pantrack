@@ -11,6 +11,7 @@ import {supplierRequest,emailAcceptanceLabel} from './purchasing-client';
 import {draftStockDisplay} from '@/lib/supplier-order-draft';
 import {emptyEditor,editorFrom,newLine,cents,dollars,statusLabel,snapshotChanges,type DraftEditor,type EditorLine} from './purchase-order-editor-model';
 import './purchase-order-drafts.css';
+import CartPreview from './cart-preview';
 
 type Choices=Awaited<ReturnType<D1PurchaseOrderDrafts['choices']>>;
 type List=Awaited<ReturnType<D1PurchaseOrderDrafts['list']>>;
@@ -195,6 +196,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
         <section className="po-section"><h2>Order lines</h2><SavedLines snapshot={snapshot}/></section>
         <section className="po-section"><h2>Delivery instructions</h2><p className="po-prewrap">{snapshot.notes||'No delivery instructions added.'}</p></section>
         <SavedSource snapshot={snapshot}/>
+        {selected&&<CartPreview key={selected.snapshot.id} companyId={companyId} order={selected}/>}
       </>}
       {selected&&<details className="po-section po-history"><summary>Revision history · {selected.events.length} records</summary><ol>{selected.events.map(e=><li key={e.revision}><div><strong>Revision {e.revision} · {e.kind==='review'?'Reviewed':e.kind==='edit'?'Edited':e.kind==='cancel'?'Canceled':'Created'}</strong><p>{e.reason}</p><small>{date(e.at)} · {e.actor}</small></div><Button type="button" variant="ghost" disabled={historyBusy||blocked} onClick={()=>void inspectRevision(e.revision)}>Inspect<span className="sr-only"> revision {e.revision}</span></Button></li>)}</ol>
         {historyBusy&&<p role="status">Loading revision…</p>}{history&&<div className="po-revision"><h3>Saved revision {history.order.revision}</h3><p>{statusLabel(history.order.status)}</p><ul>{history.changes.length?history.changes.map(c=><li key={c}>{c}</li>):<li>Order details unchanged. Status and review history updated.</li>}</ul>
@@ -203,7 +205,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     </div><aside className="po-summary" aria-label="Spending and review"><h2>Spending summary</h2><dl><div><dt>Known estimated subtotal</dt><dd>{money(known)}</dd></div></dl>{!complete&&<p>Some prices are unavailable. This subtotal excludes those items.</p>}
       {editor?<label>Proposed total spending cap (USD)<Input form="po-editor" name="cap" required inputMode="decimal" pattern="[0-9]{1,10}(\.[0-9]{1,2})?" value={editor.cap} disabled={blocked} onInvalid={e=>setInvalid(old=>({...old,cap:e.currentTarget.validationMessage}))} onChange={e=>{patch({cap:e.target.value});setInvalid(old=>({...old,cap:''}));}}/>{fieldError('cap')}<small>Include tax and delivery. No funds are reserved.</small></label>:
         <dl><div><dt>Proposed total cap</dt><dd>{money(snapshot!.capMinor)}</dd></div></dl>}
-      <p className="po-muted">Prices are estimates. Review does not approve a purchase, reserve stock or spending, or send an order.</p>
+      <p className="po-muted">Prices are estimates. Draft review does not approve a purchase, reserve stock or spending, or send an order. Separate preparation authorization can reserve spending and incoming quantities.</p>
       {editor?<div className="po-summary-actions"><Button type="submit" form="po-editor" disabled={blocked||(editor.source==='proposals'&&!selected?editor.proposalIds.length===0:editor.lines.length===0)||(!!selected&&!dirty)}>{busy?'Saving…':selected?'Save changes':'Save draft'}</Button>
         <Button variant="ghost" disabled={blocked} onClick={()=>{if(mayLeave()){setEditor(null);setInvalid({});setReason('');}}}>{selected?'Discard edits':'Cancel new draft'}</Button></div>:
         selected&&<div className="po-summary-actions">{selected.status!=='canceled'&&<Button variant="outline" disabled={blocked} onClick={()=>{clearFeedback();openEditor(editorFrom(selected.snapshot));}}><Pencil size={16}/> Edit draft</Button>}

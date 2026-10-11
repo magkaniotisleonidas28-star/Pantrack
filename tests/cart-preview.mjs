@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {randomUUID} from 'node:crypto';
+await build({stdin:{contents:"export * from './scripts/cart-preview/store';export * from './scripts/cart-preview/model';export * from './src/lib/cart-preview-contract';export * from './scripts/cart-preview/browser';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',packages:'external',outfile:'.sites-runtime/cart-test.mjs'});
+const {CartStore,cartLines,verifyCart,inferProduct,browserProxy}=await import('../.sites-runtime/cart-test.mjs');
+const root=mkdtempSync(join(tmpdir(),'pantrack-cart-'));
+try{
+  const store=new CartStore(root),companyId='a',orderId='draft',line={id:'1',kind:'non_stock',sku:'DEMO-COFFEE',description:'Coffee',unitLabel:'case of 6 × 1 lb',packs:'2',estimatedUnitMinor:'5400',estimatedLineMinor:'10800'};
+  const order={status:'reviewed',revision:2,snapshot:{id:orderId,companyId,supplier:{id:'cart-demo-supplier',accountId:'DEMO-CART',locationId:'DEMO-CAFE'},lines:[line]}};
+  const input={action:'start',companyId,orderId,expectedRevision:2,operationId:randomUUID(),layout:'rows',scenario:'normal'};
+  assert.throws(()=>cartLines({...order,status:'draft'}),/Review/);
+  assert.throws(()=>cartLines({...order,snapshot:{...order.snapshot,supplier:{id:'live-supplier'}}}),/fictional/);
+  assert.throws(()=>cartLines({...order,snapshot:{...order.snapshot,lines:[line,line]}}),/Duplicate/);
+  assert.throws(()=>cartLines({...order,snapshot:{...order.snapshot,lines:[{...line,estimatedUnitMinor:null,estimatedLineMinor:null}]}}),/price/);
+  assert.throws(()=>store.create({...input,expectedRevision:1},'manager',order),/changed/);
+  const job=store.create(input,'manager',order);assert.equal(store.create(input,'manager',order),job);
+  assert.throws(()=>store.create(input,'another-manager',order),/Operation/);
+  assert.throws(()=>store.create({...input,scenario:'unavailable'},'manager',order),/Operation/);
+  assert.throws(()=>store.create({...input,operationId:randomUUID()},'manager',order),/already/);
+  assert.throws(()=>store.get(job.id,'manager','b'),/not found/);assert.throws(()=>store.get(job.id,'other','a'),/not found/);
+  const baseline=structuredClone(store.state.fixtures[job.session].entries),entry={sku:line.sku,unitLabel:line.unitLabel,packs:line.packs,unitMinor:'5400'};
+  assert.deepEqual(verifyCart(baseline,job.input,[...baseline,entry],[line.sku]),[line.sku]);
+  for(const bad of [[entry],[...baseline,{...entry,packs:'4'}],[...baseline,entry,entry],[...baseline,{...entry,sku:'OTHER'}]])assert.throws(()=>verifyCart(baseline,job.input,bad,[line.sku]));
+  assert.throws(()=>verifyCart(baseline,job.input,[...baseline,entry],[]),/Unexpected/);
+  job.attempted=[line.sku];job.baseline=baseline;store.save();
+  const restarted=new CartStore(root),recovered=restarted.get(job.id,'manager','a');assert.equal(recovered.state,'needs_review');assert.deepEqual(recovered.attempted,[line.sku]);
+  assert.equal(restarted.current(recovered,{...order,revision:3}),false);assert.equal(recovered.state,'needs_review');
+  const eventCount=recovered.events.length;assert.equal(restarted.current(recovered,{...order,revision:3}),false);assert.equal(recovered.events.length,eventCount,'Repeated status polls must not duplicate the same audit transition');
+  restarted.update(recovered,'canceled','canceled');restarted.state.fixtures[job.session].entries.push(entry);restarted.save();
+  assert.equal(restarted.current(recovered,{...order,revision:3}),false);assert.equal(recovered.state,'canceled','Status checks must not resurrect canceled jobs');
+  const next=restarted.create({...input,operationId:randomUUID()},'manager',order);assert.equal(restarted.state.fixtures[next.session].entries.length,2,'Cancel must preserve account cart');
+  restarted.reserve(4_999_999);assert.throws(()=>restarted.reserve(2),/budget/);assert.equal(new CartStore(root).state.reservedMicros,4_999_999);
+  const modelStore=new CartStore(join(root,'model'));Object.assign(process.env,{OPENAI_API_KEY:'fictional-test-only',PANTRACK_CART_AI_MODEL:'fixture-model',PANTRACK_CART_INPUT_USD_PER_MILLION:'1',PANTRACK_CART_OUTPUT_USD_PER_MILLION:'2'});
+  let calls=0;const transport=async(url,options)=>{calls++;assert.equal(url,'https://api.openai.com/v1/responses');assert.ok(modelStore.state.reservedMicros>0,'Reserve before inference');assert.equal(JSON.parse(options.body).store,false);return Response.json({status:'completed',output:[{content:[{type:'output_text',text:'{"index":0}'}]}]});};
+  assert.equal(await inferProduct(modelStore,[],job.input[0],transport),0);assert.equal(calls,1);
+  const spent=modelStore.state.reservedMicros;await assert.rejects(inferProduct(modelStore,[],job.input[0],async()=>{throw Error('lost model response');}));assert.ok(modelStore.state.reservedMicros>spent);
+  modelStore.state.reservedMicros=5_000_000;modelStore.save();await assert.rejects(inferProduct(modelStore,[],job.input[0],transport),/budget/);assert.equal(calls,1);
+  delete process.env.OPENAI_API_KEY;await assert.rejects(inferProduct(modelStore,[],job.input[0],transport),/pending/);assert.equal(calls,1);
+  const proxy=await browserProxy('http://127.0.0.1:59999');
+  try{const {request}=await import('node:http');const denied=await new Promise((ok,fail)=>{const r=request(proxy.url,{path:'https://example.com/checkout'},res=>{res.resume();ok(res.statusCode);});r.on('error',fail);r.end();});assert.equal(denied,403);}finally{await new Promise(ok=>proxy.server.close(ok));}
+  console.log('PASS: cart exactness, company/actor/revision binding, receipts, serialization, restart reconciliation, cart preservation, network denial and cumulative pre-call AI budget.');
+}finally{rmSync(root,{recursive:true,force:true});}

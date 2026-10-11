@@ -1,6 +1,10 @@
-# Purchase-order-first purchasing rollout
+# PO-backed cart preparation and purchasing rollout
 
-Decision adopted: 2026-10-03. Workstream C; A owns inventory and proposal truth.
+Current decision adopted: 2026-10-09; supersedes the email-first direction adopted
+on 2026-10-03. Historical local evidence and completion records remain unchanged.
+See [decision 0005](decisions/0005-po-backed-ai-cart-preparation.md) and the
+[detailed integration roadmap](PO_AI_CART_INTEGRATION_ROADMAP.md).
+Workstream C; A owns inventory and proposal truth.
 This document records the approved product direction, not completed acceptance.
 See [milestones](PANTRACK_MILESTONES.md) and [current status](CURRENT_STATUS.md).
 
@@ -12,34 +16,43 @@ and non-stock lines; never silently classify an unmapped stock item as non-stock
 Preserve quantities, SKUs, revisions and frozen exact conversions. Proposal edits
 remain A-owned and audited; purchasing never recalculates replenishment needs.
 
-Supplier profiles record accepted ordering email, account/delivery references,
-cutoffs, minimums, fees, payment terms and versioned product mappings. Verify that
-each supplier actually accepts emailed POs; published Baldor guidance currently
-does not establish that channel. No supplier contact or account access has been
-authorized by this development plan.
+The weekly workflow creates a PO draft and reminder. A manager reviews the PO
+and explicitly authorizes cart preparation. Stagehand assists bounded discovery
+in Browserbase; trusted code validates exact products/packs and prepares the cart.
+AI never checks out. The manager reviews and checks out in the same hosted browser,
+records supplier confirmation, and approves staff delivery counts through A's
+atomic inventory contract. Sign-in and checkout are desktop-first; review, status
+and receiving remain responsive.
 
-Managers approve a complete snapshot and explicit total spending cap. Missing
-prices stay unavailable, never zero. The cap includes tax/delivery/other charges
-and reserves the approved amount against owner-configured limits before sending.
-Supplier acceptance of the cap process is required. The emailed cap communicates
-an instruction, not a technical restriction on the supplier's invoice. Above-cap
-confirmations require renewed approval and explicit resolution.
+Supplier profiles bind versioned supplier/account/location/product mappings,
+permitted browser use, delivery rules and payment responsibility. Baldor remains
+the first candidate, subject to access and compatibility gates. Ordering email is
+optional for browser-enabled suppliers; retain existing records and snapshots.
+No supplier contact or account access is authorized by this plan.
 
-Freeze recipient, account/location, quantities/conversions, estimates, cap and PDF
-at approval/send. Editing an unsent approved PO invalidates approval. Sent versions
-remain immutable; record supplier changes as amendments. A cancellation request
-is not a confirmed cancellation and does not itself release commitments.
+Draft review, preparation authorization and supplier purchase confirmation are
+separate. Bind authorization to the current PO revision, connection/mappings,
+account/location, lines/conversions, currency, estimates and proposed cap. Changes
+invalidate authorization. Reserve quantity commitments and spending exposure
+atomically so unresolved work does not create duplicate replenishment.
 
-Replies go to the café's existing inbox. Managers manually record acceptance,
-supplier reference, confirmed quantities/prices, backorders and changes. Keep email
-dispatch, commercial confirmation and delivery status separate: recipient-mail-
-server delivery is not supplier acceptance or receipt of goods. No inbound parsing
-or automatic email-to-API fallback is included in the first release.
+Pantrack can gate preparation and reserve a cap against owner limits; it cannot
+enforce a manager's spending at external checkout. Show observed item subtotal
+separately from final charges and reconcile confirmed prices/fees. Above-cap
+confirmation requires renewed approval. Unknown checkout retains exposure and
+commitments until reconciled. Preparation cancellation is not supplier cancellation.
+
+Keep cart, purchase and delivery status independent. A ready cart or a “checkout
+completed” button is not supplier confirmation. Managers initially enter supplier
+references, lines, quantities, prices, charges and expected delivery with explicit
+provenance and optional private evidence. Never automatically retry an uncertain
+write or switch ordering channels.
 
 ## Durable history, documents and permissions
 
-D1 stores supplier/mapping versions, PO headers and immutable revisions/lines,
-approvals, dispatch claims/events, confirmations, receiving drafts/receipts,
+The planned D1 model stores supplier/mapping versions, PO headers and immutable revisions/lines,
+preparation authorizations, connections, cart jobs/attempts/events, worker leases,
+replay receipts, confirmations, receiving drafts/receipts,
 line dispositions, budget/incoming ledgers and audit/operation receipts. Preserve
 legacy Pantrack orders read-only without inventing acceptance or inventory
 evidence. Track new Pantrack orders first; importing externally placed historical
@@ -47,17 +60,19 @@ orders is a later outcome. Archive issued records instead of deleting them.
 
 The Purchasing workspace will provide Suppliers, Purchase orders and Receiving.
 Search/filter by PO reference, supplier, product, date and status. Detail includes
-original versions, approvals, email evidence, supplier changes, delivery counts,
+original versions, preparation grants, verified cart observations, supplier
+confirmations/changes, delivery counts,
 remaining quantities and audit history. Server authorization scopes every operation
 to company membership. Staff see operational receiving fields, not restricted
 pricing/budget/account data; managers and owners manage purchasing and exports.
 
 PDF defaults: PDF-lib, embedded licensed Unicode font, paginated US Letter,
 private R2 storage and document hash/template metadata in D1. Drafts say
-**Draft — not sent**. Issued PDFs include PO number/revision, all references,
-quantities/conversions, price status, cap and delivery instructions. The email
-attachment and later download use identical immutable bytes. Verify Worker build
-and served generation before adopting the library in its implementation slice.
+**Draft — no order placed**. Exports distinguish requested, observed, confirmed
+and received quantities, prices and final charges; include PO number/revision,
+references, exact conversions, cap and delivery instructions. Retain immutable
+historical documents. Verify Worker build and served generation before adopting
+the library in its implementation slice.
 
 Excel defaults: lazy-loaded ExcelJS document workbook, genuine `.xlsx`, authorized
 server snapshots, Orders/Lines/Deliveries/History sheets. Support one PO and full
@@ -65,16 +80,29 @@ filtered history across pagination. Reject oversized exports explicitly rather
 than silently truncating. Preserve long identifiers/exact quantities as text and
 treat user content as literal cells. Do not rename CSV files to XLSX.
 
-## Safe email and receiving contracts
+## Browser execution and receiving contracts
 
-Use an injectable transport with deterministic local fake and Resend as initial
-provider. A verified Pantrack subdomain supplies From; display the café and use
-its inbox as Reply-To. Configure provider secrets privately. Persist an outbox
-claim before networking, permanent operation identity and provider references.
-Verify webhook signatures and tolerate duplicate/out-of-order events. Resend's
-24-hour idempotency retention does not replace the permanent application ledger.
-Hold unknown dispatch outcomes for manager review; never blindly resend or switch
-channels after an uncertain result.
+Cloudflare owns authorization, PO/job records and transitions. A Render Node 22
+worker claims jobs through authenticated internal endpoints without database
+credentials. Expiring leases/fencing prevent stale writes; serialize ownership
+per supplier login/cart, including shared locations. Record attempts before browser
+writes and stop for review after uncertain writes or worker crashes.
+
+Owners manage private company/login Browserbase contexts; managers sign in/handle
+2FA while automation is paused. Verify disabled browser recording/logging for real
+sessions. Keep credentials/payment pages out of model inputs. Treat Live View links
+as private access credentials, allowlist navigation, revoke sessions and remove
+contexts on disconnect while retaining purchasing audit history.
+
+Before handoff, independently reread account/location/cart and current PO, reserve
+exposure, and stop all automation/model calls. Hand the same browser to the manager
+for checkout with a visible expiry warning and 30-minute maximum session. A lost
+session after handoff leaves an unresolved purchase, never assumed cancellation.
+
+Supplier email dispatch, outbox, verified sender domain and email-provider webhooks
+from the 2026-10-03 direction are deferred. Existing fake send/unknown evidence
+remains local evidence only. Notification email remains in scope; there is no
+automatic email/API fallback from browser uncertainty.
 
 Staff record delivery counts; managers approve before inventory changes. Support
 multiple/partial deliveries and accepted, damaged/rejected, backordered,
@@ -99,9 +127,9 @@ existing absolute incoming setter or by flooring unexplained discrepancies.
 | Foundation | C4, local | Roadmap adopted; durable review-only manual/proposal drafts, exact lines, audit and company isolation. |
 | Supplier registry | C4 with A handoff | Versioned company supplier/account/location/product mappings; real mapping contract distinct from existing fictional v1/v2 handoffs. |
 | Draft editing/review | C4, local | Audited edits, review invalidation, proposed cap and immutable reviewed snapshots; no purchase approval. |
-| Purchase approval | C4 with A handoff | Atomic quantity commitments, duplicate-source prevention, owner spending controls and immutable approved snapshots. |
+| Preparation authorization | C4 with A handoff | Current immutable PO binding, atomic quantity commitments, duplicate-source prevention and owner spending reservations. |
 | Documents/history | C4 | Searchable new/legacy history, inspected PDF and XLSX exports; private immutable issued documents. |
-| Email dispatch | C4 then C5 | Fake concurrency/unknown tests, durable outbox, verified provider events; live acceptance separately authorized. |
+| Cart preparation/handoff | C4 then C5 | Durable jobs, private sessions, fenced worker, exact cart checks and same-session manager checkout; supplier validation separately authorized. |
 | Supplier confirmation | A/C contract, C4 then C5 | Audited manual confirmation and atomic order-linked incoming ledger. |
 | Delivery reconciliation | A/C contract, C4 then C5 | Staff counts, manager approval, full line accounting and atomic exact receiving. |
 | Operations/pilot/release | C6–C9, M9–M12 | Failure reminders, limits, two reviewed count-to-delivery cycles and production readiness evidence. |
@@ -115,10 +143,17 @@ profile/mapping versions into drafts; its A-facing projection remains review-onl
 Production A proposal integration is a separate handoff. The
 [draft editing/review slice](C4_PO_REVIEW_LOCAL_EVIDENCE.md) now passes locally:
 owners/managers can review their own drafts, and edits require another review.
-This review is separate from purchase approval. True approval next needs A/C
-atomic quantity commitments, duplicate-source prevention and owner spending
-controls. No budget/quantity reservation, purchase approval, sending or receiving
-is enabled yet. Existing fictional handoffs remain explicitly
+This review is separate from preparation authorization. The
+[PO/cart contract slice](C4_PO_CART_CONTRACT_LOCAL_EVIDENCE.md) provides exact
+read-only preflight. The next [durable fictional slice](C4_PO_CART_AUTHORIZATION_LOCAL_EVIDENCE.md)
+adds atomic permission, A/C commitments, cap reservations and replay/audit records
+under persisted test policies. The [durable fictional jobs slice](C4_PO_CART_JOBS_LOCAL_EVIDENCE.md)
+adds account-cart ownership, fenced leases, immutable attempts/results and conservative
+crash recovery using internal fake workers. It reuses those reservations and leaves
+the browser preview separate. Authenticated worker transport is next; real owner
+controls, production mappings, browser/session integration, supplier submission and
+receiving remain open.
+Existing fictional handoffs remain explicitly
 review-only; saving a draft never upgrades them to production mappings.
 C4/M8 acceptance and all later outcomes stay open until their evidence exists.
 
@@ -136,16 +171,18 @@ Exercise narrow layouts, keyboard navigation, downloads and history.
 Run the full local pipeline from AGENTS.md, OpenSpec validation and diff/link
 review. Keep fictional/local, provider-test, pilot and production evidence separate.
 
-Keep supplier sending and automatic purchasing disabled until the corresponding
-roadmap gates. Prerequisites include accepted M7, café authorization, accepted email
-PO terms, provider/domain configuration, private storage and A's atomic inventory
-contract. No remote migration, deployment, live email/order, café data import or
-account access is authorized here. Disable the preview for code rollback, retain
-history tables/documents, and forward-repair schema rather than destroying data.
+Keep real supplier preparation and automatic purchasing disabled until their
+roadmap gates. Prerequisites include accepted M7, café/account authorization,
+permitted browser use, hosted-fictional safety evidence, approved budgets, private
+session/storage controls and A's atomic inventory contract. Weekly scheduling
+creates drafts/reminders every 15-minute due check; it never launches AI or checkout.
+Release includes two supervised count-to-delivery cycles with a discrepancy,
+privacy/offboarding and worker recovery evidence. Rollback disables new jobs and
+schedules, pauses automation and ends sessions; retain unresolved commitments,
+history and documents, and forward-repair schema. No remote migration, deployment,
+paid hosted test, supplier contact, account access or purchase is authorized here.
 
-Primary references: [Baldor ordering](https://www.baldorfood.com/how-to-order),
-[Baldor terms](https://www.baldorfood.com/terms-of-use),
-[Resend idempotency](https://resend.com/docs/dashboard/emails/idempotency-keys),
-[Resend webhooks](https://resend.com/docs/webhooks/introduction),
-[PDF-lib](https://pdf-lib.js.org/),
-[ExcelJS document workbooks](https://github.com/exceljs/exceljs#browser).
+Current browser/worker references and feasibility gates are in the
+[integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md). Historical email-first
+choices (including Resend outbox infrastructure) are superseded and deferred;
+local evidence linked above retains its original scope.

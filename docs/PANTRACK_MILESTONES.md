@@ -1,9 +1,9 @@
 # Pantrack Development Milestones
 
-Version: 1.2
-Updated: 2026-10-03
+Version: 1.3
+Updated: 2026-10-09
 Purpose: Working specification for developing Pantrack with Codex in VS Code
-Product goal: Estimate ingredient inventory from completed menu-item sales, calculate replenishment to manager-defined target levels, and safely submit supplier orders with minimal manual work.
+Product goal: Estimate ingredient inventory from completed menu-item sales, calculate replenishment to manager-defined target levels, and prepare exact supplier carts for manager-controlled checkout.
 
 ## 1. Product outcome
 
@@ -16,8 +16,8 @@ Pantrack should let each business:
 5. Subtract calculated consumption from estimated inventory without double counting sales.
 6. Calculate the amount required to reach a manager-defined target stock level, considering confirmed incoming deliveries and supplier pack sizes.
 7. Create a purchasing proposal grouped by supplier.
-8. Create reviewed purchase orders from proposals or manual stock/non-stock lines; email through an agreed supplier channel, download PDF/Excel, retain order history and reconcile every delivered line.
-9. Run scheduled checks and reminders with budgets, limits, alerts, audit records and pause controls. Supplier APIs and unattended purchasing are optional post-launch outcomes.
+8. Create reviewed purchase orders from proposals or manual stock/non-stock lines; explicitly authorize AI cart preparation, let managers check out, download PDF/Excel, retain history and reconcile confirmed orders and every delivered line.
+9. Run weekly PO drafts/reminders with budgets, limits, alerts, audits and pause controls; managers start cart preparation. Supplier APIs and AI checkout/unattended purchasing remain separate later outcomes.
 
 The system is an inventory estimate. Physical counts remain necessary for reconciliation because spills, over-pouring, theft, spoilage, unrecorded extras, and incorrect recipes cannot always be inferred from register data.
 
@@ -91,9 +91,10 @@ flowchart TD
     F --> G[Round shortfall to supplier packs]
     G --> H[Create supplier proposal]
     H --> I[Create PO; manual lines also supported]
-    I --> J[Manager review and spending cap]
-    J --> K[Immutable PO and PDF; approved supplier email]
-    K --> L[Record supplier confirmation separately]
+    I --> J[Manager review; authorize exact cart inputs and cap]
+    J --> K[AI prepares and independently verifies supplier cart]
+    K --> Q[Manager checks out in same hosted browser]
+    Q --> L[Manager records supplier confirmation]
     L --> M[Order-linked incoming inventory]
     M --> N[Staff record delivery; manager approves]
     N --> O[Reconcile every line and stock atomically]
@@ -113,15 +114,15 @@ flowchart TD
 | M5 | Clover end-to-end pilot | M4 | Clover completed sales deduct inventory correctly in sandbox and pilot mode |
 | M6 | Additional POS adapter framework | M4–M5 | A second POS proves that integrations share one stable internal contract |
 | M7 | Replenishment and purchasing proposals | M3–M5 | Shortfalls produce explainable, safe proposals grouped by supplier |
-| M8 | Purchase orders, email ordering and delivery reconciliation | M7 | One supplier accepts reviewed POs; durable history, PDF/Excel and every delivered line reconcile safely |
-| M9 | Scheduler, alerts, and operations | M5–M8 | Background work runs reliably with visible health and failure recovery |
+| M8 | PO-backed cart preparation and delivery reconciliation | M7 | Exact verified cart, manager checkout, supplier confirmation, PDF/Excel/history and delivery reconciliation |
+| M9 | Scheduler, alerts, and operations | M5–M8 | Weekly PO drafts/reminders and background work run reliably with visible recovery; no scheduled checkout |
 | M10 | Purchasing limits and financial controls | M2, M8 | Supplier payment responsibilities, caps and budget exposure are secure and explicit |
-| M11 | Reviewed purchase-order pilot | M0–M10 | One business completes two measured count-to-delivery cycles without requiring supplier APIs or automation |
+| M11 | Reviewed purchase-order pilot | M0–M10 | One café completes two supervised browser-assisted count-to-delivery cycles, including a discrepancy |
 | M12 | Multi-company production readiness | M11 | The system can onboard additional businesses safely and supportably |
 | M13 | Optional supplier API integrations | M12, active production users | Approved APIs share existing PO, approval, budget and receiving contracts |
 | M14 | Controlled purchasing automation | M12, chosen-channel pilot; M13 for API automation | Selected products operate within tested limits and pause/recovery controls |
 
-The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) records the adopted workflow and separately reviewable outcomes. M13/M14 do not block the first reviewed-mode launch. Unrelated POS prerequisites, including the pending M6 gate, remain explicit.
+The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md), [integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md) and [2026-10-09 decision](decisions/0005-po-backed-ai-cart-preparation.md) supersede the 2026-10-03 email-first direction. Historical local evidence and completion records remain intact. Supplier email dispatch is deferred; notification email remains. M13/M14 do not block the manager-controlled launch. Unrelated POS prerequisites, including the pending M6 gate, remain explicit.
 
 ---
 
@@ -163,8 +164,8 @@ through the contracts below.
    this handoff; final M7 acceptance waits for M5's reliable inputs.
 3. **A → C: purchasing proposal.** A publishes an immutable proposal snapshot
    with versions, quantities, supplier SKU/pack data, limits, warnings, and an
-   explanation. C owns durable POs, review/approval and dispatch evidence and must
-   never recalculate A's shortfall. Existing fictional v1/v2 mappings do not
+   explanation. C owns durable POs, preparation authorization, cart/handoff and
+   confirmation evidence and must never recalculate A's shortfall. Existing fictional v1/v2 mappings do not
    authorize real ordering; A/C publish a separate production mapping handoff.
    A also owns the atomic multi-product PO confirmation/receiving port: order-linked
    incoming, commitment transfer, frozen conversion, count-cutoff reconciliation
@@ -418,8 +419,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   enabled for usability review; Clover sync and purchasing remain disabled.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
-  accepted email PO channel/contact and cap process, account/location/SKUs/terms, scheduler/queue, notification
-  owners, retry policy, payment responsibility, limits, and alert ownership.
+  permitted browser use, café/account/location authorization, exact SKUs/packs,
+  delivery/payment/testing arrangements, Browserbase/worker budgets, scheduler,
+  notification owners, retry policy, limits and alert ownership.
   Missing decisions stay explicit blockers rather than guessed defaults.
   **Preparation outcome on 2026-09-30:** the owner selected Baldor and reports
   a future NYC café pilot with an existing Baldor account, to be involved after
@@ -431,8 +433,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   café authorization, payment/operational decisions, and C3 completion remain
   open; no account was used or supplier contacted.
 - [ ] **C4 — Build safe platform components against fakes.** Define supplier,
-  scheduler/job, alert, and budget-reservation contracts. Test sending-before-call,
-  idempotency, ambiguous timeout/unknown status, reconciliation, leases, bounded
+  PO authorization, durable cart jobs, private Browserbase sessions, fenced Render
+  worker, controlled AI actions, confirmation/receiving, scheduler and budget
+  contracts. Test attempted-write-before-call, idempotency, ambiguous timeout/unknown status, reconciliation, leases, bounded
   retry, terminal failure, and concurrent budgets. Do not submit or schedule real
   work; validate A's proposal snapshot through the shared contract and tests.
   The [A7 fake consumer slice](C4_A7_HANDOFF_EVIDENCE.md) passed locally;
@@ -452,35 +455,75 @@ For every numbered item, the assigned person follows the same delivery loop:
   [Audited draft editing and review](C4_PO_REVIEW_LOCAL_EVIDENCE.md) now pass
   locally with immutable revisions and review invalidation; migration `0027`
   is local only. True approval requires A/C quantity commitments and owner
-  spending controls. PDF/XLSX, email and receiving remain separate.
+  spending controls. PDF/XLSX, cart execution and receiving remain separate;
+  supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable
-  manager drafts, supplier profiles/mappings, approval, PDF/XLSX, email and receiving
-  as separate reviewable outcomes. C4 is not complete and purchasing stays disabled.
+  manager drafts, supplier profiles/mappings, preparation authorization, PDF/XLSX,
+  verified cart/handoff and receiving as separate reviewable outcomes.
+  C4 is not complete and purchasing stays disabled.
+  The owner-selected [cart preparation preview](C4_CART_PREVIEW_LOCAL_EVIDENCE.md)
+  now proves reviewed-draft-to-fictional-cart mechanics locally, including 16
+  offline browser scenarios and recoverable manager handoff. Real-AI evaluation
+  is pending at the owner's request; Baldor access/compatibility stays a C3
+  dependency. This experiment does not close C4/M8 or replace purchasing gates.
+  The [PO-to-cart contract slice](C4_PO_CART_CONTRACT_LOCAL_EVIDENCE.md) adds
+  exact immutable input/preflight checks. The next
+  [durable authorization slice](C4_PO_CART_AUTHORIZATION_LOCAL_EVIDENCE.md) now
+  persists fictional permission, A/C commitments, budget exposure and replay/audit
+  atomically; local migration `0028`, 56 suites, fresh/populated upgrade, full pipeline
+  and browser/API regressions passed. The [durable fictional job protocol](C4_PO_CART_JOBS_LOCAL_EVIDENCE.md)
+  now adds exclusive account-cart ownership, fenced leases, atomic first attempts,
+  immutable results, permanent replay and retained uncertainty. Local migration `0029`,
+  all 60 suites, full pipeline, fresh/populated upgrade, restart and existing browser/API
+  regressions passed. That slice used internal workers; transport evidence follows.
+  Browser/session integration, real mappings, financial controls and external acceptance
+  remain open. C4/M8 stay unchecked and purchasing disabled.
+  The [authenticated local worker transport](C4_PO_CART_WORKER_LOCAL_EVIDENCE.md)
+  now adds scoped hash-only credentials, transactional revocation/version/expiry
+  checks, minimal private HTTP and a journaled separate Node fake worker. Local
+  migration `0030`, 65 suites/full pipeline, fresh/populated upgrade, two-process
+  crash/retry/heartbeat and served-D1/browser regressions passed. Transport stays
+  default-off. The [local browser consumer](C4_PO_CART_BROWSER_LOCAL_EVIDENCE.md) now
+  adds immutable baseline/final verification, consumer separation and private
+  account-profile locking through local migration `0031`. The
+  [manager Prepare/status slice](C4_PO_CART_MANAGER_LOCAL_EVIDENCE.md) now adds
+  explicit authorization, durable progress/holds, replay after reload and active
+  cancellation, with a one-command local supervisor. The
+  [supervised practice browser slice](C4_PO_CART_BROWSER_SESSION_LOCAL_EVIDENCE.md)
+  adds durable human ownership, manual fictional sign-in, read-only inspection,
+  explicit safe zero-attempt resume and local migration `0032`. Attempted/uncertain
+  [cart reconciliation](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md) now adds explicit
+  exact-cart acceptance or baseline-verified abandonment, immutable inspection/decision
+  evidence and local migration `0033`. Stagehand AI discovery/verification against the
+  fictional storefront is next; C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
-  proposal without recalculating quantities; implement reviewed email POs through
-  a supplier-agreed channel, immutable PDF, native XLSX/history, manual supplier
-  confirmation and staff-recorded/manager-approved receiving through A's atomic port.
-  Pass local/provider failure tests before one separately authorized low-risk real
-  email PO. API access is optional M13 after production users.
-- [ ] **C6 — Implement and accept M9.** After M5–M8, provision the selected
-  scheduler/queue and notification channel; connect B's sync jobs and PO failure,
-  unconfirmed-order, overdue-delivery and discrepancy reminders through idempotent
-  service entry points. Keep automatic purchasing off until M14. Prove duplicate delivery,
-  retry, terminal failure, alert delivery, status, and recovery with the browser
-  closed.
-- [ ] **C7 — Implement and accept M10.** After M8 and the payment model decision,
-  implement existing supplier account terms, owner authorization/reauthentication,
-  explicit caps, per-order/day/month limits, unknown-order exposure and financial
-  audit/reconciliation. Hosted payment setup is required only if separately chosen.
-  Move automatic eligibility/enablement to M14; keep it disabled.
+  quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
+  flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,
+  manager-approved receiving through A's atomic port. Hosted-fictional safety and
+  supplier permission precede supplier cart-only tests; separately authorize a
+  low-risk manager checkout. AI never checks out. APIs remain optional M13.
+- [ ] **C6 — Implement and accept M9.** After M5–M8, provision Cloudflare Cron
+  due checks every 15 minutes for company-timezone weekly PO drafts/reminders,
+  plus B's sync jobs and the Render worker's operational recovery. Schedules never
+  launch AI/browser preparation or checkout. Alert on sign-in, held jobs, unresolved
+  checkout, missing confirmation, overdue delivery/discrepancy and worker failure.
+  Prove duplicate occurrences, DST/delays, pause, retry and recovery with the site closed.
+- [ ] **C7 — Implement and accept M10.** After M8 and payment responsibility,
+  implement owner limits/reauthentication, preparation spending reservations,
+  unresolved checkout exposure and final-price reconciliation. Pantrack cannot
+  enforce a cap at a manager's external checkout. Use existing supplier terms for
+  the first pilot; new payment setup requires a separate outcome. Automatic
+  eligibility and AI checkout remain disabled and separate M14 work.
 - [ ] **C8 — Coordinate M11 and execute C's slice.** Prepare the runbook and
-  evidence report; operate reviewed supplier submissions, delivery reconciliation,
+  evidence report; supervise verified cart preparation, manager checkout,
+  supplier confirmation, delivery reconciliation,
   alerts, and tested pause/recovery. Collect written manager sign-off before each
   stage and combine A/B/C evidence for both reviewed cycles.
 - [ ] **C9 — Execute C's M12 slice and release coordination.** Only after M11
   acceptance, complete monitoring, incident/support procedures, security review,
-  operational recovery, and release documentation. As merge owner or coordinator,
+  operational recovery, browser-session privacy, connection removal, onboarding,
+  worker health and release documentation. As merge owner or coordinator,
   combine all M12 evidence; do not mark M12 complete from C's slice alone.
 
 ### File and merge ownership
@@ -863,49 +906,53 @@ Then apply configured capacity, shelf-life, minimum-order, order-multiple, stale
 
 ---
 
-## M8 — Purchase orders, email ordering and delivery reconciliation
+## M8 — PO-backed cart preparation and delivery reconciliation
 
-**Objective:** Complete reviewed POs and delivery accounting through an agreed
-supplier email channel. APIs are optional M13 after Pantrack has production users.
+**Objective:** Complete the authorized PO-to-cart-to-manager-checkout workflow,
+supplier confirmation, documents/history and delivery accounting. AI never checks
+out. APIs remain optional M13 after production users.
 
-Existing [C3 preparation](C3_BALDOR_PREPARATION.md), [C4 simulation evidence](C4_SUPPLIER_ENGINE_LOCAL_EVIDENCE.md)
-and [fictional draft/export evidence](C4_ORDER_DRAFT_LOCAL_EVIDENCE.md) remain local
-preparation, not supplier email acceptance. See the [complete rollout](PURCHASE_ORDER_ROLLOUT.md).
-M7 acceptance and explicit live-order authorization remain required.
+Existing [C3 preparation](C3_BALDOR_PREPARATION.md), [C4 simulation](C4_SUPPLIER_ENGINE_LOCAL_EVIDENCE.md),
+[draft/export](C4_ORDER_DRAFT_LOCAL_EVIDENCE.md) and [cart preview](C4_CART_PREVIEW_LOCAL_EVIDENCE.md)
+are local evidence only. Follow the [integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md)
+in separate slices. M7 acceptance, supplier permission and explicit live-action
+authorization remain required; real-AI evaluation is pending.
 
 ### Product decisions required
 
-- [ ] Confirm café/account/location authorization and supplier acceptance of emailed POs, ordering contact, cap process, terms, fees, minimums, cutoffs and delivery rules.
-- [ ] Configure verified Pantrack sender/Reply-To and private PDF storage; no café mailbox access is required.
-- [ ] Confirm supplier account payment responsibility; platform charging is not a prerequisite.
+- [ ] Confirm permitted browser use, café/account/location authorization, exact products/packs, delivery rules, payment responsibility and safe testing arrangements.
+- [ ] Record model configuration and distinct model ($5 cumulative), Browserbase and worker budgets before their respective paid tests.
+- [ ] Verify Browserbase context, Live View, recording/logging and termination capabilities against the controlled hosted fictional storefront.
 
 ### Tasks
 
-- [ ] Add versioned company supplier/account/location/product mappings and the production A-to-C handoff.
-- [ ] Persist manual stock/non-stock and immutable proposal POs, revisions, exact conversions, history and audit.
-- [ ] Add manager review/approval, approval invalidation, explicit caps and atomic budget claims.
-- [ ] Add immutable PDF attachment/download and native Excel single-PO/filtered-history exports.
-- [ ] Persist durable outbox claims and permanent dispatch identities; handle signed, duplicate/out-of-order provider events.
-- [ ] Separate email status from supplier acceptance; hold unknown sends for review without automatic resend/channel fallback.
-- [ ] Record café-inbox replies manually, including supplier reference, confirmed prices/quantities, backorders, changes and cancellation confirmation.
-- [ ] Use A's atomic order-linked incoming port without double-counting proposal commitments or replacing other incoming stock.
-- [ ] Let staff record delivery counts and managers approve atomic receipts using frozen conversions.
-- [ ] Reconcile partial/damaged/substituted/excess deliveries and every non-stock line; require explicit final dispositions before closure.
+- [ ] Add production versioned supplier/account/location/product mappings and A-to-C proposal integration; ordering email optional for browser suppliers.
+- [ ] Preserve exact stock/non-stock POs, immutable revisions, conversions and audit history.
+- [ ] Separate review, preparation authorization and confirmation; bind current revision/connection/account/location/lines/currency/cap, with atomic quantity commitments and spending reservations.
+- [ ] Persist company-scoped cart jobs/attempts/results/events, account-cart ownership, permanent replay receipts, fenced leases and unresolved checkout exposure in additive migrations.
+- [ ] Add authenticated Render Node 22 worker claim/heartbeat/event endpoints; recheck authorization and pauses before writes, serialize shared-account carts and hold uncertain writes.
+- [ ] Add owner-managed private Browserbase contexts, paused human sign-in/2FA, navigation allowlists, private Live View issuance and verified cleanup/privacy settings.
+- [ ] Build bounded first-supplier discovery and trusted exact mutations; preserve unrelated items, hold ambiguity/existing requested items/price or pack differences, independently verify final cart.
+- [ ] Add responsive PO progress/recovery and desktop same-session handoff; stop all automation, reserve exposure and show no order placed, subtotal/final-charge distinction and 30-minute expiry.
+- [ ] Add immutable PDF and native Excel single-PO/filtered-history exports labeling requested/observed/confirmed/received values.
+- [ ] Record manager-entered confirmation with provenance, supplier reference, quantities/prices/charges/expected delivery and private supporting documents; audit differences.
+- [ ] Use A's atomic order-linked incoming/receiving port; staff count deliveries, managers approve accepted stock once, resolve partial/damaged/substituted/excess and non-stock lines before closure.
 
 ### Acceptance criteria
 
-- [ ] Anonymous, wrong-company and forbidden-role requests reveal no purchasing data; staff cannot approve or post inventory.
-- [ ] Manager review precedes dispatch; stale recipient, quantity or cap changes invalidate approval.
-- [ ] PDF/Excel show accurate references, revisions, exact quantities and unavailable estimates; historical documents remain unchanged.
-- [ ] Duplicate/concurrent saves, dispatches, confirmations and receipts are idempotent and auditable.
-- [ ] Simulated timeout remains unknown; no automatic resend or email-to-API fallback occurs.
-- [ ] A separately authorized real low-risk email PO reaches the agreed supplier contact with the intended account, location, SKUs, packs and cap; acceptance is recorded separately.
-- [ ] Confirmation adds order-linked incoming once; partial receipts reconcile every line and add only accepted stock once.
-- [ ] Multiple POs, count-cutoff conflicts and damaged/substituted quantities reconcile without unexplained stock changes.
+- [ ] Anonymous, wrong-company, revoked and forbidden-role requests reveal no purchasing data; staff cannot prepare carts, approve or post inventory.
+- [ ] Only current durably authorized inputs permit preparation; changes invalidate authority, and fictional/review-only mappings never authorize real runs.
+- [ ] Duplicate/concurrent requests, claims, confirmations and receipts are idempotent; stale workers cannot write or publish results.
+- [ ] Both hosted-fictional layouts pass the safety matrix with zero incorrect ready carts, unauthorized access, duplicate additions or AI checkout submissions.
+- [ ] Browser/login/handoff recovery never guesses, retries uncertain writes or switches channels; lost handoff retains unresolved exposure.
+- [ ] A separately authorized supplier cart-only test verifies exact account/location/SKUs/packs before any separately authorized low-risk manager checkout.
+- [ ] Browser state/checkout-completed alone never confirms a purchase; confirmation adds incoming once and approved receipts add only accepted stock once.
+- [ ] Every order line and final-price difference reconciles, including multiple POs/count-cutoff conflicts; PDF/XLSX/history retain accurate exact values and revisions.
+- [ ] Sign-in/checkout require desktop with clear phone guidance; review/status/receiving work responsively, with privacy, keyboard and theme checks.
 
 ### Codex prompt
 
-> Implement one PO-first C4/C5 outcome from the rollout. Preserve A's immutable quantities and use its atomic inventory port. Keep supplier submission disabled until recorded gates; local fakes do not authorize a real email/order, account access or deployment.
+> Implement one bounded C4/C5 outcome from the PO-to-cart integration guide. Preserve A's quantities and atomic inventory contract. Keep real execution gated; AI never checks out. Local fakes do not authorize paid hosted tests, supplier access/contact, purchases or deployment.
 
 ---
 
@@ -915,13 +962,13 @@ M7 acceptance and explicit live-order authorization remain required.
 
 ### Tasks
 
-- [ ] Choose and document the scheduler/queue platform.
-- [ ] Add authenticated, idempotent POS sync/reconciliation and reviewed PO reminders; do not schedule automatic orders before M14.
+- [ ] Provision/document Cloudflare Cron due checks every 15 minutes and the Render Node 22 automation worker, with authenticated application claims.
+- [ ] Add authenticated idempotent POS sync/reconciliation and company-timezone weekly PO drafts/reminders; unique occurrence IDs handle DST/delays without catch-up duplicates. Schedules never start AI/browser preparation or checkout.
 - [ ] Use per-company leases to prevent overlapping runs.
 - [ ] Add bounded retries with backoff and a terminal held/failed state.
 - [ ] Add an operations page with last success, last attempt, lag, failure reason, unresolved events/orders, and next run.
 - [ ] Add alerts for disconnected POS, expired credentials, sync lag, unmapped events, failed proposals, unknown supplier outcomes, spending-limit blocks, and stale inventory.
-- [ ] Add email failure, unconfirmed PO, overdue delivery and discrepancy alerts.
+- [ ] Add reminder failure, expired supplier sign-in, held cart, unresolved checkout, missing confirmation, overdue delivery/discrepancy and worker failure alerts.
 - [ ] Add alert acknowledgement and escalation ownership.
 - [ ] Add structured logs and request/job correlation IDs without secrets.
 - [ ] Document recovery steps for every terminal job state.
@@ -929,7 +976,7 @@ M7 acceptance and explicit live-order authorization remain required.
 ### Acceptance criteria
 
 - [ ] Jobs run when no user has the website open.
-- [ ] Concurrent scheduler delivery does not duplicate sales, proposals, or orders.
+- [ ] Concurrent/delayed ticks, DST and timezone changes do not duplicate sales, drafts or reminders; managers explicitly start cart preparation.
 - [ ] Temporary failures retry within documented limits.
 - [ ] Persistent failures become visible and notify the correct owner.
 - [ ] Operations status distinguishes healthy, delayed, degraded, paused, and disconnected states.
@@ -951,7 +998,7 @@ M7 acceptance and explicit live-order authorization remain required.
 - [ ] Complete provider-hosted payment setup where required.
 - [ ] Restrict payment setup and viewing to authorized owners.
 - [ ] Add per-order, per-day, and optional per-month company limits.
-- [ ] Reserve approved total caps, including unknown prices/fees, before sending; require renewed approval for above-cap confirmation. Automatic eligibility belongs to M14.
+- [ ] Reserve authorized total caps/exposure, including unknown prices/fees, before preparation/handoff; require renewed approval and reconciliation for above-cap confirmation. Automatic eligibility belongs to M14.
 - [ ] Require reauthentication or equivalent high-confidence action for high-impact limit changes. Automatic enablement belongs to M14.
 - [ ] Audit every limit, payment, and mode change.
 - [ ] Display estimated versus final supplier totals and reconciliation differences.
@@ -960,9 +1007,9 @@ M7 acceptance and explicit live-order authorization remain required.
 
 - [ ] Pantrack never receives or logs raw card data when hosted payment collection is used.
 - [ ] Employees and unauthorized managers cannot access payment controls.
-- [ ] Orders exceeding any limit are blocked before submission.
+- [ ] Pantrack blocks preparation/handoff above owner limits; it clearly explains it cannot enforce the manager's final spending at external checkout.
 - [ ] Unresolved/unknown orders count against the budget until reconciled.
-- [ ] Unknown-price POs require an agreed supplier cap process; an emailed cap is not represented as an enforced supplier invoice limit.
+- [ ] Unknown-price/charge exposure requires an explicit cap/reservation and reconciliation; a displayed cap is never represented as an enforced external checkout limit.
 - [ ] Reviewed ordering works using existing supplier terms without requiring platform payment collection.
 
 ### Codex prompt
@@ -979,7 +1026,7 @@ M7 acceptance and explicit live-order authorization remain required.
 
 1. **Shadow inventory:** Import real sales while the café continues its normal process. Compare Pantrack estimates with physical counts.
 2. **Recommendation only:** Generate purchasing suggestions; managers compare them with actual orders.
-3. **Reviewed email POs:** Managers approve POs, record supplier replies and approve staff delivery counts. Exercise partial delivery/discrepancy handling.
+3. **Browser-assisted POs:** Managers authorize exact cart preparation, control same-session checkout, record supplier confirmation and approve staff delivery counts. Exercise partial delivery/discrepancy handling.
 4. **Reviewed release decision:** Accept two count-to-delivery cycles. API integration and limited automation remain M13/M14 follow-ups.
 
 ### Tasks
@@ -992,7 +1039,7 @@ M7 acceptance and explicit live-order authorization remain required.
 - [ ] Reconcile physical counts at an agreed frequency.
 - [ ] Investigate systematic recipe variance and adjust through reviewed configuration changes.
 - [ ] Keep an emergency global/company pause control visible and tested.
-- [ ] Obtain manager sign-off on reviewed PO sending, confirmations, receiving and pilot results.
+- [ ] Obtain manager sign-off on cart accuracy, manager checkout, confirmation, receiving, usability, recovery, time saved and both supervised cycles.
 
 ### Exit criteria
 
@@ -1001,7 +1048,7 @@ M7 acceptance and explicit live-order authorization remain required.
 - [ ] Inventory variance stays within the pilot's agreed tolerance for the selected products.
 - [ ] Every submitted order has an audit trail from sales through calculation, approval, supplier response, and receipt.
 - [ ] Alerts reach the responsible person and recovery instructions work.
-- [ ] The business completes at least two successful count-to-delivery cycles in reviewed mode.
+- [ ] The business completes at least two supervised browser-assisted count-to-delivery cycles with manager-controlled checkout.
 - [ ] At least one partial delivery or discrepancy is accounted for line by line; supplier API/automatic mode is not a pilot exit requirement.
 
 ### Codex prompt
@@ -1024,7 +1071,8 @@ M7 acceptance and explicit live-order authorization remain required.
 - [ ] Add production monitoring, error tracking, uptime checks, and incident response.
 - [ ] Test schema migration and rollback/recovery using production-like data volume.
 - [ ] Add support tools that reveal status without exposing credentials or unrelated company data.
-- [ ] Define service limits, support ownership, privacy terms, and customer offboarding.
+- [ ] Define service limits, support ownership, browser-session privacy, retention, private support access and connection removal/offboarding with context/session cleanup.
+- [ ] Verify worker crash recovery, session expiry/revocation, onboarding and cost/health monitoring before release.
 - [ ] Run a tenant-isolation test suite before each production release.
 
 ### Acceptance criteria
@@ -1042,18 +1090,18 @@ M7 acceptance and explicit live-order authorization remain required.
 
 ## M13 — Optional supplier API integrations after users
 
-**Depends on:** M12 and at least one active production café. This does not block reviewed email launch.
+**Depends on:** M12 and at least one active production café. This does not block the browser-assisted manager-controlled launch.
 
 - [ ] Prioritize actual user supplier demand; obtain approved API/EDI documentation, testing access and account permission.
 - [ ] Implement capabilities behind the same PO, approval, budget, incoming and receiving contracts; no second purchasing engine or automatic channel fallback.
 - [ ] Prove sandbox duplicate, timeout, unknown, cancellation and status matching cases before one separately authorized real API order.
 - [ ] Record supplier-specific acceptance, operational limits and rollback; APIs stay optional per supplier.
 
-## M14 — Controlled purchasing automation
+## M14 — Separate controlled purchasing automation
 
 **Depends on:** M12 and accepted chosen-channel reviewed pilot evidence; API automation additionally requires M13.
 
-- [ ] Define eligible suppliers/products, conservative limits, reauthentication, alert ownership and global/company pause controls.
+- [ ] Separately scope/authorize AI checkout or purchasing without per-order human control; neither is included in M8. Define eligible suppliers/products, conservative limits, reauthentication, alert ownership and global/company pause controls.
 - [ ] Obtain written manager permission for a bounded observation period; automatic mode remains off by default.
 - [ ] Prove no duplicate order/inventory effect and no retry/fallback after an uncertain external outcome.
 - [ ] Record automation staying within product/spending limits during the agreed period before accepting expansion.

@@ -4,25 +4,40 @@ Prepared: 2026-09-30. Status: research packet and inquiry draft ready.
 This is one C3 preparation outcome. Baldor approval, testing access, a working
 supplier connection, and M8 acceptance remain pending.
 
-## PO-first direction — 2026-10-03
+## PO-backed browser direction — 2026-10-09
 
-The [adopted rollout](PURCHASE_ORDER_ROLLOUT.md) makes reviewed emailed POs the
-first purchasing method, with optional API/EDI integration at M13 after users.
-The historical API inquiry below remains unsent and is now a post-launch access
-preparation option, not a launch prerequisite. No supplier has been contacted.
+[Decision 0005](decisions/0005-po-backed-ai-cart-preparation.md) supersedes the
+2026-10-03 email-first direction. The [rollout](PURCHASE_ORDER_ROLLOUT.md) and
+[integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md) plan Stagehand-assisted
+Browserbase cart preparation and manager-controlled checkout. AI never checks
+out. The earlier email PO inquiry/acceptance work is deferred, not an active gate;
+no supplier has been contacted. Historical API preparation remains optional M13.
 
-For C3/M8, obtain café permission, an accepted supplier ordering email/contact,
-account/location/product references, pack conversions, delivery rules, payment
-terms and explicit agreement on unknown-price spending caps. Record confirmations
-privately and keep only sanitized decision status here. Baldor's ordering guide,
-rechecked on 2026-10-03, describes website/telephone ordering and does not establish
-email PO acceptance. Until confirmed, keep email submission disabled and use its
-ordinary approved ordering process only under separate authorization.
+C3 must establish permitted browser use, café/account/location authorization,
+exact product codes/packs/conversions, delivery rules, current prices and fees,
+payment responsibility and a safe testing arrangement. Neither published ordering
+instructions nor an existing café account establishes automation permission.
+Baldor's previously reviewed access restrictions remain unresolved; do not bypass
+them, sign in or test against Baldor until permission and explicit scope exist.
 
-Replies will go to the café inbox for manual recording in Pantrack. Verify the
-Pantrack sending domain/Reply-To and private PDF storage later. Sending an email
-does not prove supplier acceptance; confirmed quantities/prices and delivery
-counts are separate evidence. Baldor browser automation remains outside scope.
+Keep sanitized access decisions here, with account material private. Validate
+hosted-fictional behavior and separately budget Browserbase/worker costs before
+supplier tests. First test cart preparation without a purchase. A low-risk manager
+checkout needs separate authorization and uses existing supplier payment terms.
+Pantrack cannot enforce the manager's final external checkout cap; reconcile
+confirmation and delivery separately. Missing approval leaves the real connector
+disabled while fictional development continues.
+
+### Browser-access inquiry — owner reviews and sends
+
+**Status: unsent.** Ask the supplier's appropriate contact whether Pantrack may
+use a controlled hosted browser to prepare a cart from an exact reviewed PO,
+with manual sign-in/2FA and a human performing all checkout. Confirm permitted
+automation, required agreements/restrictions, supported authentication domains,
+account/location verification, test account/environment and test costs. Request
+an approved read/cart-only test scope, exact product/pack sources, delivery/payment
+rules and recovery options. Do not identify the café or imply its permission.
+Sending this inquiry requires separate explicit authorization.
 
 ## What the owner selected
 
@@ -41,8 +56,12 @@ prices, invoices, agreements, and credentials outside this repository.
 
 ## Current evidence
 
-Official public pages were checked on 2026-09-30. These establish public
-ordering guidance, not permission for Pantrack to use a supplier API.
+Official public pages were checked on 2026-09-30 (historical research, not
+reverified supplier terms in this change). They establish public ordering
+guidance, not permission for Pantrack browser automation or an API.
+The superseded email-first packet also recorded a 2026-10-03 recheck of Baldor's
+website/telephone ordering guide; it did not establish emailed PO acceptance.
+That historical observation remains preparation evidence, not browser permission.
 
 | Topic | Evidence and remaining decision |
 | --- | --- |
@@ -54,12 +73,12 @@ ordering guidance, not permission for Pantrack to use a supplier API.
 
 ## One shared system, with reusable connectors
 
-In the proposed design, the shared purchasing engine owns proposal approval,
-limits, duplicate prevention, sending/unknown/accepted states, incoming stock, delivery receipts,
-and audit history. A supplier connector translates that engine's requests and
-responses into the supplier's approved format. Suppliers using the same
-approved integration service or document standard may share a connector;
-account setup, product mappings, capabilities, and contract tests still vary.
+In the revised design, the shared PO engine owns preparation authorization,
+limits/reservations, duplicate prevention, separate cart/purchase/delivery states,
+incoming stock, receipts and audit history. A browser connector discovers exact
+products and prepares/verifies carts within those boundaries; managers control
+checkout. Future approved API connectors can reuse the same commercial record.
+Account setup, product mappings, capabilities and contract tests still vary.
 
 The existing [generic connector](../src/lib/vendor-adapter.ts) posts the
 Pantrack-specific `pantrack.vendor.v1` format. Baldor's shopping website is not
@@ -68,8 +87,9 @@ currently blocks submission unconditionally. The [C4 fake consumer](C4_A7_HANDOF
 proves a local proposal handoff only; it has no supplier client.
 
 Future common capabilities should cover account/connection health, catalog and
-pack data, price/availability validation, quotes, submission, order status, and
-invoice/delivery reconciliation. Label each capability as supported, unavailable,
+pack data, price/availability validation, cart preparation/verification, manager
+handoff, confirmation and invoice/delivery reconciliation. API submission remains
+optional M13; AI checkout remains separate M14. Label each capability as supported, unavailable,
 or unverified. Consume A's immutable proposal without recalculating its
 shortfall in the connector. Preserve manual order-list export when a supplier
 does not provide an approved automated route.
@@ -122,7 +142,8 @@ Record non-sensitive status here; retain the actual account material privately.
 | First supplier and region | Baldor / New York City, selected by owner |
 | Future café and existing business account | Owner-reported; no independent account inspection or pilot permission |
 | Integration contact / inquiry | Public routing option checked; inquiry drafted, unsent |
-| Approved channel, documentation, capabilities, costs/terms | Pending Baldor confirmation |
+| Permitted Stagehand/Browserbase cart use, restrictions, capabilities and costs/terms | Pending Baldor confirmation; automation permission unverified |
+| Hosted-fictional safety, Browserbase/worker budget and supplier test scope | Pending; no paid hosted or supplier test authorized |
 | Fictional testing account and authorized environment | Pending; no credentials requested or stored |
 | Account ownership, location authorization, and data-use permission | Pending for later café pilot |
 | Product codes, pack quantities, stock-unit conversions, substitutions | Pending; no real café catalog imported |
@@ -141,14 +162,15 @@ unknown codes or conversions for review. Do not invent real SKUs or prices.
 
 ## Sequence and handoff
 
-1. **C3:** obtain separately authorized supplier email PO and café/account
-   decisions. Silence is not approval. Record only confirmed sanitized terms.
-2. **C4:** complete one local PO-first outcome at a time; preserve exact proposals
-   and test draft/export, dispatch uncertainty, budget and delivery contracts
-   against fakes. Local checks prove no supplier connectivity.
-3. **A8 / C5:** accepted M7, approved email channel and provider/failure evidence
-   gate one separately authorized low-risk email PO. Use A's atomic incoming and
-   receiving port. No live café account use during preparation.
+1. **C3:** obtain permitted browser access, café/account/location authorization,
+   exact mappings, payment/delivery rules and approved testing scope. Silence is
+   not approval; retain sanitized confirmed terms only.
+2. **C4:** complete one fictional PO-to-cart outcome at a time: exact authorization,
+   durable jobs, session privacy, worker recovery, budgets and delivery contracts.
+   Preserve offline regressions; hosted-fictional safety evidence is separate.
+3. **A8 / C5:** accepted M7, supplier permission and hosted-fictional safety evidence
+   gate supplier cart-only validation. A low-risk manager checkout needs separate
+   authorization. Use A's atomic incoming/receiving port; no AI checkout.
 4. **M11:** obtain written business/data permission and complete reviewed
    count-to-delivery pilot cycles with every PO line accounted for.
 5. **M13:** after M12 and production users, prioritize actual supplier demand
