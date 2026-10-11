@@ -19,7 +19,7 @@ const STATUSES = new Set(['draft', 'review_required', 'approved', 'sending', 'un
 const INVALIDATION_REASONS = new Set(['inventory_changed', 'inventory_config_changed', 'settings_changed', 'source_unavailable']);
 const CLOVER_REASONS = new Set(['sync_not_configured', 'clover_disconnected', 'merchant_changed',
   'unaccepted_environment', 'never_synced', 'invalid_sync_state', 'sync_disabled',
-  'sync_error', 'sync_stale', 'held_events']);
+  'sync_error', 'sync_stale', 'held_events', 'unresolved_events']);
 const HANDOFF_KEYS = [
   'contract', 'mode', 'companyId', 'proposalId', 'revision', 'status', 'productId',
   'supplier', 'salesReadiness', 'priceSource', 'packs', 'stockUnitsPerPack',

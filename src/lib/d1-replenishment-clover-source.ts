@@ -1,4 +1,5 @@
 import type {CloverSalesReadiness} from './d1-replenishment-sales-readiness';
+import {unresolvedCloverSalesSql} from './clover-sales-outcomes';
 
 export type CloverReviewPolicy = Readonly<{syncEnabled: boolean; maxLagMs: number}>;
 
@@ -30,11 +31,7 @@ export function cloverSourceGuard(
         AND s.checkpoint=? AND s.last_success=? AND s.last_error IS NULL
         AND s.checkpoint BETWEEN ? AND ?
         AND s.last_success BETWEEN ? AND ?
-        AND NOT EXISTS (
-          SELECT 1 FROM sales_events e JOIN sales_event_states t
-            ON t.company_id=e.company_id AND t.event_key=e.event_key
-          WHERE e.company_id=s.company_id AND e.provider='clover' AND t.state='held'
-        )
+        AND NOT ${unresolvedCloverSalesSql('s.company_id')}
     )`,
     args: [sales.companyId, sales.merchantId, checkpoint, sales.lastSuccessAt, oldest, current,
       new Date(oldest).toISOString(), now.toISOString()],
