@@ -29,6 +29,7 @@ import type {
 import {legacyM3Review} from './legacy-m3-review';
 import {packageTotal} from './stock-pack-quantities';
 import {formatCanonical} from './inventory-quantities';
+import {changePlanningUnit,holdAmbiguousPlanning,planningUnitsSql,type PlanningUnitRow} from './inventory-planning-units';
 
 const ZERO = BigInt(0);
 const MILLION = BigInt(1_000_000);
@@ -269,7 +270,8 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const active = await this.db.prepare("SELECT id,version,status,stock_unit_id,stock_unit_version FROM inventory_config_versions WHERE company_id=? AND product_id=? AND status='active'")
       .bind(input.companyId,input.productId).first<ConfigRow>();
     const legacy = await this.legacy(input.companyId,input.productId);
-    const legacyRecord = this.legacyRecord(legacy,input.productId,at);
+    const history=await this.db.prepare(planningUnitsSql+' AND c.product_id=?').bind(input.companyId,input.productId).all<PlanningUnitRow>();
+    const legacyRecord = holdAmbiguousPlanning(this.legacyRecord(legacy,input.productId,at),history.results);
     const nextVersion = Number((await this.db.prepare('SELECT MAX(version) AS version FROM inventory_config_versions WHERE company_id=? AND product_id=?').bind(input.companyId,input.productId).first<{version:number|null}>())?.version ?? 0)+1;
     let opening: ExactQuantity | null = null;
     if (!prior || prior.dimension !== unit.dimension) {
@@ -288,6 +290,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const onHand = opening ?? (prior ? exact(prior.dimension,prior.on_hand_minor) : exact(unit.dimension,'0'));
     const incoming = prior && prior.dimension === unit.dimension ? exact(unit.dimension,prior.incoming_minor) : exact(unit.dimension,'0');
     const estimated = prior && prior.dimension === unit.dimension ? exact(unit.dimension,prior.estimated_used_minor) : exact(unit.dimension,'0');
+    changePlanningUnit(legacyRecord,prior?await this.unit(input.companyId,input.productId,prior.stock_unit_id,prior.stock_unit_version):null,unit);
     legacyRecord.settings.unit=unit.label;
     legacyRecord.settings.unitsPerPack=legacyNumber(purchase,unit);
     legacyRecord.onHand=legacyNumber(onHand,unit);
