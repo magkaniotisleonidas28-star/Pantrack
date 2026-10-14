@@ -35,10 +35,11 @@ export class D1SalesCorrectionService{
   const clean=reason.trim();if(!clean)throw new SalesIngestionError('reason_required','Correction reason is required.');
   const waste=await this.db.prepare(`SELECT 1 AS found FROM waste_sale_allocations w JOIN sales_events e ON e.company_id=w.company_id AND e.application_key=w.application_key WHERE e.company_id=? AND e.event_key=? AND w.claimed>0 LIMIT 1`).bind(companyId,eventKey).first();
   if(waste)throw new SalesIngestionError('invalid_state','This sale includes classified waste. Review the physical stock before correcting it.');
-  const row=await this.db.prepare(`SELECT i.result_json AS inventory_result_json FROM sales_event_states s
-    JOIN sales_events e ON e.company_id=s.company_id AND e.event_key=s.event_key
-    JOIN inventory_consumption_applications i ON i.company_id=e.company_id AND i.idempotency_key=e.application_key
-    WHERE s.company_id=? AND s.event_key=? AND s.state='applied'`).bind(companyId,eventKey).first<{inventory_result_json:string}>();
+  const row=await this.db.prepare(`SELECT r.inventory_result_json FROM sales_event_states s
+    JOIN sales_event_attempts a ON a.company_id=s.company_id AND a.event_key=s.event_key
+    JOIN sales_event_attempt_results r ON r.company_id=a.company_id AND r.attempt_id=a.attempt_id
+    WHERE s.company_id=? AND s.event_key=? AND s.state='applied' AND r.outcome='applied' AND r.inventory_result_json IS NOT NULL
+    ORDER BY r.completed_at DESC LIMIT 1`).bind(companyId,eventKey).first<{inventory_result_json:string}>();
   if(!row)throw new SalesIngestionError('invalid_state','Corrections may be requested only for an applied inventory deduction.');
   const applied=json<InventoryConsumptionApplied>(row.inventory_result_json,'inventory result');
   if(applied.status!=='applied'||applied.companyId!==companyId||!Array.isArray(applied.changes)||!applied.changes.length)throw new SalesIngestionError('invalid_state','This event has no ingredient deduction to correct.');

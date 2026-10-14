@@ -1,0 +1,153 @@
+/* Repeated records use rows; settings use open sections. Color belongs to state. */
+html .sidebar-workspace[data-workspace-theme] { --workspace-section-gap: 32px; }
+html .sidebar-workspace[data-workspace-theme] :is(.catalog-card,.history-card,.automation-job,.sales-entry,.payment-panel,.payment-help,.empty,.product-panel) {
+  background: transparent; border: 0; border-radius: 0; box-shadow: none; min-width: 0;
+}
+html .sidebar-workspace[data-workspace-theme] .catalog-grid { grid-template-columns: minmax(0,1fr); gap: 0; }
+html .sidebar-workspace[data-workspace-theme] :is(.catalog-card,.history-card,.automation-job) { padding: 24px 0; border-bottom: 1px solid var(--border); margin-bottom: 0; overflow-wrap: anywhere; }
+html .sidebar-workspace[data-workspace-theme] .catalog-card h2 { margin: 0 0 12px; font-size: 18px; }
+html .sidebar-workspace[data-workspace-theme] .catalog-card p { margin: 12px 0; max-width: 70ch; }
+html .sidebar-workspace[data-workspace-theme] :is(.history-list,.catalog-grid) { border-top: 1px solid var(--border); }
+html .sidebar-workspace[data-workspace-theme] .history-card { flex-wrap: wrap; gap: 12px 24px; }
+html .sidebar-workspace[data-workspace-theme] .empty { padding: 40px 0; text-align: left; max-width: 70ch; }
+html .sidebar-workspace[data-workspace-theme] .empty > svg { margin: 0 0 16px; }
+html .sidebar-workspace[data-workspace-theme] .empty p { margin: 8px 0 20px; }
+html .sidebar-workspace[data-workspace-theme] .inventory-table { background: transparent; border: 0; border-radius: 0; border-bottom: 1px solid var(--border); overflow: hidden; }
+html .sidebar-workspace[data-workspace-theme] .inventory-table :is(td,th) { border-color: var(--border); font-variant-numeric: tabular-nums; }
+html .sidebar-workspace[data-workspace-theme] :is(.builder-row,.builder-review,.recipe-modifier-card,.modifier-change,.stock-calculation) { border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; padding: 20px 0; }
+html .sidebar-workspace[data-workspace-theme] .sales-entry { padding: 24px 0; border-top: 1px solid var(--border); }
+html .sidebar-workspace[data-workspace-theme] .sales-entry > .product-form { max-width: 780px; }
+html .sidebar-workspace[data-workspace-theme] .inventory-review-details { border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 20px 0; }
+html .sidebar-workspace[data-workspace-theme] .catalog-tools { padding: 0; }
+html .sidebar-workspace[data-workspace-theme] .product-panel th { background: transparent; border-bottom: 1px solid var(--border); }
+html .sidebar-workspace[data-workspace-theme] .product-panel .table-foot { padding-inline: 0; background: transparent; color: var(--muted-foreground); }
+html .sidebar-workspace[data-workspace-theme] .product-icon { background: transparent; width: 24px; height: 24px; color: var(--muted-foreground); }
+html .sidebar-workspace[data-workspace-theme] .basket { background: transparent; border: 0; border-left: 1px solid var(--border); border-radius: 0; padding: 0 0 0 24px; }
+html .sidebar-workspace[data-workspace-theme] .basket-empty { text-align: left; align-items: flex-start; padding: 24px 0; }
+html .sidebar-workspace[data-workspace-theme] .basket-empty > svg { display: none; }
+html .sidebar-workspace[data-workspace-theme] .basket-note { justify-content: flex-start; }
+html .sidebar-workspace[data-workspace-theme] .demo-banner { background: transparent; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 0 0 16px; }
+html .sidebar-workspace[data-workspace-theme] .automation-form { display: block; max-width: 1040px; }
+html .sidebar-workspace[data-workspace-theme] .automation-form > .catalog-card { padding: var(--workspace-section-gap) 0; }
+html .sidebar-workspace[data-workspace-theme] .automation-form > .catalog-card + .catalog-card { border-top: 1px solid var(--border); }
+html .sidebar-workspace[data-workspace-theme] .automation-form > button { margin-top: 24px; }
+html .sidebar-workspace[data-workspace-theme] .automation-form label:not(.checkbox-label) { max-width: 520px; }
+html .sidebar-workspace[data-workspace-theme] .allowed-products { max-height: 440px; padding-right: 16px; }
+html .sidebar-workspace[data-workspace-theme] .allowed-products .checkbox-label { margin: 0; padding: 14px 0; border-bottom: 1px solid var(--border); }
+html .sidebar-workspace[data-workspace-theme] .payment-layout { max-width: 1040px; gap: 40px; }
+html .sidebar-workspace[data-workspace-theme] .payment-panel { padding: 24px 0; border-top: 1px solid var(--border); }
+html .sidebar-workspace[data-workspace-theme] .payment-empty { text-align: left; align-items: flex-start; padding: 32px 0; gap: 12px; }
+html .sidebar-workspace[data-workspace-theme] .payment-empty > svg { width: 24px; height: 24px; }
+html .sidebar-workspace[data-workspace-theme] .payment-empty p { font-size: 14px; }
+html .sidebar-workspace[data-workspace-theme] .payment-help { padding: 24px 0 24px 24px; border-left: 1px solid var(--border); }
+html .sidebar-workspace[data-workspace-theme] .payment-help > svg { display: none; }
+html .sidebar-workspace[data-workspace-theme] .payment-help h2 { font-size: 16px; }
+html .sidebar-workspace[data-workspace-theme] .payment-divider { background: var(--border); }
+html .sidebar-workspace[data-workspace-theme] .setup-register { max-width: 1120px; }
+html .sidebar-workspace[data-workspace-theme] .setup-editors { display: block; }
+html .sidebar-workspace[data-workspace-theme] .setup-editors > .catalog-card { padding: 32px 0; border-top: 1px solid var(--border); border-bottom: 0; }
+html .sidebar-workspace[data-workspace-theme] .setup-editors .product-form { max-width: 680px; }
+html .sidebar-workspace[data-workspace-theme] .setup-register .catalog-card > .product-form { max-width: 680px; }
+html .sidebar-workspace[data-workspace-theme] .setup-register .product-form > button { justify-self: start; }
+html .sidebar-workspace[data-workspace-theme] .setup-progress { margin: 24px 0 32px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.setup-progress > summary { display: flex; align-items: center; gap: 12px; padding: 20px 0; font-size: 16px; font-weight: 600; cursor: pointer; }
+.setup-progress > summary::marker { content: ''; }
+.setup-progress > summary::-webkit-details-marker { display: none; }
+.setup-progress > summary > svg { transition: transform 150ms ease; flex-shrink: 0; }
+.setup-progress[open] > summary > svg { transform: rotate(90deg); }
+.setup-progress > summary > small { margin-left: auto; font-weight: 400; }
+.setup-checklist { list-style: none; margin: 0; padding: 0; }
+.setup-checklist > li { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; gap: 16px; align-items: start; padding: 20px 0; border-top: 1px solid var(--border); }
+.setup-step-number { color: var(--muted-foreground); font-size: 14px; padding-top: 2px; font-variant-numeric: tabular-nums; }
+.setup-checklist h2 { font-size: 15px; margin: 0 0 6px; }
+.setup-checklist p { margin: 8px 0 0; font-size: 13px; max-width: 70ch; }
+.setup-checklist small { color: var(--muted-foreground); }
+.workspace-section-nav { display: flex; flex-wrap: wrap; gap: 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+.workspace-section-nav button { min-height: 44px; padding: 8px 0 12px; border-bottom: 2px solid transparent; color: var(--muted-foreground); font-size: 14px; }
+.workspace-section-nav button[aria-current=page] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.workspace-section-nav button:hover { color: var(--foreground); }
+html .sidebar-workspace[data-workspace-theme] .product-catalog { min-width: 0; }
+.catalog-list-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.catalog-search { position: relative; width: 420px; max-width: 100%; }
+.catalog-search > svg { position: absolute; left: 12px; top: 13px; color: var(--muted-foreground); }
+.catalog-search input { min-height: 44px; padding-left: 40px; box-shadow: none; }
+.catalog-list-tools > p { margin: 0; font-size: 13px; }
+.catalog-products { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--border); }
+.catalog-product-row { display: grid; grid-template-columns: minmax(180px,1fr) minmax(0,2fr) 120px; gap: 24px; align-items: start; border-bottom: 1px solid var(--border); padding: 24px 0; }
+.catalog-product-name h2 { font-size: 15px; margin: 0 0 8px; overflow-wrap: anywhere; }
+.catalog-product-name small { overflow-wrap: anywhere; }
+.catalog-product-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; margin: 0; }
+.catalog-product-facts dt { font-size: 12px; color: var(--muted-foreground); margin-bottom: 6px; }
+.catalog-product-facts dd { font-size: 14px; margin: 0; overflow-wrap: anywhere; }
+.catalog-product-facts dd small { margin-top: 4px; }
+.catalog-product-actions { display: grid; justify-items: end; gap: 8px; }
+.catalog-product-actions button { min-height: 44px; }
+.catalog-product-actions a { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 8px 0; text-decoration: underline; text-underline-offset: 3px; }
+.catalog-list-empty { padding: 40px 0; }
+.catalog-list-empty p { margin: 8px 0 16px; }
+html .sidebar-workspace[data-workspace-theme] .po-preview fieldset { border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 24px 0; margin: 24px 0; }
+html .sidebar-workspace[data-workspace-theme] .po-preview legend { padding: 0 16px 0 0; }
+html .sidebar-workspace[data-workspace-theme] :is(.po-line,.po-detail) { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 20px 0; margin: 0; }
+html .sidebar-workspace[data-workspace-theme] .po-preview :is(.po-line,.po-detail) h3 { font-size: 15px; font-weight: 600; }
+html .sidebar-workspace[data-workspace-theme] .po-preview .po-fields { gap: 16px 24px; }
+html .sidebar-workspace[data-workspace-theme] :is(.workspace-section-nav,.setup-progress,.catalog-products) :is(button,summary,a):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+html .sidebar-workspace[data-workspace-theme] :is(small,.catalog-list-tools > p) { color: var(--muted-foreground); }
+html .sidebar-workspace[data-workspace-theme] input { caret-color: var(--primary); }
+html .sidebar-workspace[data-workspace-theme] ::selection { background: var(--accent); color: var(--accent-foreground); }
+html .sidebar-workspace[data-workspace-theme] { scrollbar-color: var(--border) var(--background); }
+.signin-page .signin-card { box-shadow: none; }
+body[data-workspace-theme] .order-dialog .supplier-summary { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 20px 0; background: transparent; }
+@media (max-width: 1200px) {
+  html .sidebar-workspace[data-workspace-theme] .basket { border-left: 0; border-top: 1px solid var(--border); padding: 24px 0; }
+}
+@media (max-width: 900px) {
+  .catalog-product-row { grid-template-columns: minmax(0,1fr) auto; gap: 16px; }
+  .catalog-product-name, .catalog-product-facts { grid-column: 1 / -1; }
+  .catalog-product-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; }
+}
+@media (max-width: 750px) {
+  html .sidebar-workspace[data-workspace-theme] .payment-layout { grid-template-columns: minmax(0,1fr); gap: 0; }
+  html .sidebar-workspace[data-workspace-theme] .payment-help { padding: 24px 0; border-left: 0; border-top: 1px solid var(--border); }
+  .setup-checklist > li { grid-template-columns: 24px minmax(0,1fr); gap: 12px; }
+  .setup-checklist > li > button { grid-column: 2; justify-self: start; }
+  .setup-progress > summary { flex-wrap: wrap; }
+  .setup-progress > summary > small { width: 100%; margin-left: 30px; }
+  .catalog-list-tools { gap: 12px; }
+  .catalog-search { width: 100%; }
+  .catalog-product-facts { gap: 16px; }
+  html .sidebar-workspace[data-workspace-theme] .history-card > div { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .setup-progress > summary > svg { transition: none; } }
+
+/* Center each task's canvas instead of pinning a narrow form to a wide page. */
+html .sidebar-workspace[data-workspace-theme] main {
+  --workspace-content-width: 1440px;
+  width: 100%; max-width: var(--workspace-content-width); margin-inline: auto;
+}
+html .sidebar-workspace[data-workspace-theme] main[data-workspace-page=inventory] { --workspace-content-width: 1280px; }
+html .sidebar-workspace[data-workspace-theme] main:is([data-workspace-page=setup],[data-workspace-page=suppliers],[data-workspace-page=history]) { --workspace-content-width: 1200px; }
+html .sidebar-workspace[data-workspace-theme] main[data-workspace-page=payments] { --workspace-content-width: 1120px; }
+html .sidebar-workspace[data-workspace-theme] main:is([data-workspace-page=setup],[data-workspace-page=suppliers]) { container: workspace-content / inline-size; }
+html .sidebar-workspace[data-workspace-theme] :is(.task-form,.task-review) { margin-inline: auto; }
+html .sidebar-workspace[data-workspace-theme] .task-review { max-width: none; }
+html .sidebar-workspace[data-workspace-theme] :is(.recipe-browser,.automation-form,.payment-layout,.setup-register) { max-width: none; }
+html .sidebar-workspace[data-workspace-theme] .sales-entry > .product-form { margin-inline: auto; width: 100%; }
+
+/* These pairs share a task. Columns depend on usable space, including the sidebar. */
+@container workspace-content (min-width: 1000px) {
+  html .sidebar-workspace[data-workspace-theme] .automation-form {
+    display: grid; grid-template-columns: repeat(2,minmax(0,1fr));
+    column-gap: 48px; align-items: start;
+  }
+  html .sidebar-workspace[data-workspace-theme] .automation-form > .catalog-card {
+    border-top: 1px solid var(--border); border-bottom: 0; padding: 24px 0;
+  }
+  html .sidebar-workspace[data-workspace-theme] .automation-form > button {
+    grid-column: 1 / -1; justify-self: start; margin-top: 0;
+  }
+  html .sidebar-workspace[data-workspace-theme] .setup-editors {
+    display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 48px;
+    align-items: start;
+  }
+  html .sidebar-workspace[data-workspace-theme] .setup-editors .product-form { max-width: none; }
+}

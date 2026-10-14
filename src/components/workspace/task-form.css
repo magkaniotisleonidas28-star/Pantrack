@@ -1,0 +1,117 @@
+/* A shared form rhythm for the connected stock, recipe and waste workflows. */
+.task-form { --task-space: 24px; width: 100%; max-width: 1040px; min-width: 0; }
+.task-form.recipe-builder { max-width: 1040px; gap: 0; }
+.task-form .task-form-heading { display: grid; gap: 8px; padding: 4px 0 24px; }
+.task-form .task-form-heading h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.task-form .task-form-heading p { margin: 0; max-width: 70ch; color: var(--muted-foreground); font-size: 14px; }
+.task-form .task-section { display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 32px; padding: var(--task-space) 0; border-top: 1px solid var(--border); min-width: 0; }
+.task-form .task-section-heading h3 { margin: 0 0 8px; font-size: 15px; line-height: 1.5; font-weight: 600; text-transform: none; letter-spacing: normal; }
+.task-form .task-section-heading p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--muted-foreground); }
+.task-form .task-section-fields { display: grid; gap: 16px; align-content: start; min-width: 0; }
+.task-form fieldset { min-width: 0; }
+.task-form > fieldset { display: block; border: 0; padding: 0; }
+.task-form label { display: grid; gap: 8px; min-width: 0; font-size: 13px; font-weight: 500; }
+.task-form :is(input:not([type=radio]):not([type=checkbox]),select,textarea) { width: 100%; min-width: 0; min-height: 44px; padding: 10px 12px; border: 1px solid var(--input); border-radius: 6px; background-color: var(--background); color: var(--foreground); box-shadow: none; font-size: 14px; line-height: 1.5; caret-color: var(--primary); }
+.task-form select { padding-right: 32px; }
+.task-form :is(input,select,textarea):focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.task-form input::placeholder { color: var(--muted-foreground); }
+.task-form :is(button,summary):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.task-form button { min-height: 44px; }
+.task-form :is(p,small) { color: var(--muted-foreground); }
+.task-form .task-field-pair { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; }
+.task-form .task-help { margin: 0; font-size: 13px; line-height: 1.6; max-width: 70ch; }
+.task-form .task-section-fields > button { justify-self: start; }
+.task-form .task-form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 20px 0; border-top: 1px solid var(--border); }
+.task-form .task-form-actions > p { font-size: 13px; margin: 0 auto 0 0; }
+.task-form .task-form-actions button { min-width: 100px; flex: initial; }
+.task-form [data-variant=default] { background: var(--primary); color: var(--primary-foreground); }
+.task-form .task-choices { display: grid; gap: 0; padding: 0; border: 0; }
+.task-form .task-choices legend { font-size: 13px; font-weight: 500; margin: 0 0 8px; }
+.task-form .task-choices.task-choices-compact { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0 12px; }
+.task-form .task-choice { display: flex; align-items: flex-start; gap: 12px; padding: 14px 12px; border-bottom: 1px solid var(--border); cursor: pointer; font-weight: 400; }
+.task-form .task-choice:hover { background: var(--muted); }
+.task-form .task-choice:has(:checked) { background: var(--accent); }
+.task-form .task-choice input { appearance: auto; width: 16px; height: 16px; min-height: 0; margin: 2px 0 0; padding: 0; accent-color: var(--primary); flex: 0 0 16px; }
+.task-form .task-choice strong { font-size: 14px; font-weight: 500; }
+.task-form .task-choice small { display: block; margin-top: 4px; font-size: 12px; line-height: 1.5; color: var(--muted-foreground); }
+.task-form .task-choice:has(:disabled) { cursor: not-allowed; opacity: .6; }
+.task-form .task-disclosure > summary { cursor: pointer; font-size: 13px; padding: 12px 0; color: var(--muted-foreground); }
+.task-form .task-disclosure[open] { display: grid; gap: 16px; }
+.task-form .task-disclosure > :not(summary) { margin-top: 12px; }
+.task-form label.checkbox-label { display: flex; align-items: center; gap: 10px; font-weight: 400; }
+.task-form .checkbox-label input { width: 16px; height: 16px; min-height: 0; accent-color: var(--primary); }
+.task-form .task-calculation { display: grid; gap: 4px; margin: 0; padding: 12px 0; font-size: 14px; font-variant-numeric: tabular-nums; color: var(--foreground); }
+.task-form .task-calculation strong { font-size: 16px; font-weight: 600; }
+.task-form .task-ingredient-row { display: grid; grid-template-columns: minmax(0,1fr) 44px; gap: 8px; align-items: end; padding: 0 0 16px; }
+.task-form .task-ingredient-row + .task-ingredient-row { border-top: 1px solid var(--border); padding-top: 16px; }
+.task-form .recipe-amount-fields { grid-template-columns: minmax(0,2fr) minmax(80px,1fr) minmax(80px,1fr); gap: 12px; }
+.task-form .task-option-row { display: grid; gap: 16px; padding: 16px 0; border-top: 1px solid var(--border); }
+.task-form .task-inline-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.task-form .task-option-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.task-form .task-option-header > label { flex: 1; min-width: 160px; }
+.task-form .task-option-header > button { align-self: end; }
+.task-form .task-review { max-width: 780px; }
+.task-form .task-review:focus { outline: none; }
+.task-form .task-review-lines { margin: 0; display: grid; }
+.task-form .task-review-lines > div { display: flex; justify-content: space-between; align-items: baseline; gap: 24px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.task-form .task-review-lines dt { font-size: 14px; }
+.task-form .task-review-lines dd { font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.task-form .task-review .task-review-lines dd { white-space: normal; text-align: right; overflow-wrap: anywhere; }
+.task-form .task-back { justify-self: start; padding-left: 0; }
+.task-form [hidden] { display: none !important; }
+.inventory-surface .inventory-view-switch button[data-variant=default][aria-pressed] { margin-left: auto; background: var(--primary); color: var(--primary-foreground); }
+.inventory-surface .inventory-view-switch button[data-variant=default]:hover { opacity: .9; }
+.recipe-list-toolbar { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; justify-content: space-between; margin: 0 0 20px; }
+.recipe-list-toolbar .recipe-list-search { width: 360px; max-width: 100%; margin: 0; }
+.recipe-list-toolbar > p { margin: 0; font-size: 13px; color: var(--muted-foreground); }
+.inventory-surface .compact-recipe > summary::before { content: none; }
+.compact-recipe > summary > svg { flex-shrink: 0; color: var(--muted-foreground); transition: transform 150ms ease; }
+.compact-recipe[open] > summary > svg { transform: rotate(90deg); }
+.recipe-detail-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.recipe-empty { padding: 32px 0; }
+.recipe-empty h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.recipe-empty p { margin: 0; font-size: 14px; max-width: 65ch; }
+.menu-waste-page.task-form { max-width: 1040px; margin-inline: auto; }
+.menu-waste-page.task-form .page-heading { margin: 28px 0 20px; }
+.menu-waste-page.task-form .menu-waste-content { max-width: none; display: block; }
+.menu-waste-page.task-form .inventory-section-nav { margin-bottom: 24px; }
+.menu-waste-page.task-form .inventory-section-nav { display: flex; flex-wrap: wrap; gap: 0 24px; border-bottom: 1px solid var(--border); }
+.menu-waste-page.task-form .inventory-section-nav button { min-height: 44px; padding: 8px 0 12px; border-bottom: 2px solid transparent; color: var(--muted-foreground); font-size: 14px; }
+.menu-waste-page.task-form .inventory-section-nav button[aria-current=page] { border-bottom-color: var(--primary); color: var(--primary); font-weight: 600; }
+.menu-waste-page.task-form .inventory-section-nav button:hover { color: var(--foreground); }
+.menu-waste-page.task-form .waste-picker-heading { margin-bottom: 20px; }
+.menu-waste-page.task-form .waste-picker-heading h2 { margin-bottom: 8px; font-size: 18px; }
+.menu-waste-page.task-form .waste-picker-search { max-width: 480px; margin-bottom: 24px; }
+.menu-waste-page.task-form .menu-waste-item { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; margin: 0; background: transparent; }
+.menu-waste-page.task-form .menu-waste-item button { border-radius: 0; min-height: 56px; }
+.menu-waste-page.task-form .menu-waste-item > button:first-child { padding-left: 0; }
+.menu-waste-page.task-form .waste-item-group { margin: 24px 0; }
+.menu-waste-page.task-form .menu-waste-setup { display: block; }
+.menu-waste-page.task-form :is(.menu-waste-setup article,.menu-waste-review) { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 24px 0; background: transparent; }
+.menu-waste-page.task-form .menu-waste-setup button { justify-self: start; }
+.menu-waste-page.task-form .waste-form { gap: 0; }
+.task-form .waste-quantity-row { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.task-form .waste-quantity-row > label { width: 140px; }
+.task-form .waste-quantity-row .waste-shortcuts { display: flex; gap: 8px; }
+.task-form .waste-shortcuts button { min-width: 44px; min-height: 44px; }
+.task-form .waste-reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+.task-form .waste-reasons legend { width: 100%; }
+.task-form .waste-reasons button { min-height: 44px; padding: 10px 14px; }
+.task-form .waste-impact { margin: 0; padding: 16px 0; font-size: 14px; color: var(--foreground); }
+.task-form .waste-impact strong { font-weight: 600; }
+.task-form .task-optional-label { font-weight: 400; color: var(--muted-foreground); }
+.waste-sheet .task-form .task-section { grid-template-columns: minmax(0,1fr); gap: 16px; }
+.recipe-browser.task-form .compact-recipe-detail h3 { font-size: 14px; font-weight: 600; margin: 12px 0 0; }
+@media (max-width: 800px) {
+  .task-form .task-section { grid-template-columns: minmax(0,1fr); gap: 16px; }
+  .task-form .task-section-heading p { max-width: 65ch; }
+}
+@media (max-width: 480px) {
+  .task-form .task-field-pair { grid-template-columns: minmax(0,1fr); }
+  .task-form .recipe-amount-fields { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .task-form .recipe-amount-fields > label:first-child { grid-column: 1 / -1; }
+  .task-form .task-form-actions > p { width: 100%; }
+  .task-form .task-form-actions button[data-variant=default] { flex: 1; }
+  .task-form .task-review-lines > div { gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .compact-recipe > summary > svg { transition: none; } }

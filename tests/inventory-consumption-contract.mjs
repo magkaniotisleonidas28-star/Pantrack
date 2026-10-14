@@ -233,18 +233,4 @@ const issueCodes=result=>result.issues.map(issue=>issue.code);
  assert.equal(port.getBalance('company-b','milk'),null);
 }
 
-{
- const port=new FakeInventoryConsumptionPort(fixture());
- const sale=request('fenced-sale','2026-01-15T12:00:00Z',[line('line-1','latte')]);
- const recovery={contract:'pantrack.inventory-consumption-recovery.v1',companyId:sale.companyId,idempotencyKey:sale.idempotencyKey,attemptId:'old-worker'};
- assert.deepEqual(await port.reconcile(recovery),{...recovery,status:'not_applied'});
- await assert.rejects(()=>port.consume(sale,{attemptId:'old-worker'}),/fenced/);
- await assert.rejects(()=>port.consume(sale),/fenced/);
- const applied=await port.consume(sale,{attemptId:'new-worker'});
- assert.equal(applied.status,'applied');
- assert.deepEqual((await port.reconcile(recovery)).application,{...applied,replayed:true});
- assert.equal((await port.reconcile({...recovery,companyId:'company-b'})).status,'not_applied');
- assert.equal(port.getBalance('company-a','cup').onHandMinor,'99');
-}
-
-console.log('PASS: A2 consumption contract selects sale-time versions, applies canonical recipe/modifier quantities atomically, scopes companies, returns reviewable holds, and prevents duplicate deduction; recovery fences old workers.');
+console.log('PASS: A2 consumption contract selects sale-time versions, applies canonical recipe/modifier quantities atomically, scopes companies, returns reviewable holds, and prevents duplicate deduction.');

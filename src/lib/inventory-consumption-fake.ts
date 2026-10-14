@@ -2,15 +2,12 @@ import {choiceIssues} from './recipe-choices';
 import type {RecipeChoiceGroup} from './inventory-management-contract';
 import {
   INVENTORY_CONSUMPTION_CONTRACT,
-  INVENTORY_CONSUMPTION_RECOVERY_CONTRACT,
   type ConsumptionIssue,
   type ExactQuantity,
   type InventoryConsumptionApplied,
   type InventoryConsumptionPort,
   type InventoryConsumptionRequest,
   type InventoryConsumptionResult,
-  type InventoryConsumptionRecoveryRequest,
-  type InventoryConsumptionRecoveryResult,
   type SelectedRecipeVersion,
   type UnitDimension,
 } from '@/lib/inventory-consumption-contract';
@@ -174,8 +171,6 @@ export class FakeInventoryConsumptionPort implements InventoryConsumptionPort {
   private readonly recipes: FakeRecipeVersion[];
   private readonly modifiers: FakeModifierVersion[];
   private readonly applications = new Map<string, StoredApplication>();
-  private readonly fences = new Set<string>();
-  private readonly fencedKeys = new Set<string>();
 
   constructor(fixture: FakeInventoryConsumptionFixture) {
     const now = instant(fixture.now);
@@ -214,18 +209,7 @@ export class FakeInventoryConsumptionPort implements InventoryConsumptionPort {
     return balance ? copy(balance) : null;
   }
 
-  async reconcile(request: InventoryConsumptionRecoveryRequest): Promise<InventoryConsumptionRecoveryResult> {
-    if (request.contract !== INVENTORY_CONSUMPTION_RECOVERY_CONTRACT ||
-        ![request.companyId, request.idempotencyKey, request.attemptId].every(value => typeof value === 'string' && value.length > 0 && value.length <= 200)) throw new Error('Invalid recovery identity.');
-    const key = scoped(request.companyId, request.idempotencyKey);
-    this.fencedKeys.add(key);
-    this.fences.add(scoped(request.companyId, request.idempotencyKey, request.attemptId));
-    const existing = this.applications.get(key);
-    return existing ? {...request, status: 'applied', application: {...copy(existing.result), replayed: true}} : {...request, status: 'not_applied'};
-  }
-
-  async consume(request: InventoryConsumptionRequest, attempt?: {attemptId: string}): Promise<InventoryConsumptionResult> {
-    if (attempt && (typeof attempt.attemptId !== 'string' || !attempt.attemptId || attempt.attemptId.length > 200)) throw new Error('Invalid inventory attempt identity.');
+  async consume(request: InventoryConsumptionRequest): Promise<InventoryConsumptionResult> {
     const base = {
       contract: INVENTORY_CONSUMPTION_CONTRACT,
       companyId: request.companyId,
@@ -292,9 +276,6 @@ export class FakeInventoryConsumptionPort implements InventoryConsumptionPort {
     }
 
     const issues: ConsumptionIssue[] = [];
-    if (this.fencedKeys.has(applicationKey) && (!attempt?.attemptId || this.fences.has(scoped(request.companyId, request.idempotencyKey, attempt.attemptId)))) {
-      throw new Error('Inventory attempt was fenced.');
-    }
     const selectedVersions: SelectedRecipeVersion[] = [];
     const aggregates = new Map<string, Aggregate>();
     let quantityOverflow: ConsumptionIssue | null = null;

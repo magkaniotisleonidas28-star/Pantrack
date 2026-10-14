@@ -1,0 +1,23 @@
+.cart-preview-heading{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.cart-preview-heading h2{margin-bottom:0}
+.cart-preview-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:20px 0}
+.cart-preview-status{display:flex;flex-direction:column;gap:4px;margin:24px 0 12px}
+.cart-preview-status span{font-size:.875rem;color:var(--muted-foreground);overflow-wrap:anywhere}
+.cart-preview-table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:.875rem}
+.cart-preview-table th{font-size:.8rem;font-weight:500;color:var(--muted-foreground)}
+.cart-preview-table th,.cart-preview-table td{text-align:left;padding:14px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+.cart-preview-table th:first-child,.cart-preview-table td:first-child{padding-left:0;overflow-wrap:anywhere}
+.cart-preview-table th:last-child,.cart-preview-table td:last-child{text-align:right;padding-right:0;white-space:nowrap}
+.cart-preview>.po-actions+small{margin-top:16px}
+.cart-preview :is(small,.po-muted,.cart-preview-status span,.cart-preview-table th){color:color-mix(in srgb,var(--muted-foreground) 85%,var(--foreground))}
+.cart-authorization,.cart-pending{margin:20px 0}
+.cart-authorization .po-check{margin:12px 0 16px}
+.cart-reservation,.cart-exposure{margin:16px 0;font-size:.875rem;line-height:1.6}
+.cart-preview-table td{font-variant-numeric:tabular-nums}
+.cart-reconciliation{margin:24px 0;max-width:68ch}
+.cart-reconciliation h3{font-weight:600;margin-bottom:8px}
+.cart-reconciliation p{margin:12px 0;line-height:1.6}
+.cart-reconciliation label{display:grid;gap:8px;font-size:.875rem}
+.cart-reconciliation textarea{width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--background);color:var(--foreground);resize:vertical}
+.cart-reconciliation textarea:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+@media(max-width:600px){.cart-preview-options{grid-template-columns:minmax(0,1fr)}.cart-preview-table{font-size:.8rem}.cart-preview .po-actions>button{width:100%}}

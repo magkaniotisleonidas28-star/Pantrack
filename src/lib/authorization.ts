@@ -7,8 +7,9 @@ export type Permission='read'|'operate'|'integrations'|'members'|'finance'|'paus
 export function permitted(role:string,permission:Permission){
   return role==='owner'||role==='manager'&&['read','operate','pause','recordWaste'].includes(permission)||role==='employee'&&['read','recordWaste'].includes(permission);
 }
-type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts';
+type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts'|'purchasing';
 export function routePermission(family:Family,method:string,action?:string):Permission{
+  if(family==='purchasing')return 'operate';
   if(family==='waste')return 'recordWaste';
   if(family==='waste-shortcuts')return 'operate';
   if(family==='members'||family==='companies')return 'members';

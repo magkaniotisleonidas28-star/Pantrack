@@ -7,6 +7,7 @@ import type {InventoryManagementView} from '@/lib/inventory-management-contract'
 import {CURATED_UNIT_IDS,curatedUnit,customUnit,formatCanonical,toCanonical,unitLabel,type CuratedUnitId,type UnitDefinition} from '@/lib/inventory-quantities';
 import {formatInUnit,packageTotal} from '@/lib/stock-pack-quantities';
 import {sendSaveRequest} from '@/lib/waste-client';
+import {TaskSection,ChoiceField} from './task-form';
 
 const localNow=()=>new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,19);
 const canonicalId=(dimension:string):CuratedUnitId=>dimension==='mass'?'g':dimension==='volume'?'mL':'each';
@@ -86,61 +87,61 @@ export default function StockEntry({companyId,products,view,initialProductId,onR
  const disabled=busy||!!pending||saved;
  const contentDimension=custom?dimension:curatedUnit(unit).dimension;
 
- return <form className="stock-entry recipe-builder" onSubmit={save}>
-   <h2>Add stock</h2><p>Set up an ingredient, receive packages, or record what you physically counted.</p>
+ return <form className="stock-entry recipe-builder task-form" onSubmit={save}>
+   <header className="task-form-heading"><h2>{record?'Update stock':'Add stock'}</h2><p>{record?'Record a delivery, check your actual stock, or update this item’s measurements.':'Choose an item, describe its packaging, then enter what you have on hand.'}</p></header>
    {error&&<p role="alert" className="error">{error}</p>}
    <fieldset disabled={disabled} onChange={touch}>
-     <label>Stock item<select required value={productId} onChange={e=>chooseProduct(e.target.value)}><option value="">Choose an item</option><option value="new">＋ Create a new stock item</option>{products.map(p=><option value={p.id} key={p.id}>{p.name}</option>)}</select></label>
-     {isNew&&<>
-       <label>Item name<Input required maxLength={150} placeholder="e.g. Milk, vanilla syrup or espresso beans" value={name} onChange={e=>setName(e.target.value)}/></label>
-       <details><summary>Supplier details (optional)</summary><label>Supplier<Input maxLength={100} value={supplier} onChange={e=>setSupplier(e.target.value)}/></label><label>Supplier SKU<Input maxLength={100} value={sku} onChange={e=>setSku(e.target.value)}/></label></details>
-       <p>Price stays unknown until you add purchasing details in Product catalog.</p>
-     </>}
-     {record&&<label>What are you recording?<select value={action} onChange={e=>{setAction(e.target.value as typeof action);setBasis(e.target.value==='use'?'measured':'packages');setPackages('');setRemainder('0');setAmount('');}}>
-       <option value="receive">Receive a delivery — adds stock</option><option value="count">Physical count — replaces the estimate</option><option value="use">Record extra ingredient use</option><option value="incoming">Set expected incoming stock</option><option value="configure">Change measurements or purchase pack</option>
-     </select></label>}
-     {setup&&<>
-       <label>Recipe measurement<select value={unit} onChange={e=>{const next=e.target.value as CuratedUnitId;setUnit(next);if(curatedUnit(next).dimension!==contentDimension)setContentUnitId(next);}}>
+     <TaskSection title="Stock item" description="Use an item already in your catalog, or add a new ingredient or ready-made product.">
+       <ChoiceField compact label="Choose an item type" value={isNew?'new':'existing'} onChange={value=>{chooseProduct(value==='new'?'new':'');touch();}} options={[{value:'existing',label:'Existing item'},{value:'new',label:'New item'}]}/>
+       {isNew?<>
+         <label>Item name<Input required maxLength={150} placeholder="e.g. Whole milk or espresso beans" value={name} onChange={e=>setName(e.target.value)}/></label>
+         <details className="task-disclosure"><summary>Add supplier details (optional)</summary><div className="task-field-pair"><label>Supplier<Input maxLength={100} value={supplier} onChange={e=>setSupplier(e.target.value)}/></label><label>Supplier SKU<Input maxLength={100} value={sku} onChange={e=>setSku(e.target.value)}/></label></div><p className="task-help">Price stays unknown until you add purchasing details in Product catalog.</p></details>
+       </>:<label>Catalog item<select required value={productId} onChange={e=>chooseProduct(e.target.value)}><option value="">Choose an item</option>{products.map(p=><option value={p.id} key={p.id}>{p.name}</option>)}</select></label>}
+     </TaskSection>
+     {record&&<TaskSection title="Stock update" description="A delivery adds to stock. A physical count sets the total you actually have.">
+       <label>What would you like to record?<select value={action} onChange={e=>{setAction(e.target.value as typeof action);setBasis(e.target.value==='use'?'measured':'packages');setPackages('');setRemainder('0');setAmount('');}}>
+         <option value="receive">Receive a delivery</option><option value="count">Record a physical count</option><option value="use">Record extra ingredient use</option><option value="incoming">Set expected incoming stock</option><option value="configure">Change measurements or purchase pack</option>
+       </select></label>
+       <p className="task-help">{action==='receive'?'Enter only the new delivery. This amount is added to your current stock.':action==='count'?'Count everything remaining. This total replaces the current estimate.':action==='incoming'?'Enter the full amount still expected to arrive. This does not increase on-hand stock.':action==='use'?'Enter extra ingredients used outside recorded sales or waste.': 'Updating a purchase pack keeps your current stock total and all previous conversions.'}</p>
+     </TaskSection>}
+     {setup&&<TaskSection title="Measurements & packaging" description="Recipes use a measurement such as grams or millilitres. Deliveries use a container such as a bag or jug.">
+       <label>Measure recipe ingredients in<select value={unit} onChange={e=>{const next=e.target.value as CuratedUnitId;setUnit(next);if(curatedUnit(next).dimension!==contentDimension)setContentUnitId(next);}}>
          {CURATED_UNIT_IDS.map(id=><option value={id} key={id}>{id==='each'?'Individual items (each)':unitLabel(id)}</option>)}
        </select></label>
-       <label>Purchased as<Input required maxLength={100} placeholder="jug, bottle, jar, bag or box" value={pack} onChange={e=>setPack(e.target.value)}/></label>
-       <div className="stock-package-fields">
-         <label>Each {pack||'package'} contains<Input required inputMode="decimal" value={packAmount} onChange={e=>setPackAmount(e.target.value)}/></label>
-         <label>Contents measurement<select required value={contentUnitId} onChange={e=>setContentUnitId(e.target.value)}>
+       <label>Purchase container<Input required maxLength={100} placeholder="e.g. jug, bottle, bag or box" value={pack} onChange={e=>setPack(e.target.value)}/></label>
+       <div className="task-field-pair">
+         <label>Amount in one {pack||'container'}<Input required inputMode="decimal" value={packAmount} onChange={e=>setPackAmount(e.target.value)}/></label>
+         <label>Unit of contents<select required value={contentUnitId} onChange={e=>setContentUnitId(e.target.value)}>
            {custom&&<option value={identity.unit}>{customLabel||'Custom measure'}</option>}
            {CURATED_UNIT_IDS.filter(id=>curatedUnit(id).dimension===contentDimension).map(id=><option value={id} key={id}>{unitLabel(id)}</option>)}
          </select></label>
        </div>
-       <p className="waste-hint">For example: milk — 1 US gallon per jug; syrup — 750 mL per bottle; beans — 1 kg per bag.</p>
-       <details><summary>Custom measuring unit (advanced)</summary>
+       <p className="task-help">For example: 1 US gallon per milk jug, 750 mL per syrup bottle, or 1 kg per bag of beans.</p>
+       {packagePreview&&<p className="task-calculation">{packagePreview}</p>}
+       <details className="task-disclosure" open={custom}><summary>Custom scoop or measuring unit (advanced)</summary>
          <label className="checkbox-label"><input type="checkbox" checked={custom} onChange={e=>{setCustom(e.target.checked);setDimension(curatedUnit(unit).dimension);setContentUnitId(e.target.checked?identity.unit:unit);}}/>Use a product-specific scoop or measure</label>
          {custom&&<>
            <label>Measure label<Input required value={customLabel} onChange={e=>setCustomLabel(e.target.value)}/></label>
            <label>Measures<select value={dimension} onChange={e=>{const d=e.target.value as typeof dimension;setDimension(d);setContentUnitId(canonicalId(d));}}><option value="count">Items</option><option value="mass">Grams</option><option value="volume">Millilitres</option></select></label>
-           <label>Grams, millilitres, or items per measure<Input required inputMode="numeric" value={numerator} onChange={e=>setNumerator(e.target.value)}/></label>
-           <label>Divided by (normally 1)<Input required inputMode="numeric" value={denominator} onChange={e=>setDenominator(e.target.value)}/></label>
+           <div className="task-field-pair"><label>Grams, millilitres, or items per measure<Input required inputMode="numeric" value={numerator} onChange={e=>setNumerator(e.target.value)}/></label><label>Divided by (normally 1)<Input required inputMode="numeric" value={denominator} onChange={e=>setDenominator(e.target.value)}/></label></div>
          </>}
        </details>
-     </>}
-     {packagePreview&&<p className="stock-calculation">{packagePreview}</p>}
-     {productId&&(opening||!setup)&&<>
-       {opening&&<h3>Opening physical count</h3>}
-       {hasPackages&&action!=='use'&&<label>Enter quantity as<select value={basis} onChange={e=>setBasis(e.target.value as typeof basis)}>
-         <option value="packages">{action==='receive'&&!opening?'Number of packages':'Whole containers + measured remainder'}</option><option value="measured">Measured total ({measuredLabel})</option>
-       </select></label>}
-       {basis==='packages'&&action!=='use'&&hasPackages?<>
-         <label>{action==='receive'&&!opening?'Packages received':'Whole containers'} ({setup?pack:record?.purchase?.label})<Input required inputMode="numeric" type="number" min="0" max="1000000" step="1" value={packages} onChange={e=>setPackages(e.target.value)}/></label>
-         {(opening||action==='count'||action==='incoming')&&<label>Measured remainder ({measuredLabel})<Input required inputMode="decimal" value={remainder} onChange={e=>setRemainder(e.target.value)}/></label>}
-       </>:<label>{opening?'Opening measured total':action==='count'?'Actual quantity counted':action==='incoming'?'Total expected incoming':'Quantity'} ({measuredLabel})<Input required inputMode="decimal" value={amount} onChange={e=>setAmount(e.target.value)}/></label>}
-       {preview&&<p role="status" className="stock-calculation">{preview}</p>}
-     </>}
-     {productId&&!setup&&action==='receive'&&<label className="checkbox-label"><input type="checkbox" checked={fromIncoming} onChange={e=>setFromIncoming(e.target.checked)}/>This delivery was already recorded as incoming</label>}
-     {record&&setup&&<p>Changing package size keeps the current stock total. Previous entries keep their original conversion.</p>}
-     <details><summary>Time and note</summary><label>Occurred at<Input required type="datetime-local" step="1" value={time} onChange={e=>setTime(e.target.value)}/></label>{!setup&&<label>Note<Input maxLength={300} value={note} onChange={e=>setNote(e.target.value)}/></label>}</details>
-     <Button disabled={!productId}>{setup?(record?'Save measurements and purchase pack':'Save item and opening stock'):action==='count'?'Save physical count':'Save stock update'}</Button>
+     </TaskSection>}
+     {productId&&(opening||!setup)&&<TaskSection title={opening?'Opening count':action==='count'?'Physical count':action==='incoming'?'Incoming quantity':action==='use'?'Quantity used':'Delivery quantity'} description={opening?'Count what you have now. This becomes the starting point for inventory.':action==='count'?'Include unopened containers and any amount left in an opened one.':action==='receive'?'Enter the containers received in this delivery.':undefined}>
+       {hasPackages&&action!=='use'&&<ChoiceField compact label="Enter quantity as" value={basis} onChange={setBasis} options={[{value:'packages',label:action==='receive'&&!opening?'Containers':'Containers + remainder'},{value:'measured',label:`Measured total (${measuredLabel})`}]}/>}
+       {basis==='packages'&&action!=='use'&&hasPackages?<div className="task-field-pair">
+         <label>{action==='receive'&&!opening?'Containers received':'Full containers'} ({setup?pack:record?.purchase?.label})<Input required inputMode="numeric" type="number" min="0" max="1000000" step="1" placeholder="0" value={packages} onChange={e=>setPackages(e.target.value)}/></label>
+         {(opening||action==='count'||action==='incoming')&&<label>Remainder in opened containers ({measuredLabel})<Input required inputMode="decimal" value={remainder} onChange={e=>setRemainder(e.target.value)}/></label>}
+       </div>:<label>{opening?'Total on hand':action==='count'?'Actual quantity counted':action==='incoming'?'Total expected incoming':'Quantity'} ({measuredLabel})<Input required inputMode="decimal" value={amount} onChange={e=>setAmount(e.target.value)}/></label>}
+       {preview&&<p role="status" className="task-calculation"><small>{opening?'Starting inventory':'Stock update preview'}</small><strong>{preview}</strong></p>}
+       {productId&&!setup&&action==='receive'&&<label className="checkbox-label"><input type="checkbox" checked={fromIncoming} onChange={e=>setFromIncoming(e.target.checked)}/>This delivery was already recorded as incoming</label>}
+     </TaskSection>}
+     {productId&&<TaskSection title="Entry details" description="The entry uses the current time. Change it if you are recording an earlier count or delivery.">
+       <details className="task-disclosure"><summary>Change time{!setup?' or add a note':''}</summary><label>Occurred at<Input required type="datetime-local" step="1" value={time} onChange={e=>setTime(e.target.value)}/></label>{!setup&&<label>Note (optional)<Input maxLength={300} value={note} onChange={e=>setNote(e.target.value)}/></label>}</details>
+     </TaskSection>}
+     <div className="task-form-actions"><Button type="submit" disabled={!productId}>{setup?(record?'Save measurements':'Save item & opening stock'):action==='count'?'Save physical count':action==='receive'?'Save delivery':'Save stock update'}</Button>{!disabled&&<Button type="button" variant="ghost" onClick={()=>{if(!dirty||window.confirm('Discard this stock edit?'))onSaved();}}>Cancel</Button>}</div>
    </fieldset>
    {pending&&<Button type="button" disabled={busy} onClick={()=>void save({preventDefault(){}} as React.FormEvent)}>{busy?'Confirming…':'Retry the same stock save'}</Button>}
    {saved&&<Button type="button" onClick={()=>void onReload().then(onSaved).catch(()=>setError('Could not refresh. Try again.'))}>Refresh stock list</Button>}
-   {!disabled&&<Button type="button" variant="ghost" onClick={()=>{if(!dirty||window.confirm('Discard this stock edit?'))onSaved();}}>Cancel</Button>}
  </form>;
 }

@@ -6,12 +6,8 @@ import {build} from 'esbuild';
 mkdirSync('.sites-runtime',{recursive:true});
 await build({entryPoints:['src/lib/sales-ingestion.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/sales-store-memory.mjs'});
 await build({entryPoints:['src/lib/d1-sales-event-store.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/sales-store-d1.mjs'});
-await build({entryPoints:['src/lib/d1-inventory-consumption.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/sales-store-inventory.mjs'});
-await build({entryPoints:['src/lib/inventory-consumption-fake.ts'],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/sales-store-inventory-fake.mjs'});
 const {InMemorySalesEventStore}=await import('../.sites-runtime/sales-store-memory.mjs');
 const {D1SalesEventStore}=await import('../.sites-runtime/sales-store-d1.mjs');
-const {D1InventoryConsumptionPort}=await import('../.sites-runtime/sales-store-inventory.mjs');
-const {FakeInventoryConsumptionPort}=await import('../.sites-runtime/sales-store-inventory-fake.mjs');
 
 class Statement {
  constructor(database,query,values=[]){this.database=database;this.query=query;this.values=values;}
@@ -62,8 +58,7 @@ function record({companyId='company-a',eventKey='event-1',lineageKey='lineage-1'
  return {event,auditFragment:{source:event.source,external:event.external,lines:event.lines},lineageKey,applicationKey:`application-${eventKey}`};
 }
 
-async function exercise(name,store,inventory){
- const reconcile=(record,attemptId)=>inventory.reconcile({contract:'pantrack.inventory-consumption-recovery.v1',companyId:record.event.companyId,idempotencyKey:record.applicationKey,attemptId});
+async function exercise(name,store){
  const actor='user:owner-a';
  const at='2026-01-01T00:00:00.000Z';
  const first=record();
@@ -150,10 +145,10 @@ async function exercise(name,store,inventory){
  const lease=await store.receive('company-a',record({eventKey:'lease',lineageKey:'lease-lineage',hash:'lease',externalEventId:'lease',externalOrderId:'lease-order'}),actor,at);
  const leaseAttempt={attemptId:`lease-${name}`,eventKey:lease.eventKey,startedAt:at,leaseExpiresAt:'2026-01-01T00:05:00.000Z'};
  assert.equal(await store.claim('company-a',lease.eventKey,leaseAttempt,at),true,`${name}: lease claim`);
- assert.deepEqual(await store.recoverExpired('company-b','2026-01-01T00:06:00.000Z',reconcile),[],`${name}: recovery isolation`);
+ assert.deepEqual(await store.recoverExpired('company-b','2026-01-01T00:06:00.000Z'),[],`${name}: recovery isolation`);
  const recoveries=await Promise.all([
-  store.recoverExpired('company-a','2026-01-01T00:06:00.000Z',reconcile),
-  store.recoverExpired('company-a','2026-01-01T00:06:00.000Z',reconcile),
+  store.recoverExpired('company-a','2026-01-01T00:06:00.000Z'),
+  store.recoverExpired('company-a','2026-01-01T00:06:00.000Z'),
  ]);
  assert.deepEqual(recoveries.flat(),[lease.eventKey],`${name}: expired lease recovery is idempotent`);
  assert.equal(await store.state('company-a',lease.eventKey),'failed',`${name}: interrupted state`);
@@ -183,12 +178,12 @@ async function exercise(name,store,inventory){
 }
 
 sequence=0;
-await exercise('memory',new InMemorySalesEventStore(undefined,idFactory),new FakeInventoryConsumptionPort({now:'2026-01-01T00:06:00.000Z',balances:[],recipes:[],modifiers:[]}));
+await exercise('memory',new InMemorySalesEventStore(undefined,idFactory));
 
 sequence=0;
 const sql=migratedDatabase();
 const database=new Database(sql);
-await exercise('d1',new D1SalesEventStore(database,idFactory),new D1InventoryConsumptionPort(database));
+await exercise('d1',new D1SalesEventStore(database,idFactory));
 const restarted=new D1SalesEventStore(database,idFactory);
 assert.equal(await restarted.state('company-a','event-3'),'applied','D1 restart keeps state');
 assert.equal((await restarted.event('company-a','event-3')).event.external.revision,3,'D1 restart keeps immutable facts');

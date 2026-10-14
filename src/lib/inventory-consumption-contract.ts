@@ -1,5 +1,4 @@
 export const INVENTORY_CONSUMPTION_CONTRACT = 'pantrack.inventory-consumption.v1' as const;
-export const INVENTORY_CONSUMPTION_RECOVERY_CONTRACT = 'pantrack.inventory-consumption-recovery.v1' as const;
 
 export type UnitDimension = 'count' | 'mass' | 'volume';
 
@@ -113,18 +112,10 @@ export type InventoryConsumptionResult =
   | InventoryConsumptionHeld
   | InventoryConsumptionRejected;
 
-export type InventoryConsumptionRecoveryRequest = {
-  contract: typeof INVENTORY_CONSUMPTION_RECOVERY_CONTRACT;
-  companyId: string;
-  idempotencyKey: string;
-  /** Immutable worker-attempt identity, separate from the semantic application key. */
-  attemptId: string;
-};
-
-export type InventoryConsumptionRecoveryResult = InventoryConsumptionRecoveryRequest & (
-  | {status: 'applied'; application: InventoryConsumptionApplied}
-  | {status: 'not_applied'}
-);
+/** Trusted sales execution context, separate from the v1 request and its
+ * semantic fingerprint. Durable implementations fence the application insert
+ * against this attempt's current sales lease in the same database transaction. */
+export type InventoryConsumptionLease = {eventKey: string; attemptId: string};
 
 /**
  * Company authorization and provider authentication happen before this port.
@@ -137,16 +128,9 @@ export type InventoryConsumptionRecoveryResult = InventoryConsumptionRecoveryReq
  * configuration are repaired.
  */
 export interface InventoryConsumptionPort {
-  consume(request: InventoryConsumptionRequest, attempt?: {attemptId: string}): Promise<InventoryConsumptionResult>;
-  /**
-   * Atomically fence this attempt against future commits and read the original
-   * company/application outcome. Never consumes, selects current mappings, or
-   * rewrites history. `not_applied` is proof only AFTER the durable fence.
-   * Retries keep the application key and use a new attempt identity. Fences
-   * must also stop pre-extension workers with no attempt identity for that key.
-   * Any read/validation error leaves the outcome unresolved; never infer absence.
-   * Optional for v1 consumers. Recovery requires this capability and fails closed
-   * when it is unavailable. Authorization belongs to the trusted caller.
-   */
-  reconcile?(request: InventoryConsumptionRecoveryRequest): Promise<InventoryConsumptionRecoveryResult>;
+  consume(request: InventoryConsumptionRequest, lease?: InventoryConsumptionLease): Promise<InventoryConsumptionResult>;
+  /** Read an authoritative application under its original company/key without
+   * resolving current mappings or writing inventory. A missing result is safe
+   * to act on only after the old attempt has been durably fenced. */
+  lookupApplied?(companyId: string, idempotencyKey: string): Promise<InventoryConsumptionApplied | null>;
 }

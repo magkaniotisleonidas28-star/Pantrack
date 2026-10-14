@@ -173,8 +173,78 @@
     {
       "idx": 24,
       "version": "6",
-      "when": 1791142693265,
-      "tag": "0024_safe_bromley",
+      "when": 1791430359342,
+      "tag": "0024_supplier_simulation",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1791430412685,
+      "tag": "0025_purchase_order_drafts",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1791430460341,
+      "tag": "0026_purchasing_supplier_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1791433545759,
+      "tag": "0027_purchase_order_draft_review",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "6",
+      "when": 1791590918765,
+      "tag": "0028_po_cart_authorizations",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "6",
+      "when": 1791593765668,
+      "tag": "0029_po_cart_jobs",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "6",
+      "when": 1791595405778,
+      "tag": "0030_po_cart_worker_transport",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1791652328579,
+      "tag": "0031_po_cart_local_browser",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1791684050326,
+      "tag": "0032_po_cart_browser_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1791686541202,
+      "tag": "0033_po_cart_reconciliation",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1791694384045,
+      "tag": "0034_sales_inventory_outcome_fence",
       "breakpoints": true
     }
   ]

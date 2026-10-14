@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "a3f1befa-1497-4c23-bed2-69f23ea9ad5f",
+  "id": "62dc47ff-60a5-417d-a6e1-7df15ccdbc7b",
   "prevId": "f5994724-a19a-4821-83cf-466a86649425",
   "tables": {
     "auth_fence": {
@@ -1174,67 +1174,6 @@
             "idempotency_key"
           ],
           "name": "inventory_consumption_applications_company_id_idempotency_key_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "inventory_consumption_fences": {
-      "name": "inventory_consumption_fences",
-      "columns": {
-        "company_id": {
-          "name": "company_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "idempotency_key": {
-          "name": "idempotency_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "attempt_id": {
-          "name": "attempt_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "fenced_at": {
-          "name": "fenced_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "inventory_consumption_fences_company_id_companies_id_fk": {
-          "name": "inventory_consumption_fences_company_id_companies_id_fk",
-          "tableFrom": "inventory_consumption_fences",
-          "tableTo": "companies",
-          "columnsFrom": [
-            "company_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "inventory_consumption_fences_company_id_idempotency_key_attempt_id_pk": {
-          "columns": [
-            "company_id",
-            "idempotency_key",
-            "attempt_id"
-          ],
-          "name": "inventory_consumption_fences_company_id_idempotency_key_attempt_id_pk"
         }
       },
       "uniqueConstraints": {},
@@ -4666,107 +4605,6 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
-    "sales_event_inventory_outcomes": {
-      "name": "sales_event_inventory_outcomes",
-      "columns": {
-        "company_id": {
-          "name": "company_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "attempt_id": {
-          "name": "attempt_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "event_key": {
-          "name": "event_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "recorded_at": {
-          "name": "recorded_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "inventory_result_json": {
-          "name": "inventory_result_json",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "sales_event_inventory_outcome_history": {
-          "name": "sales_event_inventory_outcome_history",
-          "columns": [
-            "company_id",
-            "event_key",
-            "recorded_at"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "sales_event_inventory_outcomes_company_id_attempt_id_sales_event_attempts_company_id_attempt_id_fk": {
-          "name": "sales_event_inventory_outcomes_company_id_attempt_id_sales_event_attempts_company_id_attempt_id_fk",
-          "tableFrom": "sales_event_inventory_outcomes",
-          "tableTo": "sales_event_attempts",
-          "columnsFrom": [
-            "company_id",
-            "attempt_id"
-          ],
-          "columnsTo": [
-            "company_id",
-            "attempt_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "sales_event_inventory_outcomes_company_id_event_key_sales_events_company_id_event_key_fk": {
-          "name": "sales_event_inventory_outcomes_company_id_event_key_sales_events_company_id_event_key_fk",
-          "tableFrom": "sales_event_inventory_outcomes",
-          "tableTo": "sales_events",
-          "columnsFrom": [
-            "company_id",
-            "event_key"
-          ],
-          "columnsTo": [
-            "company_id",
-            "event_key"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "sales_event_inventory_outcomes_company_id_attempt_id_pk": {
-          "columns": [
-            "company_id",
-            "attempt_id"
-          ],
-          "name": "sales_event_inventory_outcomes_company_id_attempt_id_pk"
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
     "sales_event_occurrence_confirmations": {
       "name": "sales_event_occurrence_confirmations",
       "columns": {
@@ -5479,6 +5317,696 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "supplier_simulation_approvals": {
+      "name": "supplier_simulation_approvals",
+      "columns": {
+        "company_id": {
+          "name": "company_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quote_id": {
+          "name": "quote_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quote_fingerprint": {
+          "name": "quote_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_fingerprint": {
+          "name": "source_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "actor": {
+          "name": "actor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "supplier_simulation_approvals_company_id_order_id_quote_id_supplier_simulation_quotes_company_id_order_id_id_fk": {
+          "name": "supplier_simulation_approvals_company_id_order_id_quote_id_supplier_simulation_quotes_company_id_order_id_id_fk",
+          "tableFrom": "supplier_simulation_approvals",
+          "tableTo": "supplier_simulation_quotes",
+          "columnsFrom": [
+            "company_id",
+            "order_id",
+            "quote_id"
+          ],
+          "columnsTo": [
+            "company_id",
+            "order_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplier_simulation_approvals_company_id_id_pk": {
+          "columns": [
+            "company_id",
+            "id"
+          ],
+          "name": "supplier_simulation_approvals_company_id_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "supplier_simulation_events": {
+      "name": "supplier_simulation_events",
+      "columns": {
+        "company_id": {
+          "name": "company_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "actor": {
+          "name": "actor",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "detail_json": {
+          "name": "detail_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "at": {
+          "name": "at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "supplier_event_operation": {
+          "name": "supplier_event_operation",
+          "columns": [
+            "company_id",
+            "operation_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "supplier_simulation_events_company_id_operation_id_supplier_simulation_operations_company_id_operation_id_fk": {
+          "name": "supplier_simulation_events_company_id_operation_id_supplier_simulation_operations_company_id_operation_id_fk",
+          "tableFrom": "supplier_simulation_events",
+          "tableTo": "supplier_simulation_operations",
+          "columnsFrom": [
+            "company_id",
+            "operation_id"
+          ],
+          "columnsTo": [
+            "company_id",
+            "operation_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplier_simulation_events_company_id_order_id_revision_pk": {
+          "columns": [
+            "company_id",
+            "order_id",
+            "revision"
+          ],
+          "name": "supplier_simulation_events_company_id_order_id_revision_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "supplier_simulation_operations": {
+      "name": "supplier_simulation_operations",
+      "columns": {
+        "company_id": {
+          "name": "company_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "result_json": {
+          "name": "result_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "write_guard": {
+          "name": "write_guard",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "supplier_simulation_operations_company_id_order_id_supplier_simulation_orders_company_id_id_fk": {
+          "name": "supplier_simulation_operations_company_id_order_id_supplier_simulation_orders_company_id_id_fk",
+          "tableFrom": "supplier_simulation_operations",
+          "tableTo": "supplier_simulation_orders",
+          "columnsFrom": [
+            "company_id",
+            "order_id"
+          ],
+          "columnsTo": [
+            "company_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplier_simulation_operations_company_id_operation_id_pk": {
+          "columns": [
+            "company_id",
+            "operation_id"
+          ],
+          "name": "supplier_simulation_operations_company_id_operation_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "supplier_simulation_orders": {
+      "name": "supplier_simulation_orders",
+      "columns": {
+        "company_id": {
+          "name": "company_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_json": {
+          "name": "source_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quote_id": {
+          "name": "quote_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "approval_id": {
+          "name": "approval_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "send_operation_id": {
+          "name": "send_operation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "external_id": {
+          "name": "external_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "supplier_simulation_orders_company_id_companies_id_fk": {
+          "name": "supplier_simulation_orders_company_id_companies_id_fk",
+          "tableFrom": "supplier_simulation_orders",
+          "tableTo": "companies",
+          "columnsFrom": [
+            "company_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplier_simulation_orders_company_id_id_pk": {
+          "columns": [
+            "company_id",
+            "id"
+          ],
+          "name": "supplier_simulation_orders_company_id_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "supplier_simulation_quotes": {
+      "name": "supplier_simulation_quotes",
+      "columns": {
+        "company_id": {
+          "name": "company_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "quote_json": {
+          "name": "quote_json",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "supplier_quote_order_identity": {
+          "name": "supplier_quote_order_identity",
+          "columns": [
+            "company_id",
+            "order_id",
+            "id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "supplier_simulation_quotes_company_id_order_id_supplier_simulation_orders_company_id_id_fk": {
+          "name": "supplier_simulation_quotes_company_id_order_id_supplier_simulation_orders_company_id_id_fk",
+          "tableFrom": "supplier_simulation_quotes",
+          "tableTo": "supplier_simulation_orders",
+          "columnsFrom": [
+            "company_id",
+            "order_id"
+          ],
+          "columnsTo": [
+            "company_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplier_simulation_quotes_company_id_id_pk": {
+          "columns": [
+            "company_id",
+            "id"
+          ],
+          "name": "supplier_simulation_quotes_company_id_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "supplier_simulation_reservations": {
+      "name": "supplier_simulation_reservations",
+      "columns": {
+        "company_id": {
+          "name": "company_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "day": {
+          "name": "day",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "currency": {
+          "name": "currency",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "total_minor": {
+          "name": "total_minor",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reserved_at": {
+          "name": "reserved_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "supplier_daily_exposure": {
+          "name": "supplier_daily_exposure",
+          "columns": [
+            "company_id",
+            "currency",
+            "day",
+            "state"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "supplier_simulation_reservations_company_id_order_id_supplier_simulation_orders_company_id_id_fk": {
+          "name": "supplier_simulation_reservations_company_id_order_id_supplier_simulation_orders_company_id_id_fk",
+          "tableFrom": "supplier_simulation_reservations",
+          "tableTo": "supplier_simulation_orders",
+          "columnsFrom": [
+            "company_id",
+            "order_id"
+          ],
+          "columnsTo": [
+            "company_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplier_simulation_reservations_company_id_order_id_pk": {
+          "columns": [
+            "company_id",
+            "order_id"
+          ],
+          "name": "supplier_simulation_reservations_company_id_order_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "supplier_simulation_source_holds": {
+      "name": "supplier_simulation_source_holds",
+      "columns": {
+        "company_id": {
+          "name": "company_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "proposal_id": {
+          "name": "proposal_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_revision": {
+          "name": "source_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "active": {
+          "name": "active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "supplier_active_source_hold": {
+          "name": "supplier_active_source_hold",
+          "columns": [
+            "company_id",
+            "proposal_id"
+          ],
+          "isUnique": true,
+          "where": "\"supplier_simulation_source_holds\".\"active\"=1"
+        },
+        "supplier_active_product_hold": {
+          "name": "supplier_active_product_hold",
+          "columns": [
+            "company_id",
+            "product_id"
+          ],
+          "isUnique": true,
+          "where": "\"supplier_simulation_source_holds\".\"active\"=1"
+        }
+      },
+      "foreignKeys": {
+        "supplier_simulation_source_holds_company_id_order_id_supplier_simulation_orders_company_id_id_fk": {
+          "name": "supplier_simulation_source_holds_company_id_order_id_supplier_simulation_orders_company_id_id_fk",
+          "tableFrom": "supplier_simulation_source_holds",
+          "tableTo": "supplier_simulation_orders",
+          "columnsFrom": [
+            "company_id",
+            "order_id"
+          ],
+          "columnsTo": [
+            "company_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "supplier_simulation_source_holds_company_id_proposal_id_replenishment_proposal_origins_company_id_id_fk": {
+          "name": "supplier_simulation_source_holds_company_id_proposal_id_replenishment_proposal_origins_company_id_id_fk",
+          "tableFrom": "supplier_simulation_source_holds",
+          "tableTo": "replenishment_proposal_origins",
+          "columnsFrom": [
+            "company_id",
+            "proposal_id"
+          ],
+          "columnsTo": [
+            "company_id",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "supplier_simulation_source_holds_company_id_product_id_products_owner_id_fk": {
+          "name": "supplier_simulation_source_holds_company_id_product_id_products_owner_id_fk",
+          "tableFrom": "supplier_simulation_source_holds",
+          "tableTo": "products",
+          "columnsFrom": [
+            "company_id",
+            "product_id"
+          ],
+          "columnsTo": [
+            "owner",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "supplier_simulation_source_holds_company_id_order_id_proposal_id_pk": {
+          "columns": [
+            "company_id",
+            "order_id",
+            "proposal_id"
+          ],
+          "name": "supplier_simulation_source_holds_company_id_order_id_proposal_id_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pantrack · Fictional order draft</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">PANTRACK · LOCAL C4 DEMONSTRATION</p>
+      <h1>Fictional review draft — not an order.</h1>
+      <p>Review an immutable replenishment proposal as a supplier list. All company, supplier, account, SKU and price details here are fictional.</p>
+    </header>
+    <section class="controls" aria-label="Example and export controls">
+      <div><label for="example">Fictional example</label>
+        <select id="example">
+          <option value="normal">Normal draft</option>
+          <option value="missing">Missing price estimate</option>
+          <option value="invalid">Invalidated source</option>
+        </select>
+      </div>
+      <button id="review" type="button">Review example</button>
+      <button id="copy" type="button" disabled>Copy draft</button>
+      <button id="download" type="button" disabled>Download CSV</button>
+      <button id="reset" type="button">Reset</button>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+    <p id="error" role="alert" hidden></p>
+    <section id="draft" aria-label="Draft review"></section>
+    <details id="text-panel" hidden>
+      <summary>Plain-text export and manual copy</summary>
+      <label for="text-export">Draft text</label>
+      <textarea id="text-export" readonly rows="15" spellcheck="false"></textarea>
+    </details>
+    <footer>
+      <h2>Manual-ordering handoff</h2>
+      <p>In a future authorized manager workflow, review the current proposal and confirm the supplier account, location, SKUs, pack units, availability, current prices, fees, minimums and delivery in the supplier’s normal interface. Complete ordering there only with separate authorization.</p>
+      <p>This demonstration records no orders, approvals, reservations, inventory movements or proposal-history changes. Confirmation tracking and receiving are separate work.</p>
+    </footer>
+  </main>
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

@@ -1,11 +1,10 @@
 import {
   INVENTORY_CONSUMPTION_CONTRACT,
-  INVENTORY_CONSUMPTION_RECOVERY_CONTRACT,
   type ConsumptionIssue,
+  type InventoryConsumptionApplied,
   type InventoryConsumptionPort,
   type InventoryConsumptionRequest,
   type InventoryConsumptionResult,
-  type InventoryConsumptionRecoveryResult,
 } from '@/lib/inventory-consumption-contract';
 
 export const SALES_EVENT_CONTRACT = 'pantrack.sales.v1' as const;
@@ -208,7 +207,18 @@ export type SalesStatusSummary = {
   timeQuality: SalesTimeQuality;
   revision: number;
   lastReason: string | null;
+  leaseExpiresAt?: string | null;
 };
+
+export type SalesLeaseRecovery={eventKey?:string;limit?:number;actor?:string;reason?:string};
+export function leaseRecoveryOptions(options:SalesLeaseRecovery={}){
+ const limit=options.limit??100;
+ if(!Number.isSafeInteger(limit)||limit<1||limit>100)throw new SalesIngestionError('invalid_limit','Recovery limit must be between 1 and 100.');
+ if(options.eventKey!==undefined&&!validId(options.eventKey))throw new SalesIngestionError('invalid_identity','Recovery event identity is invalid.');
+ if(options.actor!==undefined&&!validId(options.actor))throw new SalesIngestionError('invalid_identity','Recovery actor is invalid.');
+ if(options.reason!==undefined&&(!options.reason.trim()||options.reason.trim().length>500))throw new SalesIngestionError('reason_required','A recovery reason of up to 500 characters is required.');
+ return {limit,eventKey:options.eventKey,actor:options.actor??'system',reason:options.reason?.trim()??'Processing lease expired; application is unknown.'};
+}
 
 export type SalesHistoryEntry = {
   kind: 'transition' | 'attempt' | 'resolution' | 'audit';
@@ -228,7 +238,6 @@ export type SalesStoreSnapshot = {
   events: SalesEventRecord[];
   transitions: SalesTransition[];
   attempts: SalesAttempt[];
-  inventoryOutcomes?: Array<{eventKey: string; attemptId: string; result: InventoryConsumptionRecoveryResult}>;
   conflicts: SalesConflictReceipt[];
   conflictResolutions: SalesConflictResolution[];
   resolutions: SalesResolution[];
@@ -259,9 +268,6 @@ export interface SalesMappingPort {
   resolveModifier(input: {companyId: string; source: SalesSourceBinding; externalItemId: string; externalVariationId?: string; externalModifierId: string}): Promise<SalesModifierMappingResult>;
 }
 
-export type SalesOutcomeReconciler = (record: SalesEventRecord, attemptId: string) => Promise<InventoryConsumptionRecoveryResult>;
-export type SalesRecoveryOptions = {limit?: number; source?: Pick<SalesSourceBinding, 'provider' | 'environment' | 'merchantId'>};
-
 export interface SalesEventStore {
   receive(companyId: string, record: SalesEventRecord, actor: string, at: string): Promise<SalesReceipt>;
   claim(companyId: string, eventKey: string, attempt: SalesAttempt, at: string): Promise<boolean>;
@@ -280,44 +286,11 @@ export interface SalesEventStore {
   conflict(companyId: string, conflictId: string): Promise<SalesConflictReceipt | null>;
   dismissConflict(companyId: string, value: SalesConflictResolution, audit: SalesAuditEntry): Promise<void>;
   latestAppliedConsumption(companyId: string, lineageKey: string, beforeRevision: number): Promise<SalesEventRecord | null>;
+  unresolvedConsumption(companyId: string, lineageKey: string, beforeRevision: number): Promise<SalesEventRecord[]>;
+  reconcileApplied(companyId: string, eventKey: string, result: InventoryConsumptionApplied, at: string): Promise<boolean>;
   processingInLineage(companyId: string, lineageKey: string, exceptEventKey?: string): Promise<boolean>;
-  unresolvedInventoryAttempts(companyId: string, lineageKey: string, throughRevision: number): Promise<Array<{eventKey: string; attemptId: string}>>;
-  recordInventoryOutcome(companyId: string, eventKey: string, attemptId: string, result: InventoryConsumptionRecoveryResult, at: string): Promise<void>;
-  recoverExpired(companyId: string, now: string, reconcile: SalesOutcomeReconciler, options?: SalesRecoveryOptions): Promise<string[]>;
+  recoverExpired(companyId: string, now: string, options?:SalesLeaseRecovery): Promise<string[]>;
   purgeExpiredPayloadFragments(companyId: string, now: string, limit: number): Promise<number>;
-}
-
-export function recoveryLimit(options: SalesRecoveryOptions) {
-  const limit = options.limit ?? 100;
-  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100 || (options.source &&
-      ![options.source.provider, options.source.environment, options.source.merchantId].every(validId))) {
-    throw new SalesIngestionError('invalid_recovery', 'Recovery requires a limit between 1 and 100 and a complete source scope.');
-  }
-  return limit;
-}
-
-export function assertRecoveryIdentity(record: SalesEventRecord, attemptId: string, result: InventoryConsumptionRecoveryResult) {
-  if (!result || result.contract !== INVENTORY_CONSUMPTION_RECOVERY_CONTRACT || result.companyId !== record.event.companyId ||
-      result.idempotencyKey !== record.applicationKey || result.attemptId !== attemptId || !['applied', 'not_applied'].includes(result.status)) {
-    throw new SalesIngestionError('integration_defect', 'Recovered inventory outcome does not match the original identity.');
-  }
-  if (result.status === 'not_applied') return;
-  const applied = result.application;
-  if (!applied || applied.contract !== INVENTORY_CONSUMPTION_CONTRACT || applied.status !== 'applied' ||
-      applied.companyId !== record.event.companyId || applied.idempotencyKey !== record.applicationKey || applied.replayed !== true ||
-      !Number.isFinite(Date.parse(applied.occurredAt)) || !Array.isArray(applied.changes) ||
-      !Array.isArray(applied.selectedVersions) || !applied.selectedVersions.length) {
-    throw new SalesIngestionError('integration_defect', 'Recovered inventory application failed validation.');
-  }
-  const seen = new Set<string>();
-  for (const selected of applied.selectedVersions) {
-    const line = record.event.lines.find(item => item.externalLineId === selected?.lineId);
-    if (!line || seen.has(selected.lineId) || !validId(selected.recipeId) || !validId(selected.recipeVersionId) ||
-        !/^[1-9]\d*$/.test(selected.quantity) || BigInt(selected.quantity) > BigInt(line.quantity) || !Array.isArray(selected.modifiers)) {
-      throw new SalesIngestionError('integration_defect', 'Recovered inventory lines do not belong to the original event.');
-    }
-    seen.add(selected.lineId);
-  }
 }
 
 function clone<T>(value: T): T {
@@ -546,7 +519,6 @@ export class InMemorySalesEventStore implements SalesEventStore {
   private readonly events = new Map<string, SalesEventRecord>();
   private readonly transitions: SalesTransition[] = [];
   private readonly attempts: SalesAttempt[] = [];
-  private readonly inventoryOutcomes: NonNullable<SalesStoreSnapshot['inventoryOutcomes']> = [];
   private readonly conflicts: SalesConflictReceipt[] = [];
   private readonly conflictResolutions: SalesConflictResolution[] = [];
   private readonly resolutions: SalesResolution[] = [];
@@ -561,7 +533,6 @@ export class InMemorySalesEventStore implements SalesEventStore {
     for (const record of snapshot.events) this.events.set(record.event.external.eventIdempotencyKey, clone(record));
     this.transitions.push(...clone(snapshot.transitions));
     this.attempts.push(...clone(snapshot.attempts));
-    this.inventoryOutcomes.push(...clone(snapshot.inventoryOutcomes ?? []));
     this.conflicts.push(...clone(snapshot.conflicts));
     this.conflictResolutions.push(...clone(snapshot.conflictResolutions));
     this.resolutions.push(...clone(snapshot.resolutions));
@@ -597,7 +568,8 @@ export class InMemorySalesEventStore implements SalesEventStore {
         const confirmed = this.occurrenceConfirmations.find(item => item.eventKey === event.external.eventIdempotencyKey);
         return {eventKey:event.external.eventIdempotencyKey,state:transition!.to,sourceKind:event.source.kind,provider:event.source.provider,
           externalReference:event.external.externalOrderId,eventType:event.eventType,occurredAt:confirmed?.occurredAt ?? event.occurredAt,
-          receivedAt:event.receivedAt,timeQuality:confirmed?'confirmed':event.timeQuality,revision:event.external.revision,lastReason:transition?.reason ?? null};
+          receivedAt:event.receivedAt,timeQuality:confirmed?'confirmed':event.timeQuality,revision:event.external.revision,lastReason:transition?.reason ?? null,
+          leaseExpiresAt:this.attempts.findLast(attempt=>attempt.eventKey===event.external.eventIdempotencyKey&&!attempt.completedAt)?.leaseExpiresAt??null};
       });
   }
 
@@ -678,7 +650,7 @@ export class InMemorySalesEventStore implements SalesEventStore {
       for (const older of lineageEvents.filter(item => item.event.external.revision < storedRecord.event.external.revision)) {
         const olderKey = older.event.external.eventIdempotencyKey;
         const state = this.stateFor(companyId, olderKey);
-        if ((state === 'received' || state === 'held' || state === 'failed') && !this.unresolvedFor(companyId, olderKey)) {
+        if (state === 'received' || state === 'held' || state === 'failed') {
           this.transitionRecord(olderKey, state, 'superseded', at, 'newer_revision', eventKey);
           this.audits.push({auditId: this.idFactory(), eventKey: olderKey, action: 'superseded', actor, at, reason: `Superseded by ${eventKey}.`});
         }
@@ -699,8 +671,6 @@ export class InMemorySalesEventStore implements SalesEventStore {
     const record = this.events.get(eventKey);
     if (attempt.eventKey !== eventKey || attempt.startedAt !== at || instant(at) === null || instant(attempt.leaseExpiresAt) === null || Date.parse(attempt.leaseExpiresAt) <= Date.parse(at) ||
         !record || record.event.companyId !== companyId || this.stateFor(companyId, eventKey) !== 'received' || this.processingInLineageFor(companyId, record.lineageKey, eventKey)) return false;
-    if ([...this.events.values()].some(item => item.event.companyId === companyId && item.lineageKey === record.lineageKey &&
-        item.event.external.revision <= record.event.external.revision && this.unresolvedFor(companyId, item.event.external.eventIdempotencyKey))) return false;
     for (const older of [...this.events.values()].filter(item => item.lineageKey === record.lineageKey && item.event.external.revision < record.event.external.revision)) {
       const olderKey = older.event.external.eventIdempotencyKey;
       const state = this.stateFor(companyId, olderKey);
@@ -752,13 +722,35 @@ export class InMemorySalesEventStore implements SalesEventStore {
     const consumedEventKeys = new Set(this.attempts
       .filter(attempt => attempt.completedAt && attempt.outcome === 'applied')
       .map(attempt => attempt.eventKey));
-    for (const outcome of this.inventoryOutcomes) if (outcome.result.status === 'applied') consumedEventKeys.add(outcome.eventKey);
     let match: SalesEventRecord | undefined;
     for (const record of [...this.events.values()].filter(record => record.event.companyId === companyId && record.lineageKey === lineageKey && record.event.external.revision < beforeRevision && consumedEventKeys.has(record.event.external.eventIdempotencyKey)).sort((a, b) => b.event.external.revision - a.event.external.revision)) {
-      if (this.stateFor(companyId, record.event.external.eventIdempotencyKey) === 'applied' ||
-          this.inventoryOutcomes.some(outcome => outcome.eventKey === record.event.external.eventIdempotencyKey && outcome.result.status === 'applied')) { match = record; break; }
+      match = record; break;
     }
     return match ? clone(match) : null;
+  }
+
+  async unresolvedConsumption(companyId: string, lineageKey: string, beforeRevision: number) {
+    return clone([...this.events.values()].filter(record => record.event.companyId === companyId &&
+      record.lineageKey === lineageKey && record.event.external.revision < beforeRevision &&
+      ['received', 'held', 'failed', 'superseded'].includes(this.stateFor(companyId, record.event.external.eventIdempotencyKey) ?? '')));
+  }
+
+  async reconcileApplied(companyId: string, eventKey: string, result: InventoryConsumptionApplied, at: string) {
+    const record = await this.event(companyId, eventKey);
+    if (!record || result.companyId !== companyId || result.idempotencyKey !== record.applicationKey ||
+        result.contract !== INVENTORY_CONSUMPTION_CONTRACT || result.status !== 'applied' || !result.replayed) {
+      throw new SalesIngestionError('corrupt_store', 'Reconciled inventory does not belong to this event.');
+    }
+    const state = this.stateFor(companyId, eventKey);
+    if (!state || !['received', 'held', 'failed', 'superseded'].includes(state) ||
+        this.attempts.some(attempt => attempt.eventKey === eventKey && attempt.outcome === 'applied')) return false;
+    this.attempts.push({attemptId: this.idFactory(), eventKey, startedAt: at,
+      leaseExpiresAt: new Date(Date.parse(at) + LEASE_MS).toISOString(), completedAt: at,
+      outcome: 'applied', inventoryResult: clone(result)});
+    if (state !== 'superseded') this.transitionRecord(eventKey, state, 'applied', at, 'inventory_reconciled');
+    this.audits.push({auditId: this.idFactory(), eventKey, action: 'inventory_reconciled', actor: 'system', at,
+      reason: 'Recovered the original committed inventory result; no stock changed.'});
+    return true;
   }
 
   async appendResolution(companyId: string, value: SalesResolution) { if (!await this.event(companyId, value.eventKey)) throw new SalesIngestionError('not_found', 'Sales event was not found.'); this.resolutions.push(clone(value)); }
@@ -778,65 +770,17 @@ export class InMemorySalesEventStore implements SalesEventStore {
     this.audits.push(clone(audit));
   }
 
-  private unresolvedFor(companyId: string, eventKey: string) {
-    return this.events.get(eventKey)?.event.companyId === companyId && this.attempts.some(attempt => attempt.eventKey === eventKey &&
-      (!attempt.completedAt || attempt.outcome === 'failed') && !this.inventoryOutcomes.some(outcome => outcome.attemptId === attempt.attemptId));
-  }
-
-  async unresolvedInventoryAttempts(companyId: string, lineageKey: string, throughRevision: number) {
-    return this.attempts.filter(attempt => {
-      const record = this.events.get(attempt.eventKey);
-      return record?.event.companyId === companyId && record.lineageKey === lineageKey && record.event.external.revision <= throughRevision &&
-        this.stateFor(companyId, attempt.eventKey) !== 'processing' && (!attempt.completedAt || attempt.outcome === 'failed') &&
-        !this.inventoryOutcomes.some(outcome => outcome.attemptId === attempt.attemptId);
-    }).slice(0, 100).map(({eventKey, attemptId}) => ({eventKey, attemptId}));
-  }
-
-  async recordInventoryOutcome(companyId: string, eventKey: string, attemptId: string, result: InventoryConsumptionRecoveryResult, at: string) {
-    const record = await this.event(companyId, eventKey);
-    const attempt = this.attempts.find(item => item.attemptId === attemptId && item.eventKey === eventKey);
-    if (instant(at) === null) throw new SalesIngestionError('invalid_time', 'Reconciliation time is invalid.');
-    if (!record || !attempt) throw new SalesIngestionError('invalid_state', 'Inventory outcome is not recordable.');
-    assertRecoveryIdentity(record, attemptId, result);
-    const existing = this.inventoryOutcomes.find(outcome => outcome.attemptId === attemptId);
-    if (existing) {
-      if (existing.result.status !== result.status || (existing.result.status === 'applied' && result.status === 'applied' &&
-          JSON.stringify(existing.result.application) !== JSON.stringify(result.application))) {
-        throw new SalesIngestionError('invalid_state', 'Inventory outcome conflicts with its durable evidence.');
-      }
-      return;
-    }
-    if (this.stateFor(companyId, eventKey) === 'processing' || (attempt.completedAt && attempt.outcome !== 'failed')) {
-      throw new SalesIngestionError('invalid_state', 'Inventory outcome is not recordable.');
-    }
-    this.inventoryOutcomes.push(clone({eventKey, attemptId, result}));
-    const state = this.stateFor(companyId, eventKey);
-    if (result.status === 'applied' && (state === 'failed' || state === 'received')) this.transitionRecord(eventKey, state, 'applied', at, 'inventory_reconciled');
-    this.audits.push({auditId: this.idFactory(), eventKey, action: 'inventory_reconciled', actor: 'system', at, reason: result.status});
-  }
-
-  async recoverExpired(companyId: string, now: string, reconcile: SalesOutcomeReconciler, options: SalesRecoveryOptions = {}) {
+  async recoverExpired(companyId: string, now: string, options:SalesLeaseRecovery={}) {
     const nowMs = instant(now);
     if (nowMs === null) throw new SalesIngestionError('invalid_time', 'Recovery time is invalid.');
-    const limit = recoveryLimit(options);
+    const {eventKey,limit,actor,reason}=leaseRecoveryOptions(options);
     const recovered: string[] = [];
-    let inspected = 0;
     for (let index = 0; index < this.attempts.length; index++) {
-      if (inspected >= limit) break;
       const attempt = this.attempts[index];
-      const record = this.events.get(attempt.eventKey);
-      if (record?.event.companyId === companyId && (!options.source || Object.entries(options.source).every(([key, value]) => record.event.source[key as keyof SalesSourceBinding] === value)) &&
-          this.stateFor(companyId, attempt.eventKey) === 'processing' && !attempt.completedAt && Date.parse(attempt.leaseExpiresAt) <= nowMs) {
-        inspected++;
-        const result = await reconcile(clone(record), attempt.attemptId);
-        assertRecoveryIdentity(record, attempt.attemptId, result);
-        if (this.stateFor(companyId, attempt.eventKey) !== 'processing' || this.attempts[index].completedAt) continue;
-        const applied = result.status === 'applied';
-        this.attempts[index] = {...attempt, completedAt: now, outcome: applied ? 'applied' : 'failed',
-          ...(applied ? {inventoryResult: result.application} : {errorCode: 'interrupted'})};
-        this.inventoryOutcomes.push(clone({eventKey: attempt.eventKey, attemptId: attempt.attemptId, result}));
-        this.transitionRecord(attempt.eventKey, 'processing', applied ? 'applied' : 'failed', now, applied ? 'inventory_reconciled' : 'interrupted');
-        this.audits.push({auditId: this.idFactory(), eventKey: attempt.eventKey, action: 'lease_expired', actor: 'system', at: now, reason: `Processing lease fenced; inventory ${result.status}.`});
+      if (recovered.length<limit&&(!eventKey||attempt.eventKey===eventKey)&&this.events.get(attempt.eventKey)?.event.companyId === companyId && this.stateFor(companyId, attempt.eventKey) === 'processing' && !attempt.completedAt && Date.parse(attempt.leaseExpiresAt) <= nowMs) {
+        this.attempts[index] = {...attempt, completedAt: now, outcome: 'failed', errorCode: 'interrupted'};
+        this.transitionRecord(attempt.eventKey, 'processing', 'failed', now, 'interrupted');
+        this.audits.push({auditId: this.idFactory(), eventKey: attempt.eventKey, action: 'lease_expired', actor, at: now, reason});
         recovered.push(attempt.eventKey);
       }
     }
@@ -857,7 +801,7 @@ export class InMemorySalesEventStore implements SalesEventStore {
   }
 
   snapshot(): SalesStoreSnapshot {
-    return clone({events: [...this.events.values()], transitions: this.transitions, attempts: this.attempts, inventoryOutcomes: this.inventoryOutcomes, conflicts: this.conflicts, conflictResolutions: this.conflictResolutions, resolutions: this.resolutions, audits: this.audits, corrections: this.corrections, occurrenceConfirmations: this.occurrenceConfirmations});
+    return clone({events: [...this.events.values()], transitions: this.transitions, attempts: this.attempts, conflicts: this.conflicts, conflictResolutions: this.conflictResolutions, resolutions: this.resolutions, audits: this.audits, corrections: this.corrections, occurrenceConfirmations: this.occurrenceConfirmations});
   }
 }
 
@@ -930,7 +874,34 @@ export class SalesIngestionService {
     };
     const fragment = salesEventAuditFragment(event);
     if (utf8Bytes(canonicalJson(fragment)) > MAX_RETAINED_BYTES) throw new SalesIngestionError('retained_fragment_too_large', 'Minimal retained fragment exceeds 65,536 UTF-8 bytes.');
+    await this.reconcilePredecessors(context.companyId, lineageKey, normalized.revision);
     return this.store.receive(context.companyId, {event, auditFragment: fragment, applicationKey, lineageKey}, actorId(context.actor!), receivedAt);
+  }
+
+  private async appliedFor(record: SalesEventRecord) {
+    const result = await this.inventory.lookupApplied?.(record.event.companyId, record.applicationKey) ?? null;
+    if (!result) return null;
+    const confirmed = await this.store.occurrenceConfirmation(record.event.companyId, record.event.external.eventIdempotencyKey);
+    const occurredAt = confirmed?.occurredAt ?? record.event.occurredAt;
+    if (result.contract !== INVENTORY_CONSUMPTION_CONTRACT || result.companyId !== record.event.companyId ||
+        result.idempotencyKey !== record.applicationKey || result.status !== 'applied' || result.replayed !== true ||
+        Date.parse(result.occurredAt) !== Date.parse(occurredAt) || !Array.isArray(result.selectedVersions) ||
+        !Array.isArray(result.changes) || !result.selectedVersions.every(selected => {
+          const line = record.event.lines.find(item => item.externalLineId === selected?.lineId);
+          return line && typeof selected.quantity === 'string' && /^[1-9]\d*$/.test(selected.quantity) &&
+            BigInt(selected.quantity) <= BigInt(line.quantity);
+        })) {
+      throw new SalesIngestionError('integration_defect', 'Recovered inventory does not match the original sales application.');
+    }
+    return result;
+  }
+
+  private async reconcilePredecessors(companyId: string, lineageKey: string, beforeRevision: number) {
+    if (!this.inventory.lookupApplied) return;
+    for (const record of await this.store.unresolvedConsumption(companyId, lineageKey, beforeRevision)) {
+      const result = await this.appliedFor(record);
+      if (result) await this.store.reconcileApplied(companyId, record.event.external.eventIdempotencyKey, result, this.now());
+    }
   }
 
   private async mappedLines(record: SalesEventRecord, lines: SalesEventV1['lines']) {
@@ -1010,16 +981,27 @@ export class SalesIngestionService {
   async process(companyId: string, eventKey: string) {
     const record = await this.store.event(companyId, eventKey);
     if (!record) throw new SalesIngestionError('not_found', 'Sales event was not found.');
-    const unresolved = await this.store.unresolvedInventoryAttempts(companyId, record.lineageKey, record.event.external.revision);
-    for (const pending of unresolved) {
-      const original = await this.requiredEvent(companyId, pending.eventKey);
-      const result = await this.reconcileInventory(original, pending.attemptId);
-      await this.store.recordInventoryOutcome(companyId, pending.eventKey, pending.attemptId, result, this.now());
-    }
-    if (unresolved.length && await this.store.state(companyId, eventKey) === 'applied') return this.statusForWorker(companyId, eventKey);
+    await this.reconcilePredecessors(companyId, record.lineageKey, record.event.external.revision);
     const startedAt = this.now();
     const attempt: SalesAttempt = {attemptId: this.idFactory(), eventKey, startedAt, leaseExpiresAt: new Date(Date.parse(startedAt) + LEASE_MS).toISOString()};
     if (!await this.store.claim(companyId, eventKey, attempt, startedAt)) throw new SalesIngestionError('claim_conflict', 'Sales event is not claimable.');
+    // An uncertain same-key retry reads the original result before policy or
+    // current mappings. It never recalculates already committed consumption.
+    let recovered: InventoryConsumptionApplied | null;
+    try {
+      recovered = await this.appliedFor(record);
+    } catch (error) {
+      const errorCode = error instanceof SalesIngestionError ? 'integration_defect' as const : 'inventory_unavailable' as const;
+      const complete = {...attempt, completedAt: this.now(), outcome: 'failed' as const, errorCode};
+      await this.store.completeAttempt(companyId, complete, 'failed', complete.completedAt, errorCode);
+      return this.statusForWorker(companyId, eventKey);
+    }
+    if (recovered) {
+      if (this.options.afterInventoryApply) await this.options.afterInventoryApply(recovered);
+      const complete = {...attempt, completedAt: this.now(), outcome: 'applied' as const, inventoryResult: recovered};
+      await this.store.completeAttempt(companyId, complete, 'applied', complete.completedAt, 'inventory_replayed');
+      return this.statusForWorker(companyId, eventKey);
+    }
     const policy = await this.policy(record);
     if (policy.held.length) {
       const complete = {...attempt, completedAt: this.now(), outcome: 'held' as const, heldReasons: policy.held};
@@ -1046,7 +1028,7 @@ export class SalesIngestionService {
     };
     let result: InventoryConsumptionResult;
     try {
-      result = await this.inventory.consume(request, {attemptId: attempt.attemptId});
+      result = await this.inventory.consume(request, {eventKey, attemptId: attempt.attemptId});
     } catch {
       const complete = {...attempt, completedAt: this.now(), outcome: 'failed' as const, errorCode: 'inventory_unavailable' as const};
       await this.store.completeAttempt(companyId, complete, 'failed', complete.completedAt, complete.errorCode);
@@ -1087,23 +1069,39 @@ export class SalesIngestionService {
     return this.statusForWorker(companyId, eventKey);
   }
 
-  private async reconcileInventory(record: SalesEventRecord, attemptId: string) {
-    if (!this.inventory.reconcile) throw new SalesIngestionError('recovery_unavailable', 'The inventory port cannot safely reconcile this attempt.');
-    const result = await this.inventory.reconcile({contract: INVENTORY_CONSUMPTION_RECOVERY_CONTRACT,
-      companyId: record.event.companyId, idempotencyKey: record.applicationKey, attemptId});
-    assertRecoveryIdentity(record, attemptId, result);
-    if (result.status === 'applied') {
-      const confirmed = await this.store.occurrenceConfirmation(record.event.companyId, record.event.external.eventIdempotencyKey);
-      if (Date.parse(result.application.occurredAt) !== Date.parse(confirmed?.occurredAt ?? record.event.occurredAt)) {
-        throw new SalesIngestionError('integration_defect', 'Recovered inventory occurrence does not match the original event.');
+  async recoverExpiredLeases(companyId: string) {
+    const at = this.now();
+    // Recovery first clears the old lease atomically. Only then can an absent
+    // application mean that the expired attempt will never commit later.
+    const recovered = await this.store.recoverExpired(companyId, at);
+    if (this.inventory.lookupApplied) {
+      for (const eventKey of recovered) {
+        const record = await this.store.event(companyId, eventKey);
+        if (!record) throw new SalesIngestionError('not_found', 'Recovered sales event was not found.');
+        const result = await this.appliedFor(record);
+        if (result) await this.store.reconcileApplied(companyId, eventKey, result, at);
       }
     }
-    return result;
+    return recovered;
   }
 
-  async recoverExpiredLeases(companyId: string, options: SalesRecoveryOptions = {}) {
-    const at = this.now();
-    return this.store.recoverExpired(companyId, at, (record, attemptId) => this.reconcileInventory(record, attemptId), options);
+  async recover(companyId:string,eventKey:string,actor:SalesActor|null,reason:string){
+    const identity=assertOperator(actor,companyId);
+    const options=leaseRecoveryOptions({eventKey,limit:1,actor:identity,reason});
+    const record=await this.requiredEvent(companyId,eventKey),at=this.now();
+    if(await this.store.state(companyId,eventKey)==='processing'){
+      await this.store.recoverExpired(companyId,at,options);
+    }
+    const state=await this.store.state(companyId,eventKey);
+    if(state==='processing')throw new SalesIngestionError('invalid_state','This sale still has an active processing lease. Refresh after it expires.');
+    if(state!=='failed'&&state!=='applied')throw new SalesIngestionError('invalid_state','Only interrupted processing or failed sales may be recovered.');
+    if(!this.inventory.lookupApplied)throw new SalesIngestionError('inventory_unavailable','The saved inventory outcome cannot be verified. Keep this sale under review.');
+    // The old lease is fenced before reading the ledger. Repeated requests can
+    // also recheck a failed lookup without duplicating the expiry audit.
+    let result:InventoryConsumptionApplied|null;
+    try{result=await this.appliedFor(record);}catch{throw new SalesIngestionError('inventory_unavailable','Saved stock changes could not be verified. Keep this sale under review and check recovery again.');}
+    if(result)await this.store.reconcileApplied(companyId,eventKey,result,at);
+    return {...await this.statusForWorker(companyId,eventKey),recovery:result?'applied':state==='applied'?'already_complete':'not_applied'};
   }
 
   async retry(companyId: string, eventKey: string, actor: SalesActor | null, reason: string) {

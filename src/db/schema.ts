@@ -487,28 +487,6 @@ export const salesEventAttemptResults=sqliteTable('sales_event_attempt_results',
  foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
 ]);
 
-// Recovery evidence is append-only; failed attempt results remain historical facts.
-export const salesEventInventoryOutcomes=sqliteTable('sales_event_inventory_outcomes',{
- companyId:text('company_id').notNull(),
- attemptId:text('attempt_id').notNull(),
- eventKey:text('event_key').notNull(),
- recordedAt:text('recorded_at').notNull(),
- status:text('status').notNull(),
- inventoryResultJson:text('inventory_result_json'),
-},t=>[
- primaryKey({columns:[t.companyId,t.attemptId]}),
- index('sales_event_inventory_outcome_history').on(t.companyId,t.eventKey,t.recordedAt),
- foreignKey({columns:[t.companyId,t.attemptId],foreignColumns:[salesEventAttempts.companyId,salesEventAttempts.attemptId]}),
- foreignKey({columns:[t.companyId,t.eventKey],foreignColumns:[salesEvents.companyId,salesEvents.eventKey]}),
-]);
-
-export const inventoryConsumptionFences=sqliteTable('inventory_consumption_fences',{
- companyId:text('company_id').notNull().references(()=>companies.id),
- idempotencyKey:text('idempotency_key').notNull(),
- attemptId:text('attempt_id').notNull(),
- fencedAt:text('fenced_at').notNull(),
-},t=>[primaryKey({columns:[t.companyId,t.idempotencyKey,t.attemptId]})]);
-
 export const salesEventConflicts=sqliteTable('sales_event_conflicts',{
  companyId:text('company_id').notNull(),
  conflictId:text('conflict_id').notNull(),
@@ -660,3 +638,317 @@ export const salesEventCorrectionAdjustments=sqliteTable('sales_event_correction
  foreignKey({columns:[t.companyId,t.correctionId],foreignColumns:[salesEventCorrections.companyId,salesEventCorrections.correctionId]}),
  foreignKey({columns:[t.companyId,t.inventoryEventId],foreignColumns:[inventoryEventsExact.companyId,inventoryEventsExact.id]}),
 ]);
+
+// C4 simulation only; these records never authorize the legacy purchasing path.
+export const supplierSimulationOrders=sqliteTable('supplier_simulation_orders',{
+ companyId:text('company_id').notNull(),
+ id:text('id').notNull(),
+ sourceJson:text('source_json').notNull(),
+ status:text('status').notNull(),
+ revision:integer('revision').notNull(),
+ quoteId:text('quote_id'),
+ approvalId:text('approval_id'),
+ sendOperationId:text('send_operation_id'),
+ externalId:text('external_id'),
+ createdAt:text('created_at').notNull(),
+ updatedAt:text('updated_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.id]}),
+ foreignKey({columns:[t.companyId],foreignColumns:[companies.id]}),
+]);
+export const supplierSimulationQuotes=sqliteTable('supplier_simulation_quotes',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ id:text('id').notNull(),
+ quoteJson:text('quote_json').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.id]}),
+ uniqueIndex('supplier_quote_order_identity').on(t.companyId,t.orderId,t.id),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
+]);
+export const supplierSimulationApprovals=sqliteTable('supplier_simulation_approvals',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ id:text('id').notNull(),
+ quoteId:text('quote_id').notNull(),
+ quoteFingerprint:text('quote_fingerprint').notNull(),
+ sourceFingerprint:text('source_fingerprint').notNull(),
+ actor:text('actor').notNull(),
+ approvedAt:text('approved_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.id]}),
+ foreignKey({columns:[t.companyId,t.orderId,t.quoteId],foreignColumns:[supplierSimulationQuotes.companyId,supplierSimulationQuotes.orderId,supplierSimulationQuotes.id]}),
+]);
+export const supplierSimulationOperations=sqliteTable('supplier_simulation_operations',{
+ companyId:text('company_id').notNull(),
+ operationId:text('operation_id').notNull(),
+ orderId:text('order_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),
+ resultJson:text('result_json').notNull(),
+ writeGuard:integer('write_guard').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
+]);
+export const supplierSimulationEvents=sqliteTable('supplier_simulation_events',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ revision:integer('revision').notNull(),
+ operationId:text('operation_id').notNull(),
+ kind:text('kind').notNull(),
+ status:text('status').notNull(),
+ actor:text('actor').notNull(),
+ detailJson:text('detail_json').notNull(),
+ at:text('at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.orderId,t.revision]}),
+ uniqueIndex('supplier_event_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[supplierSimulationOperations.companyId,supplierSimulationOperations.operationId]}),
+]);
+export const supplierSimulationSourceHolds=sqliteTable('supplier_simulation_source_holds',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ proposalId:text('proposal_id').notNull(),
+ productId:text('product_id').notNull(),
+ sourceRevision:integer('source_revision').notNull(),
+ active:integer('active').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.orderId,t.proposalId]}),
+ uniqueIndex('supplier_active_source_hold').on(t.companyId,t.proposalId).where(sql`${t.active}=1`),
+ uniqueIndex('supplier_active_product_hold').on(t.companyId,t.productId).where(sql`${t.active}=1`),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
+ foreignKey({columns:[t.companyId,t.proposalId],foreignColumns:[replenishmentProposalOrigins.companyId,replenishmentProposalOrigins.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+]);
+export const supplierSimulationReservations=sqliteTable('supplier_simulation_reservations',{
+ companyId:text('company_id').notNull(),
+ orderId:text('order_id').notNull(),
+ day:text('day').notNull(),
+ currency:text('currency').notNull(),
+ totalMinor:integer('total_minor').notNull(),
+ state:text('state').notNull(),
+ reservedAt:text('reserved_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.orderId]}),
+ index('supplier_daily_exposure').on(t.companyId,t.currency,t.day,t.state),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[supplierSimulationOrders.companyId,supplierSimulationOrders.id]}),
+]);
+
+// Durable PO drafts; no supplier submission or inventory authorization.
+export const purchaseOrderDrafts=sqliteTable('purchase_order_drafts',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
+ number:text('number').notNull(),supplierId:text('supplier_id').notNull(),
+ status:text('status').notNull(),revision:integer('revision').notNull(),
+ snapshotJson:text('snapshot_json').notNull(),createdAt:text('created_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),uniqueIndex('po_draft_number').on(t.companyId,t.number),
+ index('po_draft_history').on(t.companyId,t.createdAt,t.id)]);
+export const purchaseOrderDraftLines=sqliteTable('purchase_order_draft_lines',{
+ companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),id:text('id').notNull(),
+ kind:text('kind').notNull(),productId:text('product_id'),proposalId:text('proposal_id'),
+ sourceRevision:integer('source_revision'),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.orderId,t.id]}),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+ foreignKey({columns:[t.companyId,t.proposalId],foreignColumns:[replenishmentProposalOrigins.companyId,replenishmentProposalOrigins.id]})]);
+export const purchaseOrderDraftOperations=sqliteTable('purchase_order_draft_operations',{
+ companyId:text('company_id').notNull(),operationId:text('operation_id').notNull(),orderId:text('order_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),resultJson:text('result_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]})]);
+export const purchaseOrderDraftEvents=sqliteTable('purchase_order_draft_events',{
+ companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),revision:integer('revision').notNull(),
+ operationId:text('operation_id').notNull(),kind:text('kind').notNull(),actor:text('actor').notNull(),
+ reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.orderId,t.revision]}),uniqueIndex('po_draft_event_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
+ foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[purchaseOrderDraftOperations.companyId,purchaseOrderDraftOperations.operationId]})]);
+
+// Full snapshots for every edit/review/cancel; the original header/lines stay immutable.
+export const purchaseOrderDraftRevisions=sqliteTable('purchase_order_draft_revisions',{
+ companyId:text('company_id').notNull(),orderId:text('order_id').notNull(),revision:integer('revision').notNull(),
+ status:text('status').notNull(),snapshotJson:text('snapshot_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.orderId,t.revision]}),
+ foreignKey({columns:[t.companyId,t.orderId,t.revision],foreignColumns:[purchaseOrderDraftEvents.companyId,purchaseOrderDraftEvents.orderId,purchaseOrderDraftEvents.revision]})]);
+
+// Company supplier registry: mutable heads, immutable versions/receipts/audit.
+export const purchasingSuppliers=sqliteTable('purchasing_suppliers',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
+ version:integer('version').notNull(),status:text('status').notNull(),name:text('name').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),index('purchasing_supplier_list').on(t.companyId,t.updatedAt,t.id)]);
+export const purchasingSupplierVersions=sqliteTable('purchasing_supplier_versions',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id,t.version]}),foreignKey({columns:[t.companyId,t.id],foreignColumns:[purchasingSuppliers.companyId,purchasingSuppliers.id]})]);
+export const purchasingMappings=sqliteTable('purchasing_mappings',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),status:text('status').notNull(),
+ supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),locationId:text('location_id').notNull(),
+ productId:text('product_id').notNull(),sku:text('sku').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),
+ foreignKey({columns:[t.companyId,t.supplierId],foreignColumns:[purchasingSuppliers.companyId,purchasingSuppliers.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+ uniqueIndex('purchasing_active_sku').on(t.companyId,t.supplierId,t.accountId,t.locationId,t.sku).where(sql`${t.status}='active'`),
+ index('purchasing_mapping_list').on(t.companyId,t.supplierId,t.updatedAt,t.id)]);
+export const purchasingMappingVersions=sqliteTable('purchasing_mapping_versions',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id,t.version]}),foreignKey({columns:[t.companyId,t.id],foreignColumns:[purchasingMappings.companyId,purchasingMappings.id]})]);
+export const purchasingRegistryOperations=sqliteTable('purchasing_registry_operations',{
+ companyId:text('company_id').notNull().references(()=>companies.id),operationId:text('operation_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),resultJson:text('result_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]})]);
+export const purchasingRegistryEvents=sqliteTable('purchasing_registry_events',{
+ companyId:text('company_id').notNull(),kind:text('kind').notNull(),entityId:text('entity_id').notNull(),version:integer('version').notNull(),
+ operationId:text('operation_id').notNull(),actor:text('actor').notNull(),reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.kind,t.entityId,t.version]}),uniqueIndex('purchasing_registry_event_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.operationId],foreignColumns:[purchasingRegistryOperations.companyId,purchasingRegistryOperations.operationId]})]);
+
+// Fictional cart permission only. Append configuration versions; never store session secrets.
+export const poCartConnections=sqliteTable('po_cart_connections',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
+ version:integer('version').notNull(),dataJson:text('data_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id,t.version]})]);
+export const poCartBudgetPolicies=sqliteTable('po_cart_budget_policies',{
+ companyId:text('company_id').notNull().references(()=>companies.id),version:integer('version').notNull(),
+ perOrderMinor:integer('per_order_minor').notNull(),outstandingMinor:integer('outstanding_minor').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.version]})]);
+export const poCartAuthorizations=sqliteTable('po_cart_authorizations',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),orderId:text('order_id').notNull(),
+ generation:integer('generation').notNull(),
+ revision:integer('revision').notNull(),status:text('status').notNull(),
+ connectionId:text('connection_id').notNull(),connectionVersion:integer('connection_version').notNull(),
+ policyVersion:integer('policy_version').notNull(),payloadJson:text('payload_json').notNull(),
+ createdAt:text('created_at').notNull(),startedAt:text('started_at'),releasedAt:text('released_at'),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),
+ uniqueIndex('po_cart_unreleased_order').on(t.companyId,t.orderId).where(sql`${t.releasedAt} IS NULL`),
+ uniqueIndex('po_cart_order_history').on(t.companyId,t.orderId,t.generation),
+ foreignKey({columns:[t.companyId,t.orderId],foreignColumns:[purchaseOrderDrafts.companyId,purchaseOrderDrafts.id]}),
+ foreignKey({columns:[t.companyId,t.connectionId,t.connectionVersion],foreignColumns:[poCartConnections.companyId,poCartConnections.id,poCartConnections.version]}),
+ foreignKey({columns:[t.companyId,t.policyVersion],foreignColumns:[poCartBudgetPolicies.companyId,poCartBudgetPolicies.version]})]);
+export const poCartCommitments=sqliteTable('po_cart_commitments',{
+ companyId:text('company_id').notNull(),authorizationId:text('authorization_id').notNull(),
+ productId:text('product_id').notNull(),proposalId:text('proposal_id'),
+ quantityJson:text('quantity_json').notNull(),active:integer('active').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.authorizationId,t.productId]}),
+ uniqueIndex('po_cart_active_product').on(t.companyId,t.productId).where(sql`${t.active}=1`),
+ foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]}),
+ foreignKey({columns:[t.companyId,t.productId],foreignColumns:[products.owner,products.id]}),
+ foreignKey({columns:[t.companyId,t.proposalId],foreignColumns:[replenishmentProposalOrigins.companyId,replenishmentProposalOrigins.id]})]);
+export const poCartReservations=sqliteTable('po_cart_reservations',{
+ companyId:text('company_id').notNull(),authorizationId:text('authorization_id').notNull(),
+ totalMinor:integer('total_minor').notNull(),state:text('state').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.authorizationId]}),
+ index('po_cart_exposure').on(t.companyId,t.state),
+ foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]})]);
+export const poCartOperations=sqliteTable('po_cart_operations',{
+ companyId:text('company_id').notNull(),operationId:text('operation_id').notNull(),authorizationId:text('authorization_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),receiptJson:text('receipt_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]})]);
+export const poCartEvents=sqliteTable('po_cart_events',{
+ companyId:text('company_id').notNull(),authorizationId:text('authorization_id').notNull(),revision:integer('revision').notNull(),
+ kind:text('kind').notNull(),actor:text('actor').notNull(),reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.authorizationId,t.revision]}),
+ foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]})]);
+
+// Durable fictional jobs. Account-cart ownership intentionally excludes location/version.
+export const poCartJobs=sqliteTable('po_cart_jobs',{
+ browserConfigJson:text('browser_config_json'),
+ companyId:text('company_id').notNull(),id:text('id').notNull(),authorizationId:text('authorization_id').notNull(),
+ authorizationRevision:integer('authorization_revision').notNull(),inputsJson:text('inputs_json').notNull(),
+ supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),requestedBy:text('requested_by').notNull(),
+ revision:integer('revision').notNull(),state:text('state').notNull(),purchaseState:text('purchase_state').notNull(),
+ deliveryState:text('delivery_state').notNull(),kind:text('kind').notNull(),actor:text('actor').notNull(),reason:text('reason').notNull(),
+ createdAt:text('created_at').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),uniqueIndex('po_cart_job_authorization').on(t.companyId,t.authorizationId),
+ foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]})]);
+export const poCartOwners=sqliteTable('po_cart_owners',{
+ companyId:text('company_id').notNull().references(()=>companies.id),supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),
+ jobId:text('job_id'),fence:integer('fence').notNull(),workerId:text('worker_id'),leaseUntil:text('lease_until'),
+},t=>[primaryKey({columns:[t.companyId,t.supplierId,t.accountId]}),uniqueIndex('po_cart_owned_job').on(t.companyId,t.jobId),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]})]);
+export const poCartAttempts=sqliteTable('po_cart_attempts',{
+ companyId:text('company_id').notNull(),jobId:text('job_id').notNull(),id:text('id').notNull(),lineId:text('line_id').notNull(),
+ workerId:text('worker_id').notNull(),fence:integer('fence').notNull(),intentJson:text('intent_json').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.jobId,t.id]}),uniqueIndex('po_cart_line_attempt').on(t.companyId,t.jobId,t.lineId),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]})]);
+export const poCartResults=sqliteTable('po_cart_results',{
+ companyId:text('company_id').notNull(),jobId:text('job_id').notNull(),attemptId:text('attempt_id').notNull(),
+ outcome:text('outcome').notNull(),observationJson:text('observation_json').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.jobId,t.attemptId]}),
+ foreignKey({columns:[t.companyId,t.jobId,t.attemptId],foreignColumns:[poCartAttempts.companyId,poCartAttempts.jobId,poCartAttempts.id]})]);
+export const poCartJobOperations=sqliteTable('po_cart_job_operations',{
+ companyId:text('company_id').notNull(),operationId:text('operation_id').notNull(),jobId:text('job_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),receiptJson:text('receipt_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]})]);
+export const poCartJobEvents=sqliteTable('po_cart_job_events',{
+ companyId:text('company_id').notNull(),jobId:text('job_id').notNull(),revision:integer('revision').notNull(),
+ kind:text('kind').notNull(),actor:text('actor').notNull(),reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.jobId,t.revision]}),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]})]);
+
+// Local worker transport credentials. Scope belongs to identity and never rotates.
+export const poCartWorkerIdentities=sqliteTable('po_cart_worker_identities',{
+ consumerKind:text('consumer_kind').notNull().default('fake'),
+ id:text('id').primaryKey().notNull(),companyId:text('company_id').notNull().references(()=>companies.id),
+ supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),version:integer('version').notNull(),
+ status:text('status').notNull(),createdAt:text('created_at').notNull(),
+});
+export const poCartWorkerCredentials=sqliteTable('po_cart_worker_credentials',{
+ id:text('id').primaryKey().notNull(),workerId:text('worker_id').notNull().references(()=>poCartWorkerIdentities.id),
+ secretHash:text('secret_hash').notNull(),identityVersion:integer('identity_version').notNull(),status:text('status').notNull(),
+ expiresAt:text('expires_at').notNull(),createdAt:text('created_at').notNull(),revokedAt:text('revoked_at'),
+},t=>[uniqueIndex('po_cart_worker_secret_hash').on(t.secretHash)]);
+export const poCartWorkerCredentialEvents=sqliteTable('po_cart_worker_credential_events',{
+ id:integer('id').primaryKey({autoIncrement:true}),workerId:text('worker_id').notNull().references(()=>poCartWorkerIdentities.id),
+ credentialId:text('credential_id').notNull().references(()=>poCartWorkerCredentials.id),kind:text('kind').notNull(),at:text('at').notNull(),
+});
+
+// Complete cart observations are immutable application evidence, never browser capabilities.
+export const poCartBrowserEvidence=sqliteTable('po_cart_browser_evidence',{
+ companyId:text('company_id').notNull(),jobId:text('job_id').notNull(),kind:text('kind').notNull(),
+ observationJson:text('observation_json').notNull(),verified:integer('verified').notNull(),reason:text('reason').notNull(),
+ workerId:text('worker_id').notNull(),fence:integer('fence').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.jobId,t.kind]}),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]})]);
+
+// Supervised fictional browser ownership and append-only observations/operation receipts.
+export const poCartBrowserSessions=sqliteTable('po_cart_browser_sessions',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),jobId:text('job_id').notNull(),
+ supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),purpose:text('purpose').notNull(),requestedBy:text('requested_by').notNull(),
+ revision:integer('revision').notNull(),state:text('state').notNull(),fence:integer('fence').notNull(),workerId:text('worker_id'),leaseUntil:text('lease_until'),
+ expiresAt:text('expires_at').notNull(),createdAt:text('created_at').notNull(),updatedAt:text('updated_at').notNull(),closedAt:text('closed_at'),reason:text('reason').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),
+ uniqueIndex('po_cart_browser_active_account').on(t.companyId,t.supplierId,t.accountId).where(sql`${t.state} IN ('requested','opening','open','closing')`),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]})]);
+export const poCartBrowserObservations=sqliteTable('po_cart_browser_observations',{
+ companyId:text('company_id').notNull(),sessionId:text('session_id').notNull(),phase:text('phase').notNull(),
+ observationJson:text('observation_json').notNull(),verified:integer('verified').notNull(),reason:text('reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.sessionId,t.phase]}),
+ foreignKey({columns:[t.companyId,t.sessionId],foreignColumns:[poCartBrowserSessions.companyId,poCartBrowserSessions.id]})]);
+export const poCartBrowserOperations=sqliteTable('po_cart_browser_operations',{
+ companyId:text('company_id').notNull(),operationId:text('operation_id').notNull(),sessionId:text('session_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),receiptJson:text('receipt_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]}),
+ foreignKey({columns:[t.companyId,t.sessionId],foreignColumns:[poCartBrowserSessions.companyId,poCartBrowserSessions.id]})]);
+
+// Independent closed-inspection evidence and explicit manager decisions. Neither grants a browser write.
+export const poCartReconciliationEvidence=sqliteTable('po_cart_reconciliation_evidence',{
+ companyId:text('company_id').notNull(),sessionId:text('session_id').notNull(),jobId:text('job_id').notNull(),
+ jobRevision:integer('job_revision').notNull(),authorizationRevision:integer('authorization_revision').notNull(),sessionRevision:integer('session_revision').notNull(),
+ fence:integer('fence').notNull(),workerId:text('worker_id').notNull(),credentialId:text('credential_id').notNull(),identityVersion:integer('identity_version').notNull(),
+ baselineVerified:integer('baseline_verified').notNull(),finalVerified:integer('final_verified').notNull(),
+ baselineReason:text('baseline_reason').notNull(),finalReason:text('final_reason').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.sessionId]}),
+ foreignKey({columns:[t.companyId,t.sessionId],foreignColumns:[poCartBrowserSessions.companyId,poCartBrowserSessions.id]}),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]}),
+ foreignKey({columns:[t.credentialId],foreignColumns:[poCartWorkerCredentials.id]})]);
+export const poCartReconciliations=sqliteTable('po_cart_reconciliations',{
+ companyId:text('company_id').notNull(),operationId:text('operation_id').notNull(),sessionId:text('session_id').notNull(),jobId:text('job_id').notNull(),
+ authorizationId:text('authorization_id').notNull(),jobRevision:integer('job_revision').notNull(),authorizationRevision:integer('authorization_revision').notNull(),
+ fence:integer('fence').notNull(),actor:text('actor').notNull(),action:text('action').notNull(),note:text('note').notNull(),at:text('at').notNull(),
+ fingerprint:text('fingerprint').notNull(),receiptJson:text('receipt_json').notNull(),writeGuard:integer('write_guard').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.operationId]}),uniqueIndex('po_cart_one_reconciliation').on(t.companyId,t.sessionId),
+ foreignKey({columns:[t.companyId,t.sessionId],foreignColumns:[poCartReconciliationEvidence.companyId,poCartReconciliationEvidence.sessionId]}),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]}),
+ foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]})]);

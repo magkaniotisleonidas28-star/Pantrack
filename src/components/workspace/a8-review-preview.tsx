@@ -56,9 +56,9 @@ export default function A8ReviewPreview({companyId, products}: {companyId: strin
       <p>Limits: capacity {explain.capacityPacks ?? 'none'}, shelf life {explain.shelfLifePacks ?? 'none'}, policy {explain.maximumPacks ?? 'none'} packs.</p>
       <strong>Review suggestion: {explain.recommendedPacks} whole packs</strong>
       <p>Sales checkpoint: {sales?.source === 'clover_sync' ? sales.checkpointAt ?? 'missing' : 'fictional'} · held events: {sales?.heldEventCount}</p>
-      {sales?.source === 'clover_sync' && <p>Sales warnings: {sales.reasons.join(', ') || 'none'}.</p>}
+      {sales?.source === 'clover_sync' && <p>Sales warnings: {sales.reasons.map(reason => reason === 'unresolved_events' ? 'Some sales still need to update stock or be reviewed' : reason).join(', ') || 'none'}.</p>}
       <p>Review reasons: {explain.reviewReasons.join(', ') || 'none'}.</p>
-      <small>Supplier SKU, account, delivery, and price are unverified. Saving or editing requires a successful sales sync and checkpoint within the last 10 minutes. Recalculate after any stock, settings, or sync change.</small>
+      <small>Supplier SKU, account, delivery, and price are unverified. Saving or editing requires a successful sales sync and checkpoint within the last 10 minutes, with no unresolved sales or identity conflicts. Recalculate after any stock, settings, or sync change.</small>
     </article>}
   </section><A8SavedReviews companyId={companyId} products={products}/></>;
 }
