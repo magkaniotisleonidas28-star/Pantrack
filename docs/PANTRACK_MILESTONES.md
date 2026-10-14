@@ -1,7 +1,7 @@
 # Pantrack Development Milestones
 
 Version: 1.3
-Updated: 2026-10-13
+Updated: 2026-10-14
 Purpose: Working specification for developing Pantrack with Codex in VS Code
 Product goal: Estimate ingredient inventory from completed menu-item sales, calculate replenishment to manager-defined target levels, and prepare exact supplier carts for manager-controlled checkout.
 
@@ -127,7 +127,7 @@ flowchart TD
 
 The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md), [integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md) and [2026-10-09 decision](decisions/0005-po-backed-ai-cart-preparation.md) supersede the 2026-10-03 email-first direction. Historical local evidence and completion records remain intact. Supplier email dispatch is deferred; notification email remains. M13/M14 do not block the manager-controlled launch. Unrelated POS prerequisites, including the pending M6 gate, remain explicit.
 
-### Current checklist position — 2026-10-13
+### Current checklist position — 2026-10-14
 
 | Workstream | Recorded completion | Next open steps |
 | --- | --- | --- |
@@ -136,13 +136,20 @@ The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md), [integration guide](PO_AI_CAR
 | C — Platform and purchasing | C1–C2 complete for development. C4 has substantial local PO/cart components on main. | C3 external decisions, C4 platform completion, C5/M8 acceptance, then C6–C9. |
 
 PR #8 and #9 are merged, and all six correctness/security fixes are locally
-closed. Current main `7a35004` has green Ubuntu, Windows and Supabase Preview
-checks. The development Worker is still at release `65373b3`, with database
+closed. The new `de970c8`/`12de73b` commits add evaluation-only AI discovery/cart
+extraction and private Metadata preparation. Their recorded 16-case mocked
+Metadata matrix passed, but the full offline gate stopped at reliability job 25
+on a second-addition timeout. C4/M8 and real-model acceptance remain open;
+review that failure next, without resetting holds or consumed paid allowances.
+Incoming `12de73b` CI failed because the preflight test required missing `rg`;
+[PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10) records the
+focused Git-based source-fingerprint repair and checklist synchronization.
+The development Worker is still at release `65373b3`, with database
 migrations only through `0023`; `0024`–`0034` are pending. A separately authorized
 release and hosted checks precede A8 acceptance. Workers Builds configuration
 remains unverified because its read APIs return `403`.
 
-Use the [dated status/evidence snapshot](CURRENT_STATUS.md#verified-snapshot--2026-10-13)
+Use the [dated status/evidence snapshot](CURRENT_STATUS.md#verified-snapshot--2026-10-14)
 and [simple milestone checklist](PROJECT_PROGRESS_PLAIN_LANGUAGE.md) for the
 current release order. These updates do not close A8, C3–C9, M6–M12 or the
 deferred M13/M14 gates.
@@ -447,8 +454,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   **2026-10-13 status refresh:** read-only inspection confirms the later
   [C2 UI release](C2_UI_RELEASE_20261004.md) remains active with D1 through `0023`.
   The PR #8/#9 work and all 11 migrations `0024`–`0034` still need their own
-  authorized development release and hosted validation. Current GitHub checks
-  pass; automatic Cloudflare deployment configuration remains unverified.
+  authorized development release and hosted validation. The later source sync
+  found missing-tool failures on incoming `12de73b`; the
+  [C2 portability/sync handoff](C2_STATUS_SYNC_20261013.md) records their repair.
+  Automatic Cloudflare deployment configuration remains unverified.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   permitted browser use, café/account/location authorization, exact SKUs/packs,

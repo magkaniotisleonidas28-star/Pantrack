@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-13
+Updated: 2026-10-14
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,7 +10,7 @@ POS connections have been used.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
-## Verified snapshot — 2026-10-13
+## Verified snapshot — 2026-10-14
 
 **The development foundations are accepted; the project is not ready for a real
 café or production launch.** A1–A7, B1–B7 and C1–C2 are checked in the roadmap,
@@ -19,19 +19,30 @@ open. B8/M6 remains on hold for Toast approval/testing access.
 
 | Area | Verified position | Limit or next gate |
 | --- | --- | --- |
-| Shared source | Local `main` and GitHub `main` match at `7a35004`; PR [#8](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/8) and [#9](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/9) are merged. | This documentation follow-up does not deploy their code. |
-| Current GitHub checks | [Ubuntu and Windows CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38500454965) and [Supabase Preview](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/115646057931) all report success for `7a35004`. | Preview success does not prove hosted signup/recovery, provider behavior or production readiness. The earlier Supabase preview timeout is no longer a current failing check. |
-| Six correctness/security fixes | All six are locally closed; BUG-01 was already on `main`, and PR #9 integrated BUG-02–06. The final stacked local evidence records 82 suites and the full pipeline. | These fixes do not constitute a full security review or hosted acceptance. See the [fix checklist](CORRECTNESS_SECURITY_FIX_CHECKLIST.md) and [final local integration evidence](BUG06_COUNT_RECEIPT_RACES.md). The pipeline was not rerun for this documentation update. |
+| Shared source | The incoming feature commits are `de970c8` and `12de73b`, adding the C4 AI evaluation/Metadata evidence above the merged PR [#8](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/8) and [#9](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/9). The checklist/CI synchronization follow-up is [PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10). | Source synchronization does not deploy the development Worker or close external acceptance gates. |
+| GitHub verification | Incoming `12de73b` [failed both OS jobs](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38506857157) because its preflight test could not launch `rg`. The focused Git-based source-enumeration repair at `456ad67` [passed Ubuntu and Windows CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38508252498). | [Incoming main Supabase Preview](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/115666379481) passed; PR preview was skipped by configuration. Preview success does not prove hosted signup/recovery or provider behavior. PR #10 records the final checklist/verification follow-up. |
+| Desktop local startup | Typecheck, 87 suites, 35-migration check/apply and build passed. The root `pnpm test:local` failed on cold optimization and then a Cloudflare runner entry-export internal error, including a preserved-cache/fresh-registry attempt. | The desktop full pipeline is not green. Local HTTP/startup remains an unresolved C2 follow-up; the GitHub runners' successful smoke checks are separate. See [sync evidence](C2_STATUS_SYNC_20261013.md). |
+| Six correctness/security fixes | All six are locally closed; BUG-01 was already on `main`, and PR #9 integrated BUG-02–06. The final stacked local evidence records 82 suites and the full pipeline. | These fixes do not constitute a full security review or hosted acceptance. See the [fix checklist](CORRECTNESS_SECURITY_FIX_CHECKLIST.md) and [original local integration evidence](BUG06_COUNT_RECEIPT_RACES.md); current combined-source verification is recorded separately. |
+| New C4 AI evidence | Evaluation-only product discovery, independent cart extraction, budget/preflight guards and private Metadata capture are implemented. The latest recorded 16-case mocked Metadata matrix passed, but its complete offline gate stopped at reliability job 25 on a second-addition response timeout. | Real-model acceptance remains incomplete; earlier paid attempts stopped on timeout or incomplete Metadata. No paid retry is authorized. Review the retained failure before any fresh full gate or separately authorized paid validation; see [C4 AI evidence](C4_PO_CART_AI_LOCAL_EVIDENCE.md). |
 | Hosted development code | A read-only Cloudflare deployment inspection still shows release `65373b3`, deployed at `2026-10-05T02:50:23Z`; active Worker version `ed5e9c65-31b7-432f-bff9-bf4df45e9b68`. | The merged PR #8/#9 work has not reached this Worker. |
 | Hosted development database | The read-only `d1_migrations` query returned 24 entries, `0000`–`0023`, with zero rows written and `changed_db=false`. Main contains 35 migrations. | All 11 migrations `0024`–`0034` are pending here. A release must review the entire ordered range, not just `0034`. This query did not inspect or validate all business data. |
 | Runtime gates | Exact inventory preview is enabled; Clover sales sync is disabled. Supplier submission and automatic purchasing remain disabled. | Existing gate state is not approval to use real services or place orders. |
 | Cloudflare Git/build connection | The Workers Builds trigger and build APIs both returned `403` with the existing credential. | Automatic deployment configuration remains independently unverified. GitHub CI success does not prove Cloudflare Builds is configured. |
 
-The deployment and database reads above were refreshed on 2026-10-13. No remote
+The deployment and database reads above were refreshed on 2026-10-14. No remote
 migration, deployment, supplier/POS call, purchase or historical stock repair was
 performed for this update.
 
 ## Current next-step checklist
+
+The incoming CI failure is handled by the focused C2 portability repair in
+[PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10), with
+verification recorded in the [sync handoff](C2_STATUS_SYNC_20261013.md). The
+project order continues below.
+
+The desktop Cloudflare startup failure also needs a separate C2 investigation
+before claiming local browser readiness. Keep existing stock/history and private
+configuration intact; no cause or repair is established by the CI portability fix.
 
 1. **C2: prepare the development release.** Review the complete `0024`–`0034`
    upgrade, populated-data preservation, backup/restore and forward-repair plan;
@@ -49,9 +60,12 @@ performed for this update.
    Keep the accepted ten-minute freshness policy and purchasing disabled.
 4. **C3/C4: finish supplier preparation and controlled feasibility in parallel.**
    Record permitted Baldor browser use, account/location/product mappings,
-   responsible owners and budgets. The next bounded local C4 slice is Stagehand
-   discovery and independent cart verification against the fictional storefront;
-   hosted/model tests have their own configuration, budget and authorization gates.
+   responsible owners and budgets. The AI reader/Metadata preparation is now
+   implemented, but its full offline gate failed at reliability job 25. Review
+   that retained second-addition timeout in a separate bounded C4 task; then pass
+   a fresh full gate before requesting any paid validation. Existing consumed
+   allowances and unresolved carts stay retained. Hosted/model tests have their
+   own configuration, budget and authorization gates.
 5. **C5: finish and accept M8 after M7 and the supplier gates.** Complete verified
    cart/human handoff, PDF/XLSX/history, confirmation and atomic receiving; then
    run the separately authorized supplier cart-only and manager checkout tests.
@@ -63,12 +77,15 @@ No existing acceptance checkbox is advanced by this status refresh. The detailed
 milestone table and earlier implementation records below retain their evidence
 and scope.
 
-Status-refresh verification: `pnpm test:focused replenishment-proposal
-replenishment-lifecycle-contract replenishment-lifecycle-d1` passed all three
+The initial documentation refresh ran `pnpm test:focused replenishment-proposal
+replenishment-lifecycle-contract replenishment-lifecycle-d1` and passed all three
 suites in this checkout. `git diff --check` and all 191 relative file/section
 links across the three changed documents passed; all 29 A/B/C statuses in the
-simple guide match the roadmap. Only documentation changed; no new migration or
-runtime contract was introduced. The full local pipeline was not rerun.
+simple guide matched the roadmap. That initial pass changed documentation only.
+The subsequent source/CI synchronization and combined pipeline are recorded in
+[the C2 sync handoff](C2_STATUS_SYNC_20261013.md). No new migration or application
+API was introduced. Changed source fingerprints require fresh acceptance-gate
+evidence; this repair never grants a paid run.
 
 ## What is complete
 
@@ -98,7 +115,7 @@ Complete and merged into `main` in commits `141fb31` and `703e5e4`.
   the HTTP smoke test.
 - CI correctly fails for a deliberate type error, a deliberately failing test,
   schema drift, missing migration entries, and SQL/schema mismatch.
-- Current `main` commit `7a35004` passes CI on both operating systems:
+- Earlier `main` commit `7a35004` passed CI on both operating systems:
   <https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38500454965>.
 - Contributor guidance and the pull-request template are in
   [CONTRIBUTING.md](../CONTRIBUTING.md) and [the PR template](../.github/pull_request_template.md).
@@ -226,7 +243,7 @@ environment until separately reviewed release evidence exists.
 
 | Service | Reported status | Still needed |
 | --- | --- | --- |
-| GitHub | Source synced at `7a35004`; current Ubuntu, Windows and Supabase Preview checks pass. | Keep `main` as the only long-lived branch. Preserve required checks on new commits. |
+| GitHub | New source `de970c8`/`12de73b` is preserved. Its missing-tool CI failure is repaired; Ubuntu/Windows checks pass at `456ad67`. PR #10 records the final checklist/portability follow-up. | Keep `main` as the only long-lived branch. Require passing checks on the final PR head before integration. |
 | Supabase | The owner accepted the development-provider manual walkthrough using fictional accounts and reports completing the authentication and migration review. The [C2 closeout](C2_M2_CLOSEOUT.md) records that report and an agent inspection. Automated provider tests remain separate. | Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
 | Cloudflare | Read-only checks on 2026-10-13 show Worker release `65373b3` and development D1 through `0023`; see the [C2 UI release](C2_UI_RELEASE_20261004.md). Workers Builds configuration is inaccessible with the current credential. | Prepare and separately authorize the code/`0024`–`0034` release, then record hosted checks. Keep Clover sync and purchasing disabled. Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
 | Custom domain | The user reports that the domain is already in Cloudflare. No Worker route has been verified. | Decide whether to attach the domain after the development `workers.dev` validation; the current hosted evidence uses that URL. |
@@ -592,7 +609,7 @@ behavior.
 | M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; paid latte, modifier/replay, duplicate/polling, unpaid deletion, full refund, missed-sale polling recovery, natural token refresh, lost-response recovery, disconnect/reconnect, later paid revision, and controlled webhook-failure cases recorded; owner-accepted on 2026-09-29 for tested development sandbox scope | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records nine paid latte deductions across sandbox cases, one held sale with zero partial use and an audited recovery replay, a simulated duplicate and owner poll, an unpaid deletion dismissed without stock use, one linked full $5 refund with zero additional stock use, two sales recovered by owner polling, one OAuth rotation and one controlled lost-response recovery, same-merchant reauthorization with history and stock retained, and one paid order revision that used only the added latte's ingredients. One authenticated webhook received a controlled `503`; owner polling recovered the sale once, while native retry was not observed in 20 minutes. Clover rejected a paid-order DELETE with HTTP 400. See the [bounded acceptance decision](M5_B7_ACCEPTANCE_REVIEW.md) for all excluded provider cases. Sync remains off; pilot and production approval are separate. |
 | M6 — second POS | B8 on hold at owner's request awaiting Toast approval/testing access; adapter foundation preserved; M6 not accepted | Toast received the owner's application on 2026-09-30. The [local foundation](M6_B8_ADAPTER_FOUNDATION.md) is implemented locally; native Toast remains unimplemented. Resume on Toast's request for information or an approved [access handoff](M6_TOAST_ACCESS.md), then validate a read-only sandbox connection before sales cases. |
 | M7 — replenishment proposals | A6/A7 local core and lifecycle, C4's fake consumer, and A8 local sale, sales-health reader, v2 handoff, durable source safety, gated preview, and manager save/edit/cancel flow passed locally; owner reports the local browser walkthrough works and accepted the ten-minute development freshness policy; M7 not accepted | The [served local HTTP check and owner browser report](M7_A8_SERVED_LOCAL_EVIDENCE.md) record the positive proposal flow, false D1 change-count fixes, and expected `review_required`/`inventory_changed` stock invalidation. [Decision 0004](decisions/0004-m7-development-sales-freshness.md) records the accepted development policy. The manager flow uses server-derived Clover health and fictional supplier details, with supplier submission disabled. A8 still needs hosted browser, end-to-end, and concurrency evidence. The local walkthrough used fixture sign-in and synthetic health; it does not verify provider signup or sync. Development D1 applied A7 `0016`/`0017` with the [W1/W2 release](C2_W2_HOSTED_RELEASE.md); the guard repair `0022` and auth fence `0023` were applied during the [C2 UI release](C2_UI_RELEASE_20261004.md). See [manager flow evidence](M7_A8_MANAGER_FLOW_EVIDENCE.md), [preview evidence](M7_A8_PREVIEW_API_UI_EVIDENCE.md), and [durable safety evidence](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md). |
-| M8 — PO-backed cart and delivery reconciliation | Local PO/registry/review, authorization/reservations, fenced jobs/worker, private practice sessions, manager progress and uncertain-cart reconciliation are on main through PR #8; M8 not accepted | [Reconciliation evidence](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md) and the [integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md) keep Stagehand discovery/verification, hosted-fictional privacy/safety, real supplier mappings/access, manager checkout, PDF/XLSX/history, confirmation and atomic receiving open. [Baldor preparation](C3_BALDOR_PREPARATION.md) keeps browser permission and account authorization pending. No supplier contact/access; M7 acceptance is still a gate. |
+| M8 — PO-backed cart and delivery reconciliation | Local PO/cart/session/reconciliation components and the new evaluation-only AI reader/Metadata preparation are implemented; M8 not accepted | [AI evidence](C4_PO_CART_AI_LOCAL_EVIDENCE.md) records incomplete real-model matrices and the latest second-addition timeout at offline reliability job 25. Review that failure and pass the complete fresh gate before any separately authorized paid validation. Hosted-fictional privacy/safety, permitted supplier mappings/access, manager checkout, PDF/XLSX/history, confirmation and atomic receiving remain open under the [integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md). M7 acceptance is still a gate. |
 | M9 — operations | Prototype endpoint only; new schedule/worker not provisioned | Cloudflare Cron every 15 minutes for weekly company-timezone drafts/reminders, authenticated Render worker and operational alerts; managers start carts, schedules never launch AI/browser preparation. |
 | M10 — financial controls | Partial prototype | Existing supplier terms first; preparation authorization/reservations, unresolved checkout exposure, owner limits/reauthentication and final-price reconciliation. Pantrack cannot enforce external checkout spending. |
 | M11 — reviewed PO pilot | Not started | Written permission, one POS/supplier/location, two supervised browser-assisted count-to-delivery cycles including a discrepancy, alerts, pause and manager sign-off on accuracy, usability, recovery and time saved. APIs/AI checkout are not prerequisites. |

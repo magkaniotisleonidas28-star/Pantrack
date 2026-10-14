@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-13. Based on the recorded acceptance decisions, merged source,
+Updated: 2026-10-14. Based on the recorded acceptance decisions, merged source,
 current GitHub checks and read-only Cloudflare inspection. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -14,9 +14,19 @@ accepted for development. Clover passed its approved, limited sandbox tests.
 Restocking calculations and proposal history are built locally. Purchase-order
 and practice-cart components are also built locally.
 
-The online development app is behind the code on GitHub. The latest six bug
-fixes are merged and all current GitHub checks pass, but their online release
-and testing are still needed. No real supplier order or café pilot is complete.
+The new commits add an optional AI reader for practice supplier carts and private
+records of its completion checks. Some tests passed, but the complete AI safety
+run is unfinished: its latest offline run timed out while adding the second
+item. C4/M8 therefore remain open.
+
+The online development app is behind GitHub. The six bug fixes are merged, and
+the new CI portability repair passed Windows/Linux checks on its reviewed branch.
+Online release/testing are still needed. No real supplier order or café pilot is
+complete.
+
+The local app-startup check also failed on this computer after the update.
+GitHub's Windows/Linux checks passed, but that does not prove this computer can
+start the app. This local problem needs a separate follow-up.
 
 **A checked box means complete within its stated scope.** Local means tested on
 a computer with fictional data. Sandbox means tested with a provider's test
@@ -26,15 +36,15 @@ account. Neither means approved for real customers or production.
 
 | Milestone | What it means | Current status |
 | --- | --- | --- |
-| M0 | Run the project on a computer. | Complete. |
-| M1 | Automatically check changes for errors. | Complete; current Windows and Linux checks pass. |
+| M0 | Run the project on a computer. | Baseline complete; the current desktop startup problem is unresolved. |
+| M1 | Automatically check changes for errors. | Complete; the new missing-tool CI failure is repaired and covered by Windows/Linux branch checks. |
 | M2 | Accounts, company access and permissions. | Accepted for development; hosted signup/recovery and independent security review remain follow-ups. |
 | M3 | Reliable inventory, units and recipe history. | Accepted for development; newest fixes still need online validation. |
 | M4 | Safely turn sales into ingredient deductions. | Accepted locally; newest recovery fixes still need online validation. |
 | M5 | Connect and test Clover. | Accepted for the tested development sandbox scope; excluded cases and real café use remain unverified. |
 | M6 | Connect a second register provider, Toast. | On hold awaiting Toast approval/testing access. |
 | M7 | Explain what needs restocking and let managers review it. | Built locally; A8 online acceptance remains open. |
-| M8 | Prepare exact supplier carts, let a manager check out, and record deliveries. | Partly built locally; supplier and full workflow acceptance remain open. |
+| M8 | Prepare exact supplier carts, let a manager check out, and record deliveries. | Partly built locally; the AI safety gate is blocked by a second-item timeout. Supplier/full workflow acceptance remain open. |
 | M9 | Reliable schedules, reminders and background work. | Planned/prototype only; new hosting and scheduling are not provisioned. |
 | M10 | Spending limits and financial safeguards. | Partial local safeguards; full acceptance remains open. |
 | M11 | Prove the workflow in a real café. | Not started; requires two supervised count-to-delivery cycles. |
@@ -104,20 +114,31 @@ open**, although substantial C4 code has been merged.
 C4 already has local purchase-order drafts/revisions, supplier profiles,
 preparation permission and spending reservations, saved jobs, worker access,
 private practice-browser sessions, progress screens and uncertain-cart recovery.
-Still open: real-AI discovery/verification, hosted privacy/safety, permitted Baldor
-access, production mappings, PDF/Excel exports, confirmation and approved receiving.
+The new commits also add evaluation-only AI discovery/cart checks and private
+completion evidence. The latest 16-case fake completion-check matrix passed;
+the larger reliability run passed 24 jobs, then timed out on job 25. That is
+unfinished acceptance. Earlier real-model runs also stopped before the full
+matrix completed. No paid retry is authorized.
+
+Still open: resolve that reliability failure and pass the fresh full AI gate,
+then separately authorized real-model validation, hosted privacy/safety,
+permitted Baldor access, production mappings, PDF/Excel exports, confirmation
+and approved receiving.
 
 Evidence: [C2 closeout](C2_M2_CLOSEOUT.md), [Baldor preparation](C3_BALDOR_PREPARATION.md),
-[latest local cart reconciliation](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md)
+[latest local cart reconciliation](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md),
+[AI evaluation and remaining blocker](C4_PO_CART_AI_LOCAL_EVIDENCE.md)
 and [PO/cart integration checklist](PO_AI_CART_INTEGRATION_ROADMAP.md).
 
 ## What was verified today
 
-| Check | Result on 2026-10-13 |
+| Check | Result on 2026-10-14 |
 | --- | --- |
-| Code on GitHub | Main is at `7a35004`; PR #8 and PR #9 are merged. |
-| Automated checks | Windows, Linux and Supabase Preview all pass for that commit. |
+| Code reviewed | New feature commits `de970c8` and `12de73b`, above merged PR #8/#9; the checklist/CI follow-up is PR #10. |
+| Automated checks | Incoming `12de73b` failed both OS jobs because a tool was missing. The focused repair passed Windows/Linux CI on its reviewed branch; PR preview was skipped by configuration. |
+| This computer | 87 test suites, typecheck, build and all 35 local database migrations passed. The app-startup check failed and needs investigation. |
 | Six tracked bugs | All six are locally closed; their source is on main. This is not a full security review. |
+| New AI cart tests | Optional reader and completion-evidence code are built. Full real-model acceptance and the latest offline reliability gate remain unfinished. |
 | Online app | Cloudflare still runs `65373b3`, deployed October 5. It does not yet have the PR #8/#9 changes. |
 | Online database | 24 migrations applied, through `0023`; 11 newer migrations, `0024`–`0034`, are pending. |
 | Cloudflare automatic builds | Could not verify the Git/build settings: its read APIs denied access (`403`). |
@@ -127,12 +148,17 @@ prove that the online code or database received them. Today's database check
 only read migration history and wrote no data. It did not validate every saved
 business record. No signed-in hosted/browser walkthrough was performed today.
 
-Current [Windows/Linux CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38500454965)
-and [Supabase Preview](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/115646057931)
-are green. That preview success does not prove the full login/recovery workflow.
-The earlier preview timeout is no longer a current failing check.
+The repair's [Windows/Linux CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38508252498)
+passed for `456ad67`; [PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10)
+tracks the final synchronized checklist. Incoming main's Supabase Preview passed,
+while PR preview creation was skipped because it is disabled. Neither proves
+the full login/recovery workflow. See the [sync verification record](C2_STATUS_SYNC_20261013.md).
 
 ## What happens next, in order
+
+The local startup error needs its own C2 investigation. The source/CI repair in
+PR #10 does not fix it. Release preparation and bounded C4 evidence review can
+still proceed independently.
 
 1. **Prepare a safe development release.** Review all 11 pending database updates,
    preservation of old data, backup/recovery and the Cloudflare deployment setup.
@@ -142,9 +168,11 @@ The earlier preview timeout is no longer a current failing check.
    fictional data. The old stock history must stay intact.
 3. **Finish A8/M7.** Record the online proposal screens, complete sales-to-proposal
    flow and simultaneous-request/source-change tests.
-4. **Finish C4/C5 and M8.** Resolve supplier access/budgets, prove controlled
-   practice-browser safety, and complete documents, confirmation and receiving.
-   Supplier cart tests and a real manager checkout need separate authorization.
+4. **Finish C4/C5 and M8.** The next C4 task is to review the retained second-item
+   timeout and resolve it safely before repeating the full offline gate. Paid
+   model validation needs separate approval after those checks pass. Resolve
+   supplier access/budgets, then complete hosted safety, documents, confirmation
+   and receiving. Supplier cart tests and real manager checkout need separate approval.
 5. **Finish operations and spending controls, then the café pilot.** Complete
    M9/M10 and resolve M6/Toast before M11; run two supervised delivery cycles.
 6. **Finish M12 production readiness.** Complete security, backup/restore,
