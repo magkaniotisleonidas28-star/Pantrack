@@ -12,13 +12,15 @@ let hits=0;const external=createServer((req,res)=>{hits++;res.end('Forbidden ext
 await new Promise(ok=>external.listen(0,'127.0.0.1',ok));const outside='http://127.0.0.1:'+external.address().port;
 const server=createServer((req,res)=>{if(req.url==='/catalog?external')res.writeHead(303,{location:outside+'/cart'});
  else if(req.url==='/catalog?checkout')res.writeHead(303,{location:'/checkout'});else if(req.url==='/catalog?local')res.writeHead(303,{location:'/cart'});res.end('fixture');});
-await new Promise(ok=>server.listen(0,'127.0.0.1',ok));const origin='http://127.0.0.1:'+server.address().port,proxy=await browserProxy(origin);
+await new Promise(ok=>server.listen(0,'127.0.0.1',ok));const origin='http://127.0.0.1:'+server.address().port,observed=[],proxy=await browserProxy(origin,'automation',()=>true,(url,method)=>observed.push({url,method}));
 const via=(url,method='GET')=>new Promise((ok,fail)=>{const r=request(proxy.url,{method,path:url},res=>{res.resume();res.on('end',()=>ok(res.statusCode));});r.on('error',fail);r.end();});
 const root='.sites-runtime/po-cart-workers/lock-tests-'+randomUUID();mkdirSync(root,{recursive:true,mode:0o700});
 try{
  for(const path of ['/catalog','/cart','/add','/session/private-fixture'])assert.equal(await via(origin+path),200);
- for(const url of [outside+'/catalog',origin+'/checkout',origin+'/checkout/',origin+'/unknown'])assert.equal(await via(url),403);
+ for(const url of [outside+'/catalog',origin+'/checkout',origin+'/checkout/',origin+'/unknown',origin+'/v1/traces',origin+'/__disabled_google/ListAccounts'])assert.equal(await via(url),403);
  assert.equal(await via(origin+'/cart','DELETE'),403);assert.equal(await via(origin+'/catalog?external'),403);assert.equal(await via(origin+'/catalog?checkout'),403);assert.equal(await via(origin+'/catalog?local'),303);assert.equal(hits,0);
+ const connect=await new Promise((ok,fail)=>{const r=request(proxy.url,{method:'CONNECT',path:'example.invalid:443'});r.on('connect',(res,socket)=>{socket.destroy();ok(res.statusCode);});r.on('error',fail);r.end();});
+ assert.equal(connect,403);assert.ok(observed.some(r=>r.method==='CONNECT'&&r.url==='https://example.invalid:443'));assert.equal(hits,0);
  for(const mode of ['sign_in','inspect']){
   const human=await browserProxy(origin,mode);
   const requestHuman=(path,method='GET')=>new Promise((ok,fail)=>{const r=request(human.url,{method,path:origin+path},res=>{res.resume();res.on('end',()=>ok(res.statusCode));});r.on('error',fail);r.end();});

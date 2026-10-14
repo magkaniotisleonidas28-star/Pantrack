@@ -7,6 +7,7 @@ import {existsSync,readdirSync,mkdirSync,chmodSync} from 'node:fs';
 import {homedir} from 'node:os';
 import type {CartEntry,CartLine} from '../../src/lib/cart-preview-contract';
 import type {Product} from './model';
+import type {Diagnostic} from '../po-cart-worker/browser-diagnostics';
 function cachedChrome(){
   if(process.env.CHROME_PATH)return process.env.CHROME_PATH;
   const root=process.platform==='darwin'?resolve(homedir(),'Library/Caches/ms-playwright'):process.platform==='win32'?resolve(process.env.LOCALAPPDATA??homedir(),'ms-playwright'):resolve(process.env.XDG_CACHE_HOME??resolve(homedir(),'.cache'),'ms-playwright');
@@ -24,32 +25,52 @@ export type BrowserMode='automation'|'sign_in'|'inspect';
 export function allowedBrowserRequest(origin:string,url:string,method:string,mode:BrowserMode){
  const u=new URL(url);return u.origin===origin&&storefrontPath(u.pathname)&&(mode==='automation'?['GET','POST'].includes(method):method==='GET'&&u.pathname!=='/add'||mode==='sign_in'&&method==='POST'&&u.pathname==='/login');
 }
-export async function browserProxy(origin:string,mode:BrowserMode='automation',accessAllowed=()=>true){
+export async function browserProxy(origin:string,mode:BrowserMode='automation',accessAllowed=()=>true,observe=(_url:string,_method:string)=>{},diagnostic:Diagnostic=()=>{}){
   const server=createServer((req,res)=>{
     let u:URL;try{u=new URL(req.url??'');}catch{res.writeHead(403);res.end();return;}
+    observe(u.href,req.method??'');
+    const add=u.origin===origin&&u.pathname==='/add'&&req.method==='POST';if(add)diagnostic('proxy_add');
     if(!accessAllowed()||!allowedBrowserRequest(origin,u.href,req.method??'',mode)){res.writeHead(403);res.end('Blocked outside fictional storefront.');return;}
-    const outgoing=httpRequest(u,{method:req.method,headers:{...req.headers,host:u.host}},r=>{if(r.headers.location){const target=new URL(r.headers.location,u);if(!allowedBrowserRequest(origin,target.href,'GET',mode)){r.resume();res.writeHead(403);res.end();return;}}res.writeHead(r.statusCode??502,r.headers);r.on('aborted',()=>res.destroy());r.on('error',()=>res.destroy());r.pipe(res);});
-    outgoing.on('error',()=>{res.destroy();});req.pipe(outgoing);
+    const outgoing=httpRequest(u,{method:req.method,headers:{...req.headers,host:u.host}},r=>{if(add)diagnostic('proxy_response',{status:r.statusCode??502});if(r.headers.location){const target=new URL(r.headers.location,u);if(!allowedBrowserRequest(origin,target.href,'GET',mode)){r.resume();res.writeHead(403);res.end();return;}}res.writeHead(r.statusCode??502,r.headers);r.on('end',()=>{if(add)diagnostic('proxy_end');});r.on('aborted',()=>{if(add)diagnostic('proxy_aborted');res.destroy();});r.on('error',()=>res.destroy());r.pipe(res);});
+    outgoing.on('finish',()=>{if(add)diagnostic('proxy_forward');});outgoing.on('error',()=>{if(add)diagnostic('proxy_error');res.destroy();});req.pipe(outgoing);
   });
-  server.on('connect',(_req,socket)=>{socket.on('error',()=>socket.destroy());socket.end('HTTP/1.1 403 Forbidden\r\n\r\n');});
+  server.on('connect',(req,socket)=>{try{observe('https://'+req.url,'CONNECT');}catch{observe('https://invalid.example','CONNECT');}
+    socket.on('error',()=>socket.destroy());socket.end('HTTP/1.1 403 Forbidden\r\n\r\n');});
   await new Promise<void>((ok,fail)=>{server.once('error',fail);server.listen(0,'127.0.0.1',ok);});
   const address=server.address();if(!address||typeof address==='string')throw Error('Proxy failed.');
   return {server,url:`http://127.0.0.1:${address.port}`};
 }
-export async function openLocalCartBrowser(origin:string,profilePath:string,headless=true,mode:BrowserMode='automation',accessAllowed=()=>true){
+export async function openLocalCartBrowser(origin:string,profilePath:string,headless=true,mode:BrowserMode='automation',accessAllowed=()=>true,diagnostic:Diagnostic=()=>{}){
  const u=new URL(origin);if(u.protocol!=='http:'||u.hostname!=='127.0.0.1'||u.origin!==origin)throw Error('Loopback storefront required.');
  mkdirSync(profilePath,{recursive:true,mode:0o700});if(process.platform!=='win32')chmodSync(profilePath,0o700);
- const proxy=await browserProxy(origin,mode,accessAllowed);let launched:StagehandBrowser|undefined;
+ const network={externalRequests:0,blockedBackgroundRequests:0,checkoutSubmissions:0,blockedTelemetry:0};
+ const observe=(url:string,method:string,pageRequest=false)=>{const u=new URL(url);
+   // Page requests are intercepted before the proxy. Chromium's own startup
+   // traffic can bypass page interception, but cannot pass the proxy allowlist.
+   if(u.origin!==origin){if(pageRequest)network.externalRequests++;else network.blockedBackgroundRequests++;}
+   if(u.pathname==='/checkout'&&method==='POST')network.checkoutSubmissions++;
+   if(u.origin===origin&&u.pathname==='/v1/traces')network.blockedTelemetry++;};
+ const proxy=await browserProxy(origin,mode,accessAllowed,observe,diagnostic);let launched:StagehandBrowser|undefined;
  try{
+      diagnostic('launch');
       const cdpPort=await new Promise<number>((ok,fail)=>{const probe=createPortProbe();probe.once('error',fail);probe.listen(0,'127.0.0.1',()=>{const a=probe.address();if(!a||typeof a==='string')return fail(Error('No browser control port.'));probe.close(()=>ok(a.port));});});
       const browser=await localBrowser.launch({headless:headless,executablePath:cachedChrome(),userDataDir:profilePath,preserveUserDataDir:true,
-        port:cdpPort,proxy:{server:proxy.url,bypass:`<-loopback>;127.0.0.1:${cdpPort}`},args:['--disable-background-networking','--disable-component-update','--disable-quic']});
+        // Chromium replaces duplicate disable-features flags. Preserve the
+        // pinned SDK's defaults while also suppressing its background time query.
+        port:cdpPort,proxy:{server:proxy.url,bypass:`<-loopback>;127.0.0.1:${cdpPort}`},args:['--disable-background-networking','--disable-component-update','--disable-quic',
+          '--disable-features=Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,CalculateNativeWinOcclusion,InterestFeedContentSuggestions,CertificateTransparencyComponentUpdater,AutofillServerCommunication,PrivacySandboxSettings4,RenderDocument,NetworkTimeServiceQuerying,AimEnabled']});
       launched=browser;
       // Keep deterministic form operations in Playwright; Stagehand owns the local browser lifecycle.
       const driver=await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`),context=driver.contexts()[0];
-      await context.route('**/*',route=>{const u=new URL(route.request().url());return accessAllowed()&&allowedBrowserRequest(origin,u.href,route.request().method(),mode)?route.continue():route.abort('blockedbyclient');});
+      diagnostic('connected');driver.on('disconnected',()=>diagnostic('disconnected'));
+      await context.route('**/*',route=>{const u=new URL(route.request().url());observe(u.href,route.request().method(),true);return accessAllowed()&&allowedBrowserRequest(origin,u.href,route.request().method(),mode)?route.continue():route.abort('blockedbyclient');});
       const page=context.pages()[0]??await context.newPage();page.setDefaultTimeout(10000);
-  return {browser,driver,page,proxy:proxy.server};
+      page.on('close',()=>diagnostic('page_closed'));
+      page.on('crash',()=>diagnostic('page_crashed'));
+      const isAdd=(r:{url():string;method():string})=>r.url()===origin+'/add'&&r.method()==='POST';
+      page.on('request',r=>{if(isAdd(r))diagnostic('add_request');});page.on('response',r=>{if(isAdd(r.request()))diagnostic('add_response',{status:r.status()});});
+      page.on('requestfinished',r=>{if(isAdd(r))diagnostic('add_finished');});page.on('requestfailed',r=>{if(isAdd(r))diagnostic('add_failed');});
+  return {browser,driver,page,proxy:proxy.server,network,diagnostic};
  }catch(e){await launched?.close().catch(()=>{});proxy.server.close();throw e;}
 }
 export async function readCart(page:Page,origin:string):Promise<CartEntry[]>{
@@ -63,5 +84,5 @@ export function exactProduct(products:Product[],line:CartLine){
  const p=matches[0];if(p.unitLabel!==line.unitLabel||p.unitMinor!==line.unitMinor||!p.available)throw Error('CHANGED_PRODUCT');return p.index;
 }
 export async function closeLocalCartBrowser(s:Awaited<ReturnType<typeof openLocalCartBrowser>>,strict=false){
- try{await s.browser.close();}catch(e){if(strict)throw e;}finally{await s.driver.close().catch(()=>{});s.proxy.closeAllConnections();s.proxy.close();}
+ s.diagnostic('closing');try{await s.browser.close();}catch(e){if(strict)throw e;}finally{await s.driver.close().catch(()=>{});s.proxy.closeAllConnections();s.proxy.close();s.diagnostic('closed');}
 }

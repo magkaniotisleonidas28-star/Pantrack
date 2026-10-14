@@ -2,16 +2,17 @@ import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {chromium} from 'playwright-core';
 import {createServer} from 'node:http';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
 import {mkdirSync} from 'node:fs';
-import {execFileSync} from 'node:child_process';
+import {resolve} from 'node:path';
 import {seedLocalBrowserJob} from './po-cart-worker/local-browser-fixture.mjs';
 import {launchBrowserWorker,launchHumanBrowser} from './po-cart-worker/manager-supervisor.mjs';
 import {fixtureCredential} from './po-cart-worker/credentials.mjs';
-import {readPrivate,writePrivate} from './po-cart-worker/private-files.mjs';
+import {readPrivate,writePrivate,profileLock} from './po-cart-worker/private-files.mjs';
+import {captureOwnedBrowser,stopOwnedBrowser} from './po-cart-worker/owned-browser-process.mjs';
 await build({entryPoints:['scripts/po-cart-worker/human-browser.ts'],bundle:true,platform:'node',format:'esm',packages:'external',outfile:'.sites-runtime/po-cart-workers/modules/human-acceptance.mjs',logLevel:'silent'});
 const {HumanBrowserWorker}=await import('../.sites-runtime/po-cart-workers/modules/human-acceptance.mjs');
-const ui=await chromium.launch({headless:true}),evidence='.sites-runtime/po-cart-workers/human-acceptance';mkdirSync(evidence,{recursive:true,mode:0o700});
+const ui=await chromium.launch({headless:true}),evidence='.sites-runtime/po-cart-workers/human-acceptance-'+randomUUID();mkdirSync(evidence,{recursive:true,mode:0o700});
 const sleep=ms=>new Promise(ok=>setTimeout(ok,ms));
 async function until(fn,label,timeout=20000){const end=Date.now()+timeout;while(Date.now()<end){const r=await fn();if(r)return r;await sleep(100);}throw Error('Timed out: '+label);}
 try{for(const [index,[layout,scenario,check]] of [['rows','login_expired','sign_in'],['compact','login_expired','baseline'],['rows','malicious','mismatch'],['compact','normal','native_close'],['rows','lost_response','uncertain'],['compact','normal','expiry'],['rows','normal','cancel'],['compact','normal','revoke'],['rows','normal','process'],['compact','normal','crash']].entries()){
@@ -31,14 +32,16 @@ try{for(const [index,[layout,scenario,check]] of [['rows','login_expired','sign_
   await action(scenario==='login_expired'?'Open practice sign-in':'Inspect practice cart');
   v=await view();assert.equal(v.job.session.state,'requested');assert.equal(v.job.eligibility.resume,false);
   if(['process','crash'].includes(check)){
-   const child=launchHumanBrowser(f,{headless:true});let ownedChrome;
+   const child=launchHumanBrowser(f,{headless:true});let ownedChrome,ownedBrowser;
    try{
     await until(async()=>(await view()).job.session.state==='open','separate human process');
-    const row=execFileSync('ps',['-Ao','pid,ppid,command'],{encoding:'utf8'}).split('\n').map(r=>r.match(/^\s*(\d+)\s+(\d+)\s+(.*)$/)).find(m=>m&&Number(m[2])===child.process.pid&&m[3].includes('--user-data-dir=')&&!m[3].includes('Helper'));
-    ownedChrome=row?Number(row[1]):undefined;
+    const scope=readPrivate(f.fixtureFile).jobs[f.jobId].scope,key=createHash('sha256').update(JSON.stringify(['http://127.0.0.1:5182',scope.companyId,scope.supplierId,scope.accountId])).digest('hex');
+    const profile=resolve('.sites-runtime/po-cart-workers/browser-profiles',key);
+    ownedBrowser=captureOwnedBrowser(child.process.pid,profile);ownedChrome=ownedBrowser.pid;
     if(check==='crash'){
      assert.ok(ownedChrome,'owned practice browser identified');child.process.kill('SIGKILL');await child.done;
      process.kill(ownedChrome,0);
+     assert.throws(()=>profileLock(profile),/still open/,'Live orphan blocks profile reuse before cleanup');
      const recovery=launchHumanBrowser(f,{headless:true});assert.equal(await recovery.done,0);process.kill(ownedChrome,0);
      assert.equal((await view()).job.session.state,'failed');assert.equal((await view()).job.state,'review_needed');
      // An orphan remains private and unresolved until the human closes it; recovery never adopts it.
@@ -50,7 +53,7 @@ try{for(const [index,[layout,scenario,check]] of [['rows','login_expired','sign_
     }else{await action('Close practice browser');assert.equal(await child.done,0);assert.equal((await view()).job.session.state,'closed');assert.equal((await view()).job.state,'ready');}
     assert.equal(f.readSession().entries.length,4);assert.deepEqual(await f.request('/api/inventory?companyId='+f.companyId),f.inventory);
     console.log(`PASS supervised ${layout}/${check}: separate process ownership, no repeated browser launch or cart additions`);
-   }finally{if(child.process.exitCode===null&&child.process.signalCode===null){child.process.kill('SIGTERM');await child.done;}if(ownedChrome)try{process.kill(ownedChrome,'SIGTERM');}catch{}}
+   }finally{if(child.process.exitCode===null&&child.process.signalCode===null){child.process.kill('SIGTERM');await child.done;}if(ownedBrowser)await stopOwnedBrowser(ownedBrowser);}
    continue;
   }
   let humanOrigin=f.origin;const workerDrops=new Set();

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
-import {spawn} from 'node:child_process';
+import {spawn,spawnSync} from 'node:child_process';
+import {randomUUID} from 'node:crypto';
+import {existsSync} from 'node:fs';
 import {chromium} from 'playwright-core';
 import {readPrivate} from './po-cart-worker/private-files.mjs';
-const root='.sites-runtime/po-cart-workers/manager-demo';
+const root='.sites-runtime/po-cart-workers/manager-launcher-'+randomUUID();
 async function start(){
- const p=spawn(process.execPath,['scripts/po-cart-manager-preview.mjs'],{stdio:['ignore','pipe','pipe']});let output='';
+ const p=spawn(process.execPath,['scripts/po-cart-manager-preview.mjs'],{stdio:['ignore','pipe','pipe'],env:{...process.env,PANTRACK_CART_MANAGER_ROOT:root}});let output='';
  const exited=new Promise(ok=>p.once('exit',code=>ok(code)));
  const ready=new Promise((ok,fail)=>{p.once('error',fail);p.stdout.on('data',b=>{output+=b;if(output.includes('Durable cart demo:'))ok();});p.stderr.on('data',b=>output+=b);p.once('exit',()=>fail(Error('Local launcher exited before ready.')));});
  let timer;try{await Promise.race([ready,new Promise((_,fail)=>{timer=setTimeout(()=>fail(Error('Local launcher did not become ready.')),60000);})]);}catch(e){p.kill('SIGTERM');throw e;}finally{clearTimeout(timer);}
@@ -33,4 +35,13 @@ try{
  await open();assert.equal((await view()).job.id,status.job.id);assert.deepEqual(readPrivate('.sites-runtime/po-cart-workers/local-storefront.json').fixtures[status.job.id],session);assert.deepEqual(readPrivate(root+'/manager-journal-0.json').calls,journal.calls);
  for(const secret of [session.token,credential.secret,rotated.secret])assert.ok(!launcher.output().includes(secret));
  console.log('PASS: one-command manager demo runs separate automation and visible inspection browser workers; graceful shutdown/restart preserves company, order, exact cart, token, journal and worker identity without another addition.');
-}finally{await browser?.close();await launcher?.stop();}
+}finally{
+ await browser?.close();
+ try{if(existsSync(root+'/manifest.json')){
+  const manifest=readPrivate(root+'/manifest.json');
+  for(const file of manifest.credentialFiles){
+   const result=spawnSync(process.execPath,['scripts/po-cart-worker-credential.mjs','revoke',file],{stdio:'pipe'});assert.equal(result.status,0,'Fixture credential revocation failed');
+   if(launcher){const r=await fetch(manifest.origin+'/api/internal/po-cart-worker',{headers:{authorization:'Bearer '+readPrivate(file).secret}});await r.body?.cancel();assert.equal(r.status,401);}
+  }
+ }}finally{await launcher?.stop();}
+}

@@ -4,6 +4,7 @@ import {mkdtempSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {randomUUID} from 'node:crypto';
+import {AiBudgetLedger} from '../scripts/cart-preview/ai-budget.mjs';
 await build({stdin:{contents:"export * from './scripts/cart-preview/store';export * from './scripts/cart-preview/model';export * from './src/lib/cart-preview-contract';export * from './scripts/cart-preview/browser';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',packages:'external',outfile:'.sites-runtime/cart-test.mjs'});
 const {CartStore,cartLines,verifyCart,inferProduct,browserProxy}=await import('../.sites-runtime/cart-test.mjs');
 const root=mkdtempSync(join(tmpdir(),'pantrack-cart-'));
@@ -32,13 +33,13 @@ try{
   restarted.update(recovered,'canceled','canceled');restarted.state.fixtures[job.session].entries.push(entry);restarted.save();
   assert.equal(restarted.current(recovered,{...order,revision:3}),false);assert.equal(recovered.state,'canceled','Status checks must not resurrect canceled jobs');
   const next=restarted.create({...input,operationId:randomUUID()},'manager',order);assert.equal(restarted.state.fixtures[next.session].entries.length,2,'Cancel must preserve account cart');
-  restarted.reserve(4_999_999);assert.throws(()=>restarted.reserve(2),/budget/);assert.equal(new CartStore(root).state.reservedMicros,4_999_999);
-  const modelStore=new CartStore(join(root,'model'));Object.assign(process.env,{OPENAI_API_KEY:'fictional-test-only',PANTRACK_CART_AI_MODEL:'fixture-model',PANTRACK_CART_INPUT_USD_PER_MILLION:'1',PANTRACK_CART_OUTPUT_USD_PER_MILLION:'2'});
-  let calls=0;const transport=async(url,options)=>{calls++;assert.equal(url,'https://api.openai.com/v1/responses');assert.ok(modelStore.state.reservedMicros>0,'Reserve before inference');assert.equal(JSON.parse(options.body).store,false);return Response.json({status:'completed',output:[{content:[{type:'output_text',text:'{"index":0}'}]}]});};
-  assert.equal(await inferProduct(modelStore,[],job.input[0],transport),0);assert.equal(calls,1);
-  const spent=modelStore.state.reservedMicros;await assert.rejects(inferProduct(modelStore,[],job.input[0],async()=>{throw Error('lost model response');}));assert.ok(modelStore.state.reservedMicros>spent);
-  modelStore.state.reservedMicros=5_000_000;modelStore.save();await assert.rejects(inferProduct(modelStore,[],job.input[0],transport),/budget/);assert.equal(calls,1);
-  delete process.env.OPENAI_API_KEY;await assert.rejects(inferProduct(modelStore,[],job.input[0],transport),/pending/);assert.equal(calls,1);
+  const modelStore=new CartStore(join(root,'model')),ledger=new AiBudgetLedger(join(root,'budget.json'),join(root,'absent.json'));
+  Object.assign(process.env,{OPENAI_API_KEY:'fictional-test-only',PANTRACK_CART_AI_MODEL:'gpt-5.4-mini-2026-03-17',PANTRACK_CART_INPUT_USD_PER_MILLION:'0.75',PANTRACK_CART_OUTPUT_USD_PER_MILLION:'4.50'});
+  let calls=0;const transport=async(url,options)=>{calls++;assert.equal(url,'https://api.openai.com/v1/responses');assert.ok((await ledger.snapshot()).reservedMicros>0,'Reserve before inference');assert.equal(JSON.parse(options.body).store,false);return Response.json({status:'completed',usage:{input_tokens:100,output_tokens:10},output:[{content:[{type:'output_text',text:'{"index":0}'}]}]});};
+  assert.equal(await inferProduct(modelStore,[],job.input[0],transport,ledger),0);assert.equal(calls,1);
+  const spent=(await ledger.snapshot()).reservedMicros;await assert.rejects(inferProduct(modelStore,[],job.input[0],async()=>{throw Error('lost model response');},ledger));assert.ok((await ledger.snapshot()).reservedMicros>spent);
+  await ledger.reserve(5_000_000-(await ledger.snapshot()).reservedMicros);await assert.rejects(inferProduct(modelStore,[],job.input[0],transport,ledger),/budget/);assert.equal(calls,1);
+  delete process.env.OPENAI_API_KEY;await assert.rejects(inferProduct(modelStore,[],job.input[0],transport,ledger),/pending/);assert.equal(calls,1);
   const proxy=await browserProxy('http://127.0.0.1:59999');
   try{const {request}=await import('node:http');const denied=await new Promise((ok,fail)=>{const r=request(proxy.url,{path:'https://example.com/checkout'},res=>{res.resume();ok(res.statusCode);});r.on('error',fail);r.end();});assert.equal(denied,403);}finally{await new Promise(ok=>proxy.server.close(ok));}
   console.log('PASS: cart exactness, company/actor/revision binding, receipts, serialization, restart reconciliation, cart preservation, network denial and cumulative pre-call AI budget.');

@@ -4,10 +4,10 @@ import {existsSync,mkdirSync,writeFileSync,unlinkSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {createServer} from 'node:net';
 import {seedLocalBrowserJob} from './po-cart-worker/local-browser-fixture.mjs';
-import {fixtureCredential} from './po-cart-worker/credentials.mjs';
+import {fixtureCredential,privateCredentialPath} from './po-cart-worker/credentials.mjs';
 import {readPrivate,journalLock} from './po-cart-worker/private-files.mjs';
 import {browserCandidate,fixtureProvisioner,launchBrowserWorker,humanBrowserCandidate,launchHumanBrowser} from './po-cart-worker/manager-supervisor.mjs';
-const root='.sites-runtime/po-cart-workers/manager-demo';mkdirSync(root,{recursive:true,mode:0o700});
+const root=process.env.PANTRACK_CART_MANAGER_ROOT??'.sites-runtime/po-cart-workers/manager-demo';privateCredentialPath(root);mkdirSync(root,{recursive:true,mode:0o700});
 const release=journalLock(root+'/supervisor');let stopping=false,app,worker,appDone;
 for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{stopping=true;worker?.process.kill('SIGTERM');});
 async function execute(sql){

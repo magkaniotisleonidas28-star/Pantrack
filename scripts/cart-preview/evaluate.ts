@@ -4,9 +4,10 @@ import {CartStore} from './store';
 import {CartBrowser} from './browser';
 import {catalog,startFixture} from './fixture';
 import {modelConfig} from './model';
+import {AiBudgetLedger} from './ai-budget.mjs';
 import type {PurchaseOrderView} from '../../src/lib/purchase-order-contract';
 
-modelConfig();
+const config=modelConfig(),ledger=new AiBudgetLedger();
 const root='.sites-runtime/cart-ai-evaluation';mkdirSync(root,{recursive:true,mode:0o700});
 // A persistent lock refuses concurrent evaluators. An interrupted run requires inspection before removing it.
 const lock=root+'/evaluation.lock',fd=openSync(lock,'wx',0o600);writeFileSync(fd,String(process.pid));closeSync(fd);
@@ -24,8 +25,9 @@ try{
     await browser.close();
   }
   const manualSeconds=Number(process.env.PANTRACK_CART_MANUAL_SECONDS)||null;
-  const report={evidence:'real-ai-fictional-storefront',results,model:process.env.PANTRACK_CART_AI_MODEL,calls:store.state.calls,
-    conservativeCumulativeUsd:store.state.reservedMicros/1e6,actualBillingUsd:null,manualSeconds,comparison:manualSeconds?'Compare successful elapsedMs with the recorded manual walkthrough.':'Manual timing comparison pending.',supplierCompatibility:'unverified'};
+  const budget=await ledger.snapshot();
+  const report={evidence:'real-ai-fictional-storefront',results,model:config.model,calls:budget.reservations.length+budget.legacyCalls,
+    conservativeCumulativeUsd:budget.reservedMicros/1e6,actualBillingUsd:null,manualSeconds,comparison:manualSeconds?'Compare successful elapsedMs with the recorded manual walkthrough.':'Manual timing comparison pending.',supplierCompatibility:'unverified'};
   writeFileSync(root+'/report.json',JSON.stringify(report,null,2),{mode:0o600});console.log(JSON.stringify(report,null,2));
   if(results.some(r=>!(r as {passed:boolean}).passed))process.exitCode=1;
 }finally{await browser?.close();fixture?.close();unlinkSync(lock);}

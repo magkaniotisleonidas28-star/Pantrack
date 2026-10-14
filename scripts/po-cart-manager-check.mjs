@@ -6,8 +6,9 @@ import {fixtureProvisioner,browserCandidate,launchBrowserWorker} from './po-cart
 import {fixtureCredential} from './po-cart-worker/credentials.mjs';
 import {mkdirSync} from 'node:fs';
 import {createServer} from 'node:http';
+import {randomUUID} from 'node:crypto';
 const provision=await fixtureProvisioner(),browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH??chromium.executablePath()});
-const evidence='.sites-runtime/po-cart-workers/manager-acceptance';mkdirSync(evidence,{recursive:true,mode:0o700});
+const evidence='.sites-runtime/po-cart-workers/manager-acceptance-'+randomUUID();mkdirSync(evidence,{recursive:true,mode:0o700});
 try{
  for(const [index,[layout,scenario]] of [['rows','normal'],['compact','normal'],['rows','malicious'],['compact','malicious'],['rows','login_expired'],['compact','lost_response'],['rows','cancel'],['compact','cancel_active']].entries()){
   if(process.argv.includes('--cases')&&!process.argv[process.argv.indexOf('--cases')+1].split(',').includes(String(index)))continue;

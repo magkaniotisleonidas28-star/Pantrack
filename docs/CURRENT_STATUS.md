@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-10
+Updated: 2026-10-13
 
 This is the single plain-language progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -287,8 +287,61 @@ only never-attempted, freshly verified sign-in holds can resume. Attempted or
 uncertain carts can now be resolved through the [audited reconciliation
 slice](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md): managers accept a freshly verified
 exact cart or abandon a verified baseline-matching cart, with immutable history and
-atomic exposure release. Local migration `0033` preserves prior records. Stagehand AI
-discovery/verification against the fictional storefront is the next bounded C4 handoff.
+atomic exposure release. Local migration `0033` preserves prior records. The
+[optional Stagehand reader](C4_PO_CART_AI_LOCAL_EVIDENCE.md) now adds structured
+product discovery and independent baseline/final cart extraction to the durable
+worker, behind a dedicated evaluation command. The older and new evaluators share
+one persistent cumulative $5 budget, preserving earlier reservations. Offline
+verification and the full local pipeline pass. The real-model retry passed all six
+rows-layout cases, then stopped at compact/normal on an add-response timeout;
+40 of 72 required requests completed. The held cart and all reservations remain
+intact: $0.704956 reserved cumulatively, with an owner-reported $0.04 balance
+decrease. The previous task's paid retry is exhausted. The subsequent bounded
+offline investigation passed all 60 fresh jobs across both layouts/readers and
+0/750/1,500 ms delays, but did not reproduce or explain the interruption. Private
+diagnostics, evaluator readiness/full-matrix budget preflight and scoped crash-test
+cleanup are now implemented. The newly authorized single paid matrix initially
+remained blocked and unconsumed. The 2026-10-13 targeted follow-up also passed all 24 fresh
+jobs comparing diagnostics off/passive/form, uneven Stagehand callback timing and
+both sides of the 20-second heartbeat. No failure or causal lead emerged, so its
+12 confirmation slots were unused and investigation stopped. The full local
+pipeline passed with 80 suites; no new paid calls were made during that follow-up.
+The user subsequently replaced the causal-fix prerequisite with one instrumented
+real matrix after every fresh offline gate. Passive provider/browser diagnostics
+and the sequential frozen-source gate passed all 20 fresh checks, including the
+full local pipeline with 81 suites. The one paid invocation passed rows/normal,
+then stopped at rows/malicious on `AI_INCOMPLETE_EXTRACTION` during catalog
+metadata, before any addition in that case. All 14 provider requests completed;
+the failed cart retained its baseline. The existing allowance is consumed, with
+no paid retry. Retained cumulative reservations are now $0.921518; actual new
+billing remains unverified. Credentials were revoked and task previews stopped.
+The historical timeout remains unresolved and real-AI acceptance is incomplete.
+The subsequent offline metadata audit documents the installed callback contract
+and adds private numeric verdict categories without changing strict completion
+or readiness checks. All 16 fresh synthetic browser cases passed: four exact
+ready carts and twelve unchanged held carts, with no additional calls or additions
+on rejected-case restart. The paid model outputs were not retained, so its
+rationale cannot be reconstructed. The subsequent offline single-snapshot repair
+now replaces only the SDK's Metadata system prompt with an explicit completeness
+check against the original snapshot and extracted JSON. All 16 fresh synthetic
+cases, 50 safety cases, 12 passive served mocked cases, four passive injected
+failures and the full local pipeline passed (81 suites). Extraction instructions,
+schemas and strict completion/readiness guards are unchanged. The real budget and
+consumed allowance are unchanged. These checks prove request construction and
+conservative local handling, not model interpretation or improved real-model
+reliability. Review and a separately authorized validation plan are next; no paid
+retry is authorized.
+The Metadata repair acceptance preparation now adds optional private capture of exact
+parsed completion/progress fields, an exclusive new single-use allowance bound to
+the prior consumed allowance and frozen source/gate/pricing, and a 21-step offline
+gate including the 16-case Metadata matrix. The paid matrix requires a separate
+explicit authorization; the new real allowance has not been created. The fresh
+gate passed all 16 Metadata cases, then stopped at reliability job 25
+on a second-addition response timeout after 24 passes. The partial cart and held
+exposure remain intact; no later browser gate ran. All 82 suites and the separate
+full non-browser pipeline passed. Paid execution is blocked on the failed offline
+gate. See the [C4 evidence](C4_PO_CART_AI_LOCAL_EVIDENCE.md).
+No application migration or public API was added.
 Hosting, supplier access, checkout and purchases remain disabled; C4/M8 stay open.
 
 Current focus: **W1/W2 café-item waste local review** and
