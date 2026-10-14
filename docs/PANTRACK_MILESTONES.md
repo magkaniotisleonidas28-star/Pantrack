@@ -527,8 +527,53 @@ For every numbered item, the assigned person follows the same delivery loop:
   explicit safe zero-attempt resume and local migration `0032`. Attempted/uncertain
   [cart reconciliation](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md) now adds explicit
   exact-cart acceptance or baseline-verified abandonment, immutable inspection/decision
-  evidence and local migration `0033`. Stagehand AI discovery/verification against the
-  fictional storefront is next; C4/M8 remain open.
+  evidence and local migration `0033`. The [optional Stagehand AI reader](C4_PO_CART_AI_LOCAL_EVIDENCE.md)
+  now adds evaluation-only discovery and independent cart extraction, with a shared
+  cumulative $5 ledger and passing offline safety checks/full local pipeline. The
+  real-model retry passed six rows-layout cases, then stopped at compact/normal
+  on an add-response timeout (40/72 requests). The held cart and cumulative
+  $0.704956 reservations remain intact; the owner reports a $0.04 balance decrease.
+  The previous task's paid retry is exhausted. A subsequent bounded investigation
+  passed 60 fresh jobs across both layouts/readers and all three mocked delays,
+  but did not reproduce or explain the interruption. Private diagnostics, evaluator
+  preflight and scoped crash cleanup are implemented. No new paid calls were made;
+  the newly authorized single matrix initially remained blocked and unconsumed.
+  Its original gate required a causal fix. The 2026-10-13
+  targeted follow-up passed 24 fresh jobs across diagnostics off/passive/form,
+  uneven inference timing and heartbeat boundaries, without a failure or causal
+  lead. Investigation stopped with all 12 confirmation slots unused. The full
+  local pipeline passed with 80 suites; no paid calls followed that investigation.
+  The user subsequently replaced the causal-fix prerequisite with one instrumented
+  real matrix after every fresh offline gate. Passive provider/browser diagnostics
+  and all 20 fresh frozen-source gates passed, including the full pipeline with
+  81 suites. The one paid invocation passed rows/normal, then stopped at
+  rows/malicious on `AI_INCOMPLETE_EXTRACTION` during catalog metadata, with no
+  addition in that case. All 14 requests completed; the failed baseline is unchanged.
+  The allowance is consumed without retry; cumulative reservations are $0.921518.
+  Credentials were revoked and task previews stopped. The historical timeout
+  remains unresolved. The subsequent offline metadata contract audit adds private
+  numeric verdict diagnostics while preserving strict completion and readiness
+  checks. Sixteen fresh synthetic browser cases passed: four exact ready carts,
+  twelve baseline-preserving holds and twelve restarts without new calls/additions.
+  Paid outputs were not retained; their rationale cannot be reconstructed. The
+  subsequent offline single-snapshot repair replaces only Metadata's system prompt
+  with an explicit completeness check against the original snapshot/extracted JSON.
+  All 16 fresh synthetic cases, the uninterrupted 50-case safety suite, 12 passive
+  served mocked cases, four passive faults and the full local pipeline passed
+  (81 suites). Extraction instructions/schemas, strict guards and the real budget/
+  consumed allowance are unchanged. Mocked checks do not prove model interpretation
+  or improved real-model reliability. Review and a separately authorized validation
+  plan were next, with no paid retry; 12-case/72-request real-AI acceptance remains open.
+  Offline acceptance preparation now adds separate private exact Metadata field
+  capture, a new exclusive one-matrix/72-request allowance bound to the consumed
+  predecessor and final source/gate/pricing, and the 16-case Metadata matrix as a
+  21st frozen-source gate. The old allowance remains consumed; paid execution
+  still needs separate explicit authorization. The fresh 16-case Metadata matrix
+  passed, then reliability job 25 timed out awaiting the second-addition response
+  after 24 passes. Its partial cart and unresolved exposure are retained; no later
+  browser gate ran. The separate non-browser pipeline passed with 82 suites.
+  Paid execution stays blocked; review the retained timeout evidence next.
+  C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,

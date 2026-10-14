@@ -273,6 +273,65 @@ explicit Close/Resume for verified zero-attempt work. Attempted/uncertain carts
 now have [audited reconciliation](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md): explicit
 acceptance of a freshly verified exact cart or abandonment after a verified baseline
 match, with retained history and atomic exposure release. Local migration `0033`
-preserves earlier records. Stagehand AI discovery/verification against the fictional
-storefront is the next bounded handoff.
-Hosted feasibility can proceed separately once explicitly authorized and configured.
+preserves earlier records. The [optional Stagehand reader](C4_PO_CART_AI_LOCAL_EVIDENCE.md)
+now adds evaluation-only discovery and independent baseline/final cart extraction,
+with the older and new evaluators sharing one cumulative $5 ledger. Offline checks
+and the full local pipeline pass. The single real-model retry passed all six
+rows-layout cases, then stopped at compact/normal on an add-response timeout;
+40/72 required requests completed. Held work and the cumulative $0.704956
+reservations are preserved. The owner reports a $0.04 balance decrease; itemized
+billing reconciliation remains pending. The previous task's paid retry is exhausted.
+The subsequent bounded offline investigation passed 60 fresh jobs across both
+layouts/readers and 0/750/1,500 ms delays, without reproducing or explaining the
+interruption. Private diagnostics, readiness/full-matrix budget preflight and
+scoped crash-test cleanup are implemented. No new paid calls followed that investigation.
+The newly authorized single matrix initially remained blocked and unconsumed,
+under its original causal-fix prerequisite. The 2026-10-13
+targeted follow-up passed 24 fresh jobs comparing diagnostics off/passive/form,
+uneven inference timing and both sides of the heartbeat boundary. It produced no
+failure or causal lead; all 12 confirmation slots were unused and paid execution
+stayed blocked. The full local pipeline passed with 80 suites. The user subsequently
+replaced the causal-fix prerequisite with one instrumented real matrix after all
+fresh offline gates. Passive provider/browser diagnostics and all 20 frozen-source
+gates passed, including 81 suites and the full pipeline. The one paid invocation
+passed rows/normal, then stopped at rows/malicious on `AI_INCOMPLETE_EXTRACTION`
+during catalog metadata before any addition in that case. All 14 requests completed;
+the failed cart matches its baseline. The allowance is consumed with no retry;
+cumulative reservations are $0.921518. Credentials were revoked and task previews
+stopped. The historical timeout remains unresolved. The subsequent offline
+metadata contract audit adds private numeric verdict diagnostics and preserves
+strict completion/readiness checks. All 16 fresh synthetic browser cases passed:
+four exact ready carts and twelve baseline-preserving holds, with no further
+provider calls or additions on rejected-case restart. Paid outputs were not
+retained, so their rationale cannot be reconstructed. The subsequent offline
+single-snapshot repair replaces only Metadata's system prompt with an explicit
+completeness check against the original snapshot/extracted JSON. All 16 fresh
+synthetic cases, the uninterrupted 50-case safety suite, 12 passive served mocked
+cases, four passive faults and the full local pipeline passed (81 suites).
+Extraction instructions/schemas and strict guards remain unchanged; both real
+budget locations and the consumed allowance retain their fingerprints. These
+mocked checks prove construction and conservative local handling, not model
+interpretation or improved reliability. Review and a separately authorized
+validation plan are next; no paid retry is authorized and C4/M8 remain open.
+The acceptance preparation adds optional private capture of exact parsed
+`completed`/`progress` fields before the completion guard, in exclusive mode-0600
+files capped at 16 KiB. The evaluator requires complete capture even with ordinary
+diagnostics off. A separate single-use allowance at
+`.sites-runtime/po-cart-workers/metadata-repair-acceptance/allowance.json` binds the
+consumed predecessor fingerprint, final source, 21-step gate and immediately
+verified model/settings/pricing. It is consumed durably before fixtures or model
+requests. Creation refuses any existing file; the old allowance is never reset.
+The added gate is the 16-case Metadata matrix, alongside all previous 20 checks.
+Every served mocked Metadata file is fingerprinted. This task authorizes offline
+preparation only; a subsequent explicit authorization is required for one paid
+12-case matrix, at most 72 requests, within the unchanged cumulative $5 ceiling.
+No paid probe, retry, model substitution or replay of attempted additions is allowed.
+The fresh 16-case Metadata step passed, then the reliability gate stopped at job
+25 on a second-addition response timeout after 24 passes. The partial cart,
+account ownership and exposure remain held; no later browser step ran. All 82
+suites and the separate non-browser pipeline passed, but served capture integration
+and the complete gate remain unverified. Paid execution is blocked; review the
+retained timeout before any separately reviewed browser follow-up.
+Full local real-AI
+acceptance precedes hosted fictional feasibility, which needs separate
+authorization, configuration and budget.

@@ -5,15 +5,16 @@ import {createServer as probePort} from 'node:net';
 import {spawn} from 'node:child_process';
 import {resolve} from 'node:path';
 import {randomUUID,createHash} from 'node:crypto';
-import {mkdirSync,existsSync,rmSync} from 'node:fs';
+import {mkdirSync,existsSync} from 'node:fs';
 import {workerFixture} from '../tests/helpers/po-cart-worker.mjs';
 import {enqueue,cancel} from '../tests/helpers/po-cart-jobs.mjs';
 import {writePrivate,readPrivate,profileLock} from './po-cart-worker/private-files.mjs';
 import {tables,connectionVersion} from '../tests/helpers/po-cart-authorizations.mjs';
+import {captureOwnedBrowser,stopOwnedBrowser} from './po-cart-worker/owned-browser-process.mjs';
 await build({stdin:{contents:"export * from './scripts/po-cart-worker/fixture-store.ts';export * from './scripts/cart-preview/fixture.ts';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',packages:'external',outfile:'.sites-runtime/browser-worker-fixture.mjs'});
 const {BrowserFixtureStore,startFixture,catalog}=await import('../.sites-runtime/browser-worker-fixture.mjs');
 const root='.sites-runtime/po-cart-workers/browser-acceptance-'+randomUUID();mkdirSync(root,{recursive:true,mode:0o700});
-const store=new BrowserFixtureStore(root+'/store.json');let server,fixture,f,origin,fixtureOrigin,children=[],hook=async()=>{},caseId=0;
+const store=new BrowserFixtureStore(root+'/store.json');let server,fixture,f,origin,fixtureOrigin,children=[],ownedBrowsers=[],hook=async()=>{},caseId=0;
 const pause=ms=>new Promise(ok=>setTimeout(ok,ms));
 async function until(check){const end=Date.now()+15000;while(!check()){if(Date.now()>end)throw Error('Browser acceptance condition timed out.');await pause(10);}}
 async function start({layout='rows',scenario='normal',entries,lines=catalog.map((l,i)=>({kind:'non_stock',sku:l.sku,description:l.description,unitLabel:l.unitLabel,packs:String(i+1),estimatedUnitMinor:l.unitMinor}))}={}){
@@ -40,7 +41,10 @@ function launch(name){
  return {p,credentialFile,journalFile,done:new Promise(ok=>p.on('exit',(code,signal)=>ok({code,signal,output})))};
 }
 async function stop(){for(const p of children)if(p.exitCode===null&&p.signalCode===null)p.kill('SIGKILL');children=[];
+ for(const owned of ownedBrowsers)await stopOwnedBrowser(owned);ownedBrowsers=[];
  server.closeAllConnections();await new Promise(ok=>server.close(ok));f.sql.close();fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));hook=async()=>{};}
+function profile(j){const key=createHash('sha256').update(JSON.stringify([fixtureOrigin,j.companyId,j.supplierId,j.accountId])).digest('hex');return resolve('.sites-runtime/po-cart-workers/browser-profiles',key);}
+function capture(w,j){const owned=captureOwnedBrowser(w.p.pid,profile(j));ownedBrowsers.push(owned);return owned;}
 const effects=()=>tables(f.sql,['inventory','inventory_balances_exact','inventory_events_exact','po_cart_commitments','po_cart_reservations']);
 const status=()=>f.sql.prepare('SELECT state FROM po_cart_jobs').get().state;
 const calls=workers=>workers.flatMap(w=>readPrivate(w.journalFile).calls);
@@ -64,10 +68,11 @@ try{
  }
  // Crash before first attempt can resume; pending begin is never a reusable call grant.
  for(const phase of ['before_attempt','after_attempt','known_result']){
-  const {session,initial}=await start();let blocked=false;
+  const {j,session,initial}=await start();let blocked=false;
   hook=async({phase:p,body,res})=>{const action=phase==='before_attempt'?'claim':phase==='after_attempt'?'beginAttempt':'recordResult';
    if(p==='after'&&body?.action===action&&!blocked){blocked=true;res.destroy();await pause(500);return false;}};
-  const w=launch('crash');await until(()=>blocked);w.p.kill('SIGKILL');await w.done;hook=async()=>{};
+  const w=launch('crash');await until(()=>blocked);const owned=phase==='before_attempt'?null:capture(w,j);w.p.kill('SIGKILL');await w.done;hook=async()=>{};
+  if(owned)assert.throws(()=>profileLock(profile(j)),/still open/,'A crash orphan must block profile reuse before test cleanup');
   const resumed=launch('crash');await resumed.done;
   assert.equal(status(),phase==='before_attempt'?'ready':'review_needed');
   assert.equal(calls([resumed]).length,phase==='before_attempt'?3:phase==='after_attempt'?0:1);
@@ -125,12 +130,13 @@ try{
  }
  // A process killed after the fixture writes but before its response is known never repeats the addition.
  {
-  const {session,initial}=await start();
+  const {j,session,initial}=await start();
   fixture.prependListener('request',(req,res)=>{if(req.method==='POST'&&req.url==='/add'){const end=res.end;res.end=function(...args){const timer=setTimeout(()=>end.apply(this,args),30000);timer.unref();return this;};}});
-  const w=launch('unknown-after-add');await until(()=>session.entries.length===2);w.p.kill('SIGKILL');await w.done;
+  const w=launch('unknown-after-add');await until(()=>session.entries.length===2);capture(w,j);w.p.kill('SIGKILL');await w.done;
+  assert.throws(()=>profileLock(profile(j)),/still open/,'Issued-addition orphan must block profile reuse');
   assert.equal(readPrivate(w.journalFile).attempt.outcome,null);
   const resumed=launch('unknown-after-add');await resumed.done;assert.equal(calls([resumed]).length,1);assert.equal(session.entries.length,2);assert.equal(status(),'review_needed');
   assert.equal(f.sql.prepare('SELECT outcome FROM po_cart_results').get().outcome,'uncertain');assert.equal(effects(),initial);console.log('PASS crash after issued addition retains uncertainty');await stop();
  }
-}finally{if(server?.listening)await stop();if(fixture?.listening){fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));}rmSync(root,{recursive:true,force:true});}
+}finally{if(server?.listening)await stop();if(fixture?.listening){fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));}}
 console.log('PASS: separate real-browser workers, both layouts/all scenarios, one addition per line, durable HTTP replay, crashes, cart changes and stopped authorization.');

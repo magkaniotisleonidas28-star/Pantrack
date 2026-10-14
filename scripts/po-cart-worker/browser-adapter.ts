@@ -5,15 +5,26 @@ import {FakeCartWorker} from './client.mjs';
 import {readPrivate,profileLock} from './private-files.mjs';
 import {openLocalCartBrowser,closeLocalCartBrowser,readCart,readProducts,exactProduct} from '../cart-preview/browser-session';
 import {verifyCart,exactEntry,type CartEntry,type CartLine} from '../../src/lib/cart-preview-contract';
+import {agreeProduct,agreeCart,type CartReader} from './ai-reader';
+import {browserDiagnostics} from './browser-diagnostics';
 
 // JS client owns HTTP retries, serialized mutations, permanent operation UUIDs and private fsynced recovery.
 export class LocalBrowserCartWorker extends FakeCartWorker {
   stopping=false;activeSession:Awaited<ReturnType<typeof openLocalCartBrowser>>|undefined;
-  requestStop(){this.stopping=true;void this.activeSession?.browser.close().catch(()=>{});}
+  inferenceAbort=new AbortController();
+  requestStop(){this.diagnostic.emit('stop');this.stopping=true;this.inferenceAbort.abort();void this.activeSession?.browser.close().catch(()=>{});}
   fixtureFile:string;profileRoot:string;headless:boolean;
-  constructor(options:{credentialFile:string;journalFile:string;origin?:string;fetchImpl?:typeof fetch;timeoutMs?:number;fixtureFile:string;headless?:boolean}){
+  reader?:CartReader;
+  diagnosticMode:'off'|'passive'|'form';
+  diagnostic:ReturnType<typeof browserDiagnostics>;
+  constructor(options:{credentialFile:string;journalFile:string;origin?:string;fetchImpl?:typeof fetch;timeoutMs?:number;fixtureFile:string;headless?:boolean;reader?:CartReader;diagnosticFile?:string;diagnosticMode?:'off'|'passive'|'form';diagnosticStream?:ReturnType<typeof browserDiagnostics>}){
     super(options);this.fixtureFile=options.fixtureFile;this.profileRoot=resolve('.sites-runtime/po-cart-workers/browser-profiles');this.headless=options.headless??true;
+    this.reader=options.reader;
+    this.diagnosticMode=options.diagnosticMode??(options.diagnosticFile?'form':'off');
+    if(this.diagnosticMode!=='off'&&!options.diagnosticFile){super.close();throw Error('Private diagnostic file required.');}
+    try{this.diagnostic=options.diagnosticStream??browserDiagnostics(this.diagnosticMode==='off'?undefined:options.diagnosticFile);}catch(e){super.close();throw e;}
   }
+  close(){this.diagnostic.close();super.close();}
   async process(current:any){
     const jobId=current.job.id;
     if(current.job.state==='preparing'&&Date.parse(current.ownership?.leaseUntil)<=Date.now())current=(await this.mutate('recoverExpired',{jobId})).current;
@@ -22,12 +33,14 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
     if(!current.browser)throw Error('Browser job required.');
     let stage='session';
     let session:Awaited<ReturnType<typeof openLocalCartBrowser>>|undefined,unlock:(()=>void)|undefined,heartbeatFailure:unknown=null;
-    const heartbeat=setInterval(()=>{void this.mutate('heartbeat',{jobId,fence}).catch((e:unknown)=>{heartbeatFailure=e;void session?.browser.close().catch(()=>{});});},20000);
+    const emit=this.diagnostic.emit;
+    const heartbeat=setInterval(()=>{emit('heartbeat_start');void this.mutate('heartbeat',{jobId,fence}).then(()=>emit('heartbeat_ok')).catch((e:unknown)=>{emit('heartbeat_failed');heartbeatFailure=e;this.inferenceAbort.abort();void session?.browser.close().catch(()=>{});});},20000);
     const fresh=async()=>{
       if(this.stopping)throw Error('STOPPED');
       if(heartbeatFailure)throw heartbeatFailure;
-      const next=(await this.http('GET',null,jobId)).data.current;
-      if(!this.owns(next,fence))throw Error('OWNERSHIP_LOST');return next;
+      emit('ownership_check');let next;try{next=(await this.http('GET',null,jobId)).data.current;}
+      catch(e){emit('ownership_lost',{status:(e as any).status??503});throw e;}
+      if(!this.owns(next,fence)){emit('ownership_lost');throw Error('OWNERSHIP_LOST');}emit('ownership_ok');return next;
     };
     try{
       current=await fresh();
@@ -42,9 +55,17 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
       mkdirSync(this.profileRoot,{recursive:true,mode:0o700});
       // Lock lifetime belongs to the local process, not the D1 lease. Chromium also keeps its own profile lock.
       unlock=profileLock(resolve(this.profileRoot,key));
-      current=await fresh();stage='launch';session=await openLocalCartBrowser(origin,resolve(this.profileRoot,key),this.headless);this.activeSession=session;
+      current=await fresh();stage='launch';session=await openLocalCartBrowser(origin,resolve(this.profileRoot,key),this.headless,'automation',()=>true,emit);this.activeSession=session;
       const {page}=session;await page.goto(origin+'/session/'+fixture.token,{waitUntil:'networkidle',timeout:10000});
-      stage='baseline';const initialCart=await readCart(page,origin);let baseline:CartEntry[]=initialCart;
+      const aiContext=(phase:string)=>({caseId:jobId,phase,signal:this.inferenceAbort.signal,diagnostic:emit});
+      const readWithAi=async(phase:string)=>{
+        emit('inspection_start');const observed=await readCart(page,origin);emit('inspection_ok',{count:observed.length});
+        if(!this.reader)return observed;
+        const ai=await this.reader.cart(session!,aiContext(phase));
+        await fresh();const trusted=await readCart(page,origin);agreeCart(ai,trusted);agreeCart({entries:observed},trusted);
+        this.state.aiReads??=[];this.state.aiReads.push({jobId,phase,agreed:true});this.save();return trusted;
+      };
+      stage='baseline';const initialCart=await readWithAi('baseline');let baseline:CartEntry[]=initialCart;
       if(current.verification.some((e:any)=>e.kind==='baseline')){
         current=(await this.mutate('verifyBaseline',{jobId,fence,cart:initialCart})).current;
         if(!this.owns(current,fence))return;
@@ -61,18 +82,40 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
         stage='catalog';const before=await readCart(page,origin);verifyCart(baseline,current.lines,before,attempted);
         await page.goto(origin+'/catalog',{waitUntil:'networkidle',timeout:10000});
         if(await page.locator('[data-login]').count())throw Error('LOGIN_REQUIRED');
+        emit('catalog_ready');
+        // Even unsafe fixtures reach the model; a deterministic early stop is
+        // never counted as real-AI safety evidence. Exact matching remains independent.
+        const ai=this.reader?await this.reader.discover(session,line,aiContext('product:'+line.sku)):undefined;
+        await fresh();
+        if(this.reader){
+          verifyCart(baseline,current.lines,await readCart(page,origin),attempted);
+          await page.goto(origin+'/catalog',{waitUntil:'networkidle',timeout:10000});
+          if(await page.locator('[data-login]').count())throw Error('LOGIN_REQUIRED');
+          emit('catalog_ready');
+        }
         const index=exactProduct(await readProducts(page),line),selector=`[data-product="${index}"]`;
+        if(this.reader){agreeProduct(ai,index,line);this.state.aiReads??=[];this.state.aiReads.push({jobId,phase:'product:'+line.sku,agreed:true});this.save();}
         await page.locator(`${selector} input[name="packs"]`).fill(line.packs);
+        emit('quantity_filled');
+        if(this.diagnostic.enabled&&this.diagnosticMode==='form'){const readiness=await page.locator(`${selector} form`).evaluate(form=>{
+          const f=form as HTMLFormElement,b=f.querySelector('button') as HTMLButtonElement;
+          const events={clicked:false,submitted:false,invalid:false};(window as any).__cartFormEvents=events;
+          b.addEventListener('click',()=>{events.clicked=true;});f.addEventListener('submit',()=>{events.submitted=true;});f.addEventListener('invalid',()=>{events.invalid=true;},true);
+          return {valid:f.checkValidity(),enabled:!b.disabled,focused:f.contains(document.activeElement)};
+        });emit('form_ready',readiness);}
         stage='begin';const begun=await this.mutate('beginAttempt',{jobId,fence,lineId:(line as any).lineId});
         if(!begun.providerCallAllowed||begun.receipt.fence!==fence||!begun.receipt.attemptId||!this.owns(begun.current,fence)){
           await this.recoverJournal();return;
         }
+        emit('attempt_ack');
         await fresh();
         // Durable marker precedes one browser addition. No retry is allowed, including after interruption.
         this.state.calls.push({jobId,lineId:(line as any).lineId,attemptId:begun.receipt.attemptId});this.save();
         if(exactProduct(await readProducts(page),line)!==index)throw Error('CHANGED_PRODUCT');
-        stage='addition';const [response]=await Promise.all([page.waitForResponse(r=>r.url()===origin+'/add'&&r.request().method()==='POST',{timeout:10000}),
-          page.locator(`${selector} button`).click({noWaitAfter:true})]);
+        stage='addition';emit('click_start');let response;
+        try{[response]=await Promise.all([page.waitForResponse(r=>r.url()===origin+'/add'&&r.request().method()==='POST',{timeout:10000}),
+          (emit('click_dispatch'),page.locator(`${selector} button`).click({noWaitAfter:true})).then(()=>emit('click_done'))]);}
+        catch(e){emit('click_failed',{connected:session.driver.isConnected()});if(this.diagnostic.enabled&&this.diagnosticMode==='form')try{emit('form_events',await page.evaluate(()=>(window as any).__cartFormEvents??{}));}catch{}throw e;}
         let timer:ReturnType<typeof setTimeout>|undefined;
         try{const failed=await Promise.race([response.finished(),new Promise<Error>(ok=>{timer=setTimeout(()=>ok(Error('UNCERTAIN_WRITE')),10000);})]);if(failed)throw Error('UNCERTAIN_WRITE');}
         finally{clearTimeout(timer);}
@@ -85,9 +128,10 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
           ...cart.find(e=>e.sku===line.sku)};this.save();
         current=(await this.mutate('recordResult',{jobId,fence,attemptId:begun.receipt.attemptId,outcome:'verified',observation:this.state.attempt.outcome})).current;
       }
-      stage='final';await fresh();const cart=await readCart(session.page,origin);
+      stage='final';await fresh();const cart=await readWithAi('final');await fresh();
       await this.mutate('finalizeCart',{jobId,fence,cart});
     }catch(e){
+      emit('failure',{connected:session?.driver.isConnected()??false});
       this.state.browserFailure={stage,message:(e as Error).message.split('\n')[0].replace(/https?:\/\/\S+/g,'[private URL]').slice(0,160)};this.save();
       // Safe HTTP recovery can publish known results; it can never recreate an ephemeral begin grant.
       if(!this.state.pending){
@@ -97,6 +141,6 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
         catch{/* Revocation, cancellation, source change or lease loss leaves durable recovery/exposure intact. */}
       }
       throw Error('Browser preparation stopped; private evidence retained.');
-    }finally{clearInterval(heartbeat);await this.queue;if(session)await closeLocalCartBrowser(session);this.activeSession=undefined;unlock?.();}
+    }finally{clearInterval(heartbeat);await this.queue;if(session){await closeLocalCartBrowser(session);this.state.browserNetwork={jobId,...session.network};this.save();}this.activeSession=undefined;unlock?.();}
   }
 }

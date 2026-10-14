@@ -33,5 +33,4 @@ export class CartStore{
     const message='Draft changed or was canceled. Review the latest draft and cancel this cart job.';
     if(job.state!=='needs_review'||job.message!==message)this.update(job,'needs_review',message);return false;}return true;}
   view(job:Job):CartJobView{const {id,orderId,revision,state,mode,message,lines,startedAt,updatedAt,elapsedMs,interventions,layout,scenario}=job;return {id,orderId,revision,state,mode,message,lines,startedAt,updatedAt,elapsedMs,interventions,layout,scenario};}
-  reserve(micros:number){if(!Number.isSafeInteger(micros)||micros<=0||this.state.reservedMicros+micros>5_000_000)throw Error('The cumulative $5 AI evaluation budget cannot cover another call.');this.state.reservedMicros+=micros;this.state.calls++;this.save();}
 }

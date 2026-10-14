@@ -6,7 +6,8 @@ import {mkdirSync} from 'node:fs';
 import {seedLocalBrowserJob} from './po-cart-worker/local-browser-fixture.mjs';
 import {launchBrowserWorker,launchHumanBrowser} from './po-cart-worker/manager-supervisor.mjs';
 import {readPrivate} from './po-cart-worker/private-files.mjs';
-const browser=await chromium.launch({headless:true}),evidence='.sites-runtime/po-cart-workers/reconciliation-acceptance';mkdirSync(evidence,{recursive:true,mode:0o700});
+import {fixtureCredential} from './po-cart-worker/credentials.mjs';
+const browser=await chromium.launch({headless:true}),evidence='.sites-runtime/po-cart-workers/reconciliation-acceptance-'+randomUUID();mkdirSync(evidence,{recursive:true,mode:0o700});
 const sleep=ms=>new Promise(ok=>setTimeout(ok,ms));
 async function until(fn,label,ms=30000){const end=Date.now()+ms;while(Date.now()<end){const r=await fn();if(r)return r;await sleep(150);}throw Error('Timed out: '+label);}
 const cases=[['rows','accept'],['compact','accept'],['rows','abandon'],['compact','cancel_abandon'],['rows','partial'],['compact','source_abandon']];
@@ -46,5 +47,5 @@ try{for(const [index,[layout,kind]] of cases.entries()){
   }
   assert.equal(JSON.stringify(f.readSession().entries),entries);assert.deepEqual(await f.request('/api/inventory?companyId='+f.companyId),f.inventory);assert.deepEqual(errors,[]);
   console.log(`PASS served reconciliation ${index}: ${layout} ${kind}; immutable cart/stock, explicit decision and retained/released exposure.`);
- }finally{if(human){human.process.kill('SIGTERM');await human.done;}if(proxy)await new Promise(ok=>proxy.close(ok));await context.close();}
+ }finally{if(human){human.process.kill('SIGTERM');await human.done;}if(proxy)await new Promise(ok=>proxy.close(ok));await context.close();for(const file of f.credentialFiles)await fixtureCredential({execute:f.execute,file,action:'revoke'});}
 }}finally{await browser.close();}
