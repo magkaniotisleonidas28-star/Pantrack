@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
-import {mkdtempSync,rmSync,readFileSync,statSync,closeSync,writeFileSync} from 'node:fs';
-import {spawn} from 'node:child_process';
+import {mkdtempSync,mkdirSync,rmSync,readFileSync,statSync,closeSync,writeFileSync,unlinkSync} from 'node:fs';
+import {execFileSync,spawn} from 'node:child_process';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {AiBudgetLedger} from '../scripts/cart-preview/ai-budget.mjs';
@@ -15,6 +15,26 @@ Object.assign(process.env,{OPENAI_API_KEY:'fictional-test-only',PANTRACK_CART_AI
 const root=mkdtempSync(join(tmpdir(),'pantrack-preflight-'));
 const ready=async url=>new Response('{}',{status:401,headers:{'content-type':url.includes(':5181/')?'application/json':'text/html'}});
 try{
+ // Exercise the source guard in an independent Git repository. Git-only
+ // listing must include tracked edits and new code, exclude private/generated
+ // files, preserve unusual filenames, and fail closed on missing source.
+ const sourceRoot=join(root,'source');mkdirSync(sourceRoot);
+ execFileSync('git',['init','--quiet'],{cwd:sourceRoot,stdio:'pipe'});
+ assert.throws(()=>sourceSnapshot(sourceRoot),/No source files/);
+ for(const dir of ['src','.config','docs','.sites-runtime','node_modules','dist','.wrangler','.next'])mkdirSync(join(sourceRoot,dir));
+ writeFileSync(join(sourceRoot,'.gitignore'),'ignored.secret\n');
+ const tracked=join(sourceRoot,'src','tracked file.ts'),untracked=join(sourceRoot,'.config','caf\u00e9.ts');
+ writeFileSync(tracked,'original source');writeFileSync(untracked,'new hidden source');
+ execFileSync('git',['add','--','.gitignore','src/tracked file.ts'],{cwd:sourceRoot,stdio:'pipe'});
+ const baseline=sourceSnapshot(sourceRoot);assert.equal(baseline.files,3);
+ for(const file of ['ignored.secret','README.md','cache.tsbuildinfo','docs/note.ts','.sites-runtime/private.json','node_modules/code.js','dist/code.js','.wrangler/state.js','.next/code.js'])writeFileSync(join(sourceRoot,file),'excluded fixture');
+ assert.deepEqual(sourceSnapshot(sourceRoot),baseline);
+ writeFileSync(tracked,'changed source');assert.notEqual(sourceSnapshot(sourceRoot).sha256,baseline.sha256);
+ writeFileSync(tracked,'original source');writeFileSync(untracked,'changed new source');assert.notEqual(sourceSnapshot(sourceRoot).sha256,baseline.sha256);
+ writeFileSync(untracked,'new hidden source');writeFileSync(join(sourceRoot,'src','new.ts'),'new source');
+ assert.equal(sourceSnapshot(sourceRoot).files,4);assert.notEqual(sourceSnapshot(sourceRoot).sha256,baseline.sha256);
+ unlinkSync(join(sourceRoot,'src','new.ts'));assert.deepEqual(sourceSnapshot(sourceRoot),baseline);
+ unlinkSync(tracked);assert.throws(()=>sourceSnapshot(sourceRoot),/ENOENT/);
  for(const reason of ['application_unavailable','storefront_unavailable','matrix_budget_unavailable','diagnostic_setup_unavailable','metadata_setup_unavailable','paid_allowance_unavailable']){
   const ledger=new AiBudgetLedger(join(root,reason+'.json'),join(root,'absent.json'));let fixtures=0,providerRequests=0;
   if(reason==='matrix_budget_unavailable')await ledger.reserve(5_000_000-matrixReservationMicros+1);

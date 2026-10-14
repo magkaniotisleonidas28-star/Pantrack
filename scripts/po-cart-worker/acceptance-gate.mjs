@@ -1,6 +1,7 @@
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+import {resolve} from 'node:path';
 import {readPrivate} from './private-files.mjs';
 
 export const gatePolicy='metadata-repair-real-matrix-v1';
@@ -14,9 +15,13 @@ export const gateSteps=[
  ...['typecheck','test','db:check','build','db:migrate:local','test:local'].map(name=>[name,[name]]),
  ...['cart:browser-worker:check','cart:browser-worker:check:http','cart:check','cart:manager:check','cart:browser-session:check','cart:reconciliation:check','cart:manager:check:launcher'].map(name=>[name,[name]])
 ];
-export function sourceSnapshot(){
- const files=execFileSync('rg',['--files','--hidden','-g','!.git','-g','!.sites-runtime','-g','!node_modules','-g','!docs/**','-g','!*.md','-g','!dist/**','-g','!.wrangler/**','-g','!.next/**','-g','!*.tsbuildinfo'],{encoding:'utf8'}).trim().split('\n').sort();
- const hash=createHash('sha256');for(const file of files)hash.update(file).update('\0').update(readFileSync(file));
+export function sourceSnapshot(root=process.cwd()){
+ // Git is already required by the frozen-source gate and CI. NUL delimiters
+ // preserve spaces/unicode without requiring a separately installed rg binary.
+ const listed=execFileSync('git',['ls-files','--cached','--others','--exclude-standard','-z'],{cwd:root,encoding:'utf8'});
+ const files=[...new Set(listed.split('\0').filter(file=>file&&!/^(?:\.sites-runtime|node_modules|docs|dist|\.wrangler|\.next)(?:\/|$)|(?:\.md|\.tsbuildinfo)$/.test(file)))].sort();
+ if(!files.length)throw Error('No source files found for frozen-source gate.');
+ const hash=createHash('sha256');for(const file of files)hash.update(file).update('\0').update(readFileSync(resolve(root,file)));
  return {files:files.length,sha256:hash.digest('hex')};
 }
 export const fileHash=path=>createHash('sha256').update(readFileSync(path)).digest('hex');
