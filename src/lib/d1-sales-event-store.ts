@@ -3,6 +3,7 @@ import {
   SalesIngestionError,
   canonicalSalesEvent,
   salesEventAuditFragment,
+  leaseRecoveryOptions,
   type SalesAttempt,
   type SalesAuditEntry,
   type SalesConflictReceipt,
@@ -17,7 +18,9 @@ import {
   type SalesReceipt,
   type SalesResolution,
   type SalesStatusSummary,
+  type SalesLeaseRecovery,
 } from '@/lib/sales-ingestion';
+import {INVENTORY_CONSUMPTION_CONTRACT, type InventoryConsumptionApplied} from '@/lib/inventory-consumption-contract';
 
 type EventRow = {
   company_id: string;
@@ -241,12 +244,20 @@ export class D1SalesEventStore implements SalesEventStore {
         last_reason='newer_revision',linked_event_key=?,transition_actor='worker',updated_at=?
         WHERE company_id=? AND lineage_key=(SELECT lineage_key FROM sales_event_states WHERE company_id=? AND event_key=?)
           AND revision<(SELECT revision FROM sales_event_states WHERE company_id=? AND event_key=?)
-          AND state IN ('received','held','failed')`).bind(eventKey,at,companyId,companyId,eventKey,companyId,eventKey),
+          AND state IN ('received','held','failed')
+          AND NOT EXISTS(SELECT 1 FROM sales_events e JOIN inventory_consumption_applications i
+            ON i.company_id=e.company_id AND i.idempotency_key=e.application_key
+            WHERE e.company_id=sales_event_states.company_id AND e.event_key=sales_event_states.event_key)`).bind(eventKey,at,companyId,companyId,eventKey,companyId,eventKey),
       this.db.prepare(`INSERT INTO sales_event_attempts(company_id,attempt_id,event_key,started_at,lease_expires_at)
         SELECT ?,?,?,?,? WHERE EXISTS(
           SELECT 1 FROM sales_event_states target WHERE target.company_id=? AND target.event_key=? AND target.state='received'
             AND NOT EXISTS(SELECT 1 FROM sales_event_states active WHERE active.company_id=target.company_id
               AND active.lineage_key=target.lineage_key AND active.state='processing')
+            AND NOT EXISTS(SELECT 1 FROM sales_events e JOIN inventory_consumption_applications i
+              ON i.company_id=e.company_id AND i.idempotency_key=e.application_key
+              WHERE e.company_id=target.company_id AND e.lineage_key=target.lineage_key AND e.revision<target.revision
+                AND NOT EXISTS(SELECT 1 FROM sales_event_attempt_results r
+                  WHERE r.company_id=e.company_id AND r.event_key=e.event_key AND r.outcome='applied'))
         )`).bind(companyId,attempt.attemptId,eventKey,attempt.startedAt,attempt.leaseExpiresAt,companyId,eventKey),
       this.db.prepare(`UPDATE sales_event_states SET state='processing',lease_attempt_id=?,lease_expires_at=?,
         last_reason=NULL,linked_event_key=NULL,transition_actor='worker',updated_at=?
@@ -393,10 +404,10 @@ export class D1SalesEventStore implements SalesEventStore {
       e.provider,e.external_order_id,json_extract(e.normalized_json,'$.eventType') AS event_type,
       COALESCE(c.occurred_at,e.occurred_at) AS occurred_at,e.received_at,
       CASE WHEN c.event_key IS NULL THEN json_extract(e.normalized_json,'$.timeQuality') ELSE 'confirmed' END AS time_quality,
-      e.revision,s.last_reason FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key
+      e.revision,s.last_reason,s.lease_expires_at FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key
       LEFT JOIN sales_event_occurrence_confirmations c ON c.company_id=e.company_id AND c.event_key=e.event_key
-      WHERE e.company_id=? ORDER BY e.received_at DESC,e.event_key LIMIT ?`).bind(companyId,limit).all<{event_key:string;state:SalesStatusSummary['state'];source_kind:SalesStatusSummary['sourceKind'];provider:string;external_order_id:string;event_type:SalesStatusSummary['eventType'];occurred_at:string;received_at:string;time_quality:SalesStatusSummary['timeQuality'];revision:number;last_reason:string|null}>();
-    return rows.results.map(row=>({eventKey:row.event_key,state:row.state,sourceKind:row.source_kind,provider:row.provider,externalReference:row.external_order_id,eventType:row.event_type,occurredAt:row.occurred_at,receivedAt:row.received_at,timeQuality:row.time_quality,revision:row.revision,lastReason:row.last_reason}));
+      WHERE e.company_id=? ORDER BY e.received_at DESC,e.event_key LIMIT ?`).bind(companyId,limit).all<{event_key:string;state:SalesStatusSummary['state'];source_kind:SalesStatusSummary['sourceKind'];provider:string;external_order_id:string;event_type:SalesStatusSummary['eventType'];occurred_at:string;received_at:string;time_quality:SalesStatusSummary['timeQuality'];revision:number;last_reason:string|null;lease_expires_at:string|null}>();
+    return rows.results.map(row=>({eventKey:row.event_key,state:row.state,sourceKind:row.source_kind,provider:row.provider,externalReference:row.external_order_id,eventType:row.event_type,occurredAt:row.occurred_at,receivedAt:row.received_at,timeQuality:row.time_quality,revision:row.revision,lastReason:row.last_reason,leaseExpiresAt:row.lease_expires_at}));
   }
 
   async history(companyId:string,eventKey:string,limit:number):Promise<SalesHistoryEntry[]>{
@@ -463,9 +474,64 @@ export class D1SalesEventStore implements SalesEventStore {
       JOIN sales_event_attempts a ON a.company_id=e.company_id AND a.event_key=e.event_key
       JOIN sales_event_attempt_results r ON r.company_id=a.company_id AND r.attempt_id=a.attempt_id
       LEFT JOIN sales_event_fragments f ON f.company_id=e.company_id AND f.event_key=e.event_key
-      WHERE e.company_id=? AND e.lineage_key=? AND e.revision<? AND s.state='applied' AND r.outcome='applied'
+      WHERE e.company_id=? AND e.lineage_key=? AND e.revision<? AND r.outcome='applied'
       ORDER BY e.revision DESC LIMIT 1`).bind(companyId,lineageKey,beforeRevision).first<EventRow>();
     return row ? this.record(row) : null;
+  }
+
+  async unresolvedConsumption(companyId: string, lineageKey: string, beforeRevision: number) {
+    const rows = await this.db.prepare(`SELECT e.company_id,e.event_key,e.lineage_key,e.application_key,e.source_payload_sha256,e.normalized_json,
+      e.provider,e.environment,e.merchant_id,e.external_event_id,e.external_order_id,e.revision,e.occurred_at,e.received_at,
+      f.fragment_json,f.expires_at FROM sales_events e
+      JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key
+      JOIN inventory_consumption_applications i ON i.company_id=e.company_id AND i.idempotency_key=e.application_key
+      LEFT JOIN sales_event_fragments f ON f.company_id=e.company_id AND f.event_key=e.event_key
+      WHERE e.company_id=? AND e.lineage_key=? AND e.revision<? AND s.state IN ('received','held','failed','superseded')
+        AND NOT EXISTS(SELECT 1 FROM sales_event_attempt_results r WHERE r.company_id=e.company_id AND r.event_key=e.event_key AND r.outcome='applied')
+      ORDER BY e.revision`).bind(companyId,lineageKey,beforeRevision).all<EventRow>();
+    return rows.results.map(row => this.record(row));
+  }
+
+  async reconcileApplied(companyId: string, eventKey: string, result: InventoryConsumptionApplied, at: string) {
+    assertTime(at, 'Reconciliation time');
+    const record = await this.event(companyId, eventKey);
+    if (!record || result.companyId !== companyId || result.idempotencyKey !== record.applicationKey ||
+        result.contract !== INVENTORY_CONSUMPTION_CONTRACT || result.status !== 'applied' || !result.replayed) {
+      throw new SalesIngestionError('corrupt_store', 'Reconciled inventory does not belong to this event.');
+    }
+    const attemptId = this.idFactory();
+    // Append a recovery attempt; retain the original failed result and every
+    // historical transition. The ledger check and state change share a batch.
+    const results = await this.db.batch([
+      this.db.prepare(`INSERT INTO sales_event_attempts(company_id,attempt_id,event_key,started_at,lease_expires_at)
+        SELECT ?,?,?,?,? WHERE EXISTS(
+          SELECT 1 FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key
+          JOIN inventory_consumption_applications i ON i.company_id=e.company_id AND i.idempotency_key=e.application_key
+          WHERE e.company_id=? AND e.event_key=? AND s.state IN ('received','held','failed','superseded')
+            AND json_extract(i.result_json,'$.contract')=? AND json_extract(i.result_json,'$.companyId')=?
+            AND json_extract(i.result_json,'$.idempotencyKey')=? AND json_extract(i.result_json,'$.status')='applied'
+            AND json_extract(i.result_json,'$.occurredAt')=? AND json_extract(i.result_json,'$.selectedVersions')=json(?)
+            AND json_extract(i.result_json,'$.changes')=json(?)
+            AND NOT EXISTS(SELECT 1 FROM sales_event_attempt_results r WHERE r.company_id=e.company_id AND r.event_key=e.event_key AND r.outcome='applied')
+        )`).bind(companyId,attemptId,eventKey,at,new Date(Date.parse(at)+5*60*1000).toISOString(),companyId,eventKey,
+          result.contract,companyId,result.idempotencyKey,result.occurredAt,JSON.stringify(result.selectedVersions),JSON.stringify(result.changes)),
+      this.db.prepare('SELECT changes() AS changed'),
+      this.db.prepare(`INSERT INTO sales_event_attempt_results(company_id,attempt_id,event_key,completed_at,outcome,
+        held_reasons_json,issues_json,inventory_result_json,error_code)
+        SELECT ?,?,?,?,'applied',NULL,NULL,?,NULL WHERE EXISTS(
+          SELECT 1 FROM sales_event_attempts WHERE company_id=? AND attempt_id=? AND event_key=?)`).bind(
+          companyId,attemptId,eventKey,at,JSON.stringify(result),companyId,attemptId,eventKey),
+      this.db.prepare(`UPDATE sales_event_states SET state='applied',lease_attempt_id=NULL,lease_expires_at=NULL,
+        last_reason='inventory_reconciled',linked_event_key=NULL,transition_actor='system',updated_at=?
+        WHERE company_id=? AND event_key=? AND state IN ('received','held','failed')
+          AND EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=?)`).bind(
+          at,companyId,eventKey,companyId,attemptId),
+      this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
+        SELECT ?,?,?,'inventory_reconciled','system',?,'Recovered the original committed inventory result; no stock changed.',NULL
+        WHERE EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=?)`).bind(
+          companyId,this.idFactory(),eventKey,at,companyId,attemptId),
+    ]);
+    return selectedChange(results[1]) === 1;
   }
 
   async processingInLineage(companyId: string, lineageKey: string, exceptEventKey?: string) {
@@ -474,10 +540,11 @@ export class D1SalesEventStore implements SalesEventStore {
     return Boolean(row);
   }
 
-  async recoverExpired(companyId: string, now: string) {
+  async recoverExpired(companyId: string, now: string, options:SalesLeaseRecovery={}) {
     assertTime(now, 'Recovery time');
+    const {eventKey,limit,actor,reason}=leaseRecoveryOptions(options);
     const rows = await this.db.prepare(`SELECT event_key,lease_attempt_id FROM sales_event_states
-      WHERE company_id=? AND state='processing' AND lease_expires_at<=? ORDER BY lease_expires_at,event_key`).bind(companyId,now).all<{event_key: string; lease_attempt_id: string}>();
+      WHERE company_id=? AND state='processing' AND lease_expires_at<=? ${eventKey?'AND event_key=?':''} ORDER BY lease_expires_at,event_key LIMIT ?`).bind(...(eventKey?[companyId,now,eventKey,limit]:[companyId,now,limit])).all<{event_key: string; lease_attempt_id: string}>();
     const recovered: string[] = [];
     for (const row of rows.results) {
       const results = await this.db.batch([
@@ -491,17 +558,17 @@ export class D1SalesEventStore implements SalesEventStore {
         ),
         this.db.prepare('SELECT changes() AS changed'),
         this.db.prepare(`UPDATE sales_event_states SET state='failed',lease_attempt_id=NULL,lease_expires_at=NULL,
-          last_reason='interrupted',linked_event_key=NULL,transition_actor='system',updated_at=?
+          last_reason='interrupted',linked_event_key=NULL,transition_actor=?,updated_at=?
           WHERE company_id=? AND event_key=? AND state='processing' AND lease_attempt_id=?
             AND EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=?)`).bind(
-          now,companyId,row.event_key,row.lease_attempt_id,companyId,row.lease_attempt_id,
+          actor,now,companyId,row.event_key,row.lease_attempt_id,companyId,row.lease_attempt_id,
         ),
         this.db.prepare('SELECT changes() AS changed'),
         this.db.prepare(`INSERT INTO sales_event_audits(company_id,audit_id,event_key,action,actor,at,reason,conflict_id)
-          SELECT ?,?,?,'lease_expired','system',?,'Processing lease expired; application is unknown.',NULL
-          WHERE EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=? AND error_code='interrupted')
+          SELECT ?,?,?,'lease_expired',?,?,?,NULL
+          WHERE changes()=1 AND EXISTS(SELECT 1 FROM sales_event_attempt_results WHERE company_id=? AND attempt_id=? AND error_code='interrupted')
             AND NOT EXISTS(SELECT 1 FROM sales_event_audits WHERE company_id=? AND event_key=? AND action='lease_expired' AND at=?)`).bind(
-          companyId,this.idFactory(),row.event_key,now,companyId,row.lease_attempt_id,companyId,row.event_key,now,
+          companyId,this.idFactory(),row.event_key,actor,now,reason,companyId,row.lease_attempt_id,companyId,row.event_key,now,
         ),
         this.db.prepare('SELECT changes() AS changed'),
       ]);

@@ -1,5 +1,6 @@
 import {database} from '@/db/raw';
-import {recommendation,type InventoryRecord} from '@/lib/inventory';
+import {recommendation} from '@/lib/inventory';
+import {readPlanningRecords} from '@/lib/inventory-planning-units';
 import type {Product} from '@/lib/pantry';
 import {defaultPolicy,purchasingBlockReason,type Policy,type Vendor,type Job} from './automation-types';
 import {adapter,decrypt,digest} from './vendor-adapter';
@@ -28,7 +29,7 @@ export async function submit(companyId:string,id:string){
  if(!vr)throw new Error('Vendor connection not found.');const vendor=JSON.parse(vr.data) as Vendor;
  if(!vendor.enabled||!vendor.verified)throw new Error('Enable and test the vendor connection first.');
  if(job.items.some(p=>p.sample||!policy.allowedProducts.includes(p.id)||p.supplier!==vendor.name))throw new Error('Only explicitly allowed real products may be ordered.');
- const now=Date.now(),inventory=await db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(companyId).all<{data:string}>(),records=inventory.results.map(r=>JSON.parse(r.data) as InventoryRecord);
+ const now=Date.now(),records=await readPlanningRecords(db,companyId);
  for(const item of job.items){const r=records.find(r=>r.productId===item.id);if(!r)throw new Error('Inventory missing.');if(r.settings.unit!==item.stockUnit||r.settings.unitsPerPack!==item.stockUnitsPerPack)throw new Error('Inventory units changed. Generate a new proposal.');const p=recommendation(r,now);if(p.needsCheck||p.stale||p.expired||p.packs<item.quantity)throw new Error('Inventory or replenishment need changed. Dismiss this proposal and run a fresh check.');}
  const token=await decrypt(vr.secret,companyId+':'+vendor.id);
  const raw=await adapter(vendor,token,{action:'quote',reference:job.id,currency:'USD',delivery_address:vendor.deliveryAddress,items:job.items.map(p=>({sku:p.sku,unit:p.unit,quantity:p.quantity}))});
@@ -61,8 +62,8 @@ export async function runCheck(companyId:string,force=false){
  const lease=await db.prepare('UPDATE automation_settings SET lease_until=? WHERE company_id=? AND (lease_until IS NULL OR lease_until<?)').bind(new Date(now.getTime()+300000).toISOString(),companyId,now.toISOString()).run();
  if(!lease.meta.changes)return {message:'A check is already running.',created:0};
  try{
- const [ps,rs,holds]=await Promise.all([db.prepare('SELECT data FROM products WHERE owner=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare("SELECT data FROM purchasing_jobs WHERE company_id=? AND status IN ('review','sending','unknown','accepted')").bind(companyId).all<{data:string}>()]);
- const products=ps.results.map(r=>JSON.parse(r.data) as Product),records=rs.results.map(r=>JSON.parse(r.data) as InventoryRecord),held=new Set(holds.results.flatMap(r=>(JSON.parse(r.data) as Job).items.map(p=>p.id)));
+ const [ps,records,holds]=await Promise.all([db.prepare('SELECT data FROM products WHERE owner=?').bind(companyId).all<{data:string}>(),readPlanningRecords(db,companyId),db.prepare("SELECT data FROM purchasing_jobs WHERE company_id=? AND status IN ('review','sending','unknown','accepted')").bind(companyId).all<{data:string}>()]);
+ const products=ps.results.map(r=>JSON.parse(r.data) as Product),held=new Set(holds.results.flatMap(r=>(JSON.parse(r.data) as Job).items.map(p=>p.id)));
  let created=0;
  for(const vendor of data.vendors as Vendor[]){
  if(!vendor.enabled)continue;

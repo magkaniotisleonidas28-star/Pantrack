@@ -112,6 +112,11 @@ export type InventoryConsumptionResult =
   | InventoryConsumptionHeld
   | InventoryConsumptionRejected;
 
+/** Trusted sales execution context, separate from the v1 request and its
+ * semantic fingerprint. Durable implementations fence the application insert
+ * against this attempt's current sales lease in the same database transaction. */
+export type InventoryConsumptionLease = {eventKey: string; attemptId: string};
+
 /**
  * Company authorization and provider authentication happen before this port.
  * An implementation must apply every returned change atomically or apply none.
@@ -123,5 +128,9 @@ export type InventoryConsumptionResult =
  * configuration are repaired.
  */
 export interface InventoryConsumptionPort {
-  consume(request: InventoryConsumptionRequest): Promise<InventoryConsumptionResult>;
+  consume(request: InventoryConsumptionRequest, lease?: InventoryConsumptionLease): Promise<InventoryConsumptionResult>;
+  /** Read an authoritative application under its original company/key without
+   * resolving current mappings or writing inventory. A missing result is safe
+   * to act on only after the old attempt has been durably fenced. */
+  lookupApplied?(companyId: string, idempotencyKey: string): Promise<InventoryConsumptionApplied | null>;
 }

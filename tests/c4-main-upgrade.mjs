@@ -25,9 +25,17 @@ try {
   assert.deepEqual(pending.slice(0,3).map(e=>e.tag),['0024_supplier_simulation','0025_purchase_order_drafts','0026_purchasing_supplier_registry'],
     'Preserve the original C4 integration baseline and exercise later additive migrations too');
   for(const entry of pending){
-    f.sql.exec(readFileSync(`drizzle/${entry.tag}.sql`,'utf8'));
+    const migrationSql=readFileSync(`drizzle/${entry.tag}.sql`,'utf8');
+    f.sql.exec(migrationSql);
     assert.deepEqual(snapshot(),before,`${entry.tag} rewrote existing main data`);
     for(const object of schema){
+      // BUG-02 intentionally replaces this one receipt trigger. Assert its exact
+      // journaled definition; all data and every other prior object stay fixed.
+      if(entry.tag==='0034_sales_inventory_outcome_fence'&&object.type==='trigger'&&object.name==='sales_event_state_received'){
+        const replacement=migrationSql.match(/CREATE TRIGGER `sales_event_state_received`[\s\S]*?\nEND;/)?.[0];
+        assert.ok(replacement,'The supersession repair must include its complete receipt trigger');
+        object.sql=replacement.slice(0,-1);
+      }
       assert.deepEqual(f.sql.prepare('SELECT type,name,sql FROM sqlite_master WHERE type=? AND name=?').get(object.type,object.name),object,
         `${entry.tag} changed existing main schema object ${object.name}`);
     }
@@ -37,5 +45,5 @@ try {
   for(const table of ['supplier_simulation_orders','purchase_order_drafts','purchasing_suppliers']){
     assert.equal(f.sql.prepare(`SELECT count(*) n FROM ${table}`).get().n,0,'Upgrade must not infer purchasing records');
   }
-  console.log(`PASS: ${pending.length} C4 migrations preserve all ${tables.length} existing main tables and schema objects, including fenced sessions, recovery state, stock, recipes and proposal history.`);
+  console.log(`PASS: ${pending.length} migrations preserve all ${tables.length} existing main tables and prior schema objects except the verified BUG-02 receipt-trigger replacement, including fenced sessions, recovery state, stock, recipes and proposal history.`);
 } finally {f.sql.close();}

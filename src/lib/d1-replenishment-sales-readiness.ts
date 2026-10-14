@@ -1,9 +1,10 @@
 import type {SettingsActor} from './d1-replenishment-settings';
+import {unresolvedCloverSalesSql} from './clover-sales-outcomes';
 
 export type CloverSalesReadinessReason =
   | 'sync_not_configured' | 'clover_disconnected' | 'merchant_changed'
   | 'unaccepted_environment' | 'never_synced' | 'invalid_sync_state'
-  | 'sync_disabled' | 'sync_error' | 'sync_stale' | 'held_events';
+  | 'sync_disabled' | 'sync_error' | 'sync_stale' | 'held_events' | 'unresolved_events';
 
 export type CloverSalesReadiness = Readonly<{
   companyId: string;
@@ -64,6 +65,9 @@ export class D1ReplenishmentSalesReadiness {
       .bind(companyId).first<CountRow>();
     const heldEventCount = held?.n ?? 0;
     if (!Number.isSafeInteger(heldEventCount) || heldEventCount < 0) throw new Error('Held sales count is invalid.');
+    const outcomes = await this.db.prepare(`SELECT ${unresolvedCloverSalesSql('?')} AS unresolved`)
+      .bind(companyId, companyId).first<{unresolved: number}>();
+    if (outcomes?.unresolved !== 0 && outcomes?.unresolved !== 1) throw new Error('Sales outcome state is invalid.');
     const row = await this.db.prepare(`SELECT s.environment,s.merchant_id,s.started_at,s.checkpoint,
       s.last_success,s.last_error,c.environment AS connection_environment,
       c.merchant_id AS connection_merchant_id
@@ -91,6 +95,7 @@ export class D1ReplenishmentSalesReadiness {
     }
     if (!this.syncEnabled) degraded.push('sync_disabled');
     if (heldEventCount > 0) degraded.push('held_events');
+    if (outcomes.unresolved === 1) degraded.push('unresolved_events');
     const reasons = [...unknown, ...degraded];
     return Object.freeze({
       companyId, source: 'clover_sync' as const,

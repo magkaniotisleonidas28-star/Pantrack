@@ -153,7 +153,7 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
   if (sales.source === 'clover_sync') {
     const validReasons = new Set(['sync_not_configured', 'clover_disconnected', 'merchant_changed',
       'unaccepted_environment', 'never_synced', 'invalid_sync_state', 'sync_disabled',
-      'sync_error', 'sync_stale', 'held_events']);
+      'sync_error', 'sync_stale', 'held_events', 'unresolved_events']);
     if (sales.companyId !== input.companyId || !Array.isArray(sales.reasons) ||
         !sales.reasons.every(reason => validReasons.has(reason)) ||
         (sales.merchantId !== null && (typeof sales.merchantId !== 'string' || !sales.merchantId.trim() || sales.merchantId.length > 200)) ||

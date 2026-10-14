@@ -9,6 +9,7 @@ import {CURATED_UNIT_IDS,QuantityError} from '@/lib/inventory-quantities';
 import {z} from 'zod';
 import {publishRecipe} from '@/lib/d1-recipe-publisher';
 import {recordPackageStock} from '@/lib/d1-stock-pack';
+import {readPlanningRecords} from '@/lib/inventory-planning-units';
 const amount=z.number().finite().min(0).max(10000000).multipleOf(.001);
 const settings=z.object({targetStock:amount.nullable().optional().default(null),variancePct:z.number().min(0).max(100),unit:z.string().trim().min(1).max(40),unitsPerPack:z.number().finite().positive().max(1000000),dailyUse:amount,leadDays:z.number().int().min(0).max(365),safety:amount,reviewDays:z.number().int().min(1).max(365),countEveryDays:z.number().int().min(1).max(365),location:z.string().trim().min(1).max(100),capacity:amount.nullable(),shelfDays:z.number().int().min(1).max(3650).nullable(),expiry:z.string().refine(v=>v===''||(/^\d{4}-\d{2}-\d{2}$/.test(v)&&!isNaN(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v))});
 const identity=z.string().trim().min(1).max(200);
@@ -41,8 +42,8 @@ const exactMutation=z.discriminatedUnion('action',[
 async function handleGET(req:Request){
  const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
  try{const companyId=new URL(req.url).searchParams.get('companyId');if(!(await companyAccess(u.userId,companyId)))return Response.json({error:'Company access denied.'},{status:403});
- const db=database();const enabled=exactInventoryPreviewEnabled();const [r,e,exact]=await Promise.all([db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM inventory_events WHERE company_id=? ORDER BY created DESC LIMIT 100').bind(companyId).all<{data:string}>(),enabled?new D1InventoryManagementService(db).read(companyId!):null]);
- return Response.json({records:r.results.map(x=>JSON.parse(x.data)),events:e.results.map(x=>JSON.parse(x.data)),exactEnabled:enabled,exact},{headers:{'Cache-Control':'no-store'}});
+ const db=database();const enabled=exactInventoryPreviewEnabled();const [records,e,exact]=await Promise.all([readPlanningRecords(db,companyId!),db.prepare('SELECT data FROM inventory_events WHERE company_id=? ORDER BY created DESC LIMIT 100').bind(companyId).all<{data:string}>(),enabled?new D1InventoryManagementService(db).read(companyId!):null]);
+ return Response.json({records,events:e.results.map(x=>JSON.parse(x.data)),exactEnabled:enabled,exact},{headers:{'Cache-Control':'no-store'}});
  }catch{return Response.json({error:'Could not load inventory. Please retry.'},{status:503});}
 }
 async function handlePOST(req:Request){
