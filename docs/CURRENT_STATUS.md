@@ -1,11 +1,74 @@
 # Pantrack current status
 
-Updated: 2026-10-10
+Updated: 2026-10-13
 
-This is the single plain-language progress summary for Pantrack. It separates
+This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
 No production customer data, real café sales, supplier orders, payments, or live
 POS connections have been used.
+
+For the short milestone and A/B/C checklists, use the
+[plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Verified snapshot — 2026-10-13
+
+**The development foundations are accepted; the project is not ready for a real
+café or production launch.** A1–A7, B1–B7 and C1–C2 are checked in the roadmap,
+within their recorded development or sandbox scope. A8/M7 and C4/C5/M8 remain
+open. B8/M6 remains on hold for Toast approval/testing access.
+
+| Area | Verified position | Limit or next gate |
+| --- | --- | --- |
+| Shared source | Local `main` and GitHub `main` match at `7a35004`; PR [#8](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/8) and [#9](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/9) are merged. | This documentation follow-up does not deploy their code. |
+| Current GitHub checks | [Ubuntu and Windows CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38500454965) and [Supabase Preview](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/115646057931) all report success for `7a35004`. | Preview success does not prove hosted signup/recovery, provider behavior or production readiness. The earlier Supabase preview timeout is no longer a current failing check. |
+| Six correctness/security fixes | All six are locally closed; BUG-01 was already on `main`, and PR #9 integrated BUG-02–06. The final stacked local evidence records 82 suites and the full pipeline. | These fixes do not constitute a full security review or hosted acceptance. See the [fix checklist](CORRECTNESS_SECURITY_FIX_CHECKLIST.md) and [final local integration evidence](BUG06_COUNT_RECEIPT_RACES.md). The pipeline was not rerun for this documentation update. |
+| Hosted development code | A read-only Cloudflare deployment inspection still shows release `65373b3`, deployed at `2026-10-05T02:50:23Z`; active Worker version `ed5e9c65-31b7-432f-bff9-bf4df45e9b68`. | The merged PR #8/#9 work has not reached this Worker. |
+| Hosted development database | The read-only `d1_migrations` query returned 24 entries, `0000`–`0023`, with zero rows written and `changed_db=false`. Main contains 35 migrations. | All 11 migrations `0024`–`0034` are pending here. A release must review the entire ordered range, not just `0034`. This query did not inspect or validate all business data. |
+| Runtime gates | Exact inventory preview is enabled; Clover sales sync is disabled. Supplier submission and automatic purchasing remain disabled. | Existing gate state is not approval to use real services or place orders. |
+| Cloudflare Git/build connection | The Workers Builds trigger and build APIs both returned `403` with the existing credential. | Automatic deployment configuration remains independently unverified. GitHub CI success does not prove Cloudflare Builds is configured. |
+
+The deployment and database reads above were refreshed on 2026-10-13. No remote
+migration, deployment, supplier/POS call, purchase or historical stock repair was
+performed for this update.
+
+## Current next-step checklist
+
+1. **C2: prepare the development release.** Review the complete `0024`–`0034`
+   upgrade, populated-data preservation, backup/restore and forward-repair plan;
+   confirm the Cloudflare deployment configuration. BUG-02 requires coordinated
+   runtime/migration rollout with sales ingestion and recovery paused. See its
+   [rollout limits](BUG02_SALES_OUTCOME_RECOVERY.md#compatibility-repair-and-rollback).
+   Preparation can proceed locally; applying remote migrations and deploying
+   require explicit authorization for that release.
+2. **C2/A/B: validate the released fixes with fictional hosted data.** After an
+   authorized development release, verify sign-in, inventory/history, sales
+   recovery/readiness and count/planning regressions. Record results separately
+   from the local and CI passes; do not bulk-repair old balances.
+3. **A8: finish M7 acceptance.** Capture hosted manager/browser, end-to-end and
+   concurrency/source-change evidence using the accepted B7 development inputs.
+   Keep the accepted ten-minute freshness policy and purchasing disabled.
+4. **C3/C4: finish supplier preparation and controlled feasibility in parallel.**
+   Record permitted Baldor browser use, account/location/product mappings,
+   responsible owners and budgets. The next bounded local C4 slice is Stagehand
+   discovery and independent cart verification against the fictional storefront;
+   hosted/model tests have their own configuration, budget and authorization gates.
+5. **C5: finish and accept M8 after M7 and the supplier gates.** Complete verified
+   cart/human handoff, PDF/XLSX/history, confirmation and atomic receiving; then
+   run the separately authorized supplier cart-only and manager checkout tests.
+6. **Later: operations, controls, pilot and release.** Complete C6/M9 and C7/M10,
+   resolve B8/M6 when approved Toast access arrives, then run the two reviewed
+   M11 pilot cycles before M12 production readiness. M13/M14 stay deferred.
+
+No existing acceptance checkbox is advanced by this status refresh. The detailed
+milestone table and earlier implementation records below retain their evidence
+and scope.
+
+Status-refresh verification: `pnpm test:focused replenishment-proposal
+replenishment-lifecycle-contract replenishment-lifecycle-d1` passed all three
+suites in this checkout. `git diff --check` and all 191 relative file/section
+links across the three changed documents passed; all 29 A/B/C statuses in the
+simple guide match the roadmap. Only documentation changed; no new migration or
+runtime contract was introduced. The full local pipeline was not rerun.
 
 ## What is complete
 
@@ -14,7 +77,8 @@ POS connections have been used.
 Complete and merged into `main` in commit `0a6986e`.
 
 - The repository runs locally with Node 22.23.2 and pnpm 11.25.0.
-- A local Cloudflare-compatible D1 database applies all nine existing migrations.
+- At M0 acceptance, a local Cloudflare-compatible D1 database applied the nine
+  then-existing migrations; the current source contains 35.
 - Local-only variables, database state, dependencies, and generated secrets are
   ignored by Git.
 - The home page, local sign-in fixture, company creation, company isolation, and
@@ -34,9 +98,8 @@ Complete and merged into `main` in commits `141fb31` and `703e5e4`.
   the HTTP smoke test.
 - CI correctly fails for a deliberate type error, a deliberately failing test,
   schema drift, missing migration entries, and SQL/schema mismatch.
-- The documentation-repair commit `333dbbd` passed main-branch CI on both
-  operating systems:
-  <https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567>.
+- Current `main` commit `7a35004` passes CI on both operating systems:
+  <https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38500454965>.
 - Contributor guidance and the pull-request template are in
   [CONTRIBUTING.md](../CONTRIBUTING.md) and [the PR template](../.github/pull_request_template.md).
 
@@ -51,11 +114,11 @@ are not proof of live production integration.
   register bridge with duplicate protection.
 - Target-stock calculations, supplier-pack rounding, review proposals, vendor
   connection framework, and scheduled-check endpoint.
-- Clover OAuth authorization/menu loading, a gated fake-backed local sales
-  adapter, and hosted Stripe payment-method setup.
+- Clover OAuth authorization/menu loading, a gated sales adapter with bounded
+  accepted sandbox evidence, and hosted Stripe payment-method setup.
 
-The following remain unverified against real services: live Clover sales sync,
-a second POS, a real supplier adapter, live payments,
+The following remain unverified for real-business use: production Clover sales
+sync and excluded sandbox cases, a second POS, a real supplier adapter, live payments,
 provisioned background jobs, and automatic purchases.
 
 ## M2 implementation
@@ -103,8 +166,9 @@ the [B5 evidence](M4_B5_LOCAL_EVIDENCE.md): concurrency, recovery, authorization
 privacy, compatibility, an isolated fictional gate-on served walkthrough, and
 green Ubuntu and Windows CI on the B5 branch and merged `main` commit. The B5
 walkthrough found and fixed a D1 batch-acknowledgment defect during held-event
-replay. Native Clover authentication and signatures and Clover sandbox cases
-remain unverified. Development D1 `0012` and a fictional hosted Worker
+replay. At that B5 assessment, native Clover authentication/signatures and sandbox
+cases were not verified; the later bounded [B7 acceptance](M5_B7_ACCEPTANCE_REVIEW.md)
+is recorded separately. Development D1 `0012` and a fictional hosted Worker
 walkthrough have now been verified separately in
 [C2 evidence](C2_HOSTED_DEV_EVIDENCE.md). The exact preview is now enabled
 for the [W1/W2 hosted release](C2_W2_HOSTED_RELEASE.md); Clover sync stays off.
@@ -125,8 +189,8 @@ separate from these HTTP checks. No production or integration acceptance changed
 
 On 2026-10-01, the [C2 W1/W2 release](C2_W2_HOSTED_RELEASE.md) deployed
 Waste, recipe/stock setup and package measurements through `d84078e` to
-`pantrack-dev`. Development D1 now has `0000`–`0021` applied, with a private
-backup, verified trigger-import recovery and unchanged inventory/history.
+`pantrack-dev`. Development D1 at that release had `0000`–`0021` applied, with
+a private backup, verified trigger-import recovery and unchanged inventory/history.
 Exact inventory is enabled for hosted usability review; Clover sales sync,
 supplier submission and automatic purchasing remain disabled. The complete
 local pipeline and signed-in fictional hosted form/theme checks passed.
@@ -144,7 +208,7 @@ Worker passed hosted HTTP and fictional sign-in/inventory/sale checks; see
 [C2 hosted evidence](C2_HOSTED_DEV_EVIDENCE.md). No production acceptance is
 claimed.
 
-Repository CI is green for documentation-repair commit `333dbbd`
+At the earlier documentation-repair commit `333dbbd`, repository CI was green
 ([run 35426054567](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/35426054567)). The separate
 [Cloudflare Workers build](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/105852072919)
 for that commit failed. The owner removed the misconfigured deployment and
@@ -162,15 +226,18 @@ environment until separately reviewed release evidence exists.
 
 | Service | Reported status | Still needed |
 | --- | --- | --- |
-| GitHub | Repository connected; milestone branches consolidated into `main`; earlier Ubuntu and Windows CI runs passed. | Keep `main` as the only long-lived branch. Preserve required checks on new commits. |
+| GitHub | Source synced at `7a35004`; current Ubuntu, Windows and Supabase Preview checks pass. | Keep `main` as the only long-lived branch. Preserve required checks on new commits. |
 | Supabase | The owner accepted the development-provider manual walkthrough using fictional accounts and reports completing the authentication and migration review. The [C2 closeout](C2_M2_CLOSEOUT.md) records that report and an agent inspection. Automated provider tests remain separate. | Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
-| Cloudflare | The earlier replacement build report is owner-attested. Development D1 has advanced through `0021`; the [W1/W2 release](C2_W2_HOSTED_RELEASE.md) passed the full local pipeline and hosted fictional form/theme checks with data preserved. | Exact inventory is enabled for hosted review; keep Clover sync and purchasing disabled. Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
+| Cloudflare | Read-only checks on 2026-10-13 show Worker release `65373b3` and development D1 through `0023`; see the [C2 UI release](C2_UI_RELEASE_20261004.md). Workers Builds configuration is inaccessible with the current credential. | Prepare and separately authorize the code/`0024`–`0034` release, then record hosted checks. Keep Clover sync and purchasing disabled. Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
 | Custom domain | The user reports that the domain is already in Cloudflare. No Worker route has been verified. | Decide whether to attach the domain after the development `workers.dev` validation; the current hosted evidence uses that URL. |
 
 Never send, commit, or paste Supabase keys, Cloudflare API tokens, OAuth secrets,
 supplier credentials, or payment details into chat or source control.
 
-## What you need to do next
+## Implementation history and prior handoffs
+
+The following records describe earlier slices and their then-current handoffs.
+Use the dated snapshot and current next-step checklist above for today's order.
 
 The [C4 main integration](C4_MAIN_INTEGRATION_20261007.md) now preserves the
 shipped UI and auth fixes while regenerating local-only purchasing migrations
@@ -291,7 +358,7 @@ atomic exposure release. Local migration `0033` preserves prior records. Stageha
 discovery/verification against the fictional storefront is the next bounded C4 handoff.
 Hosting, supplier access, checkout and purchases remain disabled; C4/M8 stay open.
 
-Current focus: **W1/W2 café-item waste local review** and
+Earlier parallel focus (2026-10-01): **W1/W2 café-item waste local review** and
 **C3 Baldor supplier preparation**. The
 [waste/menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md) now has a
 [working W1 local preview](W1_LOCAL_EVIDENCE.md): staff can record a quantity
@@ -468,11 +535,11 @@ behavior.
 | --- | --- | --- |
 | M2 — authentication and RBAC | C1/M2 accepted by owner and C2 evidence closed for development; replacement Cloudflare build remains owner-attested | The [C2 closeout](C2_M2_CLOSEOUT.md) records the reported review, local pipeline and read-only Worker smoke. Hosted signup/recovery callbacks and independent security verification remain release follow-ups. |
 | M3 — inventory and recipes | A5/M3 owner-accepted for development on 2026-09-23 | Local pipeline, Person B's compatibility review, and A5 fictional screen walkthrough passed. Hosted fictional exact count and consumption passed; the [W1/W2 release](C2_W2_HOSTED_RELEASE.md) now enables the exact preview for usability review. |
-| M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed; Clover remains B6/B7. |
+| M4 — POS ingestion | B5/M4 accepted for local development on 2026-09-24; later recovery fixes merged in PR #9 | [B5 evidence](M4_B5_LOCAL_EVIDENCE.md) covers local concurrency, recovery, authorization, compatibility, served behavior, and green branch/main CI. A hosted fictional sale and duplicate check passed. BUG-02/03/05 now pass locally; their hosted release/validation remain open. B7's bounded Clover acceptance is separate. |
 | M5 — Clover | B6 local adapter deployed to development; fictional sandbox merchant connected; webhook URL and Orders subscription saved; paid latte, modifier/replay, duplicate/polling, unpaid deletion, full refund, missed-sale polling recovery, natural token refresh, lost-response recovery, disconnect/reconnect, later paid revision, and controlled webhook-failure cases recorded; owner-accepted on 2026-09-29 for tested development sandbox scope | [B6 evidence](M5_B6_LOCAL_EVIDENCE.md) covers development behavior. [B7 evidence](M5_B7_SANDBOX_EVIDENCE.md) records nine paid latte deductions across sandbox cases, one held sale with zero partial use and an audited recovery replay, a simulated duplicate and owner poll, an unpaid deletion dismissed without stock use, one linked full $5 refund with zero additional stock use, two sales recovered by owner polling, one OAuth rotation and one controlled lost-response recovery, same-merchant reauthorization with history and stock retained, and one paid order revision that used only the added latte's ingredients. One authenticated webhook received a controlled `503`; owner polling recovered the sale once, while native retry was not observed in 20 minutes. Clover rejected a paid-order DELETE with HTTP 400. See the [bounded acceptance decision](M5_B7_ACCEPTANCE_REVIEW.md) for all excluded provider cases. Sync remains off; pilot and production approval are separate. |
 | M6 — second POS | B8 on hold at owner's request awaiting Toast approval/testing access; adapter foundation preserved; M6 not accepted | Toast received the owner's application on 2026-09-30. The [local foundation](M6_B8_ADAPTER_FOUNDATION.md) is implemented locally; native Toast remains unimplemented. Resume on Toast's request for information or an approved [access handoff](M6_TOAST_ACCESS.md), then validate a read-only sandbox connection before sales cases. |
 | M7 — replenishment proposals | A6/A7 local core and lifecycle, C4's fake consumer, and A8 local sale, sales-health reader, v2 handoff, durable source safety, gated preview, and manager save/edit/cancel flow passed locally; owner reports the local browser walkthrough works and accepted the ten-minute development freshness policy; M7 not accepted | The [served local HTTP check and owner browser report](M7_A8_SERVED_LOCAL_EVIDENCE.md) record the positive proposal flow, false D1 change-count fixes, and expected `review_required`/`inventory_changed` stock invalidation. [Decision 0004](decisions/0004-m7-development-sales-freshness.md) records the accepted development policy. The manager flow uses server-derived Clover health and fictional supplier details, with supplier submission disabled. A8 still needs hosted browser, end-to-end, and concurrency evidence. The local walkthrough used fixture sign-in and synthetic health; it does not verify provider signup or sync. Development D1 applied A7 `0016`/`0017` with the [W1/W2 release](C2_W2_HOSTED_RELEASE.md); the guard repair `0022` and auth fence `0023` were applied during the [C2 UI release](C2_UI_RELEASE_20261004.md). See [manager flow evidence](M7_A8_MANAGER_FLOW_EVIDENCE.md), [preview evidence](M7_A8_PREVIEW_API_UI_EVIDENCE.md), and [durable safety evidence](M7_A8_DURABLE_CLOVER_SAFETY_EVIDENCE.md). |
-| M8 — PO-backed cart and delivery reconciliation | Browser-assisted direction adopted; local PO/registry/review/cart-preview evidence only; M8 not accepted | [Integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md) requires durable authorization/reservations, jobs, private sessions, fenced worker, verified carts, manager checkout, PDF/XLSX/history, confirmation and atomic receiving. [Baldor preparation](C3_BALDOR_PREPARATION.md) keeps browser permission, account authorization and compatibility pending. No supplier contact/access; M7 and hosted-fictional safety remain gates. |
+| M8 — PO-backed cart and delivery reconciliation | Local PO/registry/review, authorization/reservations, fenced jobs/worker, private practice sessions, manager progress and uncertain-cart reconciliation are on main through PR #8; M8 not accepted | [Reconciliation evidence](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md) and the [integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md) keep Stagehand discovery/verification, hosted-fictional privacy/safety, real supplier mappings/access, manager checkout, PDF/XLSX/history, confirmation and atomic receiving open. [Baldor preparation](C3_BALDOR_PREPARATION.md) keeps browser permission and account authorization pending. No supplier contact/access; M7 acceptance is still a gate. |
 | M9 — operations | Prototype endpoint only; new schedule/worker not provisioned | Cloudflare Cron every 15 minutes for weekly company-timezone drafts/reminders, authenticated Render worker and operational alerts; managers start carts, schedules never launch AI/browser preparation. |
 | M10 — financial controls | Partial prototype | Existing supplier terms first; preparation authorization/reservations, unresolved checkout exposure, owner limits/reauthentication and final-price reconciliation. Pantrack cannot enforce external checkout spending. |
 | M11 — reviewed PO pilot | Not started | Written permission, one POS/supplier/location, two supervised browser-assisted count-to-delivery cycles including a discrepancy, alerts, pause and manager sign-off on accuracy, usability, recovery and time saved. APIs/AI checkout are not prerequisites. |

@@ -1,7 +1,7 @@
 # Pantrack Development Milestones
 
 Version: 1.3
-Updated: 2026-10-09
+Updated: 2026-10-13
 Purpose: Working specification for developing Pantrack with Codex in VS Code
 Product goal: Estimate ingredient inventory from completed menu-item sales, calculate replenishment to manager-defined target levels, and prepare exact supplier carts for manager-controlled checkout.
 
@@ -52,7 +52,10 @@ The prototype does not yet prove:
 - Production monitoring, backup/recovery, or security readiness.
 - A complete sale-to-delivery test with a real café, register, and supplier.
 
-Treat every external integration as unverified until it passes its sandbox and pilot acceptance tests.
+These baseline limitations describe the imported prototype. Later bounded
+development acceptance is recorded in [current status](CURRENT_STATUS.md),
+including M2/M3/M4 and B7's tested Clover sandbox scope. Treat pilot and production
+integration as unverified until their own acceptance tests pass.
 
 ## 3. Non-negotiable engineering rules
 
@@ -123,6 +126,26 @@ flowchart TD
 | M14 | Controlled purchasing automation | M12, chosen-channel pilot; M13 for API automation | Selected products operate within tested limits and pause/recovery controls |
 
 The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md), [integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md) and [2026-10-09 decision](decisions/0005-po-backed-ai-cart-preparation.md) supersede the 2026-10-03 email-first direction. Historical local evidence and completion records remain intact. Supplier email dispatch is deferred; notification email remains. M13/M14 do not block the manager-controlled launch. Unrelated POS prerequisites, including the pending M6 gate, remain explicit.
+
+### Current checklist position — 2026-10-13
+
+| Workstream | Recorded completion | Next open steps |
+| --- | --- | --- |
+| A — Inventory and replenishment | A1–A7 complete for local development; A5/M3 owner-accepted. | A8 hosted M7 acceptance; A9 pilot and A10 release follow later. |
+| B — Sales and POS | B1–B7 complete within local development and the accepted Clover sandbox scope. | B8 awaits approved Toast testing access; B9 pilot and B10 release follow later. |
+| C — Platform and purchasing | C1–C2 complete for development. C4 has substantial local PO/cart components on main. | C3 external decisions, C4 platform completion, C5/M8 acceptance, then C6–C9. |
+
+PR #8 and #9 are merged, and all six correctness/security fixes are locally
+closed. Current main `7a35004` has green Ubuntu, Windows and Supabase Preview
+checks. The development Worker is still at release `65373b3`, with database
+migrations only through `0023`; `0024`–`0034` are pending. A separately authorized
+release and hosted checks precede A8 acceptance. Workers Builds configuration
+remains unverified because its read APIs return `403`.
+
+Use the [dated status/evidence snapshot](CURRENT_STATUS.md#verified-snapshot--2026-10-13)
+and [simple milestone checklist](PROJECT_PROGRESS_PLAIN_LANGUAGE.md) for the
+current release order. These updates do not close A8, C3–C9, M6–M12 or the
+deferred M13/M14 gates.
 
 ---
 
@@ -284,6 +307,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   evidence. The owner accepted the ten-minute development sales-freshness
   policy on 2026-09-30 in [decision 0004](decisions/0004-m7-development-sales-freshness.md).
   Hosted browser, end-to-end, and concurrency evidence remain open.
+  **2026-10-13 follow-up:** PR #9 includes the [BUG-03 unresolved-sales guard](BUG03_UNRESOLVED_SALES_READINESS.md).
+  Its local tests and main CI pass, but the released development Worker remains
+  older. Record hosted sales-readiness/recovery and source-change results after
+  the separately authorized full `0024`–`0034` release; local fixes do not close A8.
 - [ ] **A9 — Execute A's M11 slice.** Configure approved pilot units, recipes,
   counts, targets, and pack conversions; measure inventory variance and proposal
   accuracy through two reviewed count-to-delivery cycles. Investigate variance
@@ -417,6 +444,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   records development D1 `0016`–`0021`, private backup/data-preservation checks,
   the deployed Waste/recipe/package forms and both themes. Exact inventory is
   enabled for usability review; Clover sync and purchasing remain disabled.
+  **2026-10-13 status refresh:** read-only inspection confirms the later
+  [C2 UI release](C2_UI_RELEASE_20261004.md) remains active with D1 through `0023`.
+  The PR #8/#9 work and all 11 migrations `0024`–`0034` still need their own
+  authorized development release and hosted validation. Current GitHub checks
+  pass; automatic Cloudflare deployment configuration remains unverified.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   permitted browser use, café/account/location authorization, exact SKUs/packs,
@@ -885,11 +917,20 @@ Then apply configured capacity, shelf-life, minimum-order, order-multiple, stale
 - [x] Version replenishment settings and record who changed them locally.
 - [x] Freeze a review-only proposal snapshot containing inventory versions, settings, fictional mappings, supplier SKU, pack conversion, fictional price estimate, and calculation explanation.
 - [x] Group review-only proposal lines by supplier/account/location.
-- [ ] Add statuses: draft, review required, approved, sending, unknown, accepted, rejected, canceled, partially received, and closed.
-- [ ] Prevent a new proposal from duplicating unresolved quantities.
-- [ ] Recalculate or invalidate proposals when relevant inventory/settings change.
-- [ ] Add manager edit with a reason and audit record.
-- [ ] Add proposal totals, limits, delivery expectations, and warnings.
+- [x] Add the local state graph: draft, review required, approved, sending, unknown, accepted, rejected, canceled, partially received, and closed; supplier execution stays disabled.
+- [x] Prevent a new proposal from duplicating unresolved quantities locally with atomic reservations.
+- [x] Invalidate local proposals when relevant inventory/settings change.
+- [x] Add authorized manager edits with a reason and immutable audit history locally.
+- [x] Add review-only proposal totals, limits and warnings; delivery timing is explicitly unconfirmed.
+
+The checked tasks record **local implementation**, supported by the
+[A6 calculations](M7_A6_LOCAL_EVIDENCE.md), [A7 lifecycle/handoff](M7_A7_LIFECYCLE_EVIDENCE.md)
+and [A8 manager flow](M7_A8_MANAGER_FLOW_EVIDENCE.md). The current state graph,
+reservation/invalidation service and contract tests were inspected for this
+refresh, and all three focused calculation/lifecycle suites passed again on
+2026-10-13. They do not establish supplier execution or real delivery dates.
+The acceptance checkboxes below remain open until A8 records the required hosted
+browser, end-to-end and concurrency evidence.
 
 ### Acceptance criteria
 
