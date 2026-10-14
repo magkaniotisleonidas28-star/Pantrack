@@ -1,134 +1,183 @@
-# Pantrack progress, in plain language
+# Pantrack progress and milestone checklist
 
-Updated: 2026-09-24. This guide summarizes the roadmap and recorded owner
-decisions. Refresh it when workstream branches merge or new evidence is accepted.
+Updated: 2026-10-14. Based on the recorded acceptance decisions, merged source,
+current GitHub checks and read-only Cloudflare inspection. Detailed evidence is
+in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
-## The short version
+## Where we are
 
-Pantrack has a working local foundation: accounts and company roles, a product
-catalog, inventory and recipes, and several ways to enter sales. The owner has
-accepted the **M2 account-and-permissions and M3 inventory milestones for
-development**. The sales-to-inventory connection (M4) is accepted for local
-development and passed a fictional hosted check. Real Clover
-sales, supplier orders, automatic purchasing, and a real café pilot have not
-been completed.
+**Pantrack has its development foundations. We are finishing restocking
+suggestions and the supplier-cart workflow before a real café trial.**
 
-The next dependency is:
+Accounts, inventory, recipe history and the sales-processing foundation are
+accepted for development. Clover passed its approved, limited sandbox tests.
+Restocking calculations and proposal history are built locally. Purchase-order
+and practice-cart components are also built locally.
 
-```text
-Person A's M3 acceptance (A5) is recorded
-    → Person B's local M4 acceptance (B5) is recorded
-    → Person B has built the local Clover adapter (B6)
-    → Person B can test it with a fictional Clover sandbox (B7)
-    → later replenishment, supplier, pilot, and release work can proceed
-```
+The new commits add an optional AI reader for practice supplier carts and private
+records of its completion checks. Some tests passed, but the complete AI safety
+run is unfinished: its latest offline run timed out while adding the second
+item. C4/M8 therefore remain open.
 
-Person C can work in parallel on the remaining M2 evidence record, outside
-service decisions, and safe tests using fake services. None of that means a
-live supplier order or an automatic purchase is permitted.
+The online development app is behind GitHub. The six bug fixes are merged, and
+the new CI portability repair passed Windows/Linux checks on its reviewed branch.
+Online release/testing are still needed. No real supplier order or café pilot is
+complete.
 
-## How to read the status words
+The local app-startup check also failed on this computer after the update.
+GitHub's Windows/Linux checks passed, but that does not prove this computer can
+start the app. This local problem needs a separate follow-up.
 
-- **Done on `main`:** the checked roadmap step is in the shared branch.
-- **Built locally, acceptance open:** code or a screen exists and local checks
-  passed, but the required review or real-world evidence is not complete.
-- **Branch awaiting integration:** work is saved separately and is not yet part
-  of `main`.
-- **Open:** the roadmap step has not been accepted. Some groundwork may still
-  exist; “open” does not necessarily mean “no code.”
+**A checked box means complete within its stated scope.** Local means tested on
+a computer with fictional data. Sandbox means tested with a provider's test
+account. Neither means approved for real customers or production.
 
-A *milestone* is a larger goal (such as M3 inventory). A numbered *step* is one
-person's smaller piece of it (such as A5). A local test uses fictional data on
-this computer; it does not prove that a hosted service or real provider works.
+## Milestone checklist
 
-## What is already done
+| Milestone | What it means | Current status |
+| --- | --- | --- |
+| M0 | Run the project on a computer. | Baseline complete; the current desktop startup problem is unresolved. |
+| M1 | Automatically check changes for errors. | Complete; the new missing-tool CI failure is repaired and covered by Windows/Linux branch checks. |
+| M2 | Accounts, company access and permissions. | Accepted for development; hosted signup/recovery and independent security review remain follow-ups. |
+| M3 | Reliable inventory, units and recipe history. | Accepted for development; newest fixes still need online validation. |
+| M4 | Safely turn sales into ingredient deductions. | Accepted locally; newest recovery fixes still need online validation. |
+| M5 | Connect and test Clover. | Accepted for the tested development sandbox scope; excluded cases and real café use remain unverified. |
+| M6 | Connect a second register provider, Toast. | On hold awaiting Toast approval/testing access. |
+| M7 | Explain what needs restocking and let managers review it. | Built locally; A8 online acceptance remains open. |
+| M8 | Prepare exact supplier carts, let a manager check out, and record deliveries. | Partly built locally; the AI safety gate is blocked by a second-item timeout. Supplier/full workflow acceptance remain open. |
+| M9 | Reliable schedules, reminders and background work. | Planned/prototype only; new hosting and scheduling are not provisioned. |
+| M10 | Spending limits and financial safeguards. | Partial local safeguards; full acceptance remains open. |
+| M11 | Prove the workflow in a real café. | Not started; requires two supervised count-to-delivery cycles. |
+| M12 | Make it ready for multiple real businesses. | Not started; requires the café pilot first. |
+| M13 | Add optional direct supplier APIs. | Deferred until production users exist. |
+| M14 | Consider automatic purchasing or AI checkout. | Separate later project; disabled. |
 
-| Area | Current position |
+The first launch is planned around **manager-controlled checkout**. AI prepares
+a cart; it does not place an order. M13/M14 do not block that launch. The Toast
+gate has not been waived.
+
+## Person A — inventory and restocking
+
+A1–A7 are complete for local development. **A8 is the next open A step.**
+
+- [x] **A1:** Agree how units, old records, counts and recipe history work.
+- [x] **A2:** Define how sales safely subtract ingredients.
+- [x] **A3:** Add the required inventory/history database structures.
+- [x] **A4:** Build exact inventory, recipes, counts and manager screens.
+- [x] **A5:** Accept M3 for development and hand the inventory contract to B.
+- [x] **A6:** Build the restocking calculation engine; suggestions only.
+- [x] **A7:** Save proposal history, handle edits/changed stock, prevent duplicate quantities and hand the contract to C.
+- [ ] **A8:** Finish M7 acceptance with online manager/browser, end-to-end and simultaneous-request tests.
+- [ ] **A9:** Measure inventory and suggestion accuracy during the approved café pilot.
+- [ ] **A10:** Verify inventory onboarding, export/deletion and backup recovery before release.
+
+Evidence: [A5 acceptance](M3_A5_ACCEPTANCE.md), [A6 calculations](M7_A6_LOCAL_EVIDENCE.md),
+[A7 lifecycle](M7_A7_LIFECYCLE_EVIDENCE.md) and [A8 local flow/remaining gates](M7_A8_SERVED_LOCAL_EVIDENCE.md).
+B7 is accepted within its recorded scope; waiting for B7 is no longer A8's blocker.
+
+## Person B — sales and register connections
+
+B1–B7 are complete within their local or accepted sandbox scope.
+**B8 is on hold for Toast access.**
+
+- [x] **B1:** Agree on sales events, duplicates, refunds and held sales.
+- [x] **B2:** Test sales processing against a fake inventory service.
+- [x] **B3:** Store sales events and their review/audit history.
+- [x] **B4:** Connect sales to exact inventory and manager recovery tools.
+- [x] **B5:** Accept M4 for local development.
+- [x] **B6:** Build Clover locally and test with fake provider responses.
+- [x] **B7:** Accept the tested Clover development sandbox cases.
+- [ ] **B8:** Obtain approved Toast access, build its native connection and pass its sandbox tests.
+- [ ] **B9:** Measure missed, delayed, duplicate and held sales during the approved café pilot.
+- [ ] **B10:** Finish register onboarding, abuse protection and company-isolation release checks.
+
+Evidence: [B5 acceptance](M4_B5_LOCAL_EVIDENCE.md), [B6 local adapter](M5_B6_LOCAL_EVIDENCE.md),
+[B7 bounded acceptance](M5_B7_ACCEPTANCE_REVIEW.md) and [Toast handoff](M6_TOAST_ACCESS.md).
+B7 does not prove native webhook retry or every Clover order state. Polling
+recovery is the accepted fallback; real café and production approval are separate.
+
+## Person C — platform, suppliers and operations
+
+C1–C2 are complete for development. **C3 decisions and C4 components remain
+open**, although substantial C4 code has been merged.
+
+- [x] **C1:** Accept development accounts and company permissions.
+- [x] **C2:** Record the development evidence and deployment limits.
+- [ ] **C3:** Finish supplier permission, account/location/product, budget, payment and operations decisions.
+- [ ] **C4:** Finish the safe purchasing platform and controlled browser/model tests.
+- [ ] **C5:** Accept the complete supplier/cart/manager-checkout/confirmation/delivery workflow after M7.
+- [ ] **C6:** Provision and test schedules, reminders, worker recovery and alerts.
+- [ ] **C7:** Finish spending controls and financial acceptance.
+- [ ] **C8:** Coordinate the two approved café pilot cycles and collect A/B/C evidence.
+- [ ] **C9:** Finish security, support, privacy, recovery and production release evidence.
+
+C4 already has local purchase-order drafts/revisions, supplier profiles,
+preparation permission and spending reservations, saved jobs, worker access,
+private practice-browser sessions, progress screens and uncertain-cart recovery.
+The new commits also add evaluation-only AI discovery/cart checks and private
+completion evidence. The latest 16-case fake completion-check matrix passed;
+the larger reliability run passed 24 jobs, then timed out on job 25. That is
+unfinished acceptance. Earlier real-model runs also stopped before the full
+matrix completed. No paid retry is authorized.
+
+Still open: resolve that reliability failure and pass the fresh full AI gate,
+then separately authorized real-model validation, hosted privacy/safety,
+permitted Baldor access, production mappings, PDF/Excel exports, confirmation
+and approved receiving.
+
+Evidence: [C2 closeout](C2_M2_CLOSEOUT.md), [Baldor preparation](C3_BALDOR_PREPARATION.md),
+[latest local cart reconciliation](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md),
+[AI evaluation and remaining blocker](C4_PO_CART_AI_LOCAL_EVIDENCE.md)
+and [PO/cart integration checklist](PO_AI_CART_INTEGRATION_ROADMAP.md).
+
+## What was verified today
+
+| Check | Result on 2026-10-14 |
 | --- | --- |
-| Local setup and automated checks (M0–M1) | Done on `main`. The app can run locally, and GitHub Actions checks the project on Ubuntu and Windows. |
-| Accounts and company permissions (C1/M2) | Owner-accepted for development. The owner tested confirmation, sign-in, invitations, roles, ownership transfer, recovery, and sign-out with fictional accounts. A separate independent security review is **not** claimed. A development Worker was deployed and passed hosted sign-in; hosted signup and recovery callbacks remain unchecked. |
-| Exact inventory and recipes (A4–A5/M3) | Owner-accepted for development after the full local pipeline, Person B's contract review, and the fictional older-data walkthrough. Development database migration `0012` and a fictional hosted inventory check passed. The hidden switch is off again. |
-| Permanent sales events and exceptions (B1–B5/M4) | B1–B5 are checked on `main` for local development. Manual sales, CSV paths, and the authenticated register bridge can use the exact-inventory flow while the hidden switch is on. A fictional hosted sale applied once and its duplicate left stock unchanged. Clover remains future work. |
-| Clover, suppliers, and payments | Clover's local adapter passed tests using fake provider responses; real sandbox testing is B7. Supplier setup and payment screens do **not** represent live ordering or production payment readiness. |
+| Code reviewed | New feature commits `de970c8` and `12de73b`, above merged PR #8/#9; the checklist/CI follow-up is PR #10. |
+| Automated checks | Incoming `12de73b` failed both OS jobs because a tool was missing. The focused repair passed Windows/Linux CI on its reviewed branch; PR preview was skipped by configuration. |
+| This computer | 87 test suites, typecheck, build and all 35 local database migrations passed. The app-startup check failed and needs investigation. |
+| Six tracked bugs | All six are locally closed; their source is on main. This is not a full security review. |
+| New AI cart tests | Optional reader and completion-evidence code are built. Full real-model acceptance and the latest offline reliability gate remain unfinished. |
+| Online app | Cloudflare still runs `65373b3`, deployed October 5. It does not yet have the PR #8/#9 changes. |
+| Online database | 24 migrations applied, through `0023`; 11 newer migrations, `0024`–`0034`, are pending. |
+| Cloudflare automatic builds | Could not verify the Git/build settings: its read APIs denied access (`403`). |
 
-The B4 closeout began on `workstream-b/b4-closeout-20260923` at `3aa521f`.
-Its evidence and the later [B5 local acceptance](M4_B5_LOCAL_EVIDENCE.md) are
-recorded on `main`. The [hosted development check](C2_HOSTED_DEV_EVIDENCE.md)
-is separate from those local results.
+A migration is an ordered database update. Pushing commits to GitHub does not
+prove that the online code or database received them. Today's database check
+only read migration history and wrote no data. It did not validate every saved
+business record. No signed-in hosted/browser walkthrough was performed today.
 
-## Person A — inventory and replenishment
+The repair's [Windows/Linux CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38508252498)
+passed for `456ad67`; [PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10)
+tracks the final synchronized checklist. Incoming main's Supabase Preview passed,
+while PR preview creation was skipped because it is disabled. Neither proves
+the full login/recovery workflow. See the [sync verification record](C2_STATUS_SYNC_20261013.md).
 
-Person A makes stock quantities trustworthy and later builds suggestions for
-what to reorder. “Replenishment” means calculating what may need restocking;
-it does not place an order.
+## What happens next, in order
 
-| Step | Plain-language job | Status |
-| --- | --- | --- |
-| A1 | Agree on units, recipe history, opening counts, and how old records are handled. | Done on `main`; the design decision is accepted. |
-| A2 | Publish the safe “subtract ingredients for this sale” agreement used by B. | Done on `main`; Person B's compatibility review is recorded. |
-| A3 | Add database structures for exact quantities and recipe/count history without erasing old records. | Done on `main`; additive migrations and legacy compatibility tests passed locally. |
-| A4 | Build exact inventory, recipe versions, counts, manager screens, and permission tests. | Done on `main`; checked. Hidden switch remains off by default. |
-| A5 | Review all M3 evidence and formally hand the inventory contract to B. | Done on `main`; owner-accepted for development on 2026-09-23. Hosted checks remain separate. |
-| A6 | Build the safe calculation engine for suggested replenishment. | Done on `main`; suggestions stay review-only. |
-| A7 | Add the suggestion review/history process and hand its contract to C. | Done locally; lifecycle, duplicate-quantity protection, and C4 fake consumer test passed. M7 remains open for A8. |
-| A8 | Accept the replenishment milestone after the needed sales inputs are accepted. | Later; open. |
-| A9 | Measure inventory and suggestion accuracy during an approved café pilot. | Later; open; requires written pilot permission. |
-| A10 | Help validate onboarding, data export/deletion, and backup/restore before release. | Later; open; requires pilot acceptance. |
+The local startup error needs its own C2 investigation. The source/CI repair in
+PR #10 does not fix it. Release preparation and bounded C4 evidence review can
+still proceed independently.
 
-## Person B — sales and point-of-sale connections
+1. **Prepare a safe development release.** Review all 11 pending database updates,
+   preservation of old data, backup/recovery and the Cloudflare deployment setup.
+   Keep sales processing paused during the coordinated code/database change.
+2. **Authorize and perform that specific development release, then test it online.**
+   Record the inventory, sales recovery/readiness and count/planning results with
+   fictional data. The old stock history must stay intact.
+3. **Finish A8/M7.** Record the online proposal screens, complete sales-to-proposal
+   flow and simultaneous-request/source-change tests.
+4. **Finish C4/C5 and M8.** The next C4 task is to review the retained second-item
+   timeout and resolve it safely before repeating the full offline gate. Paid
+   model validation needs separate approval after those checks pass. Resolve
+   supplier access/budgets, then complete hosted safety, documents, confirmation
+   and receiving. Supplier cart tests and real manager checkout need separate approval.
+5. **Finish operations and spending controls, then the café pilot.** Complete
+   M9/M10 and resolve M6/Toast before M11; run two supervised delivery cycles.
+6. **Finish M12 production readiness.** Complete security, backup/restore,
+   monitoring, support and onboarding checks after the pilot.
 
-Person B makes every sale traceable, prevents duplicate stock deductions, and
-later connects real register providers. A *held sale* is saved for a manager to
-review instead of silently changing stock.
-
-| Step | Plain-language job | Status |
-| --- | --- | --- |
-| B1 | Formally approve the common sales-event rules, including duplicates, held sales, refunds, and privacy. | Done on `main`; the M4 design record is accepted. |
-| B2 | Prove the sales process against a fake inventory service, including retries and failures. | Done on `main`; checked. |
-| B3 | Add permanent sales-event, review, and audit database records. | Done on `main`; checked. |
-| B4 | Connect sales to exact inventory and provide review, replay, dismissal, and correction screens. | Done locally on `main`; closeout and employee-status privacy evidence are recorded. |
-| B5 | Review the complete M4 evidence after A5/M3 acceptance. | Done on `main`; M4 accepted for local development on 2026-09-24. |
-| B6 | Finish the Clover connection locally, including mapping, missed sales, and connection health. | Done locally; [fake-backed evidence](M5_B6_LOCAL_EVIDENCE.md) recorded. Sync gate is off. |
-| B7 | Test the completed Clover connection in its approved sandbox. | Later; open. Sandbox access and evidence are required. |
-| B8 | Choose and test a second real register provider using the same approach. | Later; open; needs the owner's provider choice. |
-| B9 | Measure missed, delayed, duplicate, and held sales in an approved café pilot. | Later; open. |
-| B10 | Finish integration onboarding, abuse protection, and company-isolation release checks. | Later; open; requires pilot acceptance. |
-
-## Person C — accounts, suppliers, and operations
-
-Person C handles the platform, external-service decisions, and the safeguards
-around purchasing. An automated test using a fake supplier never authorizes a
-real order.
-
-| Step | Plain-language job | Status |
-| --- | --- | --- |
-| C1 | Accept accounts and company permissions with a development Supabase account and owner walkthrough. | Owner-accepted for development on 2026-09-23; checked. Cloudflare build success is owner-reported, not independently verified here. |
-| C2 | Record the full M2 evidence and remaining deployment limits for the team. | Open in roadmap. The owner accepted C1 and later reported completing the authentication/migration review; its separate written record remains unavailable. Development D1 and Worker validation are [recorded](C2_HOSTED_DEV_EVIDENCE.md). |
-| C3 | Obtain decisions about Clover sandbox, second register provider, first supplier, job runner, alerts, payment responsibility, and limits. | Can proceed in parallel; open. Do not guess missing business decisions. |
-| C4 | Build and test safe supplier, background-job, alert, and spending-limit components using fake services. | A7 fake consumer slice passed locally; the broader C4 work remains open. No real submissions or schedules. |
-| C5 | Connect the chosen supplier only after A's replenishment milestone is accepted. | Later; open. One real test order would need separate explicit approval. |
-| C6 | Connect scheduled jobs and alerts after the preceding sales/supplier milestones. | Later; open. |
-| C7 | Finish financial controls after supplier and payment decisions. | Later; open. Automatic purchasing stays disabled. |
-| C8 | Coordinate the approved café pilot and collect the A/B/C evidence. | Later; open; requires written sign-offs. |
-| C9 | Coordinate security, support, recovery, and the final release evidence. | Later; open; requires pilot acceptance. |
-
-## The next practical moves
-
-1. **A:** begin A6's review-only replenishment calculation work. Keep versioned
-   proposals and automatic purchasing behind their later gates.
-2. **B:** prepare B7's fictional Clover sandbox test with explicit approval.
-   The local B6 adapter is complete; its sync gate remains off.
-3. **C:** finish the C2 evidence/limitations record and start collecting C3
-   business decisions. C4 may use fake services only while other work proceeds.
-4. **Project owner:** choose and approve outside services when the relevant step
-   reaches that gate. Do not supply secrets in chat or use real customer data for
-   these development checks.
-
-The development D1 migration and Worker deployment described above are complete.
-No live point-of-sale call, supplier order, automatic purchasing, or production
-deployment is implied by this document.
-
-For the authoritative checkboxes and detailed acceptance rules, use the
-[full A/B/C roadmap](PANTRACK_MILESTONES.md#step-by-step-checklist-for-each-person).
-For the milestone-level summary, use [current status](CURRENT_STATUS.md).
-The B4 local test details are in [B4 evidence](M4_B4_LOCAL_EVIDENCE.md).
+Supplier decisions and bounded local C4 development can continue alongside
+release preparation and A8. Toast can resume when its approved access arrives.
+Supplier submission and automatic purchasing remain disabled.
