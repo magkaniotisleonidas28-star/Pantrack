@@ -1,0 +1,1407 @@
+{
+  "version": 1,
+  "description": "Sanitized retained observations; no missing historical fields or canonical evidence reconstructed.",
+  "collected": [
+    {
+      "id": "protocol-0-1",
+      "source": {
+        "path": ".sites-runtime/po-cart-workers/browser-lifecycle-validation-task-20261015/cases/protocol-0-1/observation-0002.json",
+        "sha256": "59688106cb26fe931a566e5900f0272ad181968ff2aeb84ba06573249f464f3b"
+      },
+      "sample": {
+        "version": 2,
+        "event": "sample",
+        "phase": "shutdown",
+        "evidenceOrigin": "collected",
+        "complete": true,
+        "forbiddenPids": [
+          4303
+        ],
+        "absentPids": [],
+        "baseline": [
+          {
+            "pid": 78977,
+            "parent": 77001,
+            "group": 78977,
+            "identity": "e68703ea53b533fc6e841698b2e8065b8fd30d217678f76274cc5a7667bf4363",
+            "startedMs": 1792122246000,
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "executableHash": "342cced28aee099205fda2d748a8e3203a8e8239bceb2bfcaec7c3c7d8deb4a7",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          },
+          {
+            "pid": 79005,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "03890399d33b6678c6a25cbc8371791610fd8fcd7a5e9081a3adfa05e6a1f3c5",
+            "startedMs": 1792122246000,
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          },
+          {
+            "pid": 79006,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "2de465e459db49438309157cea1aec01f4d8b49f431390ef230b6cacb3ccc385",
+            "startedMs": 1792122246000,
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          },
+          {
+            "pid": 79007,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "ae8725e6eb3a5365827dbca1c39462e31efc1881af8cf981f06db45f50058bc7",
+            "startedMs": 1792122246000,
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          },
+          {
+            "pid": 79026,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "a1452698e751089e405d58f5eaf708230d4bb8e420afc5bcb7bcc35b521c74f0",
+            "startedMs": 1792122246000,
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          },
+          {
+            "pid": 79029,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "02fbbd5fd8514eefb6b93a5c00999b90e16213f3cd369b004ffe5fb52b317c7a",
+            "startedMs": 1792122246000,
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          },
+          {
+            "pid": 79045,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "ca281aef78f198cab84d60a347be1307247be34a3d1f9998804a99096f34a7fd",
+            "startedMs": 1792122247000,
+            "startHash": "1e3b6cbe1d583e53bf599602ef860643fe24b2e416950a7d6058b29a5121bbda",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          },
+          {
+            "pid": 79051,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "77c3408b711cc31bbbda952265508f382d685321d901b8f8c139a5ceb01a8c1f",
+            "startedMs": 1792122247000,
+            "startHash": "1e3b6cbe1d583e53bf599602ef860643fe24b2e416950a7d6058b29a5121bbda",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          },
+          {
+            "pid": 79057,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "3f853330f064654445be5441133260ee0d53f5f9774fba7eab4a5c377b134304",
+            "startedMs": 1792122247000,
+            "startHash": "1e3b6cbe1d583e53bf599602ef860643fe24b2e416950a7d6058b29a5121bbda",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "e52b1e26de7ea1de5e254ef61400270202c9297191c57df96d1fc6be44da4629"
+          }
+        ],
+        "before": [
+          {
+            "pid": 78977,
+            "parent": 77001,
+            "group": 78977,
+            "identity": "4fdd48b0d914d39d600264caae750d8a17fc960846cfb9035423656920701e53",
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122246000,
+            "state": "Us",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79005,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "4fdd48b0d914d39d600264caae750d8a17fc960846cfb9035423656920701e53",
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122246000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79006,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "4fdd48b0d914d39d600264caae750d8a17fc960846cfb9035423656920701e53",
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122246000,
+            "state": "R",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79007,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "4fdd48b0d914d39d600264caae750d8a17fc960846cfb9035423656920701e53",
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122246000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79029,
+            "parent": 78977,
+            "group": 78977,
+            "identity": "4fdd48b0d914d39d600264caae750d8a17fc960846cfb9035423656920701e53",
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122246000,
+            "state": "?E",
+            "zombie": false,
+            "profile": null
+          }
+        ],
+        "after": [
+          {
+            "pid": 78977,
+            "parent": 77001,
+            "group": 78977,
+            "identity": "b2d3b25613c53a284bae583dd89a7bdd1bea599008dd83a02be573819cc7e6b3",
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "commandHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e",
+            "startedMs": 1792122246000,
+            "state": "Z",
+            "zombie": true,
+            "profile": null
+          }
+        ],
+        "executables": [
+          {
+            "pid": 78977,
+            "startedMs": 1792122246000,
+            "startHash": "362babf7320fdb5773c14d45a5ac5ed0ff538cad080b790fd531362d5796e7f6",
+            "executableHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e"
+          }
+        ]
+      },
+      "originalStrictVerdict": {
+        "passed": false,
+        "category": "identity_changed",
+        "phase": "reconciliation",
+        "pid": 78977,
+        "expectedIdentity": "e68703ea53b533fc6e841698b2e8065b8fd30d217678f76274cc5a7667bf4363",
+        "observedIdentity": "4fdd48b0d914d39d600264caae750d8a17fc960846cfb9035423656920701e53"
+      }
+    },
+    {
+      "id": "protocol-0-2",
+      "source": {
+        "path": ".sites-runtime/po-cart-workers/browser-lifecycle-validation-task-20261015/cases/protocol-0-2/observation-0002.json",
+        "sha256": "b7b3a039b80b4abcdfef6eb7a3019346d9415c5a89572e8a07aafb50a3dcf46b"
+      },
+      "sample": {
+        "version": 2,
+        "event": "sample",
+        "phase": "shutdown",
+        "evidenceOrigin": "collected",
+        "complete": true,
+        "forbiddenPids": [
+          4303
+        ],
+        "absentPids": [],
+        "baseline": [
+          {
+            "pid": 79271,
+            "parent": 77001,
+            "group": 79271,
+            "identity": "b60c93a4aa495377f2b46dd089ba15ad24e0f9c96ec70b089ec2821bda132814",
+            "startedMs": 1792122249000,
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "executableHash": "342cced28aee099205fda2d748a8e3203a8e8239bceb2bfcaec7c3c7d8deb4a7",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79299,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "74794efc80dad3715af47250b753be03f9dd8358a3b2a04f32397d2d62128363",
+            "startedMs": 1792122249000,
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79300,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "20dcdef37248ad0273361736b3c011b4f7889f672a3ae1b67e3265e86cc05fd9",
+            "startedMs": 1792122249000,
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79301,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "89f6bd92742a72273ed722d47569c133da713ea5135c4ad5bf1e3e76b19f40d5",
+            "startedMs": 1792122249000,
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79320,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "d34beb6bf697827ec77b64700edb1978a4f5d0bd5a518b19941ad75aeae5c637",
+            "startedMs": 1792122249000,
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79325,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "b967bd653b2fd1ce9ba40b278f7b8b7b6be1c5cd8ef953d74995177d1a9f9a1a",
+            "startedMs": 1792122250000,
+            "startHash": "1cbc0409a9f906492869ab72b6f31fcf7be403ead7190c4b932f212bad9cd5fe",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79341,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "a80730c08394193a37542b4cd42af7ef7d00fb8a967c27d39471404942f7d639",
+            "startedMs": 1792122250000,
+            "startHash": "1cbc0409a9f906492869ab72b6f31fcf7be403ead7190c4b932f212bad9cd5fe",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79349,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "6c2dd4c01c43db644511b02c3298f0ad783c49c1f4855abbe1eba1bef404a985",
+            "startedMs": 1792122250000,
+            "startHash": "1cbc0409a9f906492869ab72b6f31fcf7be403ead7190c4b932f212bad9cd5fe",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79355,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "4ac4335befe6261d723c07a64d238fbe4d69766125e483aee7ad2f636ef67c8b",
+            "startedMs": 1792122250000,
+            "startHash": "1cbc0409a9f906492869ab72b6f31fcf7be403ead7190c4b932f212bad9cd5fe",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          }
+        ],
+        "before": [
+          {
+            "pid": 79271,
+            "parent": 77001,
+            "group": 79271,
+            "identity": "b60c93a4aa495377f2b46dd089ba15ad24e0f9c96ec70b089ec2821bda132814",
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "commandHash": "f9cee6c9b8fa4f8e8a197885922b03c1639bacfe96be2b8e892822f39c777ba9",
+            "startedMs": 1792122249000,
+            "state": "Rs",
+            "zombie": false,
+            "profile": "b8557fbdcb402a1c70f6924f73750987dea8679e8e621cb4a4cd8bb3581d0f7f"
+          },
+          {
+            "pid": 79299,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "249e59a583d50c071c5d2b76c3c194f9d0b6d66eec58348011d07ce9167e4782",
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122249000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79300,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "249e59a583d50c071c5d2b76c3c194f9d0b6d66eec58348011d07ce9167e4782",
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122249000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79301,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "249e59a583d50c071c5d2b76c3c194f9d0b6d66eec58348011d07ce9167e4782",
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122249000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79325,
+            "parent": 79271,
+            "group": 79271,
+            "identity": "23cc118d84bd18fa48268a922b851e732984567cc4d9f38928101cb37537491f",
+            "startHash": "1cbc0409a9f906492869ab72b6f31fcf7be403ead7190c4b932f212bad9cd5fe",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122250000,
+            "state": "?E",
+            "zombie": false,
+            "profile": null
+          }
+        ],
+        "after": [
+          {
+            "pid": 79271,
+            "parent": 77001,
+            "group": 79271,
+            "identity": "9b84b282b83ce0ff3f237b09498f134b7543f231e558e18f5a7f8d49d67e3a9a",
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "commandHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e",
+            "startedMs": 1792122249000,
+            "state": "Z",
+            "zombie": true,
+            "profile": null
+          }
+        ],
+        "executables": [
+          {
+            "pid": 79271,
+            "startedMs": 1792122249000,
+            "startHash": "436702026ac223c81f7341b15ad3acbde92ba824498092682d7d46e4490496bf",
+            "executableHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580"
+          },
+          {
+            "pid": 79325,
+            "startedMs": 1792122250000,
+            "startHash": "1cbc0409a9f906492869ab72b6f31fcf7be403ead7190c4b932f212bad9cd5fe",
+            "executableHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e"
+          }
+        ]
+      },
+      "originalStrictVerdict": {
+        "passed": false,
+        "category": "identity_changed",
+        "phase": "reconciliation",
+        "pid": 79271,
+        "expectedIdentity": "b60c93a4aa495377f2b46dd089ba15ad24e0f9c96ec70b089ec2821bda132814",
+        "observedIdentity": "9b84b282b83ce0ff3f237b09498f134b7543f231e558e18f5a7f8d49d67e3a9a"
+      }
+    },
+    {
+      "id": "protocol-10-1",
+      "source": {
+        "path": ".sites-runtime/po-cart-workers/browser-lifecycle-validation-task-20261015/cases/protocol-10-1/observation-0002.json",
+        "sha256": "7ba308a9043469ae395e4b1585d1559cfb02351655aac938cbae65b22f83c488"
+      },
+      "sample": {
+        "version": 2,
+        "event": "sample",
+        "phase": "shutdown",
+        "evidenceOrigin": "collected",
+        "complete": true,
+        "forbiddenPids": [
+          4303
+        ],
+        "absentPids": [],
+        "baseline": [
+          {
+            "pid": 79569,
+            "parent": 77001,
+            "group": 79569,
+            "identity": "edaa301fa43028ec2af74cd1f8d31eb2c3cd47db52f473eb3b0117fd22027690",
+            "startedMs": 1792122252000,
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "executableHash": "342cced28aee099205fda2d748a8e3203a8e8239bceb2bfcaec7c3c7d8deb4a7",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79597,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "c6a3d8c7682cb7b193d1f69f88756706c64eed9af219f080fd87795052ec4b7a",
+            "startedMs": 1792122252000,
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79598,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "12d1868b19f3da64ab47137a8799189a497d74e5ca3dad4f8935a23379de31b3",
+            "startedMs": 1792122252000,
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79599,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "59a701ecbdb6d2e1ff1e8df83724c8870ce5c35efa63ebf2723f92eda489cba4",
+            "startedMs": 1792122252000,
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79618,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "01748837438a9cbcb288dfc55b4cb54f3affeb385f6dd646ceddc09c64029de2",
+            "startedMs": 1792122252000,
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79621,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "79bd5a9722a907d0c434963db140e8a97791e8c9cfe7c7b691c8a37b9076c4f3",
+            "startedMs": 1792122253000,
+            "startHash": "8a9adcfb42a11256aea6569b1397bfd4c0cf1d22699d7e8235b3fc8732b99057",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79637,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "96bccb14496bd952cf370ba24d51072d8ded239859248471d2ae5f32507d9dc9",
+            "startedMs": 1792122253000,
+            "startHash": "8a9adcfb42a11256aea6569b1397bfd4c0cf1d22699d7e8235b3fc8732b99057",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79643,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "21785ff194d0e34499b8ba2fab2bb3075c436efd8990794449e6a7a0db22dcd5",
+            "startedMs": 1792122253000,
+            "startHash": "8a9adcfb42a11256aea6569b1397bfd4c0cf1d22699d7e8235b3fc8732b99057",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79649,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "580b9d4e30ba7eb56b1b10f4ffa717ef3c88df50531c540592c5dee858a4e6e2",
+            "startedMs": 1792122254000,
+            "startHash": "0796b3d02601c4361e2a57833fd6226c0ede90782c7ae39d8c9d0cc5d28cec8e",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          }
+        ],
+        "before": [
+          {
+            "pid": 79569,
+            "parent": 77001,
+            "group": 79569,
+            "identity": "edaa301fa43028ec2af74cd1f8d31eb2c3cd47db52f473eb3b0117fd22027690",
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "commandHash": "c5e6cc24221cef3ca6fc9ba3c430846aa7f85df62c22b8e9a2789d90a0b7743d",
+            "startedMs": 1792122252000,
+            "state": "Us",
+            "zombie": false,
+            "profile": "200e2ed55edca52b04ea873f6f2ca71a25500c5763ddeda72e707a0f77a943b5"
+          },
+          {
+            "pid": 79597,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "c5c6d7e8184bb94386c77ce01102ec10c8984ba9e4d2dbc3f19440a9d0ef7520",
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122252000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79598,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "c5c6d7e8184bb94386c77ce01102ec10c8984ba9e4d2dbc3f19440a9d0ef7520",
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122252000,
+            "state": "U",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79599,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "c5c6d7e8184bb94386c77ce01102ec10c8984ba9e4d2dbc3f19440a9d0ef7520",
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122252000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79621,
+            "parent": 79569,
+            "group": 79569,
+            "identity": "4528b59973d257f52902702fab888d37de7b1ce8d3eed2f11474bfb9cd1d67e3",
+            "startHash": "8a9adcfb42a11256aea6569b1397bfd4c0cf1d22699d7e8235b3fc8732b99057",
+            "commandHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e",
+            "startedMs": 1792122253000,
+            "state": "Z",
+            "zombie": true,
+            "profile": null
+          }
+        ],
+        "after": [
+          {
+            "pid": 79569,
+            "parent": 77001,
+            "group": 79569,
+            "identity": "f641f180cbf34f3eca7770cbbebb4e2fc111837d5c25f7e2f5dd424bc0dbfb6d",
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "commandHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e",
+            "startedMs": 1792122252000,
+            "state": "Z",
+            "zombie": true,
+            "profile": null
+          }
+        ],
+        "executables": [
+          {
+            "pid": 79569,
+            "startedMs": 1792122252000,
+            "startHash": "ccb17adcdc895938fd218a73bdfc402f63fb461d6d5061404dfe53564fbbaba7",
+            "executableHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580"
+          },
+          {
+            "pid": 79621,
+            "startedMs": 1792122253000,
+            "startHash": "8a9adcfb42a11256aea6569b1397bfd4c0cf1d22699d7e8235b3fc8732b99057",
+            "executableHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e"
+          }
+        ]
+      },
+      "originalStrictVerdict": {
+        "passed": false,
+        "category": "identity_changed",
+        "phase": "reconciliation",
+        "pid": 79569,
+        "expectedIdentity": "edaa301fa43028ec2af74cd1f8d31eb2c3cd47db52f473eb3b0117fd22027690",
+        "observedIdentity": "f641f180cbf34f3eca7770cbbebb4e2fc111837d5c25f7e2f5dd424bc0dbfb6d"
+      }
+    },
+    {
+      "id": "protocol-10-2",
+      "source": {
+        "path": ".sites-runtime/po-cart-workers/browser-lifecycle-validation-task-20261015/cases/protocol-10-2/observation-0002.json",
+        "sha256": "261b905f28eff4078dc26c8c6af43c3099bd290fcf212d6a0d3239292180564b"
+      },
+      "sample": {
+        "version": 2,
+        "event": "sample",
+        "phase": "shutdown",
+        "evidenceOrigin": "collected",
+        "complete": true,
+        "forbiddenPids": [
+          4303
+        ],
+        "absentPids": [],
+        "baseline": [
+          {
+            "pid": 79865,
+            "parent": 77001,
+            "group": 79865,
+            "identity": "7d3a4858445728d8d831f3b622816fa6ad08e48b0e43665a3b1e1d9931f4b29c",
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "342cced28aee099205fda2d748a8e3203a8e8239bceb2bfcaec7c3c7d8deb4a7",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79893,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "84854037594c8244b2e42f16de2a005862be0f6bd836f517553249a62975f1ea",
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79894,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "6214b537849f6c8c4b2f0be49da77bdbb6f43cec81d02be5fced0a12c844d297",
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79895,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "cf60715451ab3eb0bbd8554f0cffa3b7f9a487f1410ab928a5a4b8866db03036",
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79914,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "c378836c57ccb597334126b7894ea6ad282754f25adc5fe39cb99c9efbed2122",
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79917,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "43618e34662faf8f1e3614bf24bf0d058f341f1f024ee9a6abcfb1a2a17392f8",
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79933,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "6ea9832ed0fadb1da73b8cb16e5bd4d7e4a01dd01cd3cd808d5985fb124e1f9b",
+            "startedMs": 1792122256000,
+            "startHash": "140a506bd3fea82ec1bc9eb59b0c44b17a7131e37c3cae2324f883cf493bf567",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79939,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "ac6ab4e187140b320e299f08906eb8052134c16727f573ad492827768b93914f",
+            "startedMs": 1792122256000,
+            "startHash": "140a506bd3fea82ec1bc9eb59b0c44b17a7131e37c3cae2324f883cf493bf567",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79945,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "762b44fe50d135d8008132b4b67bb88266d2e37169b389a296eed02907b31f55",
+            "startedMs": 1792122257000,
+            "startHash": "e07ffe41383847eec8a24aa4aed152a1711b9cef7680bf114e8a593d9759cb75",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          }
+        ],
+        "before": [
+          {
+            "pid": 79865,
+            "parent": 77001,
+            "group": 79865,
+            "identity": "7d3a4858445728d8d831f3b622816fa6ad08e48b0e43665a3b1e1d9931f4b29c",
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "commandHash": "288aa2afe77a2e566e9b139fbc8707d201682dfa929d85273250e532f2517477",
+            "startedMs": 1792122255000,
+            "state": "Rs",
+            "zombie": false,
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79893,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "84854037594c8244b2e42f16de2a005862be0f6bd836f517553249a62975f1ea",
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "commandHash": "0dafaf341c36898b2af095659220ac1e94dc1714df5c3bd20158e4a341844ead",
+            "startedMs": 1792122255000,
+            "state": "S",
+            "zombie": false,
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79894,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "18dd925f92fd4c2d970d4646ec8fdd62f66e73dd499f788c0d29f4ca3ede3676",
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122255000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          },
+          {
+            "pid": 79895,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "cf60715451ab3eb0bbd8554f0cffa3b7f9a487f1410ab928a5a4b8866db03036",
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "commandHash": "87ae6e69e1a723232e67d673b9857a49177919b0ee8da4a056601d4a2c48e764",
+            "startedMs": 1792122255000,
+            "state": "S",
+            "zombie": false,
+            "profile": "73e718b50b136f35745d6f49cf93c2c13118b438ae0ab83dfc28db2870527c43"
+          },
+          {
+            "pid": 79917,
+            "parent": 79865,
+            "group": 79865,
+            "identity": "18dd925f92fd4c2d970d4646ec8fdd62f66e73dd499f788c0d29f4ca3ede3676",
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+            "startedMs": 1792122255000,
+            "state": "S",
+            "zombie": false,
+            "profile": null
+          }
+        ],
+        "after": [
+          {
+            "pid": 79865,
+            "parent": 77001,
+            "group": 79865,
+            "identity": "57460178358813453a769dd5301916e0acbc5b2394e7a13c51d3cee66613e781",
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "commandHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e",
+            "startedMs": 1792122255000,
+            "state": "Z",
+            "zombie": true,
+            "profile": null
+          }
+        ],
+        "executables": [
+          {
+            "pid": 79865,
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580"
+          },
+          {
+            "pid": 79893,
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580"
+          },
+          {
+            "pid": 79895,
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580"
+          },
+          {
+            "pid": 79917,
+            "startedMs": 1792122255000,
+            "startHash": "2594de69d156d799397563cb6a9987f98e07a230b68fbef79bf2d149caab12fb",
+            "executableHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e"
+          }
+        ]
+      },
+      "originalStrictVerdict": {
+        "passed": false,
+        "category": "identity_changed",
+        "phase": "reconciliation",
+        "pid": 79865,
+        "expectedIdentity": "7d3a4858445728d8d831f3b622816fa6ad08e48b0e43665a3b1e1d9931f4b29c",
+        "observedIdentity": "57460178358813453a769dd5301916e0acbc5b2394e7a13c51d3cee66613e781"
+      }
+    },
+    {
+      "id": "protocol-50-2",
+      "source": {
+        "path": ".sites-runtime/po-cart-workers/browser-lifecycle-validation-task-20261015/cases/protocol-50-2/observation-0002.json",
+        "sha256": "6fa11cffffd13481421212e12de9262d985699bf4de78eda51b8617593bb45bc"
+      },
+      "sample": {
+        "version": 2,
+        "event": "sample",
+        "phase": "shutdown",
+        "evidenceOrigin": "collected",
+        "complete": true,
+        "forbiddenPids": [
+          4303
+        ],
+        "absentPids": [],
+        "baseline": [
+          {
+            "pid": 80427,
+            "parent": 77001,
+            "group": 80427,
+            "identity": "3619481e5eb6da49ecf93be8fbe3d56cd0ad57d3b006786c3979bfc0c365a785",
+            "startedMs": 1792122261000,
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "executableHash": "342cced28aee099205fda2d748a8e3203a8e8239bceb2bfcaec7c3c7d8deb4a7",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          },
+          {
+            "pid": 80455,
+            "parent": 80427,
+            "group": 80427,
+            "identity": "3be36a95017ae73f091d4b78a6c13ab816730022aa7baa11ccbde1134f88c655",
+            "startedMs": 1792122261000,
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          },
+          {
+            "pid": 80456,
+            "parent": 80427,
+            "group": 80427,
+            "identity": "a3ed6e819bf1595bb11497004ad7d5df2220c442313ee473775befe76225746c",
+            "startedMs": 1792122261000,
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          },
+          {
+            "pid": 80457,
+            "parent": 80427,
+            "group": 80427,
+            "identity": "1eab530f0dc5802cb75684e8cf9a4a90d071df6eca371b84c0c7869f2aca9648",
+            "startedMs": 1792122261000,
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          },
+          {
+            "pid": 80476,
+            "parent": 80427,
+            "group": 80427,
+            "identity": "f29cf819a3139e2ef122f6297db9dd60cdbcb5a9fb7af746d1ae46a33ddfaee8",
+            "startedMs": 1792122261000,
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          },
+          {
+            "pid": 80479,
+            "parent": 80427,
+            "group": 80427,
+            "identity": "e850ea34452d0abaf996ff6576f6546c8286781ae306edaa1f7a2c354fb8bbbb",
+            "startedMs": 1792122261000,
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          },
+          {
+            "pid": 80495,
+            "parent": 80427,
+            "group": 80427,
+            "identity": "ad76c2c4bb6a9346758eab764806f0b73b9266544edcb4de5ce3d6107dbdf02c",
+            "startedMs": 1792122262000,
+            "startHash": "cf45128efcbc559d3ed5b9cd5160ad36a816e82692057e6d3cfbe391c7607252",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          },
+          {
+            "pid": 80501,
+            "parent": 80427,
+            "group": 80427,
+            "identity": "da700ce35358bfca150e82c40a4a22ead0f1844440b2596f6b508005e874f42c",
+            "startedMs": 1792122263000,
+            "startHash": "bfb041d3bdb7e4ff5f942b19e83c6e1e7b500f0dc52734a1aad26227457f9a6d",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          },
+          {
+            "pid": 80507,
+            "parent": 80427,
+            "group": 80427,
+            "identity": "e7634e45818b1d79ae8d1b284fc2454aceb503ad6cd85fe9355a4047ea74ef36",
+            "startedMs": 1792122263000,
+            "startHash": "bfb041d3bdb7e4ff5f942b19e83c6e1e7b500f0dc52734a1aad26227457f9a6d",
+            "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+            "profile": "4cbdb6899747bd0f7c5e28daba8a785999c806ba2c181319c56f923b61f2d016"
+          }
+        ],
+        "before": [
+          {
+            "pid": 80427,
+            "parent": 77001,
+            "group": 80427,
+            "identity": "8b78a3984dc520e226f203a88009e934caac4a69c4fc22e3a6aaef9fffe43c2f",
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "commandHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e",
+            "startedMs": 1792122261000,
+            "state": "Z",
+            "zombie": true,
+            "profile": null
+          }
+        ],
+        "after": [
+          {
+            "pid": 80427,
+            "parent": 77001,
+            "group": 80427,
+            "identity": "8b78a3984dc520e226f203a88009e934caac4a69c4fc22e3a6aaef9fffe43c2f",
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "commandHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e",
+            "startedMs": 1792122261000,
+            "state": "Z",
+            "zombie": true,
+            "profile": null
+          }
+        ],
+        "executables": [
+          {
+            "pid": 80427,
+            "startedMs": 1792122261000,
+            "startHash": "bf919e40dbe5ba18a52430b2edbc68c2e76db7df4fe1e5ff2a9611571f08cf09",
+            "executableHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e"
+          }
+        ]
+      },
+      "originalStrictVerdict": {
+        "passed": false,
+        "category": "identity_changed",
+        "phase": "reconciliation",
+        "pid": 80427,
+        "expectedIdentity": "3619481e5eb6da49ecf93be8fbe3d56cd0ad57d3b006786c3979bfc0c365a785",
+        "observedIdentity": "8b78a3984dc520e226f203a88009e934caac4a69c4fc22e3a6aaef9fffe43c2f"
+      }
+    }
+  ],
+  "historical": {
+    "path": ".sites-runtime/po-cart-workers/remaining-profile-cleanup-task-20261015/observations/000006.json",
+    "sha256": "5d0f4586905663ec15f5437a8c8c286212fc6fd555ba53888382141797fe8f9e",
+    "observation": {
+      "version": 1,
+      "before": [
+        {
+          "pid": 30082,
+          "parent": 1,
+          "group": 30082,
+          "identity": "bcf020150064e434b689f6541bceba4fba466ac031e16bdb83006fef54dc7547",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30088,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "652b24169338ad0b03e0663d3e7b9fb2527adeb7ee57eef240fb1adc0a5b167b",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30089,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "4d22d01fc719fc9c5a9a14594c6e6c597f58620a20e26d0d204e3fcdd982a6d9",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30090,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "037c08c702d54ee79c381ab9605952bad8b0df4b086f394ee73134241c480249",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30093,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "66c569367414dd4d3b53a092a6ffc8b72a7d887c978a86d1add84d43b718d785",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30095,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "a66fd6e3072031b979b31d4ebf362ae4c2b571ecfbee333e36eb98ad625bf085",
+          "profile": null,
+          "zombie": false
+        },
+        {
+          "pid": 30096,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "e91f8d16c11ebcf0bb61d8a8810a9ecd24818ca880dcb87db9f1f3b29f54a8ed",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30097,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "49b4fa6b9288c21bb3f495489125839d8ad94eb5bdc5486e5c1987af56c04e93",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30115,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "912a57013b6aa477cd6462a5714b683ea92bfb92c2c26ec8f7b2c43036e7a707",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30474,
+          "parent": 1,
+          "group": 30474,
+          "identity": "01a4268366309fd953be3d9017079d58577a26fcc585f68b93195157b2fd677a",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30480,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "492227cd6960d8117776d047ad6c4552cfc1544180a9211bddfa22194b67f9e1",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30481,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "ebfe0687986969e5750807584a1dc88fef03ca2b7ac695bef40b22ccd968e4db",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30482,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "81bb41ac843af25499b75bede72d852ab6f861b011a4f4ff84aab7a586e23a41",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30484,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "55110d3234e30ab600a73958bb2ee8ce9a0d99a1e9dba68ce6b996100585bc33",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30487,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "ead22f70a1613e57db49aa36957273e7f9b63c37e0818da193f1e2e81bb7b487",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30488,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "2cc9f44891afe314eacbe2de916648f6184b3db83b6726bd7919e2e7fe7bc5e4",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30493,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "40c26591a7e22123acf9a1e9e9994bbe9bbeba89a126e79955bb79dea38a15ad",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30528,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "c1bfb1dc443f1dde8974d3adfe6f505b134e3e29e01dde79ed3a4726a20e42ec",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        }
+      ],
+      "after": [
+        {
+          "pid": 30082,
+          "parent": 1,
+          "group": 30082,
+          "identity": "bcf020150064e434b689f6541bceba4fba466ac031e16bdb83006fef54dc7547",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30088,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "652b24169338ad0b03e0663d3e7b9fb2527adeb7ee57eef240fb1adc0a5b167b",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30089,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "4d22d01fc719fc9c5a9a14594c6e6c597f58620a20e26d0d204e3fcdd982a6d9",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30090,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "037c08c702d54ee79c381ab9605952bad8b0df4b086f394ee73134241c480249",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30093,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "66c569367414dd4d3b53a092a6ffc8b72a7d887c978a86d1add84d43b718d785",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30096,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "e91f8d16c11ebcf0bb61d8a8810a9ecd24818ca880dcb87db9f1f3b29f54a8ed",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30097,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "49b4fa6b9288c21bb3f495489125839d8ad94eb5bdc5486e5c1987af56c04e93",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30115,
+          "parent": 30082,
+          "group": 30082,
+          "identity": "912a57013b6aa477cd6462a5714b683ea92bfb92c2c26ec8f7b2c43036e7a707",
+          "profile": "22776886a411811a4c53a017119217ada012618186faf680812903ed38e254f0",
+          "zombie": false
+        },
+        {
+          "pid": 30474,
+          "parent": 1,
+          "group": 30474,
+          "identity": "01a4268366309fd953be3d9017079d58577a26fcc585f68b93195157b2fd677a",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30480,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "492227cd6960d8117776d047ad6c4552cfc1544180a9211bddfa22194b67f9e1",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30481,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "ebfe0687986969e5750807584a1dc88fef03ca2b7ac695bef40b22ccd968e4db",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30482,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "81bb41ac843af25499b75bede72d852ab6f861b011a4f4ff84aab7a586e23a41",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30484,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "55110d3234e30ab600a73958bb2ee8ce9a0d99a1e9dba68ce6b996100585bc33",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30487,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "ead22f70a1613e57db49aa36957273e7f9b63c37e0818da193f1e2e81bb7b487",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30488,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "2cc9f44891afe314eacbe2de916648f6184b3db83b6726bd7919e2e7fe7bc5e4",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30493,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "40c26591a7e22123acf9a1e9e9994bbe9bbeba89a126e79955bb79dea38a15ad",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        },
+        {
+          "pid": 30528,
+          "parent": 30474,
+          "group": 30474,
+          "identity": "c1bfb1dc443f1dde8974d3adfe6f505b134e3e29e01dde79ed3a4726a20e42ec",
+          "profile": "803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571",
+          "zombie": false
+        }
+      ],
+      "executables": [
+        {
+          "pid": 30082,
+          "startedMs": 1791694882000,
+          "executableHash": "342cced28aee099205fda2d748a8e3203a8e8239bceb2bfcaec7c3c7d8deb4a7",
+          "identity": "bcf020150064e434b689f6541bceba4fba466ac031e16bdb83006fef54dc7547"
+        },
+        {
+          "pid": 30088,
+          "startedMs": 1791694882000,
+          "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+          "identity": "652b24169338ad0b03e0663d3e7b9fb2527adeb7ee57eef240fb1adc0a5b167b"
+        },
+        {
+          "pid": 30089,
+          "startedMs": 1791694882000,
+          "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+          "identity": "4d22d01fc719fc9c5a9a14594c6e6c597f58620a20e26d0d204e3fcdd982a6d9"
+        },
+        {
+          "pid": 30090,
+          "startedMs": 1791694882000,
+          "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+          "identity": "037c08c702d54ee79c381ab9605952bad8b0df4b086f394ee73134241c480249"
+        },
+        {
+          "pid": 30093,
+          "startedMs": 1791694882000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "66c569367414dd4d3b53a092a6ffc8b72a7d887c978a86d1add84d43b718d785"
+        },
+        {
+          "pid": 30096,
+          "startedMs": 1791694882000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "e91f8d16c11ebcf0bb61d8a8810a9ecd24818ca880dcb87db9f1f3b29f54a8ed"
+        },
+        {
+          "pid": 30097,
+          "startedMs": 1791694882000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "49b4fa6b9288c21bb3f495489125839d8ad94eb5bdc5486e5c1987af56c04e93"
+        },
+        {
+          "pid": 30115,
+          "startedMs": 1791694887000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "912a57013b6aa477cd6462a5714b683ea92bfb92c2c26ec8f7b2c43036e7a707"
+        },
+        {
+          "pid": 30474,
+          "startedMs": 1791694944000,
+          "executableHash": "342cced28aee099205fda2d748a8e3203a8e8239bceb2bfcaec7c3c7d8deb4a7",
+          "identity": "01a4268366309fd953be3d9017079d58577a26fcc585f68b93195157b2fd677a"
+        },
+        {
+          "pid": 30480,
+          "startedMs": 1791694944000,
+          "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+          "identity": "492227cd6960d8117776d047ad6c4552cfc1544180a9211bddfa22194b67f9e1"
+        },
+        {
+          "pid": 30481,
+          "startedMs": 1791694944000,
+          "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+          "identity": "ebfe0687986969e5750807584a1dc88fef03ca2b7ac695bef40b22ccd968e4db"
+        },
+        {
+          "pid": 30482,
+          "startedMs": 1791694944000,
+          "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9",
+          "identity": "81bb41ac843af25499b75bede72d852ab6f861b011a4f4ff84aab7a586e23a41"
+        },
+        {
+          "pid": 30484,
+          "startedMs": 1791694944000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "55110d3234e30ab600a73958bb2ee8ce9a0d99a1e9dba68ce6b996100585bc33"
+        },
+        {
+          "pid": 30487,
+          "startedMs": 1791694944000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "ead22f70a1613e57db49aa36957273e7f9b63c37e0818da193f1e2e81bb7b487"
+        },
+        {
+          "pid": 30488,
+          "startedMs": 1791694945000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "2cc9f44891afe314eacbe2de916648f6184b3db83b6726bd7919e2e7fe7bc5e4"
+        },
+        {
+          "pid": 30493,
+          "startedMs": 1791694947000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "40c26591a7e22123acf9a1e9e9994bbe9bbeba89a126e79955bb79dea38a15ad"
+        },
+        {
+          "pid": 30528,
+          "startedMs": 1791694949000,
+          "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e",
+          "identity": "c1bfb1dc443f1dde8974d3adfe6f505b134e3e29e01dde79ed3a4726a20e42ec"
+        }
+      ],
+      "exited": [
+        {
+          "pid": 30095,
+          "identity": "a66fd6e3072031b979b31d4ebf362ae4c2b571ecfbee333e36eb98ad625bf085"
+        }
+      ],
+      "outcome": "blocked",
+      "failure": {
+        "category": "identity_changed",
+        "phase": "reconciliation",
+        "pid": 30095,
+        "expectedIdentity": "e71604313e8d59b8856d2ff853072b9cabef9cb660c8d639266426045da2bd96",
+        "observedIdentity": "a66fd6e3072031b979b31d4ebf362ae4c2b571ecfbee333e36eb98ad625bf085"
+      }
+    }
+  }
+}
