@@ -1,3 +1,4 @@
+import './po-cart-worker/offline-boundary.mjs';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {randomUUID} from 'node:crypto';

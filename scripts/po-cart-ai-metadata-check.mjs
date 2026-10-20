@@ -1,3 +1,6 @@
+import {assertGateSource} from './po-cart-worker/full-gate-runtime.mjs';
+import {finishOfflineFixture} from './po-cart-worker/offline-case-cleanup.mjs';
+import './po-cart-worker/offline-boundary.mjs';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {createServer} from 'node:http';
@@ -32,7 +35,7 @@ try{
   assert.equal(sourceSnapshot().sha256,source.sha256,'Frozen source changed; stop browser progression');
   const dir=root+'/'+layout+'-'+scenario+'-'+kind;
   const result={layout,scenario,kind,classification,passed:false,credentialsRevoked:false,cleanup:false};report.results.push(result);save();
-  let f,fixture,server,worker,credential,profile;
+  let f,fixture,server,worker,credential,profile,origin;
   try{
    f=await workerFixture();
    const store=new BrowserFixtureStore(dir+'/store.json'),ledger=new AiBudgetLedger(dir+'/mock-ledger.json',dir+'/absent.json');
@@ -46,7 +49,7 @@ try{
     const chunks=[];for await(const b of req)chunks.push(b);const raw=Buffer.concat(chunks).toString();if(raw)mutations.push(JSON.parse(raw).action);
     const r=await f.api[req.method](new Request(origin+req.url,{method:req.method,headers:req.headers,...(raw?{body:raw}:{})}));res.writeHead(r.status,Object.fromEntries(r.headers));res.end(await r.text());
    }catch{res.writeHead(503);res.end('{}');}});
-   await new Promise(ok=>server.listen(0,'127.0.0.1',ok));const origin='http://127.0.0.1:'+server.address().port;
+   await new Promise(ok=>server.listen(0,'127.0.0.1',ok));origin='http://127.0.0.1:'+server.address().port;
    const credentialFile=dir+'/credential.json',journalFile=dir+'/journal.json',fixtureFile=dir+'/fixture.json',diagnosticFile=dir+'/diagnostics.jsonl';
    credential=f.credential({consumerKind:'local_browser'});writePrivate(credentialFile,credential);
    writePrivate(fixtureFile,{version:1,origin:fixtureOrigin,jobs:{[job.id]:{scope:{companyId:job.companyId,supplierId:job.supplierId,accountId:job.accountId},layout,scenario,token:session.token}}});
@@ -86,12 +89,14 @@ try{
     }).request(request,context);
    }};
    worker=new LocalBrowserCartWorker({credentialFile,journalFile,fixtureFile,origin,reader:new StagehandCartReader(provider),diagnosticMode:'passive',diagnosticFile});
-   if(completion===true)await worker.tick();else await assert.rejects(worker.tick(),/Browser preparation stopped/);
+   assertGateSource();if(completion===true)await worker.tick();else await assert.rejects(worker.tick(),/Browser preparation stopped/);
    const state=()=>f.sql.prepare('SELECT state FROM po_cart_jobs WHERE id=?').get(job.id).state;
    assert.equal(state(),completion===true?'ready':'review_needed');
    const additions=worker.state.calls.length;assert.equal(additions,completion===true?3:0);assert.equal(mutations.filter(m=>m==='beginAttempt').length,additions);
    assert.deepEqual(session.entries,completion===true?[...baseline,...catalog.map((l,i)=>({sku:l.sku,unitLabel:l.unitLabel,unitMinor:l.unitMinor,packs:String(i+1)}))]:baseline);
    assert.equal(effects(),before);assert.equal(worker.state.browserNetwork.externalRequests,0);assert.equal(worker.state.browserNetwork.checkoutSubmissions,0);assert.equal(worker.activeSession,undefined);
+   result.networkCoverageComplete=worker.state.browserNetwork.pageIntercepted===true;
+   assert.equal(result.networkCoverageComplete,true);
    assert.equal(worker.diagnostic.healthy(),true);worker.close();worker=undefined;
    const phases=requests.map(r=>r.phase);assert.equal(phases.length,completion===true?10:4);
    assert.equal(verifyEvaluationDiagnostics(diagnosticFile,phases,additions),true);
@@ -103,17 +108,15 @@ try{
    if(completion!==true){
     const calls=requests.length,reserved=(await ledger.snapshot()).reservedMicros;
     worker=new LocalBrowserCartWorker({credentialFile,journalFile,fixtureFile,origin,reader:new StagehandCartReader(provider),diagnosticMode:'off'});
-    await worker.tick();assert.equal(requests.length,calls);assert.equal((await ledger.snapshot()).reservedMicros,reserved);assert.equal(worker.state.calls.length,0);assert.deepEqual(session.entries,baseline);assert.equal(state(),'review_needed');assert.equal(effects(),before);
+    (assertGateSource(),await worker.tick());assert.equal(requests.length,calls);assert.equal((await ledger.snapshot()).reservedMicros,reserved);assert.equal(worker.state.calls.length,0);assert.deepEqual(session.entries,baseline);assert.equal(state(),'review_needed');assert.equal(effects(),before);
     worker.close();worker=undefined;result.restartNoEffects=true;
    }
    assert.ok(!existsSync(journalFile+'.lock'));assert.ok(!existsSync(profile+'.lock'));assert.ok(!existsSync(profile+'/SingletonLock'));
-   Object.assign(result,{passed:true,requests:phases.length,additions,exactCart:true,diagnosticsComplete:true,events:events.length,externalBrowserRequests:0,checkoutSubmissions:0,inventoryAndHoldsUnchanged:true});
+   Object.assign(result,{passed:true,requests:phases.length,completedRequests:(await ledger.snapshot()).reservations.filter(r=>r.status==='completed').length,additions,exactCart:true,diagnosticsComplete:true,events:events.length,externalRequests:0,checkoutSubmissions:0,inventoryAndHoldsUnchanged:true});
   }finally{
    worker?.close();
    try{
-    if(credential){f.revoke(credential);const r=await f.request(credential);await r.body?.cancel();assert.equal(r.status,401);result.credentialsRevoked=true;}
-    // Retain the synthetic jobs, holds and audit state even on failure.
-    if(f){f.sql.exec("VACUUM INTO '"+resolve(dir+'/state.sqlite').replaceAll("'","''")+"'");chmodSync(dir+'/state.sqlite',0o600);}
+    if(f)Object.assign(result,await finishOfflineFixture({f,dir,origin,worker,profile}));
    }finally{await closeServer(server);await closeServer(fixture);f?.sql.close();result.cleanup=(!server||!server.listening)&&(!fixture||!fixture.listening)&&(!profile||!existsSync(profile+'.lock'));save();}
   }
   assert.equal(result.credentialsRevoked,true);assert.equal(result.cleanup,true);

@@ -1,3 +1,6 @@
+import {gateActive} from './po-cart-worker/full-gate-runtime.mjs';
+if(gateActive())await import('./po-cart-worker/offline-boundary.mjs');
+import {confineManagerContext} from './po-cart-worker/full-gate-runtime.mjs';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {chromium} from 'playwright-core';
@@ -17,7 +20,7 @@ const sleep=ms=>new Promise(ok=>setTimeout(ok,ms));
 async function until(fn,label,timeout=20000){const end=Date.now()+timeout;while(Date.now()<end){const r=await fn();if(r)return r;await sleep(100);}throw Error('Timed out: '+label);}
 try{for(const [index,[layout,scenario,check]] of [['rows','login_expired','sign_in'],['compact','login_expired','baseline'],['rows','malicious','mismatch'],['compact','normal','native_close'],['rows','lost_response','uncertain'],['compact','normal','expiry'],['rows','normal','cancel'],['compact','normal','revoke'],['rows','normal','process'],['compact','normal','crash']].entries()){
  if(process.argv.includes('--cases')&&!process.argv[process.argv.indexOf('--cases')+1].split(',').includes(String(index)))continue;
- const f=await seedLocalBrowserJob({layout,scenario}),context=await ui.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
+ const f=await seedLocalBrowserJob({layout,scenario}),context=await ui.newContext({viewport:{width:1440,height:1000}}),page=await (await confineManagerContext(context)).newPage();
  let human,run,proxy;const failures=[];page.on('pageerror',e=>failures.push(e.message));
  const view=()=>f.request(`/api/po-cart-jobs?view=manager&companyId=${f.companyId}&orderId=${f.orderId}`);
  async function openUI(){await page.setViewportSize({width:1440,height:1000});await page.goto(f.origin+'/signin-with-chatgpt?return_to='+encodeURIComponent('/?company='+f.companyId));await page.getByRole('button',{name:'Purchase-order drafts',exact:true}).click();await page.getByRole('button',{name:/^Open PO-/}).first().click();await page.locator('[data-durable-cart]').waitFor();}

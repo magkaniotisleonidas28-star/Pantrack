@@ -3,6 +3,8 @@ import {resolve} from 'node:path';
 import {mkdirSync} from 'node:fs';
 import {FakeCartWorker} from './client.mjs';
 import {readPrivate,profileLock} from './private-files.mjs';
+import {assertGateSource,registerGateProfile,gateActive} from './full-gate-runtime.mjs';
+import {cleanupTaskBrowser} from './second-addition-cleanup.mjs';
 import {openLocalCartBrowser,closeLocalCartBrowser,readCart,readProducts,exactProduct} from '../cart-preview/browser-session';
 import {verifyCart,exactEntry,type CartEntry,type CartLine} from '../../src/lib/cart-preview-contract';
 import {agreeProduct,agreeCart,type CartReader} from './ai-reader';
@@ -15,11 +17,12 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
   requestStop(){this.diagnostic.emit('stop');this.stopping=true;this.inferenceAbort.abort();void this.activeSession?.browser.close().catch(()=>{});}
   fixtureFile:string;profileRoot:string;headless:boolean;
   reader?:CartReader;
+  retainFailureMessage:boolean;
   diagnosticMode:'off'|'passive'|'form';
   diagnostic:ReturnType<typeof browserDiagnostics>;
-  constructor(options:{credentialFile:string;journalFile:string;origin?:string;fetchImpl?:typeof fetch;timeoutMs?:number;fixtureFile:string;headless?:boolean;reader?:CartReader;diagnosticFile?:string;diagnosticMode?:'off'|'passive'|'form';diagnosticStream?:ReturnType<typeof browserDiagnostics>}){
+  constructor(options:{credentialFile:string;journalFile:string;origin?:string;fetchImpl?:typeof fetch;timeoutMs?:number;fixtureFile:string;headless?:boolean;reader?:CartReader;diagnosticFile?:string;diagnosticMode?:'off'|'passive'|'form';diagnosticStream?:ReturnType<typeof browserDiagnostics>;retainFailureMessage?:boolean}){
     super(options);this.fixtureFile=options.fixtureFile;this.profileRoot=resolve('.sites-runtime/po-cart-workers/browser-profiles');this.headless=options.headless??true;
-    this.reader=options.reader;
+    this.reader=options.reader;this.retainFailureMessage=gateActive()?false:options.retainFailureMessage??true;
     this.diagnosticMode=options.diagnosticMode??(options.diagnosticFile?'form':'off');
     if(this.diagnosticMode!=='off'&&!options.diagnosticFile){super.close();throw Error('Private diagnostic file required.');}
     try{this.diagnostic=options.diagnosticStream??browserDiagnostics(this.diagnosticMode==='off'?undefined:options.diagnosticFile);}catch(e){super.close();throw e;}
@@ -31,9 +34,10 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
     if(current.job.state==='queued')current=(await this.mutate('claim',{jobId})).current;
     const fence=current.ownership?.fence;if(!this.owns(current,fence))return;
     if(!current.browser)throw Error('Browser job required.');
-    let stage='session';
+    let stage='session',ownedProfile:string|undefined;
     let session:Awaited<ReturnType<typeof openLocalCartBrowser>>|undefined,unlock:(()=>void)|undefined,heartbeatFailure:unknown=null;
     const emit=this.diagnostic.emit;
+    let lifecycle:import('../cart-preview/browser-session').BrowserEvidence|undefined;
     const heartbeat=setInterval(()=>{emit('heartbeat_start');void this.mutate('heartbeat',{jobId,fence}).then(()=>emit('heartbeat_ok')).catch((e:unknown)=>{emit('heartbeat_failed');heartbeatFailure=e;this.inferenceAbort.abort();void session?.browser.close().catch(()=>{});});},20000);
     const fresh=async()=>{
       if(this.stopping)throw Error('STOPPED');
@@ -55,7 +59,8 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
       mkdirSync(this.profileRoot,{recursive:true,mode:0o700});
       // Lock lifetime belongs to the local process, not the D1 lease. Chromium also keeps its own profile lock.
       unlock=profileLock(resolve(this.profileRoot,key));
-      current=await fresh();stage='launch';session=await openLocalCartBrowser(origin,resolve(this.profileRoot,key),this.headless,'automation',()=>true,emit);this.activeSession=session;
+      ownedProfile=resolve(this.profileRoot,key);
+      current=await fresh();stage='launch';assertGateSource();registerGateProfile(resolve(this.profileRoot,key));session=await openLocalCartBrowser(origin,resolve(this.profileRoot,key),this.headless,'automation',()=>true,emit,{onEvidence:e=>{lifecycle=e;this.state.browserNetwork={jobId,...e};this.save();}});this.activeSession=session;
       const {page}=session;await page.goto(origin+'/session/'+fixture.token,{waitUntil:'networkidle',timeout:10000});
       const aiContext=(phase:string)=>({caseId:jobId,phase,signal:this.inferenceAbort.signal,diagnostic:emit});
       const readWithAi=async(phase:string)=>{
@@ -132,7 +137,7 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
       await this.mutate('finalizeCart',{jobId,fence,cart});
     }catch(e){
       emit('failure',{connected:session?.driver.isConnected()??false});
-      this.state.browserFailure={stage,message:(e as Error).message.split('\n')[0].replace(/https?:\/\/\S+/g,'[private URL]').slice(0,160)};this.save();
+      this.state.browserFailure={stage,message:this.retainFailureMessage?(e as Error).message.split('\n')[0].replace(/https?:\/\/\S+/g,'[private URL]').slice(0,160):'Browser preparation failed.'};this.save();
       // Safe HTTP recovery can publish known results; it can never recreate an ephemeral begin grant.
       if(!this.state.pending){
         try{const next=await fresh();if(this.owns(next,fence))await this.mutate('hold',{jobId,fence,reason:
@@ -141,6 +146,14 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
         catch{/* Revocation, cancellation, source change or lease loss leaves durable recovery/exposure intact. */}
       }
       throw Error('Browser preparation stopped; private evidence retained.');
-    }finally{clearInterval(heartbeat);await this.queue;if(session){await closeLocalCartBrowser(session);this.state.browserNetwork={jobId,...session.network};this.save();}this.activeSession=undefined;unlock?.();}
+    }finally{
+      clearInterval(heartbeat);
+      try{await this.queue;}finally{
+        try{if(session)await closeLocalCartBrowser(session);if(gateActive()&&ownedProfile)await cleanupTaskBrowser(ownedProfile);}finally{
+          if(lifecycle){this.state.browserNetwork={jobId,...lifecycle};this.save();}
+          this.activeSession=undefined;unlock?.();
+        }
+      }
+    }
   }
 }

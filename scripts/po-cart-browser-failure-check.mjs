@@ -1,3 +1,6 @@
+import {assertGateSource} from './po-cart-worker/full-gate-runtime.mjs';
+import {finishOfflineFixture} from './po-cart-worker/offline-case-cleanup.mjs';
+import './po-cart-worker/offline-boundary.mjs';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {createServer} from 'node:http';
@@ -25,10 +28,10 @@ for(const kind of ['missing_request','interrupted_response','disconnected','auth
  }catch{res.destroy();}});
  await new Promise(ok=>server.listen(0,'127.0.0.1',ok));const origin='http://127.0.0.1:'+server.address().port;
  const credentialFile=dir+'/credential.json',journalFile=dir+'/journal.json',fixtureFile=dir+'/sessions.json';
- writePrivate(credentialFile,f.credential({consumerKind:'local_browser'}));writePrivate(fixtureFile,{version:1,origin:storefront,jobs:{[j.id]:{scope:{companyId:j.companyId,supplierId:j.supplierId,accountId:j.accountId},layout:'compact',scenario,token:session.token}}});
- const effects=()=>tables(f.sql,['inventory','inventory_balances_exact','inventory_events_exact','po_cart_commitments','po_cart_reservations']),before=effects();
  let worker,injected=false,failureProbes=0;
  try{
+ writePrivate(credentialFile,f.credential({consumerKind:'local_browser'}));writePrivate(fixtureFile,{version:1,origin:storefront,jobs:{[j.id]:{scope:{companyId:j.companyId,supplierId:j.supplierId,accountId:j.accountId},layout:'compact',scenario,token:session.token}}});
+ const effects=()=>tables(f.sql,['inventory','inventory_balances_exact','inventory_events_exact','po_cart_commitments','po_cart_reservations']),before=effects();
   worker=new LocalBrowserCartWorker({credentialFile,journalFile,fixtureFile,origin,diagnosticMode,diagnosticFile:dir+'/diagnostics.jsonl',fetchImpl:async(url,options)=>{
    const r=await fetch(url,options);
    if(options.body&&JSON.parse(options.body).action==='beginAttempt'&&!injected){injected=true;
@@ -53,10 +56,10 @@ for(const kind of ['missing_request','interrupted_response','disconnected','auth
    if(kind==='authority_lost')assert.ok(events.some(e=>e.event==='ownership_lost'&&e.status===401));
   }
   assert.equal(worker.state.browserNetwork.externalRequests,0);assert.equal(worker.state.browserNetwork.checkoutSubmissions,0);
-  worker.close();worker=new LocalBrowserCartWorker({credentialFile,journalFile,fixtureFile,origin});try{await worker.tick();}catch{}
+  worker.close();worker=new LocalBrowserCartWorker({credentialFile,journalFile,fixtureFile,origin});try{(assertGateSource(),await worker.tick());}catch{}
   assert.equal(worker.state.calls.length,calls);assert.equal(session.entries.length,entries);assert.equal(effects(),before);
   assert.notEqual(f.sql.prepare('SELECT state FROM po_cart_jobs').get().state,'ready');
   console.log('PASS injected '+kind+' ('+diagnosticMode+'): held, no duplicate addition or incorrect readiness after restart');
- }finally{worker?.close();server.closeAllConnections();await new Promise(ok=>server.close(ok));fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));f.sql.close();}
+ }finally{const cleanup=await finishOfflineFixture({f,dir:dir,origin,worker});server.closeAllConnections();await new Promise(ok=>server.close(ok));fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));f.sql.close();assert.equal(cleanup.cleanupVerified,true);}
 }
 console.log('Private fault evidence: '+root);

@@ -15,6 +15,8 @@ import {browserDiagnostics} from './browser-diagnostics';
 import {verifyEvaluationDiagnostics} from './evaluation-diagnostics';
 import {sourceSnapshot} from './acceptance-gate.mjs';
 import {metadataEvidence,verifyMetadataEvidence,type MetadataEvidenceSink} from './metadata-evidence';
+import {assertGateSource} from './full-gate-runtime.mjs';
+import {verifyAdditionAttempts} from './second-addition-case.mjs';
 const sdkVersion=(name:string)=>{let path=fileURLToPath(import.meta.resolve(name));for(let i=0;i<5;i++){
   path=dirname(path);try{const p=JSON.parse(readFileSync(path+'/package.json','utf8'));if(p.name===name)return p.version;}catch{}
 }return 'unverified';};
@@ -74,7 +76,7 @@ try{
    const diagnosticFile=f.root+'/diagnostics.jsonl',stream=streams.get(layout+'-'+scenario);
    const metadata=metadataStreams.get(layout+'-'+scenario)!;result.metadataFiles=metadata.files();
    worker=new LocalBrowserCartWorker({credentialFile:f.credentialFiles[0],journalFile:f.root+'/journal.json',fixtureFile:f.fixtureFile,origin:f.origin,reader:offline?offline.reader(f,metadata):new StagehandCartReader(undefined,metadata),headless:!process.argv.includes('--visible'),diagnosticMode,diagnosticFile,diagnosticStream:stream});
-   try{await worker.tick();}catch{result.interventions++;}
+   assertGateSource();try{await worker.tick();}catch{result.interventions++;}
    // tick has stopped the browser. Inspect the fixture independently afterward.
    const stopped=worker;worker.close();worker=undefined;
    const current=await f.request(`/api/po-cart-jobs?companyId=${f.companyId}&jobId=${f.jobId}`),session=f.readSession();
@@ -86,6 +88,9 @@ try{
    const required=ready?['baseline','product:DEMO-COFFEE','product:DEMO-OAT','product:DEMO-CUPS','final']:['baseline','product:DEMO-COFFEE'];
    const realCalls=required.every(p=>['Extraction','Metadata'].every(name=>calls.filter((c:any)=>c.phase===p+':'+name&&c.status==='completed').length===1));
    const additions=stopped.state.calls.length,network=stopped.state.browserNetwork;
+   result.networkCoverageComplete=network?.pageIntercepted===true;
+   result.cleanupVerified=!!network&&network.proxyClosed&&network.driverClosed&&network.browserClosed&&network.cleanupErrors===0;
+   result.attemptsVerified=ready?verifyAdditionAttempts(current):current.attempts.length===0&&current.results.length===0;
    result.diagnosticFile=diagnosticMode==='passive'?diagnosticFile:null;
    result.diagnosticsComplete=diagnosticMode==='off'||Boolean(stream?.healthy()&&verifyEvaluationDiagnostics(diagnosticFile,required.flatMap(p=>[p+':Extraction',p+':Metadata']),additions));
    metadata.close();
@@ -96,7 +101,7 @@ try{
    result.blockedTelemetryRequests=network?.blockedTelemetry??null;
    result.inventoryUnchanged=equal(await f.request('/api/inventory?companyId='+f.companyId),f.inventory);result.reservationUnchanged=equal(current.authorization.reservation,f.reservation);
    result.passed=current.job.state===(ready?'ready':'review_needed')&&exact&&realCalls&&calls.length===(ready?10:4)&&additions===(ready?3:0)
-    &&network?.externalRequests===0&&network?.checkoutSubmissions===0&&result.inventoryUnchanged&&result.reservationUnchanged&&result.diagnosticsComplete&&result.metadataComplete;
+    &&network?.externalRequests===0&&network?.checkoutSubmissions===0&&result.inventoryUnchanged&&result.reservationUnchanged&&result.diagnosticsComplete&&result.metadataComplete&&result.networkCoverageComplete&&result.cleanupVerified&&result.attemptsVerified;
    result.reason=result.passed?'verified':'acceptance check failed or real model calls incomplete';
   }catch{result.reason='local application, model, budget or private evidence unavailable';result.interventions++;}
   finally{

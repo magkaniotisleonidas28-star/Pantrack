@@ -15,7 +15,7 @@ for(const [layout,scenario,drop] of [['rows','normal','recordBaseline'],['rows',
  await new Promise(ok=>proxy.listen(0,'127.0.0.1',ok));const origin='http://127.0.0.1:'+proxy.address().port;
  try{
   const workers=f.credentialFiles.map((file,i)=>new Promise((ok,fail)=>{
-   const p=spawn(process.execPath,['scripts/po-cart-browser-worker.mjs','--credential',file,'--journal',f.root+`/journal-${i}.json`,'--fixture',f.fixtureFile,'--origin',origin,'--once'],{stdio:['ignore','pipe','pipe'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
+   const p=spawn(process.execPath,['scripts/po-cart-browser-worker.mjs','--credential',file,'--journal',f.root+`/journal-${i}.json`,'--fixture',f.fixtureFile,'--origin',origin,'--once'],{stdio:['ignore','pipe','pipe'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP','PANTRACK_FULL_OFFLINE_GATE'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
    let output='';p.stdout.on('data',b=>output+=b);p.stderr.on('data',b=>output+=b);p.on('error',fail);p.on('exit',code=>ok({code,output}));
   }));
   const results=await Promise.all(workers),current=await f.request(`/api/po-cart-jobs?companyId=${f.companyId}&jobId=${f.jobId}`),session=f.readSession();
