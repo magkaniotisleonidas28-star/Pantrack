@@ -31,7 +31,8 @@ function deferred(){let resolve;const promise=new Promise(r=>{resolve=r;});retur
 function barrier(){return {entered:deferred(),release:deferred()};}
 let sessionBatchBarrier,completionFailures=0;const recoveryClaimBarriers=[];
 let failingAuditAction,failMembership=false;
-globalThis.m2db={prepare(query){let values=[];return {query,bind(...v){values=v;return this;},async first(){if(failMembership&&query.startsWith('SELECT role FROM memberships'))throw new Error('Fictional internal membership failure');return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){if(query.startsWith('INSERT INTO security_audit')&&values.includes(failingAuditAction))throw new Error('Fictional internal audit failure');return this.execute();}};},async batch(statements){
+let failingQuery;
+globalThis.m2db={prepare(query){if(failingQuery&&query.startsWith(failingQuery))throw new Error('Fictional D1 internal SQL and secret detail');let values=[];return {query,bind(...v){values=v;return this;},async first(){if(failMembership&&query.startsWith('SELECT role FROM memberships'))throw new Error('Fictional internal membership failure');return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){if(query.startsWith('INSERT INTO security_audit')&&values.includes(failingAuditAction))throw new Error('Fictional internal audit failure');return this.execute();}};},async batch(statements){
  if(sessionBatchBarrier&&statements.some(s=>/^INSERT INTO auth_sessions\b/.test(s.query))){const gate=sessionBatchBarrier;sessionBatchBarrier=undefined;gate.entered.resolve();await gate.release.promise;}
  if(recoveryClaimBarriers.length&&statements.some(s=>s.query.startsWith('DELETE FROM auth_sessions WHERE user_id='))){const gate=recoveryClaimBarriers.shift();gate.entered.resolve();await gate.release.promise;}
  sql.exec('BEGIN');try{const out=statements.map(s=>s.execute());if(completionFailures&&statements.some(s=>s.query.includes('recovery_until=CASE'))){completionFailures--;throw new Error('Fictional completion commit failure');}sql.exec('COMMIT');return out;}catch(e){sql.exec('ROLLBACK');throw e;}
@@ -142,6 +143,40 @@ for(const family of ['waste','waste-shortcuts']){
  assert.equal((await response.json()).uncertain,true,'Genuine post-dispatch waste faults preserve safe replay advice');
 }
 console.log('PASS: F2 committed credentials, malformed input, pre-dispatch outages and waste uncertainty');
+// F6: unexpected failures must not expose D1, crypto, or runtime details.
+for(const [family,body,query,fallback] of [
+ ['auth',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)},'UPDATE auth_fence','Authentication unavailable.'],
+ ['register',{companyId:'company-a',action:'token'},'INSERT INTO register_settings','Could not save settings.'],
+ ['automation',{companyId:'company-a',action:'scheduler'},'INSERT INTO automation_settings','Could not update automation.'],
+ ['clover',{companyId:'company-a',action:'disconnect'},'DELETE FROM clover_connections','Clover request failed.'],
+ ['sales',{companyId:'company-a',action:'removeMapping',mappingKey:'missing'},'DELETE FROM register_mappings','Could not save sales.'],
+ ['register/ingest',{},'SELECT company_id FROM register_settings','Could not import sales.']
+]){
+ failingQuery=query;
+ const template=req(family,'POST',body,cookies.owner,family==='register/ingest'?{Authorization:'Bearer fictional-bridge-token'}:{});
+ const response=await modules[family].POST(family==='register/ingest'?new Request(template.url+'?companyId=company-a',template):template);
+ failingQuery=undefined;
+ assert.equal(response.status,family==='register/ingest'?422:400);
+ assert.equal((await response.json()).error,fallback,'F6 '+family+' hides unexpected internal error details');
+}
+const originalDigest=crypto.subtle.digest;
+try{
+ crypto.subtle.digest=async function(algorithm,data){
+  if(data.byteLength===72)throw new DOMException('Fictional crypto internal key material','OperationError');
+  return originalDigest.call(this,algorithm,data);
+ };
+ const failed=await call('register','POST',{companyId:'company-a',action:'token'},cookies.owner);
+ assert.equal(failed.status,400);assert.equal((await failed.json()).error,'Could not save settings.');
+}finally{crypto.subtle.digest=originalDigest;}
+const cryptoKey=globalThis.m2env.AUTH_ENCRYPTION_KEY;
+globalThis.m2env.AUTH_ENCRYPTION_KEY='ab';
+const cryptoFailure=await call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)});
+globalThis.m2env.AUTH_ENCRYPTION_KEY=cryptoKey;
+assert.equal((await cryptoFailure.json()).error,'Authentication encryption is not configured.','Deliberately authored setup message remains unchanged');
+assert.equal((await(await call('register','POST',{companyId:'company-a',action:'save'},cookies.owner)).json()).error,'Enter register settings.');
+assert.equal((await(await call('sales','POST',{companyId:'company-a',action:'import'},cookies.owner)).json()).error,'Enter a unique sales reference and quantities.');
+assert.equal((await(await call('automation','POST',{companyId:'company-a',action:'vendor'},cookies.owner)).json()).error,'Vendor details required.');
+console.log('PASS: F6 six API error boundaries hide internals and preserve intended messages');
 const families=['workspace','inventory','sales','register','clover','payments','automation','members'];
 const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','publishRecipeExact','createStockExact','packageStockExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
 for(const family of families){

@@ -1,3 +1,4 @@
+import {UserFacingError} from '@/lib/user-facing-error';
 import {env} from 'cloudflare:workers';
 import {database} from '@/db/raw';
 import {cloverConfig,cloverJson,withClover} from '@/lib/clover';
@@ -21,13 +22,13 @@ export async function cloverSyncStatus(companyId:string){
 }
 
 export async function syncClover(companyId:string){
- if(!cloverSyncEnabled())throw new Error('Clover sales sync is disabled.');
+ if(!cloverSyncEnabled())throw new UserFacingError('Clover sales sync is disabled.');
  const db=database(),now=Date.now(),lease=now+120_000;
  const state=await db.prepare('UPDATE clover_sync_state SET lease_until=?,last_attempt=?,last_error=NULL WHERE company_id=? AND lease_until<? RETURNING environment,merchant_id,started_at,checkpoint').bind(lease,new Date(now).toISOString(),companyId,now).first<{environment:string;merchant_id:string;started_at:number;checkpoint:number}>();
- if(!state)throw new Error('Clover is disconnected or a sync is already running.');
+ if(!state)throw new UserFacingError('Clover is disconnected or a sync is already running.');
  try{
   const result=await withClover(companyId,async(connection,token)=>{
-   if(connection.merchant_id!==state.merchant_id||connection.environment!==state.environment)throw new Error('Clover connection changed. Reconnect before syncing.');
+   if(connection.merchant_id!==state.merchant_id||connection.environment!==state.environment)throw new UserFacingError('Clover connection changed. Reconnect before syncing.');
    const config=cloverConfig(),source=cloverSource(companyId,state.environment,state.merchant_id),service=d1SalesService(db);
    const lower=Math.max(state.started_at,state.checkpoint-OVERLAP_MS),upper=Math.min(Date.now(),lower+24*60*60*1000);
    if(upper<lower)return {scanned:0,created:0,held:0,duplicates:0,checkpoint:new Date(state.checkpoint).toISOString()};
@@ -41,7 +42,7 @@ export async function syncClover(companyId:string){
      created++;
      const status=await service.process(companyId,receipt.eventKey);
      if(status?.state==='held')held++;
-     if(status?.state==='failed')throw new Error('A Clover event was received but could not be applied.');
+     if(status?.state==='failed')throw new UserFacingError('A Clover event was received but could not be applied.');
     }else duplicates++;
    };
    // Clover omits deleted orders from modifiedTime results and returns 404 for
@@ -64,12 +65,12 @@ export async function syncClover(companyId:string){
      url.searchParams.set('limit',String(PAGE_SIZE));
      if(field==='deletedTime')url.searchParams.set('expand','lineItems,lineItems.modifications,payments');
      const list=await cloverJson(url.href,{headers:{Authorization:'Bearer '+token}}) as {elements?:CloverOrder[]};
-     if(!Array.isArray(list.elements)||list.elements.length>PAGE_SIZE)throw new Error('Clover returned an invalid orders page.');
+     if(!Array.isArray(list.elements)||list.elements.length>PAGE_SIZE)throw new UserFacingError('Clover returned an invalid orders page.');
      let previous=cursor;
      for(const item of list.elements){
       if(typeof item.id!=='string'||!/^[A-Za-z0-9_-]{1,200}$/.test(item.id)||!Number.isSafeInteger(item.modifiedTime)
        ||previous&&(item.modifiedTime<previous.time||item.modifiedTime===previous.time&&item.id<=previous.id)
-       ||cursor&&(ties?item.modifiedTime!==cursor.time:item.modifiedTime<=cursor.time))throw new Error('Clover returned an invalid orders page.');
+       ||cursor&&(ties?item.modifiedTime!==cursor.time:item.modifiedTime<=cursor.time))throw new UserFacingError('Clover returned an invalid orders page.');
       previous={time:item.modifiedTime,id:item.id};
      }
      for(const item of list.elements){
@@ -85,7 +86,7 @@ export async function syncClover(companyId:string){
       if(deletedIds.has(item.id))continue;
       const detailUrl=config.api+'/v3/merchants/'+encodeURIComponent(state.merchant_id)+'/orders/'+encodeURIComponent(item.id)+'?expand=lineItems,lineItems.modifications,payments,refunds';
       const order=await cloverJson(detailUrl,{headers:{Authorization:'Bearer '+token}}) as CloverOrder;
-      if(order.id!==item.id)throw new Error('Clover order identity changed during sync.');
+      if(order.id!==item.id)throw new UserFacingError('Clover order identity changed during sync.');
       if(order.modifiedTime>upper)continue;
       await ingest(normalizeCloverOrder(order,state.started_at));
      }
@@ -96,7 +97,7 @@ export async function syncClover(companyId:string){
      }else ties=true;
      cursor=previous;
     }
-    if(!finished)throw new Error('Clover order page limit reached; checkpoint was not advanced.');
+    if(!finished)throw new UserFacingError('Clover order page limit reached; checkpoint was not advanced.');
    }
    const checkpoint=Math.max(state.checkpoint,upper);
    await db.prepare('UPDATE clover_sync_state SET checkpoint=?,last_success=?,last_error=NULL WHERE company_id=? AND lease_until=?').bind(checkpoint,new Date().toISOString(),companyId,lease).run();

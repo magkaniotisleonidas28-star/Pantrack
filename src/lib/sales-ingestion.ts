@@ -1,3 +1,4 @@
+import {UserFacingError} from '@/lib/user-facing-error';
 import {
   INVENTORY_CONSUMPTION_CONTRACT,
   type ConsumptionIssue,
@@ -251,7 +252,7 @@ export type SalesReceipt =
   | {kind: 'duplicate'; eventKey: string; state: SalesEventState}
   | {kind: 'conflict'; eventKey: string; conflictId: string; state: SalesEventState};
 
-export class SalesIngestionError extends Error {
+export class SalesIngestionError extends UserFacingError {
   constructor(public readonly code: string, message: string) {
     super(message);
     this.name = 'SalesIngestionError';

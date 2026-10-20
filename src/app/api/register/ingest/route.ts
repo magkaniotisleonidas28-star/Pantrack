@@ -1,3 +1,4 @@
+import {userFacingMessage} from '@/lib/user-facing-error';
 import {database} from '@/db/raw';
 import {BodyTooLargeError,readBoundedUtf8} from '@/lib/bounded-body';
 import {digest} from '@/lib/vendor-adapter';
@@ -14,5 +15,5 @@ export async function POST(req:Request){
  const lines=b.lines.map(l=>({mappingKey:JSON.stringify([l.provider,l.location,l.itemId]),quantity:l.quantity}));
  const result=exactInventoryPreviewEnabled()?await ingestLocalSale({db,companyId,source:'bridge',reference:b.reference,occurredAt:b.occurredAt,lines,actor:bridgeActor(companyId)}):await importSales(companyId,'bridge:'+b.reference,lines,'Register bridge');
  await db.prepare('UPDATE register_settings SET last_received=? WHERE company_id=?').bind(new Date().toISOString(),companyId).run();return Response.json(result,{headers:{'Cache-Control':'no-store'}});
- }catch(e){return Response.json({error:e instanceof z.ZodError||e instanceof SyntaxError?'Invalid sales payload.':e instanceof Error?e.message:'Could not import sales.'},{status:422});}
+ }catch(e){return Response.json({error:e instanceof z.ZodError||e instanceof SyntaxError?'Invalid sales payload.':userFacingMessage(e,'Could not import sales.')},{status:422});}
 }
