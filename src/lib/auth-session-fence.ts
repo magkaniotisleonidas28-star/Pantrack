@@ -1,3 +1,4 @@
+import {UserFacingError} from '@/lib/user-facing-error';
 import {database} from '@/db/raw';
 
 export type AuthenticationFence = {epoch:number};
@@ -7,7 +8,7 @@ const changed = 'Authentication changed. Please sign in again or request a fresh
 
 function epochFrom(result:D1Result):AuthenticationFence {
   const row=result.results?.[0] as {epoch:number}|undefined;
-  if(!row || !Number.isSafeInteger(row.epoch) || row.epoch<0)throw new Error(changed);
+  if(!row || !Number.isSafeInteger(row.epoch) || row.epoch<0)throw new UserFacingError(changed);
   return {epoch:row.epoch};
 }
 

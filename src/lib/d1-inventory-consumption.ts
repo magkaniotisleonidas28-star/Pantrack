@@ -1,3 +1,4 @@
+import {UserFacingError} from '@/lib/user-facing-error';
 import {choiceIssues} from './recipe-choices';
 import type {RecipeChoiceGroup} from './inventory-management-contract';
 import {
@@ -82,7 +83,7 @@ type LoadedBalance = BalanceRow & {
 
 type PersistedApplication = InventoryConsumptionApplied & {_claimToken: string; _salesAttemptId?: string};
 
-export class InventoryConsumptionPersistenceError extends Error {
+export class InventoryConsumptionPersistenceError extends UserFacingError {
   constructor(message: string) {
     super(message);
     this.name = 'InventoryConsumptionPersistenceError';

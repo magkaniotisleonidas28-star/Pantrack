@@ -1,3 +1,4 @@
+import {UserFacingError} from '@/lib/user-facing-error';
 import {D1InventoryConsumptionPort} from '@/lib/d1-inventory-consumption';
 import {D1SalesEventStore} from '@/lib/d1-sales-event-store';
 import {SALES_EVENT_CONTRACT,SalesIngestionService,type SalesActor,type SalesEventDraftV1,type SalesMappingPort,type SalesSourceBinding} from '@/lib/sales-ingestion';
@@ -47,10 +48,10 @@ export async function ingestLocalSale(input:{db:D1Database;companyId:string;sour
  const grouped=new Map<string,{externalItemId:string;quantity:bigint;modifiers:Array<{modifierId:string;perItem:number}>}>();
  for(const line of input.lines){
   const externalItemId=line.recipeId??line.mappingKey;
-  if(!externalItemId)throw new Error('Every sale line requires a recipe or mapping identity.');
+  if(!externalItemId)throw new UserFacingError('Every sale line requires a recipe or mapping identity.');
   const modifiers=[...(line.modifiers??[])].sort((a,b)=>a.modifierId.localeCompare(b.modifierId));
-  if(modifiers.length&&input.source!=='manual')throw new Error('Choices are supported in manual sales only.');
-  if(new Set(modifiers.map(m=>m.modifierId)).size!==modifiers.length||modifiers.some(m=>!Number.isInteger(m.perItem)||m.perItem<1||m.perItem>5))throw new Error('Check the choices for this sale.');
+  if(modifiers.length&&input.source!=='manual')throw new UserFacingError('Choices are supported in manual sales only.');
+  if(new Set(modifiers.map(m=>m.modifierId)).size!==modifiers.length||modifiers.some(m=>!Number.isInteger(m.perItem)||m.perItem<1||m.perItem>5))throw new UserFacingError('Check the choices for this sale.');
   const key=JSON.stringify([line.recipeId?'recipe':'mapping',externalItemId,modifiers]),current=grouped.get(key);
   grouped.set(key,{externalItemId,quantity:(current?.quantity??BigInt(0))+BigInt(line.quantity),modifiers});
  }
@@ -63,7 +64,7 @@ export async function ingestLocalSale(input:{db:D1Database;companyId:string;sour
 }
 
 export function localUserActor(user:{userId:string},companyId:string,role:string):SalesActor{
- if(role!=='owner'&&role!=='manager'&&role!=='employee')throw new Error('Unsupported company role.');
+ if(role!=='owner'&&role!=='manager'&&role!=='employee')throw new UserFacingError('Unsupported company role.');
  return {kind:'user',userId:user.userId,companyId,role};
 }
 export function bridgeActor(companyId:string){const source=bindings.bridge(companyId);return {kind:'machine' as const,machineId:`register-bridge:${companyId}`,companyId,source};}

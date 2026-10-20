@@ -1,3 +1,4 @@
+import {UserFacingError,userFacingMessage} from '@/lib/user-facing-error';
 import {withCompanyRoute} from '@/lib/authorization';
 import {importSales} from '@/lib/import-sales';
 import {getChatGPTUser} from '@/lib/chatgpt-auth';
@@ -20,30 +21,30 @@ async function handlePOST(req:Request){
  if(exactInventoryPreviewEnabled()&&b.action==='recipe')return Response.json({error:'Exact inventory preview is enabled. Recipe changes use the versioned inventory editor.'},{status:409});
  const db=database(),rows=await db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(b.companyId).all<{data:string}>(),records=rows.results.map(x=>JSON.parse(x.data) as InventoryRecord);
  if(b.action==='mapping'){
- if(!b.mapping)throw new Error('Enter register item details.');
- if(!await db.prepare('SELECT id FROM recipes WHERE company_id=? AND id=?').bind(b.companyId,b.mapping.recipeId).first())throw new Error('Choose a recipe belonging to this company.');
+ if(!b.mapping)throw new UserFacingError('Enter register item details.');
+ if(!await db.prepare('SELECT id FROM recipes WHERE company_id=? AND id=?').bind(b.companyId,b.mapping.recipeId).first())throw new UserFacingError('Choose a recipe belonging to this company.');
  const key=JSON.stringify([b.mapping.provider,b.mapping.location,b.mapping.itemId]);
  await db.prepare('INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?) ON CONFLICT(company_id,external_key) DO UPDATE SET data=excluded.data').bind(b.companyId,key,JSON.stringify({...b.mapping,key})).run();return Response.json({ok:true});
  }
  if(b.action==='removeMapping'){
- if(!b.mappingKey)throw new Error('Select a mapping.');
+ if(!b.mappingKey)throw new UserFacingError('Select a mapping.');
  await db.prepare('DELETE FROM register_mappings WHERE company_id=? AND external_key=?').bind(b.companyId,b.mappingKey).run();return Response.json({ok:true});
  }
  if(b.action==='recipe'){
- if(!b.recipe)throw new Error('Enter recipe ingredients.');
- if(new Set(b.recipe.ingredients.map(i=>i.productId)).size!==b.recipe.ingredients.length)throw new Error('Use each ingredient once per recipe.');
- for(const i of b.recipe.ingredients){const r=records.find(r=>r.productId===i.productId);if(!r||r.settings.unit!==i.unit)throw new Error('Configure inventory units before saving the recipe.');}
+ if(!b.recipe)throw new UserFacingError('Enter recipe ingredients.');
+ if(new Set(b.recipe.ingredients.map(i=>i.productId)).size!==b.recipe.ingredients.length)throw new UserFacingError('Use each ingredient once per recipe.');
+ for(const i of b.recipe.ingredients){const r=records.find(r=>r.productId===i.productId);if(!r||r.settings.unit!==i.unit)throw new UserFacingError('Configure inventory units before saving the recipe.');}
  await db.prepare('INSERT INTO recipes(company_id,id,data) VALUES (?,?,?) ON CONFLICT(company_id,id) DO UPDATE SET data=excluded.data').bind(b.companyId,b.recipe.id,JSON.stringify(b.recipe)).run();return Response.json({ok:true});
  }
- if(!b.reference||!b.lines)throw new Error('Enter a unique sales reference and quantities.');
+ if(!b.reference||!b.lines)throw new UserFacingError('Enter a unique sales reference and quantities.');
  if(exactInventoryPreviewEnabled()){
-  if(!b.occurredAt)throw new Error('Confirm when these sales occurred before importing.');
+  if(!b.occurredAt)throw new UserFacingError('Confirm when these sales occurred before importing.');
   const source=b.source??(b.lines.some(line=>line.mappingKey)?'mapped_csv':'manual');
-  if(source==='mapped_csv'&&b.lines.some(line=>!line.mappingKey)||source!=='mapped_csv'&&b.lines.some(line=>!line.recipeId))throw new Error('Sales source does not match its lines.');
+  if(source==='mapped_csv'&&b.lines.some(line=>!line.mappingKey)||source!=='mapped_csv'&&b.lines.some(line=>!line.recipeId))throw new UserFacingError('Sales source does not match its lines.');
   return Response.json(await ingestLocalSale({db,companyId:b.companyId,source,reference:b.reference,occurredAt:b.occurredAt,lines:b.lines,actor:localUserActor(u,b.companyId,member.role)}));
  }
  return Response.json(await importSales(b.companyId,b.reference,b.lines,u.email));
- }catch(e){return Response.json({error:e instanceof z.ZodError?'Check recipes and sales quantities.':e instanceof Error?e.message:'Could not save sales.'},{status:400});}
+ }catch(e){return Response.json({error:e instanceof z.ZodError?'Check recipes and sales quantities.':userFacingMessage(e,'Could not save sales.')},{status:400});}
 }
 export const GET=withCompanyRoute('sales',handleGET);
 export const POST=withCompanyRoute('sales',handlePOST);

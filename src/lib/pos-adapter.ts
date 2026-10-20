@@ -1,3 +1,4 @@
+import {UserFacingError} from '@/lib/user-facing-error';
 import type {SalesEventDraftV1, SalesIngestionService, SalesSourceBinding} from './sales-ingestion';
 
 /** Implemented capabilities, not a provider's advertised or planned features. */
@@ -11,7 +12,7 @@ export type PosCapabilities = {
 export type PosResult<T> = {kind: 'supported'; value: T} | {kind: 'unsupported'; reason: 'adapter_not_implemented' | 'operation_not_supported'};
 export const supported = <T>(value: T): PosResult<T> => ({kind: 'supported', value});
 export function requireSupported<T>(result: PosResult<T>): T {
-  if (result.kind === 'unsupported') throw new Error('This POS operation is not implemented.');
+  if (result.kind === 'unsupported') throw new UserFacingError('This POS operation is not implemented.');
   return result.value;
 }
 export type PosAuthorization = {
@@ -61,6 +62,6 @@ export function unavailablePosAdapter(providerId: string): PosAdapter {
 
 /** The provider-neutral receipt boundary. Inventory receives only the existing M4 contract. */
 export function receivePosEvent(service: SalesIngestionService, companyId: string, source: SalesSourceBinding, draft: SalesEventDraftV1) {
-  if (source.kind !== 'native') throw new Error('A native POS source is required.');
+  if (source.kind !== 'native') throw new UserFacingError('A native POS source is required.');
   return service.receive({companyId, source, actor: {kind: 'machine', machineId: `${source.provider}:${companyId}`, companyId, source}}, draft);
 }

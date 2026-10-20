@@ -1,3 +1,4 @@
+import {UserFacingError} from '@/lib/user-facing-error';
 import {SALES_EVENT_CONTRACT,type SalesEventDraftV1,type SalesSourceBinding} from '@/lib/sales-ingestion';
 
 type CloverCollection<T>={elements:T[]};
@@ -10,36 +11,36 @@ export function cloverSource(companyId:string,environment:string,merchantId:stri
 }
 
 function timestamp(value:number|undefined,label:string){
- if(!Number.isSafeInteger(value)||!value||value<0||value>Date.now()+300_000)throw new Error(`Clover ${label} is missing or invalid.`);
+ if(!Number.isSafeInteger(value)||!value||value<0||value>Date.now()+300_000)throw new UserFacingError(`Clover ${label} is missing or invalid.`);
  return new Date(value).toISOString();
 }
 
 function orderLines(order:CloverOrder,allowMissing=false):SalesEventDraftV1['lines']{
  if(allowMissing&&order.lineItems===undefined)return [];
- if(!order.lineItems||!Array.isArray(order.lineItems.elements)||order.lineItems.elements.length>=100)throw new Error('Clover order lines are incomplete or too large.');
+ if(!order.lineItems||!Array.isArray(order.lineItems.elements)||order.lineItems.elements.length>=100)throw new UserFacingError('Clover order lines are incomplete or too large.');
  return order.lineItems.elements.map(line=>{
-  if(!line.id||!line.item?.id||line.unitQty!=null&&line.unitQty!==1000)throw new Error('Clover line item identity or quantity needs review.');
+  if(!line.id||!line.item?.id||line.unitQty!=null&&line.unitQty!==1000)throw new UserFacingError('Clover line item identity or quantity needs review.');
   const modifications=line.modifications?.elements??[];
-  if(!Array.isArray(modifications)||modifications.length>=100)throw new Error('Clover modifiers are incomplete or too large.');
+  if(!Array.isArray(modifications)||modifications.length>=100)throw new UserFacingError('Clover modifiers are incomplete or too large.');
   return {externalLineId:line.id,externalItemId:line.item.id,quantity:'1',modifiers:modifications.map(mod=>{
-   if(!mod.id||!mod.modifier?.id)throw new Error('Clover modifier identity needs review.');
+   if(!mod.id||!mod.modifier?.id)throw new UserFacingError('Clover modifier identity needs review.');
    return {externalModifierLineId:mod.id,externalModifierId:mod.modifier.id,quantity:'1'};
   })};
  });
 }
 
 export function normalizeCloverOrder(order:CloverOrder,startedAt:number):SalesEventDraftV1|null{
- if(!order||typeof order.id!=='string'||!order.id||!Number.isSafeInteger(order.modifiedTime)||order.modifiedTime<=0||!Number.isSafeInteger(order.createdTime)||order.createdTime<=0)throw new Error('Clover order identity or revision is invalid.');
+ if(!order||typeof order.id!=='string'||!order.id||!Number.isSafeInteger(order.modifiedTime)||order.modifiedTime<=0||!Number.isSafeInteger(order.createdTime)||order.createdTime<=0)throw new UserFacingError('Clover order identity or revision is invalid.');
  if(order.createdTime<startedAt)return null;
  const paymentState=order.paymentState?.toUpperCase()||'OPEN';
  const paid=paymentState==='PAID';
  const refundEntries=order.refunds?.elements;
- if(refundEntries&&!Array.isArray(refundEntries))throw new Error('Clover refund expansion is incomplete.');
+ if(refundEntries&&!Array.isArray(refundEntries))throw new UserFacingError('Clover refund expansion is incomplete.');
  let linkedRefundStatus:'refunded'|'partially_refunded'|null=null;
  if(refundEntries?.length){
-  if(!Number.isSafeInteger(order.total)||Number(order.total)<=0||refundEntries.some(refund=>!refund.id||!Number.isSafeInteger(refund.amount)||refund.amount<=0)||new Set(refundEntries.map(refund=>refund.id)).size!==refundEntries.length)throw new Error('Clover refund details need review.');
+  if(!Number.isSafeInteger(order.total)||Number(order.total)<=0||refundEntries.some(refund=>!refund.id||!Number.isSafeInteger(refund.amount)||refund.amount<=0)||new Set(refundEntries.map(refund=>refund.id)).size!==refundEntries.length)throw new UserFacingError('Clover refund details need review.');
   const refundedAmount=refundEntries.reduce((sum,refund)=>sum+refund.amount,0);
-  if(!Number.isSafeInteger(refundedAmount)||refundedAmount>order.total!)throw new Error('Clover refund amount needs review.');
+  if(!Number.isSafeInteger(refundedAmount)||refundedAmount>order.total!)throw new UserFacingError('Clover refund amount needs review.');
   linkedRefundStatus=refundedAmount===order.total?'refunded':'partially_refunded';
  }
  const refunded=Boolean(linkedRefundStatus)||paymentState==='REFUNDED'||paymentState==='PARTIALLY_REFUNDED'||paymentState==='CREDITED';
@@ -53,7 +54,7 @@ export function normalizeCloverOrder(order:CloverOrder,startedAt:number):SalesEv
  // A linked refund can become visible after a detail response for this same
  // modifiedTime was already received as PAID. Keep that receipt immutable and
  // give the refund its own adjacent revision, so a later poll can reconcile it.
- if(linkedRefundStatus&&!Number.isSafeInteger(order.modifiedTime+1))throw new Error('Clover refund revision is invalid.');
+ if(linkedRefundStatus&&!Number.isSafeInteger(order.modifiedTime+1))throw new UserFacingError('Clover refund revision is invalid.');
  const revision=linkedRefundStatus?order.modifiedTime+1:order.modifiedTime;
  const externalEventId=linkedRefundStatus?`${order.id}:refund:${refundEntries!.map(refund=>refund.id).sort().join(',')}`:`${order.id}:${order.modifiedTime}`;
  const draft:SalesEventDraftV1={schemaVersion:SALES_EVENT_CONTRACT,externalEventId,externalOrderId:order.id,revision,eventType,orderStatus:linkedRefundStatus??(refunded?(paymentState==='PARTIALLY_REFUNDED'?'partially_refunded':'refunded'):canceled?'canceled':'completed'),preparationStatus:refunded?'unknown':paid?'fulfilled':canceled?'not_started':'unknown',occurredAt,timeQuality:refunded||hasPaymentTime?'provider':'inferred',lines};
@@ -66,7 +67,7 @@ export function normalizeCloverOrder(order:CloverOrder,startedAt:number):SalesEv
 // This projection is valid only for an order returned by Clover's deletedTime
 // filter. The list can omit deletedTime and lineItems while detail GET is 404.
 export function normalizeCloverDeletedOrder(order:CloverOrder,startedAt:number):SalesEventDraftV1|null{
- if(!order||typeof order.id!=='string'||!order.id||!Number.isSafeInteger(order.modifiedTime)||order.modifiedTime<=0||!Number.isSafeInteger(order.createdTime)||order.createdTime<=0)throw new Error('Clover deleted order identity or revision is invalid.');
+ if(!order||typeof order.id!=='string'||!order.id||!Number.isSafeInteger(order.modifiedTime)||order.modifiedTime<=0||!Number.isSafeInteger(order.createdTime)||order.createdTime<=0)throw new UserFacingError('Clover deleted order identity or revision is invalid.');
  if(order.createdTime<startedAt)return null;
  const draft:SalesEventDraftV1={schemaVersion:SALES_EVENT_CONTRACT,externalEventId:`${order.id}:${order.modifiedTime}`,externalOrderId:order.id,revision:order.modifiedTime,eventType:'cancellation',orderStatus:'canceled',preparationStatus:'unknown',occurredAt:timestamp(order.modifiedTime,'deletion modification time'),timeQuality:'provider',lines:orderLines(order,true)};
  draft.sourcePayload={...draft};
