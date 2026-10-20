@@ -59,7 +59,8 @@ export async function runCheck(companyId:string,force=false){
  if(policy.mode==='paused')return {message:'Automation is paused.',created:0};
  const now=new Date(),last=data.lastRun?Date.parse(data.lastRun):0;
  if(!force&&now.getTime()-last<policy.intervalHours*3600000)return {message:'Next check is not due yet.',created:0};
- const lease=await db.prepare('UPDATE automation_settings SET lease_until=? WHERE company_id=? AND (lease_until IS NULL OR lease_until<?)').bind(new Date(now.getTime()+300000).toISOString(),companyId,now.toISOString()).run();
+ const leaseUntil=new Date(now.getTime()+300000).toISOString();
+ const lease=await db.prepare('UPDATE automation_settings SET lease_until=? WHERE company_id=? AND (lease_until IS NULL OR lease_until<?)').bind(leaseUntil,companyId,now.toISOString()).run();
  if(!lease.meta.changes)return {message:'A check is already running.',created:0};
  try{
  const [ps,records,holds]=await Promise.all([db.prepare('SELECT data FROM products WHERE owner=?').bind(companyId).all<{data:string}>(),readPlanningRecords(db,companyId),db.prepare("SELECT data FROM purchasing_jobs WHERE company_id=? AND status IN ('review','sending','unknown','accepted')").bind(companyId).all<{data:string}>()]);
@@ -76,7 +77,7 @@ export async function runCheck(companyId:string,force=false){
  }
  await db.prepare('UPDATE automation_settings SET last_run=? WHERE company_id=?').bind(now.toISOString(),companyId).run();
  return {message:created?created+' proposal(s) created.':'No new eligible replenishment proposals.',created};
- }finally{await db.prepare('UPDATE automation_settings SET lease_until=NULL WHERE company_id=?').bind(companyId).run();}
+ }finally{await db.prepare('UPDATE automation_settings SET lease_until=NULL WHERE company_id=? AND lease_until=?').bind(companyId,leaseUntil).run();}
 }
 export async function reconcile(companyId:string,id:string){
  const job=await loadJob(companyId,id);if(!['sending','unknown','accepted'].includes(job.status))throw new Error('This order does not need reconciliation.');
