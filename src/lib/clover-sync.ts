@@ -48,17 +48,33 @@ export async function syncClover(companyId:string){
    // their detail URL. The deletedTime-filtered list is the provider evidence.
    for(const field of ['deletedTime','modifiedTime'] as const){
     let finished=false;
+    let cursor:{time:number;id:string}|undefined,ties=false;
+    const seen=new Set<string>();
     for(let page=0;page<MAX_PAGES;page++){
      const url=new URL(config.api+'/v3/merchants/'+encodeURIComponent(state.merchant_id)+'/orders');
      url.searchParams.set('filter',`${field}>=${lower}`);
      url.searchParams.append('filter',`${field}<=${upper}`);
      url.searchParams.set('orderBy','modifiedTime ASC,id ASC');
-     url.searchParams.set('limit',String(PAGE_SIZE));url.searchParams.set('offset',String(page*PAGE_SIZE));
+     // Drain the boundary timestamp by ID, then seek later timestamps. Separate
+     // conjunctive queries avoid relying on an undocumented compound OR filter.
+     if(cursor){
+      url.searchParams.append('filter',`modifiedTime${ties?'=':'>'}${cursor.time}`);
+      if(ties)url.searchParams.append('filter',`id>${cursor.id}`);
+     }
+     url.searchParams.set('limit',String(PAGE_SIZE));
      if(field==='deletedTime')url.searchParams.set('expand','lineItems,lineItems.modifications,payments');
      const list=await cloverJson(url.href,{headers:{Authorization:'Bearer '+token}}) as {elements?:CloverOrder[]};
      if(!Array.isArray(list.elements)||list.elements.length>PAGE_SIZE)throw new Error('Clover returned an invalid orders page.');
+     let previous=cursor;
      for(const item of list.elements){
-      if(!item.id||!Number.isSafeInteger(item.modifiedTime))throw new Error('Clover returned an order without stable identity.');
+      if(typeof item.id!=='string'||!/^[A-Za-z0-9_-]{1,200}$/.test(item.id)||!Number.isSafeInteger(item.modifiedTime)
+       ||previous&&(item.modifiedTime<previous.time||item.modifiedTime===previous.time&&item.id<=previous.id)
+       ||cursor&&(ties?item.modifiedTime!==cursor.time:item.modifiedTime<=cursor.time))throw new Error('Clover returned an invalid orders page.');
+      previous={time:item.modifiedTime,id:item.id};
+     }
+     for(const item of list.elements){
+      if(seen.has(item.id))continue;
+      seen.add(item.id);
       if(item.modifiedTime>upper)continue;
       if(field==='deletedTime'){
        if(deletedIds.has(item.id))continue;
@@ -73,7 +89,12 @@ export async function syncClover(companyId:string){
       if(order.modifiedTime>upper)continue;
       await ingest(normalizeCloverOrder(order,state.started_at));
      }
-     if(list.elements.length<PAGE_SIZE){finished=true;break;}
+     if(list.elements.length<PAGE_SIZE){
+      if(!ties){finished=true;break;}
+      // The boundary is exhausted; the next range starts strictly after it.
+      ties=false;
+     }else ties=true;
+     cursor=previous;
     }
     if(!finished)throw new Error('Clover order page limit reached; checkpoint was not advanced.');
    }
