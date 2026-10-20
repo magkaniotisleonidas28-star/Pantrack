@@ -8,6 +8,8 @@ import {LegacyVerificationError,legacyFailure,parseLegacyExecutables,reconcileLe
  captureLegacyObservation,createLegacyAttempt} from '../scripts/po-cart-worker/legacy-profile-verification.mjs';
 import {legacySnapshot,closeLegacyBrowsers,browserTargets,consumeMaintenance} from '../scripts/po-cart-worker/legacy-profile-cleanup.mjs';
 import {writePrivate} from '../scripts/po-cart-worker/private-files.mjs';
+// POSIX-only: models macOS process maintenance, including durable directory fsync of attempt records.
+if(process.platform==='win32'){console.log('SKIP po-cart-legacy-verification on Windows: requires POSIX directory fsync and file modes.');process.exit(0);}
 
 const sandbox=realpathSync(mkdtempSync(join(tmpdir(),'pantrack-legacy-verification-')));
 const root=join(sandbox,'profiles');mkdirSync(root);
