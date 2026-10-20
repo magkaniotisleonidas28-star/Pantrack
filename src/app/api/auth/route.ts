@@ -1,4 +1,5 @@
 import {UserFacingError,userFacingMessage} from '@/lib/user-facing-error';
+import {SessionUnavailableError,sessionUnavailableResponse} from '@/lib/auth-availability';
 import {appOrigin,audit,AuthProviderError,cookieValue,createSession,csrf,hash,sessionCookie,sessionFromHeaders,supabase,verifyToken} from '@/lib/auth';
 import {beginPasswordRecovery,captureAuthenticationFence,finishPasswordRecovery} from '@/lib/auth-session-fence';
 import {database} from '@/db/raw';
@@ -21,7 +22,11 @@ export async function POST(req:Request){
     if(new URL(req.url).origin!==appOrigin())return Response.json({error:'Invalid application origin.'},{status:403});
     const b=input.parse(await req.json());
     const fence=['signin','reauthenticate','verify'].includes(b.action)?await captureAuthenticationFence():null;
-    const session=await sessionFromHeaders(req.headers),db=database();
+    // D1 revocation must still work when remote session verification is down.
+    const session=await sessionFromHeaders(req.headers).catch(error=>{
+      if(b.action==='signout'&&error instanceof SessionUnavailableError)return null;
+      throw error;
+    }),db=database();
     if(b.action==='signout'){
       const raw=cookieValue(req.headers,appOrigin().startsWith('https:')?'__Host-pantrack':'pantrack_local');
       // Revocation must work even when the provider is offline or the token expired.
@@ -59,5 +64,5 @@ export async function POST(req:Request){
     const recovery=b.action==='verify'&&b.type==='recovery';
     const fresh=await createSession(result,fence,recovery,session?.sessionHash);
     return reply({ok:true,recovery},sessionCookie(fresh.token,fresh.seconds));
-  }catch(e){return Response.json({error:e instanceof z.ZodError?'Check your email and password. '+NEW_PASSWORD_REQUIREMENT:userFacingMessage(e,'Authentication unavailable.')},{status:400,headers:{'Cache-Control':'no-store'}});}
+  }catch(e){if(e instanceof SessionUnavailableError)return sessionUnavailableResponse();return Response.json({error:e instanceof z.ZodError?'Check your email and password. '+NEW_PASSWORD_REQUIREMENT:userFacingMessage(e,'Authentication unavailable.')},{status:400,headers:{'Cache-Control':'no-store'}});}
 }

@@ -1,4 +1,5 @@
 import {UserFacingError} from '@/lib/user-facing-error';
+import {SessionUnavailableError} from '@/lib/auth-availability';
 import {env} from 'cloudflare:workers';
 import {database} from '@/db/raw';
 import {z} from 'zod';
@@ -35,19 +36,19 @@ async function encryptionKey(){
 async function seal(value:string, scope:string){const iv=crypto.getRandomValues(new Uint8Array(12));const data=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:encoder.encode(scope)},await encryptionKey(),encoder.encode(value));return btoa(String.fromCharCode(...iv,...new Uint8Array(data)));}
 async function unseal(value:string,scope:string){const data=Uint8Array.from(atob(value),x=>x.charCodeAt(0));return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:data.slice(0,12),additionalData:encoder.encode(scope)},await encryptionKey(),data.slice(12)));}
 export class AuthProviderError extends UserFacingError {
-  constructor(message:string,public readonly uncertain:boolean){super(message);}
+  constructor(message:string,public readonly uncertain:boolean,public readonly status?:number){super(message);}
 }
 export async function supabase(path:string,body?:unknown,token?:string,method=body===undefined?'GET':'POST') {
   const e=settings(),url=e.SUPABASE_URL,key=e.SUPABASE_PUBLISHABLE_KEY;
   if(!url||!key||!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url))throw new UserFacingError('Authentication is not configured.');
   const response=await fetch(url+'/auth/v1'+path,{method,redirect:'manual',signal:AbortSignal.timeout(10000),headers:{apikey:key,...(token?{Authorization:'Bearer '+token}:{}),'Content-Type':'application/json'},...(body===undefined?{}:{body:JSON.stringify(body)})});
-  if(!response.ok)throw new AuthProviderError(response.status===429?'Too many attempts. Please wait before retrying.':'Authentication failed. Check your credentials or request a new link.',response.status>=500||response.status<400);
+  if(!response.ok)throw new AuthProviderError(response.status===429?'Too many attempts. Please wait before retrying.':'Authentication failed. Check your credentials or request a new link.',response.status>=500||response.status<400,response.status);
   return response.status===204?{}:await response.json();
 }
 const verifiedUser=z.object({id:z.string().uuid(),email:z.string().email(),email_confirmed_at:z.string().min(1),is_anonymous:z.boolean().optional(),user_metadata:z.object({full_name:z.string().optional()}).passthrough().optional()});
 export async function verifyToken(token:string):Promise<AuthUser>{
   const u=verifiedUser.parse(await supabase('/user',undefined,token));
-  if(u.is_anonymous)throw new UserFacingError('Confirm your email before signing in.');
+  if(u.is_anonymous)throw new AuthProviderError('Confirm your email before signing in.',false,403);
   return {userId:u.id,email:u.email.toLowerCase(),displayName:u.user_metadata?.full_name||u.email,fullName:u.user_metadata?.full_name||null};
 }
 export function audit(companyId:string|null,actor:string,action:string,target=''){
@@ -82,11 +83,20 @@ export async function sessionFromHeaders(headers:Headers):Promise<(AuthUser & {a
     if(!/^[a-f0-9]{64}$/.test(raw))return null;
     const digest=await hash(raw),db=database(),row=await db.prepare('SELECT s.* FROM auth_sessions s JOIN auth_users u ON u.id=s.user_id WHERE s.hash=? AND s.expires>? AND s.epoch=u.session_epoch AND u.recovery_id IS NULL').bind(digest,Date.now()).first<{user_id:string;token:string;expires:number;reauthenticated_at:number;recovery:number;epoch:number}>();
     if(!row)return null;
-    const accessToken=await unseal(row.token,digest),user=await verifyToken(accessToken);
+    let accessToken:string;
+    try{accessToken=await unseal(row.token,digest);}
+    catch(error){
+      if(error instanceof DOMException&&['OperationError','InvalidCharacterError'].includes(error.name))return null;
+      throw error;
+    }
+    const user=await verifyToken(accessToken);
     if(user.userId!==row.user_id)return null;
     // Recovery may have happened while the provider GET was in flight.
     if(!await db.prepare('SELECT s.hash FROM auth_sessions s JOIN auth_users u ON u.id=s.user_id WHERE s.hash=? AND s.user_id=? AND s.epoch=? AND s.expires>? AND s.epoch=u.session_epoch AND u.recovery_id IS NULL').bind(digest,user.userId,row.epoch,Date.now()).first())return null;
     return {...user,sessionHash:digest,reauthenticatedAt:row.reauthenticated_at,recovery:!!row.recovery,accessToken};
-  }catch{return null;}
+  }catch(error){
+    if(error instanceof AuthProviderError&&(error.status===401||error.status===403))return null;
+    throw new SessionUnavailableError();
+  }
 }
 export function recentlyVerified(user:AuthUser){return !user.recovery && !!user.reauthenticatedAt && user.reauthenticatedAt>Date.now()-5*60*1000;}

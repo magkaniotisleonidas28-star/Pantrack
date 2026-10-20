@@ -32,7 +32,8 @@ function barrier(){return {entered:deferred(),release:deferred()};}
 let sessionBatchBarrier,completionFailures=0;const recoveryClaimBarriers=[];
 let failingAuditAction,failMembership=false;
 let failingQuery;
-globalThis.m2db={prepare(query){if(failingQuery&&query.startsWith(failingQuery))throw new Error('Fictional D1 internal SQL and secret detail');let values=[];return {query,bind(...v){values=v;return this;},async first(){if(failMembership&&query.startsWith('SELECT role FROM memberships'))throw new Error('Fictional internal membership failure');return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){if(query.startsWith('INSERT INTO security_audit')&&values.includes(failingAuditAction))throw new Error('Fictional internal audit failure');return this.execute();}};},async batch(statements){
+let failingSessionQuery,providerFault;
+globalThis.m2db={prepare(query){if(failingQuery&&query.startsWith(failingQuery))throw new Error('Fictional D1 internal SQL and secret detail');let values=[];return {query,bind(...v){values=v;return this;},async first(){if(failingSessionQuery&&query.startsWith(failingSessionQuery))throw new Error('Fictional internal session D1 failure');if(failMembership&&query.startsWith('SELECT role FROM memberships'))throw new Error('Fictional internal membership failure');return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){if(query.startsWith('INSERT INTO security_audit')&&values.includes(failingAuditAction))throw new Error('Fictional internal audit failure');return this.execute();}};},async batch(statements){
  if(sessionBatchBarrier&&statements.some(s=>/^INSERT INTO auth_sessions\b/.test(s.query))){const gate=sessionBatchBarrier;sessionBatchBarrier=undefined;gate.entered.resolve();await gate.release.promise;}
  if(recoveryClaimBarriers.length&&statements.some(s=>s.query.startsWith('DELETE FROM auth_sessions WHERE user_id='))){const gate=recoveryClaimBarriers.shift();gate.entered.resolve();await gate.release.promise;}
  sql.exec('BEGIN');try{const out=statements.map(s=>s.execute());if(completionFailures&&statements.some(s=>s.query.includes('recovery_until=CASE'))){completionFailures--;throw new Error('Fictional completion commit failure');}sql.exec('COMMIT');return out;}catch(e){sql.exec('ROLLBACK');throw e;}
@@ -56,6 +57,9 @@ globalThis.fetch=async(url,init={})=>{
  const path=new URL(url).pathname,body=init.body?JSON.parse(init.body):{},token=init.headers?.Authorization?.slice(7);
  providerRequests.set(path,(providerRequests.get(path)||0)+1);
  if(path.endsWith('/user')){
+   if(providerFault==='timeout')throw new DOMException('Fictional provider timeout','TimeoutError');
+   if(providerFault==='malformed')return Response.json({invalid:true});
+   if(typeof providerFault==='number')return Response.json({error:'Fictional provider failure'},{status:providerFault});
    if(!tokens.has(token))return Response.json({error:'expired'},{status:401});
    if(init.method==='PUT'){
      passwordUpdates++;const failure=passwordFailure,gate=passwordPutBarrier;passwordFailure=undefined;passwordPutBarrier=undefined;
@@ -177,6 +181,37 @@ assert.equal((await(await call('register','POST',{companyId:'company-a',action:'
 assert.equal((await(await call('sales','POST',{companyId:'company-a',action:'import'},cookies.owner)).json()).error,'Enter a unique sales reference and quantities.');
 assert.equal((await(await call('automation','POST',{companyId:'company-a',action:'vendor'},cookies.owner)).json()).error,'Vendor details required.');
 console.log('PASS: F6 six API error boundaries hide internals and preserve intended messages');
+// F8: distinguish invalid identity from unavailable verification without caching.
+const savedSessions=sql.prepare('SELECT * FROM auth_sessions ORDER BY hash').all();
+for(const fault of [503,429,'timeout','malformed']){
+ providerFault=fault;
+ for(const family of ['companies','members','waste']){
+  const response=await call(family,'GET',null,cookies.owner);
+  assert.equal(response.status,503,'F8 '+family+' unavailable verification is not session expiry: '+fault);
+  const body=await response.json();assert.ok(!('uncertain' in body));
+  assert.equal(body.error,'Authentication is temporarily unavailable. Please retry.');
+  assert.match(response.headers.get('Cache-Control'),/no-store/);
+ }
+ const response=await call('auth','POST',{action:'reauthenticate',password:passwords.get(accounts.owner.id)},cookies.owner);
+ assert.equal(response.status,503,'Auth API also distinguishes unavailable session verification');
+ providerFault=undefined;
+}
+assert.deepEqual(sql.prepare('SELECT * FROM auth_sessions ORDER BY hash').all(),savedSessions,'Outages preserve sessions for recovery');
+for(const query of ['SELECT s.* FROM auth_sessions','SELECT s.hash FROM auth_sessions']){
+ failingSessionQuery=query;
+ const response=await call('companies','GET',null,cookies.owner);failingSessionQuery=undefined;
+ assert.equal(response.status,503,'Both D1 session reads distinguish outages');
+ assert.equal((await response.json()).error,'Authentication is temporarily unavailable. Please retry.');
+}
+for(const status of [401,403]){
+ providerFault=status;assert.equal((await call('companies','GET',null,cookies.owner)).status,401,'Provider rejection remains invalid identity');providerFault=undefined;
+}
+const verifications=providerRequests.get('/auth/v1/user')||0;
+assert.equal((await call('companies','GET',null,cookies.owner)).status,200);
+const afterFirst=providerRequests.get('/auth/v1/user');assert.ok(afterFirst>verifications);
+assert.equal((await call('companies','GET',null,cookies.owner)).status,200);
+assert.ok(providerRequests.get('/auth/v1/user')>afterFirst,'Every request still reaches the provider');
+console.log('PASS: F8 provider/D1 outages, invalid sessions, recovery and uncached verification');
 const families=['workspace','inventory','sales','register','clover','payments','automation','members'];
 const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','publishRecipeExact','createStockExact','packageStockExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
 for(const family of families){
@@ -480,7 +515,7 @@ assert.equal((await call('members','POST',{action:'acceptTransfer',companyId:'co
 assert.equal((await call('auth','POST',{action:'signout'},cookies.employee)).status,200);assert.equal((await call('companies','GET',null,cookies.employee)).status,401);
 sql.prepare('UPDATE auth_sessions SET expires=0 WHERE user_id=?').run(accounts.manager.id);assert.equal((await call('companies','GET',null,cookies.manager)).status,401);
 assert.equal((await call('companies','GET',null,cookies.owner+'; '+cookies.owner)).status,401);
-failProvider=true;assert.equal((await call('companies','GET',null,cookies.owner)).status,401);failProvider=false;
+failProvider=true;assert.equal((await call('companies','GET',null,cookies.owner)).status,503);failProvider=false;
 const outageCookie=await login('other');failProvider=true;
 assert.equal((await call('auth','POST',{action:'signout'},outageCookie)).status,200,'Logout works during provider outage');
 failProvider=false;assert.equal((await call('companies','GET',null,outageCookie)).status,401,'Outage logout cannot replay');
