@@ -1,3 +1,5 @@
+import {gateActive} from './po-cart-worker/full-gate-runtime.mjs';
+if(gateActive())await import('./po-cart-worker/offline-boundary.mjs');
 import {build} from 'esbuild';
 import {resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';

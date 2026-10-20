@@ -1,3 +1,4 @@
+import {confineManagerContext} from './po-cart-worker/full-gate-runtime.mjs';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright-core';
 import {createServer} from 'node:http';
@@ -13,7 +14,7 @@ async function until(fn,label,ms=30000){const end=Date.now()+ms;while(Date.now()
 const cases=[['rows','accept'],['compact','accept'],['rows','abandon'],['compact','cancel_abandon'],['rows','partial'],['compact','source_abandon']];
 try{for(const [index,[layout,kind]] of cases.entries()){
  if(process.argv.includes('--cases')&&!process.argv[process.argv.indexOf('--cases')+1].split(',').includes(String(index)))continue;
- const f=await seedLocalBrowserJob({layout,scenario:kind==='partial'?'lost_response':'normal'}),context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
+ const f=await seedLocalBrowserJob({layout,scenario:kind==='partial'?'lost_response':'normal'}),context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await (await confineManagerContext(context)).newPage();
  const view=()=>f.request(`/api/po-cart-jobs?view=manager&companyId=${f.companyId}&orderId=${f.orderId}`),intents=[],errors=[];page.on('pageerror',e=>errors.push(e.message));
  let human,proxy,results=0,dropped=false,closeDropped=false,lastFence;
  async function openUI(){await page.setViewportSize({width:1440,height:1000});await page.goto(f.origin+'/signin-with-chatgpt?return_to='+encodeURIComponent('/?company='+f.companyId));await page.getByRole('button',{name:'Purchase-order drafts',exact:true}).click();await page.getByRole('button',{name:/^Open PO-/}).first().click();await page.locator('[data-durable-cart]').waitFor();}

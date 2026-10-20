@@ -2,6 +2,7 @@ import {createHash,randomUUID} from 'node:crypto';
 import {resolve} from 'node:path';
 import {FakeCartWorker} from './client.mjs';
 import {readPrivate,profileLock} from './private-files.mjs';
+import {assertGateSource,registerGateProfile} from './full-gate-runtime.mjs';
 import {openLocalCartBrowser,closeLocalCartBrowser,readCart} from '../cart-preview/browser-session';
 /** No browser write operation exists here. Login is clicked by the manager in the visible window. */
 export class HumanBrowserWorker extends FakeCartWorker {
@@ -51,7 +52,7 @@ export class HumanBrowserWorker extends FakeCartWorker {
    const key=createHash('sha256').update(JSON.stringify([origin,current.scope.companyId,current.scope.supplierId,current.scope.accountId])).digest('hex');
    const profile=resolve('.sites-runtime/po-cart-workers/browser-profiles',key);unlock=profileLock(profile);
    marker.phase='opening';this.save();
-   session=await openLocalCartBrowser(origin,profile,this.headless,current.session.purpose,accessAllowed);this.activeSession=session;
+   assertGateSource();registerGateProfile(profile);session=await openLocalCartBrowser(origin,profile,this.headless,current.session.purpose,accessAllowed);this.activeSession=session;
    if(!accessAllowed())throw Error('ACCESS_LOST');
    await session.page.goto(origin+'/session/'+fixture.token,{waitUntil:'networkidle',timeout:10000});
    const read=async()=>{try{return await readCart(session!.page,origin);}catch(e){if((e as Error).message==='LOGIN_REQUIRED')return null;throw e;}};

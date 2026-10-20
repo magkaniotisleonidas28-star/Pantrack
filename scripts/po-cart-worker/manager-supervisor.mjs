@@ -33,7 +33,7 @@ export function launchBrowserWorker(manifest,index=0){
   // File paths only. Neither credentials nor fixture tokens enter arguments or logs.
   const p=spawn(process.execPath,['scripts/po-cart-browser-worker.mjs','--credential',manifest.credentialFiles[index],
     '--journal',manifest.root+`/manager-journal-${index}.json`,'--fixture',manifest.fixtureFile,'--origin',manifest.origin,'--once'],
-    {stdio:['ignore','ignore','ignore'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
+    {stdio:['ignore','ignore','ignore'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP','PANTRACK_FULL_OFFLINE_GATE'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
   const done=new Promise((ok,fail)=>{p.once('error',fail);p.once('exit',code=>ok(code));});
   return {process:p,done};
 }
@@ -45,6 +45,6 @@ export async function humanBrowserCandidate(manifest){
 export function launchHumanBrowser(manifest,{headless=false}={}){
  const p=spawn(process.execPath,['scripts/po-cart-human-browser.mjs','--credential',manifest.credentialFiles[0],
   '--journal',manifest.root+'/human-journal.json','--fixture',manifest.fixtureFile,'--origin',manifest.origin,...(headless?['--headless']:[])],
-  {stdio:['ignore','ignore','ignore'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
+  {stdio:['ignore','ignore','ignore'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP','PANTRACK_FULL_OFFLINE_GATE'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
  return {process:p,done:new Promise((ok,fail)=>{p.once('error',fail);p.once('exit',code=>ok(code));})};
 }

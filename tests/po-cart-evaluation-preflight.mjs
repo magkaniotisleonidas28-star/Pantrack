@@ -55,7 +55,7 @@ try{
  assert.equal(paidAllowanceFile,'.sites-runtime/po-cart-workers/metadata-repair-acceptance/allowance.json');
  writePrivate(allowance,{version:1,matrices:1,state:'blocked_offline',offlineGatePassed:false});assert.throws(()=>consumePaidAllowance('one',allowance),/paid_allowance/);
  const source=sourceSnapshot(),evidence=join(root,'evidence.json'),gateFile=join(root,'gate.json');writePrivate(evidence,{offline:true});
- const gate={policy:gatePolicy,source,passed:true,results:gateSteps.map(([id,args])=>({id,args,exitCode:0,passed:true,sourceBefore:source.sha256,sourceAfter:source.sha256,references:[{path:evidence,sha256:fileHash(evidence)}]}))};
+ const gate={version:2,audits:{passed:true,credentialsRevoked:true,cleanupVerified:true,preservationVerified:true,evidenceVerified:true,consumptionVerified:true,references:Array.from({length:7},()=>({path:evidence,sha256:fileHash(evidence)}))},policy:gatePolicy,source,passed:true,results:gateSteps.map(([id,args])=>({id,args,exitCode:0,passed:true,sourceBefore:source.sha256,sourceAfter:source.sha256,references:[{path:evidence,sha256:fileHash(evidence)}]}))};
  const pricing={model:'gpt-5.4-mini-2026-03-17',reasoning:'none',inputUsdPerMillion:0.75,outputUsdPerMillion:4.5,source:'https://developers.openai.com/api/docs/models/gpt-5.4-mini',checkedAt:new Date().toISOString()};
  writePrivate(gateFile,gate);assert.equal(validateGate(gateFile).source.sha256,source.sha256);
  for(const bad of [{...gate,source:{...source,sha256:'stale'}},{...gate,results:gate.results.slice(1)},{...gate,results:gate.results.map((r,i)=>i? r:{...r,exitCode:1})}]){writePrivate(gateFile,bad);assert.throws(()=>validateGate(gateFile));}

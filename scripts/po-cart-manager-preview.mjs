@@ -7,8 +7,10 @@ import {seedLocalBrowserJob} from './po-cart-worker/local-browser-fixture.mjs';
 import {fixtureCredential,privateCredentialPath} from './po-cart-worker/credentials.mjs';
 import {readPrivate,journalLock} from './po-cart-worker/private-files.mjs';
 import {browserCandidate,fixtureProvisioner,launchBrowserWorker,humanBrowserCandidate,launchHumanBrowser} from './po-cart-worker/manager-supervisor.mjs';
+import {capturePreview,observePreviewExit,cleanupPreview} from './po-cart-worker/second-addition-cleanup.mjs';
+import {registerGateChild} from './po-cart-worker/full-gate-runtime.mjs';
 const root=process.env.PANTRACK_CART_MANAGER_ROOT??'.sites-runtime/po-cart-workers/manager-demo';privateCredentialPath(root);mkdirSync(root,{recursive:true,mode:0o700});
-const release=journalLock(root+'/supervisor');let stopping=false,app,worker,appDone;
+const release=journalLock(root+'/supervisor');let stopping=false,app,worker,appDone,appIdentity;
 for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{stopping=true;worker?.process.kill('SIGTERM');});
 async function execute(sql){
   const file=root+'/admin-'+randomUUID()+'.sql';writeFileSync(file,sql,{mode:0o600});
@@ -18,7 +20,8 @@ async function execute(sql){
 try{
   for(const port of [5181,5182])await new Promise((ok,fail)=>{const probe=createServer();probe.once('error',()=>fail(Error('Local demo ports are already occupied.')));probe.listen(port,'127.0.0.1',()=>probe.close(ok));});
   app=spawn(process.execPath,['scripts/po-cart-browser-worker-preview.mjs'],{detached:true,stdio:['ignore','ignore','ignore'],env:process.env});
-  appDone=new Promise(ok=>{app.once('error',()=>{stopping=true;ok();});app.once('exit',()=>{stopping=true;ok();});});
+  appDone=observePreviewExit(app);appIdentity=capturePreview(app);registerGateChild(app);
+  appDone.then(()=>{stopping=true;});
   let ready=false;for(let i=0;i<120&&!stopping;i++){
     try{const r=await fetch('http://127.0.0.1:5181/signin-with-chatgpt?return_to=/',{redirect:'manual',signal:AbortSignal.timeout(1000)});if(r.headers.get('set-cookie')){ready=true;break;}}catch{}
     await new Promise(ok=>setTimeout(ok,500));
@@ -46,6 +49,6 @@ try{
 }catch{console.error('Local manager demo stopped. Existing jobs, carts and private recovery files were retained.');process.exitCode=1;}
 finally{
   stopping=true;if(worker){worker.process.kill('SIGTERM');await worker.done;}
-  if(app){try{process.kill(-app.pid,'SIGTERM');}catch{}await appDone;}
+  if(app){const cleanup=await cleanupPreview(app,appDone,appIdentity);if(!cleanup.verified)process.exitCode=1;}
   release();
 }

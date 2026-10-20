@@ -1,7 +1,7 @@
 # Pantrack Development Milestones
 
 Version: 1.3
-Updated: 2026-10-14
+Updated: 2026-10-15
 Purpose: Working specification for developing Pantrack with Codex in VS Code
 Product goal: Estimate ingredient inventory from completed menu-item sales, calculate replenishment to manager-defined target levels, and prepare exact supplier carts for manager-controlled checkout.
 
@@ -139,8 +139,26 @@ PR #8 and #9 are merged, and all six correctness/security fixes are locally
 closed. The new `de970c8`/`12de73b` commits add evaluation-only AI discovery/cart
 extraction and private Metadata preparation. Their recorded 16-case mocked
 Metadata matrix passed, but the full offline gate stopped at reliability job 25
-on a second-addition timeout. C4/M8 and real-model acceptance remain open;
-review that failure next, without resetting holds or consumed paid allowances.
+on a second-addition timeout. Its [bounded diagnostic follow-up](C4_SECOND_ADDITION_DIAGNOSIS_20261014.md)
+stopped at the first case on a new runner startup defect. C4/M8 and real-model
+acceptance remain open. The [runner repair follow-up](C4_SECOND_ADDITION_REPAIR_20261014.md)
+passed 89 suites/full pipeline, then stopped at its first case on an introduced
+unbound Playwright connector. The [source-only correction](C4_CONNECTOR_SOURCE_REPAIR_20261014.md)
+now preserves the receiver and improves exit/group/port verification; 91 suites
+and the full local pipeline passed. The subsequent
+[fresh bounded investigation](C4_SECOND_ADDITION_COMPATIBILITY_20261014.md) passed
+twelve normal browser jobs and sixty mocked requests after a 92-suite/full pipeline.
+Result: **not reproduced; cause unresolved**. Cleanup and independent preservation
+audits passed; consumed slots, holds and paid allowances remain retained. The
+[fresh complete-gate attempt](C4_FULL_OFFLINE_GATE_20261014.md) passed all 16 Metadata
+cases, then stopped at reliability job 5 after four passes. Its final audit also
+retains an introduced redundant terminal-revocation defect. All credentials are
+independently revoked, cleanup/preservation passed and later steps were not run.
+The October 15 [source-only credential-audit repair](C4_CREDENTIAL_AUDIT_REPAIR_20261015.md)
+now passes repeated cleanup against the real triggers, seven focused suites and
+the 94-suite/full preparation pipeline. The failed gate and its freeze remain
+untouched; a complete offline gate is still required. No browser job or new
+execution allowance follows from the repair.
 Incoming `12de73b` CI failed because the preflight test required missing `rg`;
 [PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10) records the
 focused Git-based source-fingerprint repair and checklist synchronization.
@@ -581,8 +599,201 @@ For every numbered item, the assigned person follows the same delivery loop:
   passed, then reliability job 25 timed out awaiting the second-addition response
   after 24 passes. Its partial cart and unresolved exposure are retained; no later
   browser gate ran. The separate non-browser pipeline passed with 82 suites.
-  Paid execution stays blocked; review the retained timeout evidence next.
-  C4/M8 remain open.
+  Paid execution stays blocked. The [bounded offline timeout diagnosis](C4_SECOND_ADDITION_DIAGNOSIS_20261014.md)
+  reviewed the retained job without replay, then stopped at its first fresh case:
+  the new runner's transport guard blocked local browser startup. No additions or
+  mocked/real requests occurred; eleven slots cannot be resumed. Historical data,
+  budgets and allowance fingerprints are preserved; credentials/processes are
+  cleaned up, with runtime page-network counters unavailable. The final pipeline
+  passed 88 suites. The [runner repair follow-up](C4_SECOND_ADDITION_REPAIR_20261014.md)
+  broadened only loopback debugging access and added partial-launch evidence and
+  cleanup checks. Its 89-suite/full pipeline passed, then its first case stopped
+  on an introduced unbound Playwright connector, before interception/additions.
+  Both new credentials were revoked; independent final inspection found no owned
+  processes and free ports, while the runner's failed preview verification remains
+  recorded. Eleven slots in each investigation remain unusable. The
+  [source-only correction](C4_CONNECTOR_SOURCE_REPAIR_20261014.md) now preserves
+  SDK receivers and observes preview child exit separately from process-group
+  clearance and port checks, retaining fixed failure categories. Receiver-sensitive
+  and mocked cleanup regressions plus the 91-suite/full pipeline passed. Historical
+  data/budgets and failed reports are unchanged. No browser or allowance ran;
+  separately scope a new bounded investigation. The subsequent
+  [single-use compatibility investigation](C4_SECOND_ADDITION_COMPATIBILITY_20261014.md)
+  passed all twelve normal cases, exactly sixty mocked requests and the 92-suite/
+  full pipeline on frozen source. Independent exact-cart/attempt/result, credential,
+  cleanup and historical-preservation audits passed. No separate browser probe,
+  paid inference, supplier access, checkout or full gate ran. Result:
+  **not reproduced; cause unresolved**. The new matrix is fully consumed; both
+  earlier roots retain eleven unusable slots each. Scope a fresh complete offline
+  acceptance gate next. The original timeout remains unresolved, and the previous
+  preview verification failure's cause is unproved.
+  The [fresh full-gate attempt](C4_FULL_OFFLINE_GATE_20261014.md) passed the
+  93-suite preparation pipeline and all 16 Metadata cases (88 mocked requests),
+  then stopped at reliability job 5 (rows/1,500 ms) after four passes. Only one
+  actual addition reached the held failed cart; its second attempt is unresolved.
+  Steps 3–21 were not run. A separate introduced audit SQL defect attempted to
+  revoke terminal credentials again; the database correctly rejected it. The
+  retained report remains failed, although all 26 actual fixture credentials
+  are independently revoked and process/resource/preservation audits passed.
+  No in-run repair, retry, paid call or historical replay followed. The invocation is
+  consumed. The October 15 [source-only audit repair](C4_CREDENTIAL_AUDIT_REPAIR_20261015.md)
+  now requires matching active credentials and independently attempts SQL and
+  HTTP checks. Real-trigger idempotency/failure regressions, seven focused suites
+  and the 94-suite/full preparation pipeline passed without browser execution.
+  Historical reports, carts, holds and allowances remain retained. Separately
+  scope controlled browser investigation or a fresh complete gate next; neither
+  is authorized by this repair. The screen-off correlation does not establish
+  causality.
+  The October 15 [display-on investigation](C4_SECOND_ADDITION_DISPLAY_ON_20261015.md)
+  passed twelve fresh fictional jobs in passive/form/off, Stagehand/deterministic,
+  rows/compact order with 1,500 ms mocked-response/application-GET delays and
+  exactly sixty completed mocked requests. The 95-suite preparation pipeline,
+  25 display-on power-log checks, credential and owned-process cleanup audits
+  passed. Strict artifact preservation failed on seventeen cache/QuotaManager
+  files in three older profiles with unowned October 11 Chrome processes; the
+  failed audit and exceptions remain recorded. Independent job and business
+  preservation audits passed for all twelve new jobs, 482 historical carts and
+  36,412 baseline rows. Result:
+  **not reproduced with display on; cause unresolved**.
+  Its invocation is fully consumed; historical failed carts, attempts, holds,
+  budgets and allowances remain retained. No causal repair, confirmation run or
+  complete gate followed. Separately scope causal investigation/repair or a fresh
+  complete offline gate next; paid execution remains blocked.
+  The [historical-profile preflight](C4_PROFILE_PRESERVATION_PREFLIGHT_20261015.md)
+  now refuses active/unavailable profile evidence before three browser entry
+  points load preparation or consume an invocation. Seven focused suites and
+  the 96-suite/full local pipeline passed. The real read-only check correctly
+  blocks 27 legacy profile processes and four live lock references. No process
+  was signaled, lock reclaimed, browser job replayed or new invocation created;
+  prior failed audit evidence remains failed. Explicitly review legacy resource
+  disposition before a fresh idle preflight/baseline and separately scoped gate.
+  The [single legacy cleanup attempt](C4_LEGACY_PROFILE_CLEANUP_20261015.md)
+  passed six focused suites and the 97-suite/full preparation pipeline, then
+  stopped during verification after SIGTERM to the first captured leader.
+  Its nine processes are gone; 18 original processes and three live lock
+  references still block preflight. The macOS PID-4303 process and its stale
+  worker lock are untouched, and task-created guards are cleared. The invocation
+  is consumed; no retry, lock archive, idle baseline, investigation or gate
+  followed. Review the refusal and separately scope the remaining disposition.
+  The seventeen-file historical failure remains failed.
+  The [source-only shutdown verification repair](C4_LEGACY_VERIFICATION_REPAIR_20261015.md)
+  now brackets executable reads with identity snapshots, retains precise named
+  failures and prevents competing report overwrites. Seven focused suites and
+  the 98-suite/full preparation pipeline passed. Independent evidence/business
+  preservation passed; all 46 worker locks and the 18 remaining process identities
+  are unchanged. The latest read-only preflight blocks 18 processes and two live
+  lock references. No signal, cleanup invocation, lock archival, fresh baseline
+  or gate followed. Separately scope remaining disposition on fresh evidence;
+  the previous shutdown refusal's exact cause remains unknown. C4/M8 remain open.
+  The [single remaining-profile attempt](C4_REMAINING_PROFILE_CLEANUP_20261015.md)
+  adds a fixed two-instance policy and independent idle-baseline auditor. Eight
+  focused suites and the 99-suite/full preparation pipeline passed. The sole
+  attempt sent SIGTERM only to 30082, then stopped on captured helper 30095's
+  changed identity, retained at `observations/000006.json`. Nine original
+  processes rooted at 30474 and one live lock reference still block preflight;
+  PID 4303 is absent, all 46 worker locks remain unarchived, and task guards are
+  cleared. Its invocation is consumed; no retry, baseline or gate followed.
+  Both earlier failure audits remain unchanged. Separately scope read-only review
+  of the retained identity-change evidence and remaining resource disposition;
+  no failure cause is resolved and C4/M8 remain open.
+  The [isolated shutdown diagnosis](C4_SHUTDOWN_OBSERVATION_DIAGNOSIS_20261015.md)
+  adds a fixed disposable-browser matrix without changing existing verification
+  or cleanup code. Five focused suites, type checking, 100 test suites and build
+  passed. The first case retained unchanged start times with command/executable
+  text changes and a zombie transition, then the diagnostic's metadata check
+  stopped execution. One case was attempted, zero completed and eleven remain
+  unstarted; its invocation is consumed. All fixture processes are gone and
+  historical resources/business state are preserved. Its process-instance label
+  overstates the evidence. Separately repair the diagnostic classification using
+  this observation before a fresh isolated matrix; no historical cleanup retry,
+  policy relaxation, cause determination or C4/M8 acceptance followed.
+  The [source-only observation repair](C4_SHUTDOWN_OBSERVATION_REPAIR_20261015.md)
+  separates shutdown findings from signal authorization and detects matching
+  helpers independently of the strict verifier's first reported PID. Retained
+  transition replay, independent JavaScript/Python analysis, five focused suites,
+  type checking, 100 test suites and build passed. Exit in the offline proof
+  follows a simulated complete absence snapshot; no real matrix was run.
+  Structured incomplete-matrix auditing preserves primary diagnostic failures
+  separately from audit failures. Existing verification/signal/disposal checks,
+  fixed root/matrix, consumed reports, historical resources and business state
+  remain unchanged. Separately scope a fresh disposable matrix; no execution
+  allowance, historical cleanup retry, idle baseline or C4/M8 acceptance followed.
+  The [fresh disposable matrix](C4_SHUTDOWN_OBSERVATION_MATRIX_20261015.md)
+  passed six focused suites, type checking, 101 test suites and build. Its single
+  new invocation attempted eight cases and completed seven, four with matching
+  signatures, before `protocol-0-2` failed startup baseline verification. Four
+  cases remain unstarted; the matrix is blocked and invocation consumed. All
+  fixture processes are gone and independent audits passed. Historical resources,
+  business state and prior consumed attempts are preserved. The rejected startup
+  population was not retained; no baseline-failure cause is established. Next
+  separately scope read-only review and, if needed, source-only startup evidence
+  work. No retry, historical cleanup, idle baseline or gate followed; C4/M8 remain
+  open and the original seventeen-file failure remains failed.
+  The [source-only lifecycle consolidation](C4_BROWSER_LIFECYCLE_SOURCE_REVIEW_20261015.md)
+  now passes 130 simulated trials, complete/partial actual-controller and
+  independent-auditor integration, seven focused suites, type checking, 102 test
+  suites and build. It adds persisted version-two startup/refusal evidence and
+  preserves primary failures through cleanup/report errors. Startup admission,
+  deadlines, strict signal/disposal primitives and consumed policies are
+  unchanged. Independent historical/business preservation passed. No browser,
+  new invocation or acceptance advance followed. Review offline proof and limits
+  before separately scoping fresh real validation; C4/M8 and original causes
+  remain open.
+  The subsequent [single real lifecycle validation](C4_BROWSER_LIFECYCLE_VALIDATION_20261015.md)
+  passed eight focused suites, type checking, 103 suites and build on frozen
+  source, then completed all twelve collected version-two Chrome cases.
+  Classification: **reproduced**, four protocol-close signature cases; all
+  independent lifecycle, fixture, signal and preservation audits passed.
+  Historical identities, all 46 locks, protected evidence, carts, business rows,
+  budgets and prior consumed attempts are preserved. Seven profile differences
+  were confined to the profile already active initially. Invocation consumed;
+  no retry, historical cleanup, lock archive, idle baseline or acceptance gate
+  followed. Next separately scope read-only historical verification/disposition
+  review. C4/M8 and historical causes remain open.
+  The [read-only historical shutdown review](C4_HISTORICAL_SHUTDOWN_REVIEW_20261016.md)
+  independently rechecks the twelve collected cases and refreshes all nine
+  historical identities, canonical executable/profile ownership, 46 exact lock
+  metadata records and PID-4303 absence. Five completed protocol cases retain
+  strict identity refusals, four with the narrower signature. The historical
+  30095 transition lacks separate start/command evidence; no causal conclusion
+  follows. Three simulated suites passed and executable source is unchanged.
+  Next: source-only maintenance observation refinement with unchanged strict
+  signal gates, then separately scope one remaining-instance/stale-lock task.
+  No cleanup, invocation, idle baseline or acceptance checkbox advance occurred;
+  C4/M8 and historical causes remain open.
+  The [source-only maintenance observation refinement](C4_MAINTENANCE_OBSERVATION_REFINEMENT_20261016.md)
+  passed 32 simulated actual lifecycles, five retained-transition replays,
+  independent auditing, nine focused suites, type checking, 104 suites and build
+  on frozen source. Version-two inputs are persisted before decisions; bounded
+  waiting is separate from unchanged strict signal/reconciliation primitives.
+  Consumption/archive policy is unchanged. Historical identities, all 46 locks,
+  evidence, carts, business rows, budgets and consumed attempts are preserved;
+  six profile differences are confined to the already-active profile. No new
+  runner, allowance, real maintenance, idle baseline or acceptance advance ran.
+  Next separately scope the one-instance/stale-lock plan and its collected
+  evidence/independent idle gates. C4/M8 and historical causes remain open.
+  Lane A of the [parallel maintenance preparation](C4_PARALLEL_IMPLEMENTATION_HANDOFF_20261016.md)
+  now has a [fixed single-instance runner, binding and independent adapter](C4_SINGLE_INSTANCE_MAINTENANCE_PREPARATION_20261016.md).
+  Twenty-one injected controller modes plus ownership/concurrency/reuse checks,
+  ten focused suites, type checking, 105 suites and build passed on frozen Lane A
+  source. Eight retained simulated proofs passed independent offline auditing;
+  none can satisfy collected acceptance. Shared lifecycle primitives and consumed
+  bindings are unchanged. This result preceded Lane B integration and combined
+  verification below. No real maintenance, allowance, lock archival, idle baseline or
+  C4/M8 acceptance advance followed.
+  The [combined source-only integration](C4_MAINTENANCE_PARALLEL_INTEGRATION_20261016.md)
+  now selectively includes Lane B's independent auditor and adversarial suite.
+  Its API/evidence format and strict resource primitives are unchanged. Thirty-two
+  simulated lifecycles, 46 forged-proof and two malformed-sample refusals,
+  optimization refusal, eleven focused suites, type checking, 106 suites and build
+  passed on the combined frozen source. The stricter audit holds one deliberate
+  permanent-write proof as truncated, retaining its primary; seven other retained
+  proofs are valid offline and all eight fail collected acceptance. Independent
+  preservation passed for historical identities, all 46 locks, evidence, business
+  rows, budgets and prior consumption; six profile changes are confined to the
+  already-active profile. Next separately scope the real one-instance/stale-lock
+  operation and its fresh independent idle gates. No real maintenance or acceptance
+  checkbox advance occurred; C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,

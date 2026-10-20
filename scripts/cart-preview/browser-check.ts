@@ -7,7 +7,9 @@ import {CartStore} from './store';
 import {CartBrowser} from './browser';
 import {catalog,startFixture} from './fixture';
 import type {PurchaseOrderView} from '../../src/lib/purchase-order-contract';
-const root=mkdtempSync(join(tmpdir(),'pantrack-cart-browser-')),store=new CartStore(root),fixture=await startFixture(store,5184),browser=new CartBrowser(store,'http://127.0.0.1:5184',!process.argv.includes('--visible'));
+import {gateActive} from '../po-cart-worker/full-gate-runtime.mjs';
+import {fullGateRoot} from '../po-cart-worker/acceptance-gate.mjs';
+const root=gateActive()?fullGateRoot+'/cart-browser-fixtures':mkdtempSync(join(tmpdir(),'pantrack-cart-browser-')),store=new CartStore(root),fixture=await startFixture(store,5184),browser=new CartBrowser(store,'http://127.0.0.1:5184',!process.argv.includes('--visible'));
 const results:unknown[]=[];
 try{
   for(const layout of ['rows','compact'] as const)for(const scenario of ['normal','unavailable','price_changed','wrong_pack','ambiguous','lost_response','login_expired','malicious'] as const){
@@ -24,5 +26,5 @@ try{
     results.push({layout,scenario,state:job.state,elapsedMs:job.elapsedMs,interventions:job.interventions});console.log(`PASS ${layout}/${scenario}: ${job.state}`);
     await browser.close();
   }
-  writeFileSync('.sites-runtime/cart-browser-results.json',JSON.stringify({evidence:'offline-real-browser',results},null,2));
-}finally{await browser.close();await new Promise<void>(ok=>fixture.close(()=>ok()));rmSync(root,{recursive:true,force:true});}
+  writeFileSync(gateActive()?fullGateRoot+'/cart-browser-results.json':'.sites-runtime/cart-browser-results.json',JSON.stringify({evidence:'offline-real-browser',results},null,2),{mode:0o600});
+}finally{await browser.close();await new Promise<void>(ok=>fixture.close(()=>ok()));if(!gateActive())rmSync(root,{recursive:true,force:true});}

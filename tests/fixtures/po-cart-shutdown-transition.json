@@ -1,0 +1,263 @@
+{
+  "version": 1,
+  "provenance": {
+    "baselineSha256": "f434e2302582a2e18d26a70026ae67590fdb9b8a97a9dd4f3c6cedc16f945fa1",
+    "observationSha256": "0a8b8413f80b8a7d4990616ed48d373aaabd92c184b34ff0b76816a02c88b87b",
+    "description": "Sanitized fields from the consumed SIGTERM-0-1 diagnostic; no completed real matrix claim"
+  },
+  "baseline": [
+    {
+      "pid": 61492,
+      "parent": 61444,
+      "group": 61492,
+      "identity": "7bc0a38fcbc21efe65a5b9bea505ee48a58a6e715e4ab63fa64fef11092055eb",
+      "commandHash": "17809f213ff1c3817c8895e886205f83b8a0e241f10cab68be4a9cdd0c648654",
+      "startHash": "4f0f20ab9304623b002a88619051eaf251f1d1c0fd80c5aa3161354cfd5de583",
+      "start": "Thu Oct 15 18:53:22 2026",
+      "startedMs": 1792104802000,
+      "state": "Ss",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "342cced28aee099205fda2d748a8e3203a8e8239bceb2bfcaec7c3c7d8deb4a7"
+    },
+    {
+      "pid": 61597,
+      "parent": 61492,
+      "group": 61492,
+      "identity": "5f595a974062a851d072158c9c0abfd09c1210c1fc9bb20c16752a7f7abfcf28",
+      "commandHash": "c7a40389b60bbfaa1a02bffcb2faaac9e521a4b3ca0b6e0390025cf4ef71e3e0",
+      "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+      "start": "Thu Oct 15 18:53:23 2026",
+      "startedMs": 1792104803000,
+      "state": "S",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9"
+    },
+    {
+      "pid": 61598,
+      "parent": 61492,
+      "group": 61492,
+      "identity": "ce5c2232badd9207fe79466c2af9e8bd674862c0b6c953c7bab2e7dd133aba03",
+      "commandHash": "6d44b4b69a6e2d36b8447b021468e2e357783befbad467ffbf9913069d44830b",
+      "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+      "start": "Thu Oct 15 18:53:23 2026",
+      "startedMs": 1792104803000,
+      "state": "S",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9"
+    },
+    {
+      "pid": 61605,
+      "parent": 61492,
+      "group": 61492,
+      "identity": "a6ff71d50c80a17a6ca667b14f456856fbbb865b231d43123abdff83b6c5f87f",
+      "commandHash": "f1238460867ca35544a83a94eba3c46e1094dce4144a8ffee41600811a46bd65",
+      "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+      "start": "Thu Oct 15 18:53:23 2026",
+      "startedMs": 1792104803000,
+      "state": "S",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "f6686ffe99d1c9955d4d367ea8e3306c51a5d7193f6e8dad55282f38e46aa4a9"
+    },
+    {
+      "pid": 61624,
+      "parent": 61492,
+      "group": 61492,
+      "identity": "9c64bf07569c9748b6e8ca16d01c1336fba0f4066ae1bac707091601986f07e7",
+      "commandHash": "b1f1f135e1a263d0444b12cc4917dc3fbb06aca9d7fc8c63a27916abf07ab715",
+      "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+      "start": "Thu Oct 15 18:53:23 2026",
+      "startedMs": 1792104803000,
+      "state": "S",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e"
+    },
+    {
+      "pid": 61628,
+      "parent": 61492,
+      "group": 61492,
+      "identity": "c95083bb799ac71571e6ba1d848be10d1a560339209fc0e92f5a66c92643fb1d",
+      "commandHash": "64e19fa0003d395626c42269dabb79d603d64bfe0321cfc3d2fdd34603f27fd6",
+      "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+      "start": "Thu Oct 15 18:53:23 2026",
+      "startedMs": 1792104803000,
+      "state": "S",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e"
+    },
+    {
+      "pid": 61629,
+      "parent": 61492,
+      "group": 61492,
+      "identity": "87d4b041e03311873b2835bf947d5b40cdface03e32659e5a5a402b26287fce7",
+      "commandHash": "fe565bd5d40b6fd1cd996a22e7324abaeee123161e5c0b89243f7ced2e9ad97d",
+      "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+      "start": "Thu Oct 15 18:53:23 2026",
+      "startedMs": 1792104803000,
+      "state": "S",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e"
+    },
+    {
+      "pid": 61632,
+      "parent": 61492,
+      "group": 61492,
+      "identity": "ac416fac876bfc6e8379bf577f183cc0ef3d0f783103d8ac02937c41eb5abe94",
+      "commandHash": "0eb8af44eab29529309c7550d5b012eb09b94af7a25fe2ce0eba042d2e5e098b",
+      "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+      "start": "Thu Oct 15 18:53:23 2026",
+      "startedMs": 1792104803000,
+      "state": "S",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e"
+    },
+    {
+      "pid": 61633,
+      "parent": 61492,
+      "group": 61492,
+      "identity": "9fe08f55635f830aab4adf12e8e674dce300687ebce957b24d2603e170fcdf66",
+      "commandHash": "86dec4a2ecc231bc95d772c77244042ff7907fb13072cb563990e91075c873ab",
+      "startHash": "4de6a6af1104cd897fc676ef312176f87c449d54c7ad8fb7db47f553418316eb",
+      "start": "Thu Oct 15 18:53:24 2026",
+      "startedMs": 1792104804000,
+      "state": "S",
+      "zombie": false,
+      "exactProfile": true,
+      "executableHash": "bb71ba513a654a4c80b7e5476967f057823e215e97bf341e2698664a93c0987e"
+    }
+  ],
+  "observation": {
+    "version": 1,
+    "complete": true,
+    "startedMono": 5724.560458,
+    "finishedMono": 5790.727708,
+    "before": [
+      {
+        "pid": 61492,
+        "parent": 61444,
+        "group": 61492,
+        "identity": "7bc0a38fcbc21efe65a5b9bea505ee48a58a6e715e4ab63fa64fef11092055eb",
+        "commandHash": "17809f213ff1c3817c8895e886205f83b8a0e241f10cab68be4a9cdd0c648654",
+        "startHash": "4f0f20ab9304623b002a88619051eaf251f1d1c0fd80c5aa3161354cfd5de583",
+        "start": "Thu Oct 15 18:53:22 2026",
+        "startedMs": 1792104802000,
+        "state": "Rs",
+        "zombie": false,
+        "exactProfile": true
+      },
+      {
+        "pid": 61597,
+        "parent": 61492,
+        "group": 61492,
+        "identity": "5f595a974062a851d072158c9c0abfd09c1210c1fc9bb20c16752a7f7abfcf28",
+        "commandHash": "c7a40389b60bbfaa1a02bffcb2faaac9e521a4b3ca0b6e0390025cf4ef71e3e0",
+        "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+        "start": "Thu Oct 15 18:53:23 2026",
+        "startedMs": 1792104803000,
+        "state": "S",
+        "zombie": false,
+        "exactProfile": true
+      },
+      {
+        "pid": 61598,
+        "parent": 61492,
+        "group": 61492,
+        "identity": "f21bfd601dbb720229031b88e98fd0335fb6aaa05a21a446b9dac9703212d9bf",
+        "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+        "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+        "start": "Thu Oct 15 18:53:23 2026",
+        "startedMs": 1792104803000,
+        "state": "S",
+        "zombie": false,
+        "exactProfile": false
+      },
+      {
+        "pid": 61605,
+        "parent": 61492,
+        "group": 61492,
+        "identity": "a6ff71d50c80a17a6ca667b14f456856fbbb865b231d43123abdff83b6c5f87f",
+        "commandHash": "f1238460867ca35544a83a94eba3c46e1094dce4144a8ffee41600811a46bd65",
+        "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+        "start": "Thu Oct 15 18:53:23 2026",
+        "startedMs": 1792104803000,
+        "state": "S",
+        "zombie": false,
+        "exactProfile": true
+      },
+      {
+        "pid": 61628,
+        "parent": 61492,
+        "group": 61492,
+        "identity": "f21bfd601dbb720229031b88e98fd0335fb6aaa05a21a446b9dac9703212d9bf",
+        "commandHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580",
+        "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+        "start": "Thu Oct 15 18:53:23 2026",
+        "startedMs": 1792104803000,
+        "state": "S",
+        "zombie": false,
+        "exactProfile": false
+      }
+    ],
+    "details": [
+      {
+        "pid": 61492,
+        "start": "Thu Oct 15 18:53:22 2026",
+        "startHash": "4f0f20ab9304623b002a88619051eaf251f1d1c0fd80c5aa3161354cfd5de583",
+        "startedMs": 1792104802000,
+        "executableHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580"
+      },
+      {
+        "pid": 61597,
+        "start": "Thu Oct 15 18:53:23 2026",
+        "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+        "startedMs": 1792104803000,
+        "executableHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580"
+      },
+      {
+        "pid": 61605,
+        "start": "Thu Oct 15 18:53:23 2026",
+        "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+        "startedMs": 1792104803000,
+        "executableHash": "42e99907f8f8195d6d5d6c722590822dd6c6c23ae5c86cfe312914f833d01580"
+      },
+      {
+        "pid": 61628,
+        "start": "Thu Oct 15 18:53:23 2026",
+        "startHash": "a15ab885250db31a85d7cbdd1e9fc40facd935c90335a24a85945785fd49d08f",
+        "startedMs": 1792104803000,
+        "executableHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e"
+      }
+    ],
+    "after": [
+      {
+        "pid": 61492,
+        "parent": 61444,
+        "group": 61492,
+        "identity": "0a02465b6b7ca525fbbb477dffcc55ac71b2efe9d8be6c84d6a1602a95cf76f0",
+        "commandHash": "2cb5df3e483665ed13c3cc80b0123d0cac6d93548e8a334e7782fd2c63ab975e",
+        "startHash": "4f0f20ab9304623b002a88619051eaf251f1d1c0fd80c5aa3161354cfd5de583",
+        "start": "Thu Oct 15 18:53:22 2026",
+        "startedMs": 1792104802000,
+        "state": "Z",
+        "zombie": true,
+        "exactProfile": false
+      }
+    ],
+    "verdict": {
+      "passed": false,
+      "category": "identity_changed",
+      "phase": "reconciliation",
+      "pid": 61492,
+      "expectedIdentity": "7bc0a38fcbc21efe65a5b9bea505ee48a58a6e715e4ab63fa64fef11092055eb",
+      "observedIdentity": "0a02465b6b7ca525fbbb477dffcc55ac71b2efe9d8be6c84d6a1602a95cf76f0"
+    },
+    "signaturePids": []
+  }
+}

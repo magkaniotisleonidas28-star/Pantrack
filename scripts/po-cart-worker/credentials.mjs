@@ -1,18 +1,20 @@
 import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import {resolve,relative,isAbsolute} from 'node:path';
 import {writePrivate,readPrivate} from './private-files.mjs';
+import {captureGateCredential,verifyGateRevocation} from './full-gate-runtime.mjs';
 const quote=value=>`'${String(value).replaceAll("'","''")}'`;
 const root=resolve('.sites-runtime/po-cart-workers');
 export function privateCredentialPath(path){
   const full=resolve(path),rel=relative(root,full);if(!rel||rel.startsWith('..')||isAbsolute(rel))throw Error('Credentials must stay under .sites-runtime/po-cart-workers.');return full;
 }
 // Local administration only. execute receives SQL containing hashes, never bearer secrets.
-export async function fixtureCredential({execute,file,action='issue',companyId,supplierId='cart-demo-supplier',accountId='DEMO-CART',consumerKind='fake',ttlSeconds=3600}){
+export async function fixtureCredential({execute,file,action='issue',companyId,supplierId='cart-demo-supplier',accountId='DEMO-CART',consumerKind='fake',ttlSeconds=3600,onIssuing=()=>{}}){
   file=privateCredentialPath(file);
   if(!['fake','local_browser'].includes(consumerKind)||!['issue','rotate','revoke'].includes(action)||!Number.isInteger(ttlSeconds)||ttlSeconds<1||ttlSeconds>3600)throw Error('Invalid fixture credential request.');
   const at=new Date().toISOString(),prior=action==='issue'?null:readPrivate(file);
   if(action==='revoke'){
     await execute(`UPDATE po_cart_worker_credentials SET status='revoked',revoked_at=${quote(at)} WHERE id=${quote(prior.credentialId)} AND worker_id=${quote(prior.workerId)} AND status='active';`);
+    await verifyGateRevocation(prior);
     return {workerId:prior.workerId};
   }
   if(action==='issue'&&(!companyId||!supplierId||!accountId))throw Error('Fixture company and scope required.');
@@ -21,5 +23,9 @@ export async function fixtureCredential({execute,file,action='issue',companyId,s
     `UPDATE po_cart_worker_credentials SET status='revoked',revoked_at=${quote(at)} WHERE worker_id=${quote(workerId)} AND status='active';\n`;
   sql+=`INSERT INTO po_cart_worker_credentials SELECT ${quote(credentialId)},id,${quote(hash)},version,'active',${quote(new Date(Date.now()+ttlSeconds*1000).toISOString())},${quote(at)},NULL FROM po_cart_worker_identities WHERE id=${quote(workerId)};\n`;
   if(prior)sql+=`INSERT INTO po_cart_worker_credential_events(worker_id,credential_id,kind,at) VALUES(${quote(workerId)},${quote(credentialId)},'rotated',${quote(at)});\n`;
+  // The owning fixture can revoke and check a partial INSERT/private-file failure.
+  // Keep this capability in memory; it is never diagnostic evidence.
+  onIssuing({workerId,credentialId,secret});
+  captureGateCredential({workerId,credentialId,secret});
   await execute(sql);writePrivate(file,{workerId,credentialId,secret});return {workerId};
 }

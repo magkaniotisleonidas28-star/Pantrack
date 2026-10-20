@@ -9,6 +9,8 @@ const sql=new DatabaseSync(':memory:');
 for(const file of readdirSync('drizzle').filter(file=>file.endsWith('.sql')).sort()){
  sql.exec(readFileSync('drizzle/'+file,'utf8'));
 }
+function deferred(){let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};}
+const checkGates=[];
 globalThis.testDB={
  prepare(query){
   let values=[];
@@ -16,7 +18,10 @@ globalThis.testDB={
    bind(...bindings){values=bindings;return this;},
    async run(){const result=sql.prepare(query).run(...values);return {meta:{changes:Number(result.changes)}};},
    async first(){return sql.prepare(query).get(...values)||null;},
-   async all(){return {results:sql.prepare(query).all(...values)};}
+   async all(){
+    if(query==='SELECT data FROM products WHERE owner=?'&&checkGates.length){const gate=checkGates.shift();gate.entered.resolve();await gate.release.promise;}
+    return {results:sql.prepare(query).all(...values)};
+   }
   };
  },
  async batch(statements){
@@ -100,6 +105,29 @@ assert.equal(proposal.status,'review');
 assert.equal(JSON.parse(proposal.data).items[0].quantity,8);
 assert.equal(proposal.spend_day,null);
 assert.deepEqual(networkActions,[]);
+
+// F4: an expired slow run must not release the successor's lease.
+const realDate=globalThis.Date;let fakeNow=realDate.now();
+globalThis.Date=class extends realDate{constructor(...args){super(...(args.length?args:[fakeNow]));}static now(){return fakeNow;}};
+const firstGate={entered:deferred(),release:deferred()},secondGate={entered:deferred(),release:deferred()};
+let firstRun,secondRun;
+try{
+ checkGates.push(firstGate);firstRun=engine.runCheck('review-company',true);await firstGate.entered.promise;
+ const firstLease=sql.prepare('SELECT lease_until FROM automation_settings WHERE company_id=?').get('review-company').lease_until;
+ fakeNow+=300001;
+ checkGates.push(secondGate);secondRun=engine.runCheck('review-company',true);await secondGate.entered.promise;
+ const secondLease=sql.prepare('SELECT lease_until FROM automation_settings WHERE company_id=?').get('review-company').lease_until;
+ assert.notEqual(firstLease,secondLease);
+ firstGate.release.resolve();await firstRun;
+ assert.equal(sql.prepare('SELECT lease_until FROM automation_settings WHERE company_id=?').get('review-company').lease_until,secondLease,'F4: older finally must preserve the successor lease');
+ secondGate.release.resolve();await secondRun;
+ assert.equal(sql.prepare('SELECT lease_until FROM automation_settings WHERE company_id=?').get('review-company').lease_until,null,'The current owner releases its own lease');
+ assert.equal(jobs('review-company').length,1,'The existing proposal remains unique');assert.deepEqual(networkActions,[]);
+}finally{
+ firstGate.release.resolve();secondGate.release.resolve();
+ await Promise.allSettled([firstRun,secondRun]);globalThis.Date=realDate;
+}
+console.log('PASS: F4 two actual slow checks retain successor lease and release only their own');
 
 // Both the authorized API path and a direct engine caller are blocked before any network or spend.
 const approval=await post({action:'approve',id:proposal.id});

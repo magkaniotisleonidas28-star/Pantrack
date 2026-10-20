@@ -1,6 +1,7 @@
 import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {audit,csrf} from '@/lib/auth';
+import {SessionUnavailableError,sessionUnavailableResponse} from '@/lib/auth-availability';
 import {z} from 'zod';
 export type Role='owner'|'manager'|'employee';
 export type Permission='read'|'operate'|'integrations'|'members'|'finance'|'pause'|'recordWaste';
@@ -20,6 +21,7 @@ export function routePermission(family:Family,method:string,action?:string):Perm
 }
 export function withCompanyRoute(family:Family,handler:(req:Request)=>Promise<Response>){
   return async(req:Request):Promise<Response>=>{
+    let dispatched=false;
     try{
       const user=await getChatGPTUser();
       if(!user)return Response.json({error:'Your session has expired. Please sign in.'},{status:401});
@@ -35,10 +37,19 @@ export function withCompanyRoute(family:Family,handler:(req:Request)=>Promise<Re
       const target=(family==='waste'||family==='waste-shortcuts')&&typeof body?.operationId==='string'
         ?body.operationId.slice(0,80):typeof body?.action==='string'?body.action.slice(0,80):'';
       if(logged)await audit(typeof companyId==='string'?companyId:null,user.userId,family+'.attempt',target).run();
+      dispatched=true;
       const response=await handler(req);
-      if(logged)await audit(typeof companyId==='string'?companyId:null,user.userId,family+(response.ok?'.succeeded':'.failed'),target).run();
+      if(logged){
+        try{await audit(typeof companyId==='string'?companyId:null,user.userId,family+(response.ok?'.succeeded':'.failed'),target).run();}
+        catch{console.error('Company route outcome audit could not be recorded.');}
+      }
       response.headers.set('Cache-Control','private, no-store');
       return response;
-    }catch{if(family==='waste'||family==='waste-shortcuts')return Response.json({error:'The save outcome is uncertain. Retry the same entry.',uncertain:true},{status:503});return Response.json({error:'Request could not be completed. Please retry.'},{status:400});}
+    }catch(error){
+      if(error instanceof SessionUnavailableError)return sessionUnavailableResponse();
+      const invalid=error instanceof z.ZodError||error instanceof SyntaxError;
+      if(!invalid&&dispatched&&(family==='waste'||family==='waste-shortcuts'))return Response.json({error:'The save outcome is uncertain. Retry the same entry.',uncertain:true},{status:503});
+      return Response.json({error:'Request could not be completed. Please retry.'},{status:invalid?400:503});
+    }
   };
 }

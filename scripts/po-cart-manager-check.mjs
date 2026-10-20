@@ -1,3 +1,4 @@
+import {confineManagerContext} from './po-cart-worker/full-gate-runtime.mjs';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright-core';
 import {readPrivate} from './po-cart-worker/private-files.mjs';
@@ -12,7 +13,7 @@ const evidence='.sites-runtime/po-cart-workers/manager-acceptance-'+randomUUID()
 try{
  for(const [index,[layout,scenario]] of [['rows','normal'],['compact','normal'],['rows','malicious'],['compact','malicious'],['rows','login_expired'],['compact','lost_response'],['rows','cancel'],['compact','cancel_active']].entries()){
   if(process.argv.includes('--cases')&&!process.argv[process.argv.indexOf('--cases')+1].split(',').includes(String(index)))continue;
-  const f=await seedLocalBrowserJob({enqueueJob:false}),context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await context.newPage();
+  const f=await seedLocalBrowserJob({enqueueJob:false}),context=await browser.newContext({viewport:{width:1440,height:1000}}),page=await (await confineManagerContext(context)).newPage();
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   async function open(){
    await page.goto(f.origin+'/signin-with-chatgpt?return_to='+encodeURIComponent('/?company='+f.companyId));

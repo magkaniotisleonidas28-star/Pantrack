@@ -1,3 +1,6 @@
+import {assertGateSource} from './po-cart-worker/full-gate-runtime.mjs';
+import {finishOfflineFixture} from './po-cart-worker/offline-case-cleanup.mjs';
+import './po-cart-worker/offline-boundary.mjs';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {createServer} from 'node:http';
@@ -32,6 +35,7 @@ for(const [caseIndex,c] of cases.entries()){
  }catch{res.writeHead(503);res.end('{}');}});
  await new Promise(ok=>server.listen(0,'127.0.0.1',ok));const origin='http://127.0.0.1:'+server.address().port;
  const credentialFile=caseRoot+'/credential.json',journalFile=caseRoot+'/journal.json',fixtureFile=caseRoot+'/fixture.json';
+ try{
  writePrivate(credentialFile,f.credential({consumerKind:'local_browser'}));writePrivate(fixtureFile,{version:1,origin:fixtureOrigin,jobs:{[job.id]:{scope:{companyId:job.companyId,supplierId:job.supplierId,accountId:job.accountId},layout:c.layout,scenario:c.scenario,token:session.token}}});
  const provider={request:async(request,context)=>{
   phases.push(context.phase);const phase=context.phase.replace(/:(Extraction|Metadata)$/,''),metadata=context.phase.endsWith(':Metadata'),target=phase===c.phase;let value;
@@ -67,8 +71,7 @@ for(const [caseIndex,c] of cases.entries()){
   return new BoundedAiProvider(ledger,transport,target&&c.kind==='timeout'?10:45000).request(request,context);
  }};
  worker=new LocalBrowserCartWorker({credentialFile,journalFile,fixtureFile,origin,reader:new StagehandCartReader(provider)});
- try{
-  try{await worker.tick();}catch(e){failure=e;}
+  try{(assertGateSource(),await worker.tick());}catch(e){failure=e;}
   const state=f.sql.prepare('SELECT state FROM po_cart_jobs WHERE id=?').get(job.id).state,ready=c.kind==='matrix'&&['normal','malicious'].includes(c.scenario);
   assert.equal(state,ready?'ready':c.kind==='cancel'?'canceled':c.kind==='revoke'||c.kind==='lease'||c.kind==='source'||c.kind.startsWith('restart')?'preparing':'review_needed',JSON.stringify({c,state,failure:String(failure),journal:worker.state.browserFailure,phases}));
   const count=c.phase==='final'?3:c.kind==='restart_after_add'?1:0;
@@ -80,10 +83,10 @@ for(const [caseIndex,c] of cases.entries()){
   assert.equal(worker.state.browserNetwork.externalRequests,0);assert.equal(worker.state.browserNetwork.checkoutSubmissions,0);
   worker.close();worker=null;
   if(c.kind.startsWith('restart')){
-   worker=new LocalBrowserCartWorker({credentialFile,journalFile,fixtureFile,origin,reader:new StagehandCartReader(provider)});try{await worker.tick();}catch{}
+   worker=new LocalBrowserCartWorker({credentialFile,journalFile,fixtureFile,origin,reader:new StagehandCartReader(provider)});try{(assertGateSource(),await worker.tick());}catch{}
    const resumable=c.kind==='restart';assert.equal(worker.state.calls.length,resumable?3:count);assert.equal(f.sql.prepare('SELECT state FROM po_cart_jobs WHERE id=?').get(job.id).state,resumable?'ready':'review_needed');assert.equal(session.entries.length,resumable?4:count+1);
   }
   console.log('PASS offline Stagehand '+caseIndex+': '+c.layout+'/'+c.scenario+'/'+c.kind+(c.phase?' during '+c.phase:''));
- }finally{worker?.close();server.closeAllConnections();await new Promise(ok=>server.close(ok));fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));f.sql.close();}
+ }finally{const cleanup=await finishOfflineFixture({f,dir:caseRoot,origin,worker});server.closeAllConnections();await new Promise(ok=>server.close(ok));fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));f.sql.close();assert.equal(cleanup.cleanupVerified,true);}
 }
 console.log('PASS: local real browsers and Stagehand extraction with mocked inference only; no real-AI acceptance claimed.');

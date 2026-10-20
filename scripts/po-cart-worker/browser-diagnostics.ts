@@ -4,7 +4,7 @@ import {performance} from 'node:perf_hooks';
 
 // Internal opt-in evidence: no strings supplied by pages, HTTP, SDKs or errors.
 export type Diagnostic=(event:string,fields?:Record<string,boolean|number>)=>void;
-const events=new Set(['launch','connected','disconnected','page_closed','page_crashed','closing','closed','stop',
+const events=new Set(['proxy_created','interception_ready','cleanup_failed','launch','connected','disconnected','page_closed','page_crashed','closing','closed','stop',
  'provider_reserved','provider_start','provider_headers','provider_complete','provider_failed','provider_aborted','metadata_verdict',
  'catalog_ready','quantity_filled','attempt_ack','ownership_check','click_dispatch',
  'heartbeat_start','heartbeat_ok','heartbeat_failed','ownership_ok','ownership_lost','inspection_start','inspection_ok',

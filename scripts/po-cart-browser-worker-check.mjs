@@ -1,3 +1,4 @@
+import {finishOfflineFixture} from './po-cart-worker/offline-case-cleanup.mjs';
 import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {createServer} from 'node:http';
@@ -36,13 +37,13 @@ function launch(name){
  name=caseId+'-'+name;const credentialFile=`${root}/${name}-credential.json`,journalFile=`${root}/${name}-journal.json`;
  if(!existsSync(credentialFile))writePrivate(credentialFile,f.credential({consumerKind:'local_browser'}));
  const p=spawn(process.execPath,['scripts/po-cart-browser-worker.mjs','--credential',credentialFile,'--journal',journalFile,'--fixture',root+'/sessions.json','--origin',origin,'--once'],
-  {stdio:['ignore','pipe','pipe'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
+  {stdio:['ignore','pipe','pipe'],env:Object.fromEntries(['PATH','SystemRoot','SYSTEMROOT','WINDIR','TEMP','TMP','PANTRACK_FULL_OFFLINE_GATE'].filter(k=>process.env[k]).map(k=>[k,process.env[k]]))});
  let output='';p.stdout.on('data',b=>output+=b);p.stderr.on('data',b=>output+=b);children.push(p);
  return {p,credentialFile,journalFile,done:new Promise(ok=>p.on('exit',(code,signal)=>ok({code,signal,output})))};
 }
 async function stop(){for(const p of children)if(p.exitCode===null&&p.signalCode===null)p.kill('SIGKILL');children=[];
  for(const owned of ownedBrowsers)await stopOwnedBrowser(owned);ownedBrowsers=[];
- server.closeAllConnections();await new Promise(ok=>server.close(ok));f.sql.close();fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));hook=async()=>{};}
+ const cleanup=await finishOfflineFixture({f,dir:root+'/states/'+caseId,origin});server.closeAllConnections();await new Promise(ok=>server.close(ok));f.sql.close();fixture.closeAllConnections();await new Promise(ok=>fixture.close(ok));hook=async()=>{};assert.equal(cleanup.cleanupVerified,true);}
 function profile(j){const key=createHash('sha256').update(JSON.stringify([fixtureOrigin,j.companyId,j.supplierId,j.accountId])).digest('hex');return resolve('.sites-runtime/po-cart-workers/browser-profiles',key);}
 function capture(w,j){const owned=captureOwnedBrowser(w.p.pid,profile(j));ownedBrowsers.push(owned);return owned;}
 const effects=()=>tables(f.sql,['inventory','inventory_balances_exact','inventory_events_exact','po_cart_commitments','po_cart_reservations']);

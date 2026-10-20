@@ -1,3 +1,4 @@
+import {confineManagerContext} from './po-cart-worker/full-gate-runtime.mjs';
 import assert from 'node:assert/strict';
 import {spawn,spawnSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
@@ -15,7 +16,7 @@ async function start(){
 let launcher,browser;
 try{
  launcher=await start();const manifest=readPrivate(root+'/manifest.json'),credential=readPrivate(manifest.credentialFiles[0]);
- browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH??chromium.executablePath()});const page=await browser.newPage();
+ browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH??chromium.executablePath()});const context=await confineManagerContext(await browser.newContext()),page=await context.newPage();
  async function open(){await page.goto(manifest.origin+'/signin-with-chatgpt?return_to='+encodeURIComponent('/?company='+manifest.companyId));await page.getByRole('button',{name:'Purchase-order drafts',exact:true}).click();await page.getByRole('button',{name:/^Open PO-/}).first().click();await page.locator('[data-durable-cart]').waitFor();}
  async function view(){return page.evaluate(async m=>(await fetch(`/api/po-cart-jobs?view=manager&companyId=${m.companyId}&orderId=${m.orderId}`)).json(),manifest);}
  await open();let status=await view();const panel=page.locator('[data-durable-cart]');

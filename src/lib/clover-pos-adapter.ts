@@ -1,3 +1,4 @@
+import {UserFacingError} from '@/lib/user-facing-error';
 import {z} from 'zod';
 import {cloverConfig, cloverConnection, cloverJson, withClover} from './clover';
 import {cloverSyncStatus, syncClover} from './clover-sync';
@@ -19,7 +20,7 @@ export const cloverPosAdapter: PosAdapter = {
     return supported(connection ? [{id: connection.merchant_id, environment: connection.environment}] : []);
   },
   async catalog(companyId, kind, offset) {
-    if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000) throw new Error('Invalid catalog offset.');
+    if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000) throw new UserFacingError('Invalid catalog offset.');
     const config = cloverConfig();
     return supported(await withClover(companyId, async (connection, token) => {
       const url = config.api + '/v3/merchants/' + encodeURIComponent(connection.merchant_id) + '/' + kind + '?limit=100&offset=' + offset;

@@ -45,6 +45,11 @@ this file concise; detailed workflow and prompt templates live in
   development review is not a completion gate.
 - A mocked-provider pass proves local behavior only. Keep local, sandbox, pilot,
   and production evidence clearly separated.
+- Keep diagnostic observations separate from signal authorization. Changed `ps`
+  command/executable text during shutdown does not alone prove PID reuse; retain
+  the transition as evidence and keep signal ownership checks strict.
+- Test the actual resource lifecycle with injected dependencies, and persist the
+  inputs to refusal decisions before evaluating them; helper mocks alone are insufficient.
 
 ## Verification
 
