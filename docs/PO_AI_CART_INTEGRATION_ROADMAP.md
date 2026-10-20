@@ -332,6 +332,51 @@ account ownership and exposure remain held; no later browser step ran. All 82
 suites and the separate non-browser pipeline passed, but served capture integration
 and the complete gate remain unverified. Paid execution is blocked; review the
 retained timeout before any separately reviewed browser follow-up.
+The [bounded offline diagnosis](C4_SECOND_ADDITION_DIAGNOSIS_20261014.md) reviewed
+that evidence, then stopped on its first fresh case because its new fetch guard
+blocked Stagehand's local debugging port. No addition or mocked/real request ran;
+eleven slots cannot be resumed. The final 88-suite pipeline and historical
+preservation checks passed, but runtime page-network evidence was unavailable.
+The [runner repair follow-up](C4_SECOND_ADDITION_REPAIR_20261014.md) added loopback
+debugging access, partial-launch evidence and verified cleanup handling. Its full
+local pipeline passed with 89 suites, but its first fresh browser case stopped on
+an introduced unbound Playwright connector before page interception/additions.
+The runner's preview teardown verification failed; independent final inspection
+found owned processes stopped and ports free. Zero mocked/real requests occurred;
+both credentials were revoked and historical data/budgets were preserved. Eleven
+slots in each consumed root remain unusable. The
+[source-only correction](C4_CONNECTOR_SOURCE_REPAIR_20261014.md) now restores the
+default SDK receivers and improves preview exit/group/port verification with fixed
+failure categories. Its installed-method receiver regression, mocked teardown
+tests, 91-suite/full pipeline and preservation checks passed. No browser job or
+new allowance was created by that correction; both prior failed reports remain
+unchanged. The separately authorized
+[fresh bounded investigation](C4_SECOND_ADDITION_COMPATIBILITY_20261014.md) then
+passed all twelve normal jobs and exactly sixty mocked requests after the
+92-suite/full pipeline on the same frozen source. Independent exact-cart,
+attempt/result, credential, cleanup and preservation audits passed. The first
+case exercised real SDK startup; no separate browser probe ran. Result:
+**not reproduced; cause unresolved**. All new slots are consumed, both prior roots'
+eleven unused slots remain unusable, and paid allowances/budgets are unchanged.
+Scope a fresh complete offline acceptance gate next; this matrix does not replace
+it or authorize paid execution. These checks do not establish the historical
+preview verification failure's cause. C4/M8 remain open.
+The [fresh full-gate attempt](C4_FULL_OFFLINE_GATE_20261014.md) subsequently passed
+the 93-suite preparation pipeline and all 16 Metadata cases, then stopped at
+reliability job 5 (rows/1,500 ms), with one actual addition and an unresolved
+second attempt. Steps 3–21 were not run. Its retained final audit failed on an
+introduced redundant terminal-revocation SQL defect; independent inspection
+confirms all 26 actual fixture credentials revoked, clear task resources and
+preserved historical data/budgets. The invocation is consumed with no retry or
+paid authorization. The October 15 [source-only audit repair](C4_CREDENTIAL_AUDIT_REPAIR_20261015.md)
+adds the active-status predicate and independent SQL/HTTP attempts. Repeated
+cleanup against the real credential triggers, seven focused suites and the
+94-suite/full preparation pipeline passed. The failed gate, its freeze and all
+historical evidence remain untouched. Separately scope controlled browser
+investigation or a fresh complete gate; this repair authorizes neither and creates
+or consumes no execution allowance. The observed screen-off correlation has
+unresolved causality. C4/M8 remain open.
+The original timeout remains unresolved; no complete-gate or paid acceptance is claimed.
 Full local real-AI
 acceptance precedes hosted fictional feasibility, which needs separate
 authorization, configuration and budget.

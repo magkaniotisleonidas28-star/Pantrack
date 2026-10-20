@@ -1003,9 +1003,106 @@ monetary reservations, evidence, carts and unresolved holds. Restoring source
 invalidates the gate. No migration rollback is needed; ordinary deterministic
 preparation remains available.
 
+## Bounded second-addition diagnosis — 2026-10-14
+
+The [diagnostic report](C4_SECOND_ADDITION_DIAGNOSIS_20261014.md) records read-only
+review of job 25, whose off-mode evidence cannot identify the request/response
+milestone. Its cart and unresolved holds were not reopened or replayed. The new
+single-use twelve-case investigation stopped at passive/Stagehand/rows before
+browser connection: the new runner's fetch allowlist blocks Stagehand's ephemeral
+local debugging port. This introduced startup failure explains neither the original
+second-addition timeout nor real-model reliability. No automatic repair or further
+browser attempt followed; eleven unused slots cannot be resumed.
+
+Zero additions and mocked/real requests occurred. The final full local pipeline
+passed 88 suites. Independent comparison preserved 10,415 artifact states, 463
+historical carts, 33,333 data rows and 35 gate references; one Cloudflare bookkeeping
+row changed during local startup. Both budget locations and the consumed allowance
+retain their hashes and $0.921518 reserved exposure. Both new credentials returned
+401 after revocation; task-owned processes are stopped. Runtime external-page and
+checkout counters were unavailable for the failed launch, not verified zero.
+The report includes the frozen source, private evidence paths, limitations,
+source-only debugging-boundary/cleanup handoff and task-specific rollback.
+C4/M8 and full real-AI acceptance remain open.
+
+## Diagnostic runner follow-up — 2026-10-14
+
+The [runner repair report](C4_SECOND_ADDITION_REPAIR_20261014.md) records the new
+single-use twelve-job/sixty-mocked-request allowance. The loopback fetch boundary,
+partial-launch evidence and cleanup handling changed; 89 suites and the complete
+local pipeline passed on frozen source. Its first normal passive/Stagehand/rows
+case passed Stagehand launch, then failed before CDP connection on an introduced
+unbound Playwright method. Zero additions or mocked/real inference requests ran;
+the baseline cart, inventory and reservation remain intact. Both credentials were
+revoked and returned 401 while the preview was available. The runner's preview
+shutdown verification failed; independent final inspection found no new owned
+processes and free ports. Observed network counters are retained with incomplete
+page coverage. The private prior diagnosis record is unchanged. Eleven slots in
+each consumed root cannot resume. Compatibility and the original timeout remain
+unresolved; no post-stop repair or further browser attempt occurred.
+
+## Source-only connector and teardown correction — 2026-10-14
+
+The [source-only repair](C4_CONNECTOR_SOURCE_REPAIR_20261014.md) restores the
+default Playwright/Stagehand receivers and separates preview child exit, group
+clearance and free-port verification. Fixed cleanup failure categories preserve
+the original investigation failure without retaining raw errors or commands.
+The receiver regression exercises the installed Playwright method with transport
+stubbed, and mocked teardown tests cover exit races and failure handling. All 91
+suites and the full local pipeline passed, with historical artifacts/data/budgets
+and both consumed investigation records preserved. No browser job or execution
+allowance was created. Real compatibility, the historical preview failure's cause
+and the original timeout remain unverified; C4/M8 stay open.
+
+## Fresh bounded browser compatibility investigation — 2026-10-14
+
+The [single-use investigation](C4_SECOND_ADDITION_COMPATIBILITY_20261014.md) passed
+all twelve normal browser jobs in passive → form → off, Stagehand → deterministic,
+rows → compact order. Its first normal case exercised real SDK startup without
+a separate probe. All six Stagehand cases completed exactly ten mocked requests
+each; deterministic cases made none. Result: **not reproduced; cause unresolved**.
+Independent audits verified all exact baseline-plus-three-line carts, 36 unique
+verified attempts/results, unchanged inventory/reservations, complete interception,
+healthy diagnostics or verified off-mode absence, and successful resource/process
+cleanup. All 24 new credentials were revoked and independently returned HTTP 401
+while the owned preview was available. Child exit, group clearance and free ports
+passed separately. Eight focused suites and the complete 92-suite local pipeline
+passed before browser execution, bound to the same 539-file source fingerprint.
+
+Historical artifact/cart/business-row, real-budget and consumed-record fingerprints
+are preserved. Two Cloudflare bookkeeping rows and one verified credential-event
+sequence counter changed; new fictional records are documented separately. Both
+earlier roots retain eleven unusable slots each; this new matrix is fully consumed.
+No paid inference, supplier access, checkout, retained-job recovery or full 21-step
+gate ran. The original timeout and historical preview failure's causes remain
+unestablished. C4/M8 remain open; scope a fresh complete offline gate next. The
+investigation report records private evidence and its source-only rollback.
+
+## Fresh complete offline gate attempt — 2026-10-14
+
+The [single-use full-gate attempt](C4_FULL_OFFLINE_GATE_20261014.md) passed all ten
+focused non-browser suites and the 93-suite/full preparation pipeline on frozen
+source. Step 1 passed 16 Metadata cases and 88 completed mocked requests. Step 2
+passed four reliability jobs, then stopped at job 5 (rows/1,500 ms) during the
+second addition. That cart has one actual addition, two attempts, one verified
+result and one unresolved result; its ownership and fictional $250 reservation
+remain held. Steps 3–21 were not run. Total gate inference was 134 completed
+mocked requests with zero real inference.
+
+The retained final report is failed. A separate introduced audit defect attempted
+to UPDATE already-revoked credentials, correctly rejected by the database. All
+26 actual fixture credentials are independently revoked; all ten served HTTP
+audit responses were 401. Process/resource, source/reference and historical
+preservation audits passed. No source repair, retry, resume, extra browser probe,
+paid call or historical replay followed the stop. This invocation is consumed
+with 19 unrun steps. Source-only audit repair with repeated-revocation coverage
+is the next unblocked C4 task; the original timeout remains unresolved. C4/M8
+stay open. The new report records this invocation's separate source-only rollback.
+
 ## Rollback and handoff
 
-Stop evaluation and use the ordinary deterministic worker. Preserve the shared
+The shared connector now has a successful bounded real local-browser walkthrough;
+broader acceptance still requires a fresh complete gate. Preserve the shared
 budget ledger, legacy high-water source, jobs, evidence, journals, profiles,
 receipts, unresolved account ownership and spending/quantity holds. Never delete
 reservations to retry under a fresh $5 allowance. Existing reconciliation is the
@@ -1013,12 +1110,27 @@ only path for attempted/uncertain carts. No migration rollback is needed.
 
 The instrumented real matrix's prior allowance remains consumed. The repaired
 Metadata prompt and this acceptance preparation have local synthetic/unit evidence
-only. The current 21-step gate failed at reliability job 25 on a second-addition
-response timeout; the paid run and remaining browser checks are blocked. Review
-its retained failure evidence next. Do not retry the attempted addition or revise
-the prompt automatically. The historical timeout is still unexplained.
+only. The historical 21-step gate failed at reliability job 25 on a second-addition
+response timeout; the fresh attempt described above stopped at job 5. The paid
+run and remaining browser checks are blocked. The
+[bounded diagnosis](C4_SECOND_ADDITION_DIAGNOSIS_20261014.md) now records the retained
+failure review and a separate runner startup defect. The
+[runner follow-up](C4_SECOND_ADDITION_REPAIR_20261014.md) identifies an introduced
+unbound CDP connector and unverified preview teardown. The
+[source-only correction](C4_CONNECTOR_SOURCE_REPAIR_20261014.md) fixes binding and
+adds modeled exit/group/port checks; it granted no browser execution. The separately
+authorized [fresh investigation](C4_SECOND_ADDITION_COMPATIBILITY_20261014.md) now
+passes twelve normal jobs and sixty mocked requests, without reproducing or
+explaining the timeout. Do not retry the attempted addition, resume consumed
+diagnostic slots or revise the prompt automatically. Paid execution remains blocked
+pending the complete fresh gate and separate authorization.
 
-Restore only this preparation's source/test changes from
+For the latest full-gate source-only rollback, use the new
+[gate report's rollback manifest](C4_FULL_OFFLINE_GATE_20261014.md#rollback-and-handoff),
+which preserves the incoming dirty work and every runtime artifact. Its failed
+report, consumed invocation, partial cart and hold must remain retained.
+
+The earlier acceptance preparation has a separate rollback: restore only its source/test changes from
 `metadata-acceptance-task-20261013/before/` and remove only its three new source/test
 files if rolling back this task. Preserve all inherited work, historical evidence,
 consumed allowances, budget reservations and unresolved holds. The earlier prompt
