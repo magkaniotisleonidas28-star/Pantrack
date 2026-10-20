@@ -1,9 +1,10 @@
 import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {companyAccess} from '@/lib/company-access';
 import {csrf} from '@/lib/auth';
+import {withSessionAvailability} from '@/lib/auth-availability';
 import {database} from '@/db/raw';
 import {MembershipError,membershipInput,mutateMembership} from '@/lib/memberships';
-export async function GET(req:Request){
+async function handleGET(req:Request){
   const user=await getChatGPTUser();if(!user)return Response.json({error:'Please sign in.'},{status:401});
   const companyId=new URL(req.url).searchParams.get('companyId'),member=await companyAccess(user.userId,companyId);
   if(!member)return Response.json({error:'Company access denied.'},{status:403});
@@ -16,9 +17,11 @@ export async function GET(req:Request){
   ]);
   return Response.json({members:members.results,invitations:invitations.results,transfers:transfers.results,audit:events.results},{headers:{'Cache-Control':'no-store'}});
 }
-export async function POST(req:Request){
+async function handlePOST(req:Request){
   const user=await getChatGPTUser();if(!user)return Response.json({error:'Please sign in.'},{status:401});
   if(!csrf(req))return Response.json({error:'Invalid request origin.'},{status:403});
   try{return Response.json(await mutateMembership(user,membershipInput.parse(await req.json())),{headers:{'Cache-Control':'no-store'}});}
   catch(e){return Response.json({error:e instanceof MembershipError?e.message:'Membership update failed. Reload and retry.'},{status:e instanceof MembershipError?e.status:400});}
 }
+export const GET=withSessionAvailability(handleGET);
+export const POST=withSessionAvailability(handlePOST);
