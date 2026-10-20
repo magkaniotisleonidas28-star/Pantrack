@@ -30,7 +30,8 @@ assert.deepEqual(upgrade.prepare('PRAGMA foreign_key_check').all(),[]);upgrade.c
 function deferred(){let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};}
 function barrier(){return {entered:deferred(),release:deferred()};}
 let sessionBatchBarrier,completionFailures=0;const recoveryClaimBarriers=[];
-globalThis.m2db={prepare(query){let values=[];return {query,bind(...v){values=v;return this;},async first(){return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){return this.execute();}};},async batch(statements){
+let failingAuditAction,failMembership=false;
+globalThis.m2db={prepare(query){let values=[];return {query,bind(...v){values=v;return this;},async first(){if(failMembership&&query.startsWith('SELECT role FROM memberships'))throw new Error('Fictional internal membership failure');return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){if(query.startsWith('INSERT INTO security_audit')&&values.includes(failingAuditAction))throw new Error('Fictional internal audit failure');return this.execute();}};},async batch(statements){
  if(sessionBatchBarrier&&statements.some(s=>/^INSERT INTO auth_sessions\b/.test(s.query))){const gate=sessionBatchBarrier;sessionBatchBarrier=undefined;gate.entered.resolve();await gate.release.promise;}
  if(recoveryClaimBarriers.length&&statements.some(s=>s.query.startsWith('DELETE FROM auth_sessions WHERE user_id='))){const gate=recoveryClaimBarriers.shift();gate.entered.resolve();await gate.release.promise;}
  sql.exec('BEGIN');try{const out=statements.map(s=>s.execute());if(completionFailures&&statements.some(s=>s.query.includes('recovery_until=CASE'))){completionFailures--;throw new Error('Fictional completion commit failure');}sql.exec('COMMIT');return out;}catch(e){sql.exec('ROLLBACK');throw e;}
@@ -102,6 +103,45 @@ sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a','milk',JSON.s
 sql.prepare('INSERT INTO orders VALUES (?,?,?,?)').run('company-a','private-order',JSON.stringify({id:'private-order'}),'now');
 sql.prepare('INSERT INTO sales_imports(company_id,reference,data,created) VALUES (?,?,?,?)').run('company-a','fictional-legacy-reference',JSON.stringify({reference:'fictional-legacy-reference'}),'now');
 sql.prepare('INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?)').run('company-a','fictional-register-reference',JSON.stringify({key:'fictional-register-reference'}));
+// F2: a committed credential must survive a failing outcome audit.
+for(const [family,action,key,table,column] of [
+ ['register','token','token','register_settings','token_hash'],
+ ['automation','scheduler','schedulerToken','automation_settings','scheduler_hash']
+]){
+ failingAuditAction=family+'.succeeded';
+ const response=await call(family,'POST',{companyId:'company-a',action},cookies.owner);
+ failingAuditAction=undefined;
+ assert.equal(response.status,200,'Committed '+family+' credential response survives an outcome-audit failure');
+ assert.match(response.headers.get('Cache-Control'),/no-store/);
+ const body=await response.json();
+ assert.equal(sql.prepare('SELECT '+column+' AS hash FROM '+table+' WHERE company_id=?').get('company-a').hash,await modules.authlib.hash(body[key]));
+}
+for(const family of ['register','waste','waste/shortcuts']){
+ for(const body of ['{',JSON.stringify({companyId:42})]){
+  const template=req(family,'POST',{},cookies.owner);
+  const response=await modules[family].POST(new Request(template.url,{method:'POST',headers:template.headers,body}));
+  assert.equal(response.status,400,'Malformed '+family+' input is a client error');
+  assert.ok(!('uncertain' in await response.json()));
+ }
+ failingAuditAction=(family==='waste/shortcuts'?'waste-shortcuts':family)+'.attempt';
+ const response=await call(family,'POST',{companyId:'company-a'},cookies.owner);
+ failingAuditAction=undefined;
+ assert.equal(response.status,503,'Attempt-audit failure is a server fault');
+ assert.ok(!('uncertain' in await response.json()),'A pre-dispatch fault is not an uncertain save');
+ failMembership=true;
+ const unavailable=await call(family,'POST',{companyId:'company-a'},cookies.owner);
+ failMembership=false;
+ assert.equal(unavailable.status,503,'Membership D1 failure is a server fault');
+ assert.ok(!('uncertain' in await unavailable.json()));
+}
+for(const family of ['waste','waste-shortcuts']){
+ let dispatched=0;
+ const wrapped=modules.authorization.withCompanyRoute(family,async()=>{dispatched++;throw new Error('Fictional post-dispatch failure');});
+ const response=await wrapped(req('waste','POST',{companyId:'company-a'},cookies.owner));
+ assert.equal(dispatched,1);assert.equal(response.status,503);
+ assert.equal((await response.json()).uncertain,true,'Genuine post-dispatch waste faults preserve safe replay advice');
+}
+console.log('PASS: F2 committed credentials, malformed input, pre-dispatch outages and waste uncertainty');
 const families=['workspace','inventory','sales','register','clover','payments','automation','members'];
 const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','publishRecipeExact','createStockExact','packageStockExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
 for(const family of families){
