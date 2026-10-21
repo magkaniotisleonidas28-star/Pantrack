@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-16
+Updated: 2026-10-21
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -32,6 +32,7 @@ open. B8/M6 remains on hold for Toast approval/testing access.
 | C4 maintenance observation refinement | The [source-only refinement](C4_MAINTENANCE_OBSERVATION_REFINEMENT_20261016.md) passed 32 simulated actual maintenance lifecycles, independent auditing, five retained-transition replays, nine focused suites, type checking, 104 suites and build. Version-two inputs precede decisions; bounded waiting records terminal transitions separately from strict pre-signal checks. | Signal/reconciliation/consumption/archive primitives are unchanged. Historical identities, all 46 locks, evidence, business rows, budgets and consumed attempts are preserved; six profile differences are confined to the already-active profile. No cleanup, allowance or real validation ran. Next separately scope the one-instance/stale-lock maintenance plan and its collected evidence/idle gates; C4/M8 and historical causes remain open. |
 | C4 single-instance maintenance preparation — Lane A | The [fixed runner/binding/adapter preparation](C4_SINGLE_INSTANCE_MAINTENANCE_PREPARATION_20261016.md) passed 21 injected controller modes plus concurrency/reuse/evidence-ownership cases, independent lock/process/stability checks, ten focused suites, type checking, 105 suites and build. Eight retained simulated proofs passed its offline audit and all failed the collected-evidence gate. Independent historical/business preservation passed; seven profile differences are confined to the already-active profile. | This result covers Lane A's original snapshot; combined verification and stricter proof reassessment are recorded below. No execution root, allowance, historical signals, lock archival, idle baseline or acceptance advance was created; C4/M8 remain open. |
 | C4 combined maintenance preparation | The [parallel integration](C4_MAINTENANCE_PARALLEL_INTEGRATION_20261016.md) selectively integrates Lane B's auditor and adversarial suite, preserving its API. Thirty-two simulated lifecycles, 46 forged-proof refusals, two malformed-sample refusals, fixed-adapter optimization refusal, eleven focused suites, type checking, 106 suites and build passed on the combined frozen source. Seven retained proofs are valid offline; one deliberate permanent-write proof is held as truncated, with its primary retained. All eight fail collected acceptance. Independent historical/business preservation passed; six profile differences are confined to the already-active profile. | Source preparation is integrated; real maintenance remains separately scoped with immediate revalidation. No historical cleanup, lock archival, invocation/allowance, idle baseline or acceptance advance ran. C4/M8 and historical causes remain open. |
+| C4 single-instance maintenance plan | The [read-only planning observation](C4_SINGLE_INSTANCE_MAINTENANCE_PLAN_20261021.md) found all nine captured 30474 members absent without a reboot. Active-profile writes ended at about 11:01 on 2026-10-21; exit cause unobserved. PID 4303 is absent, no process references a historical profile, and both preflight reads return `idle`. All 46 locks match exactly and no inactive profile changed. | Point observations only, not collected evidence. The fixed runner would now refuse at target validation: the owner retired it unexecuted and excluded stale-lock archival. Next: a source-only, signal-free observation-baseline entrypoint, then one separately authorized run. No signal, guard, archive, invocation, baseline or acceptance advance occurred; C4/M8 remain open. |
 | Hosted development code | A read-only Cloudflare deployment inspection still shows release `65373b3`, deployed at `2026-10-05T02:50:23Z`; active Worker version `ed5e9c65-31b7-432f-bff9-bf4df45e9b68`. | The merged PR #8/#9 work has not reached this Worker. |
 | Hosted development database | The read-only `d1_migrations` query returned 24 entries, `0000`–`0023`, with zero rows written and `changed_db=false`. Main contains 35 migrations. | All 11 migrations `0024`–`0034` are pending here. A release must review the entire ordered range, not just `0034`. This query did not inspect or validate all business data. |
 | Runtime gates | Exact inventory preview is enabled; Clover sales sync is disabled. Supplier submission and automatic purchasing remain disabled. | Existing gate state is not approval to use real services or place orders. |
@@ -164,6 +165,13 @@ configuration intact; no cause or repair is established by the CI portability fi
    scope the review's one-instance/stale-lock maintenance plan with collected
    evidence and independent idle/stability/preservation gates. C4/M8 and
    historical causes remain open.
+   The [maintenance plan](C4_SINGLE_INSTANCE_MAINTENANCE_PLAN_20261021.md) then
+   found the 30474 instance already gone and preflight `idle` without any
+   signal. The exit cause is unobserved. The owner retired the fixed runner
+   unexecuted and excluded stale-lock archival. The next unblocked C4
+   task is a source-only, signal-free observation-baseline entrypoint with
+   collected idle/stability/preservation audits, followed by one separately
+   authorized run. C4/M8 remain open.
    Existing consumed allowances and unresolved carts stay retained. Hosted/model tests have their
    own configuration, budget and authorization gates.
 5. **C5: finish and accept M8 after M7 and the supplier gates.** Complete verified

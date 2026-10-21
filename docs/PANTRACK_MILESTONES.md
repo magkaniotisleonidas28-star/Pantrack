@@ -794,6 +794,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   already-active profile. Next separately scope the real one-instance/stale-lock
   operation and its fresh independent idle gates. No real maintenance or acceptance
   checkbox advance occurred; C4/M8 remain open.
+  The [single-instance maintenance plan](C4_SINGLE_INSTANCE_MAINTENANCE_PLAN_20261021.md)
+  observed, read-only, that all nine 30474 members had exited without a reboot
+  (cause unobserved). It found PID 4303 absent, preflight `idle` and all 46 locks
+  unchanged. The owner retired the fixed runner unexecuted and excluded
+  stale-lock archival. Next is a signal-free observation-baseline source task,
+  then one separately authorized run. No signal, archive, invocation, baseline or
+  checkbox advance occurred; C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,
