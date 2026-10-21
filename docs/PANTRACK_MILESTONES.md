@@ -808,7 +808,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   passed with zero signals. It published a fresh baseline: idle profiles, equal
   fingerprints, all 46 locks exact, and 46,678 business rows across 118 databases
   preserved. Next, separately scope a fresh full offline gate. No checkbox
-  advanced; C4/M8 remain open.
+  advanced; C4/M8 remain open. The [fresh gate scope](C4_FULL_OFFLINE_GATE_SCOPE_20261021.md)
+  defines G1, source-only rebinding with corrected preservation and a power
+  guard, then G2, one separately authorized run; nothing ran.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,
