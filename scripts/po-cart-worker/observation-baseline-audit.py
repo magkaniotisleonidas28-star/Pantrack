@@ -26,6 +26,8 @@ PROFILES = Path('.sites-runtime/po-cart-workers/browser-profiles')
 PROFILE = '803d991d176c8396e146ef8b95f5553373130034ff92d08aade5c847b597d571'
 FORBIDDEN = [4303]
 LOCK_COUNT = 46
+# Every local database, including cart-review and other review states outside po-cart-workers.
+DATABASE_BASES = [Path('.wrangler/state'), Path('.sites-runtime')]
 SINGLETON_HASH = '1ca5152cf75d66e36c07e75dc337956996e3ad0a4975d923f8f41043019c10f2'
 HISTORY = Path('.sites-runtime/po-cart-workers/profile-preflight-source-task-20261015/observed-preflight.json')
 HISTORY_HASH = '196d88a3cfc163b6742d9a20e2a414deafcf5d7330d30b6ec9f732cbf775571e'
@@ -199,9 +201,12 @@ def preservation():
     value = legacy.audit_preservation()
     assert value['ordinaryFictionalSmokeRows'] == value['bookkeepingRowsChanged'] == 0, 'Unexpected database writes'
     assert not any(db['tables'] for db in value['databaseDelta']), 'Database additions or changes'
-    paths = {str(p) for base in [Path('.wrangler/state'), Path('.sites-runtime/po-cart-workers')] for p in base.rglob('*.sqlite')}
-    assert paths == {p['path'] for p in read('database-before.json')}, 'Database files added/removed'
+    assert database_paths() == {p['path'] for p in read('database-before.json')}, 'Database files added/removed'
     return value
+
+
+def database_paths():
+    return {str(p) for base in DATABASE_BASES for p in base.rglob('*.sqlite')}
 
 
 def fingerprint():

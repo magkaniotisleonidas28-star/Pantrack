@@ -117,6 +117,22 @@ directories and regenerated `.sites-runtime/*.mjs` harness modules, as existing
 suites do. It changed no older file there and added no `task.json` or
 `allowance.json`. No independent preservation audit was run for this source task.
 
+## Database inventory correction
+
+Task 2's first preparation exposed a scope gap in this auditor's database
+inventory. It enumerated SQLite files only under `.wrangler/state` and
+`.sites-runtime/po-cart-workers`. That missed `.sites-runtime/cart-review-state/`,
+which holds 35,513 of the 37,368 historical business rows in the earlier
+six-database preservation scope, as well as other local review states. A
+read-only comparison found the cart-review data unchanged since 2026-10-16.
+
+The auditor now inventories every `*.sqlite` under `.wrangler/state` and the
+whole of `.sites-runtime`. Any database added or removed after capture fails
+preservation. A focused case shows that adding or removing a cart-review database
+fails. A static assertion pins the scope; reverting it to the narrower scope makes
+the suite fail. The uninvoked first preparation was moved aside unchanged, and
+Task 2 reprepares on the corrected source. No invocation was consumed.
+
 ## Live read-only dry check
 
 Without creating the fixed root, the auditor's read-only groups were run against

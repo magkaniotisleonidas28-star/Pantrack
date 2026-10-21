@@ -291,6 +291,26 @@ print(json.dumps(dict(passed=result['passed'],failures=[f['category'] for f in r
   const result=auditCase(mode);
   assert.deepEqual(result,{passed:false,failures,published:false,baseline:false,summary:true},mode);
  }
+ // The database inventory spans every local state directory, not only po-cart-workers.
+ const dbCase=mode=>{
+  const f=fixture(),identity=lstatSync(f.root),state=join(f.base,'state');
+  for(const dir of ['po-cart-workers','cart-review-state/v3/d1'])mkdirSync(join(state,dir),{recursive:true});
+  writeFileSync(join(state,'po-cart-workers','a.sqlite'),'');writeFileSync(join(state,'cart-review-state/v3/d1','b.sqlite'),'');
+  writePrivate(join(f.root,'report.json'),{rootIdentity:{dev:identity.dev,ino:identity.ino,mode:identity.mode}});
+  writePrivate(join(f.root,'database-before.json'),['po-cart-workers/a.sqlite','cart-review-state/v3/d1/b.sqlite'].map(p=>({path:join(state,p),tables:[]})));
+  if(mode==='added')writeFileSync(join(state,'cart-review-state','c.sqlite'),'');
+  if(mode==='removed')rmSync(join(state,'cart-review-state/v3/d1','b.sqlite'));
+  return python(`
+a.ROOT=pathlib.Path(sys.argv[2]);a.DATABASE_BASES=[pathlib.Path(sys.argv[3])]
+a.legacy.audit_preservation=lambda:dict(passed=True,ordinaryFictionalSmokeRows=0,bookkeepingRowsChanged=0,databaseDelta=[])
+try:a.preservation();print(json.dumps(dict(passed=True,paths=len(a.database_paths()))))
+except AssertionError as error:print(json.dumps(dict(passed=False,error=str(error))))
+`,f.root,state);
+ };
+ assert.deepEqual(dbCase('pass'),{passed:true,paths:2});
+ for(const mode of ['added','removed'])assert.deepEqual(dbCase(mode),{passed:false,error:'Database files added/removed'},mode);
+ const auditorSource=readFileSync(auditPath,'utf8');
+ assert.match(auditorSource,/DATABASE_BASES = \[Path\('\.wrangler\/state'\), Path\('\.sites-runtime'\)\]/);
  console.log('Observation baseline controller, CLI and independent audit passed offline; no signal, guard, archive or real root was used.');
 }finally{
  process.kill=realKill;
