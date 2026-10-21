@@ -801,6 +801,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   stale-lock archival. Next is a signal-free observation-baseline source task,
   then one separately authorized run. No signal, archive, invocation, baseline or
   checkbox advance occurred; C4/M8 remain open.
+  The [observation-baseline source](C4_OBSERVATION_BASELINE_SOURCE_20261021.md) adds
+  that fixed signal-free entrypoint and independent auditor. Its focused offline
+  suite, type checking, 109 suites and build passed. A live read-only dry check
+  found the gates currently satisfiable. Next is one separately authorized
+  baseline run; no root, baseline or checkbox advance followed.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,
