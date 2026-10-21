@@ -133,6 +133,19 @@ fails. A static assertion pins the scope; reverting it to the narrower scope mak
 the suite fail. The uninvoked first preparation was moved aside unchanged, and
 Task 2 reprepares on the corrected source. No invocation was consumed.
 
+The second preparation's capture then found five WAL-format database copies
+without `-wal`/`-shm` sidecars. Four are backups under
+`.sites-runtime/checkout-sync-20261007/` and one is under `po-review-state`.
+Plain `mode=ro` cannot open them, and the shared
+`legacy-profile-audit.py` used that mode. Its new `open_readonly` helper opens
+only such sidecar-less copies with `immutable=1`. They hold no uncommitted
+frames, and every other database opens exactly as before.
+
+A focused case covers three behaviors. Plain mode fails on such a copy. The helper
+reads it without creating sidecars. Rows that exist only in a live WAL stay
+visible. All 118 local databases now open read-only. The partial, uninvoked
+second preparation was also moved aside.
+
 ## Live read-only dry check
 
 Without creating the fixed root, the auditor's read-only groups were run against

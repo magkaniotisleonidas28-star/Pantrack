@@ -309,6 +309,20 @@ except AssertionError as error:print(json.dumps(dict(passed=False,error=str(erro
  };
  assert.deepEqual(dbCase('pass'),{passed:true,paths:2});
  for(const mode of ['added','removed'])assert.deepEqual(dbCase(mode),{passed:false,error:'Database files added/removed'},mode);
+ // WAL-format backups copied without sidecars open read-only; live WAL frames stay visible.
+ const walDir=join(sandbox,'wal');mkdirSync(walDir);
+ assert.deepEqual(python(`
+import sqlite3,shutil
+d=pathlib.Path(sys.argv[2]);live=d/'live.sqlite';c=sqlite3.connect(live);c.execute('PRAGMA journal_mode=WAL');c.execute('PRAGMA wal_autocheckpoint=0')
+c.execute('CREATE TABLE t(v)');c.execute("INSERT INTO t VALUES ('kept')");c.commit();c.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+shutil.copyfile(live,d/'copy.sqlite');c.execute("INSERT INTO t VALUES ('wal-only')");c.commit()
+try:sqlite3.connect('file:'+str(d/'copy.sqlite')+'?mode=ro',uri=True).execute('SELECT * FROM t').fetchall();plain='opened'
+except sqlite3.OperationalError:plain='failed'
+copy=[r[0] for r in a.legacy.open_readonly(d/'copy.sqlite').execute('SELECT v FROM t')]
+current=[r[0] for r in a.legacy.open_readonly(live).execute('SELECT v FROM t ORDER BY rowid')]
+print(json.dumps(dict(plain=plain,copy=copy,live=current,created=sorted(p.name for p in d.iterdir() if p.name.startswith('copy')))))
+`,walDir),{plain:'failed',copy:['kept'],live:['kept','wal-only'],created:['copy.sqlite']});
+ assert.match(readFileSync('scripts/po-cart-worker/legacy-profile-audit.py','utf8'),/connection = open_readonly\(entry\['path'\]\)/);
  const auditorSource=readFileSync(auditPath,'utf8');
  assert.match(auditorSource,/DATABASE_BASES = \[Path\('\.wrangler\/state'\), Path\('\.sites-runtime'\)\]/);
  console.log('Observation baseline controller, CLI and independent audit passed offline; no signal, guard, archive or real root was used.');
