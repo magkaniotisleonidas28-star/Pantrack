@@ -84,6 +84,16 @@ A read-only live dry run of `before` passed. The baseline `8ee75de7…` still ho
 exactly: 353,361 identical entries, idle, 46 exact locks. There are currently 118
 databases. Nothing was written.
 
+### Root-assertion correction
+
+G2's first preparation failed at `pnpm test`. The new suite asserted that the
+real gate root was absent, which is false during preparation, and would also be
+false during the gate's own `test` step. The suite now asserts only that it
+leaves the root's listing and modification times unchanged. With the root
+present, the three affected suites passed. The failed preparation consumed no
+invocation (`task.json` was never created). It is retained unchanged at
+`.sites-runtime/po-cart-workers/full-offline-acceptance-superseded-preparation-20261021/`.
+
 ## G2 procedure (separately authorized)
 
 1. Prepare the new root with the six-command pipeline, using the October 14

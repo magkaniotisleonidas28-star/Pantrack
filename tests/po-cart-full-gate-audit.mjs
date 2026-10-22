@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,realpathSync,rmSync,existsSync,statSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,realpathSync,rmSync,existsSync,statSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
@@ -9,6 +9,11 @@ if(process.platform==='win32'){console.log('SKIP po-cart-full-gate-audit on Wind
 const auditPath=resolve('scripts/po-cart-worker/full-gate-audit.py');
 const consumed='.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014';
 const consumedTask=existsSync(consumed+'/task.json')?statSync(consumed+'/task.json').mtimeMs:null;
+// The real gate root legitimately exists during gate preparation and its own
+// test step; this suite must leave it exactly as it found it.
+const gateRoot='.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021';
+const gateListing=()=>existsSync(gateRoot)?readdirSync(gateRoot).sort().map(name=>[name,statSync(gateRoot+'/'+name).mtimeMs]):null;
+const gateBefore=gateListing();
 const sandbox=realpathSync(mkdtempSync(join(tmpdir(),'pantrack-full-gate-audit-')));
 let count=0;
 
@@ -134,7 +139,7 @@ try{
  assert.notEqual(invalid.status,0);assert.match(invalid.stderr,/Only fixed capture\/before\/finish/);
  const optimized=spawnSync('python3',['-O',auditPath,'capture'],{encoding:'utf8',cwd:sandbox});
  assert.notEqual(optimized.status,0);assert.match(optimized.stderr,/Optimized gate audit execution is not accepted/);
- assert.equal(existsSync('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),false);
+ assert.deepEqual(gateListing(),gateBefore,'Real gate root changed');
  if(consumedTask!==null)assert.equal(statSync(consumed+'/task.json').mtimeMs,consumedTask);
  console.log('PASS full gate audit: complete database capture, WAL copies, classified additions, historical-loss refusal and baseline pre-check; no real root written.');
 }finally{
