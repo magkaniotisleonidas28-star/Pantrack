@@ -106,6 +106,33 @@ A read-only live run of `baseline_holds()` passed against the current state:
 
 Nothing was written. The new root is absent.
 
+## CI portability correction
+
+PR #12 CI failed `pnpm test` on Ubuntu and Windows, although the branch passes
+locally and in a clean clone. Both causes were test assumptions; neither was a
+defect in the gate tools.
+
+- **Ubuntu:** the observation-baseline WAL-copy test expected a plain `mode=ro`
+  open of a sidecar-less WAL copy to fail. That is what happens on macOS. Linux
+  SQLite instead opens it by creating `-wal`/`-shm` sidecars. This confirms why
+  `open_readonly` uses `immutable=1`. The test now opens a separate copy plainly
+  and accepts either a refusal or created sidecars as proof that plain opening is
+  unsafe. It still requires the helper to read the copy and create nothing.
+  Disabling `immutable=1` still fails the suite.
+- **Windows:** the cleanup regression asserted POSIX modes and created a symlink.
+  Those assertions now run only off Windows, matching the suites' existing POSIX
+  conventions.
+
+After `000e26d`, type checking, 110 suites and build passed locally. CI passed on
+`ubuntu-latest` and `windows-latest`.
+
+That change altered the frozen source, so the first preparation was retired
+uninvoked. It had passed the six-command pipeline at `40f84755…` and a capture of
+25,498 protected files, 548 carts and 196 databases, a trial `finish` and the
+`before` check. It has no `task.json`. It is retained unchanged at
+`.sites-runtime/po-cart-workers/full-offline-acceptance-superseded-preparation-20261022/`,
+and the gate root was re-prepared. The root binding is unchanged.
+
 ## Next gate procedure (separately authorized)
 
 The procedure is the same as [G2](C4_FULL_GATE_REBINDING_20261021.md#g2-procedure-separately-authorized),
