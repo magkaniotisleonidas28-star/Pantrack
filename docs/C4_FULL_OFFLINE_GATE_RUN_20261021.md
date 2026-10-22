@@ -139,8 +139,8 @@ added to `consumedGateRoots` and a new root.
 ## Next
 
 1. **Repair:** done (above).
-2. **Rebinding:** consume the G2 root, choose the baseline option above, and
-   bind a new root.
+2. **Rebinding:** done on 2026-10-22 with Option A; see the
+   [rebinding record](C4_FULL_GATE_REBINDING_20261022.md).
 3. **Then a separately authorized fresh gate** with the same procedure.
 
 The October 14 hold, reservation and both consumed gate roots remain retained.

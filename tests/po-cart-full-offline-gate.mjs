@@ -10,11 +10,11 @@ import {finishOfflineFixture} from '../scripts/po-cart-worker/offline-case-clean
 const root=mkdtempSync(join(tmpdir(),'full-offline-gate-')),source={files:1,sha256:'frozen'},snapshot=()=>source;
 try{
  assert.equal(gateAuditsPassed({passed:true}),false);
- assert.equal(fullGateRoot,'.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021');assert.equal(gateSteps.length,21);
- // The consumed 2026-10-14 root stays retained; the paid-allowance policy binding is unchanged.
- assert.deepEqual(consumedGateRoots,['.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014']);
+ assert.equal(fullGateRoot,'.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022');assert.equal(gateSteps.length,21);
+ // Both consumed gate roots stay retained; the paid-allowance policy binding is unchanged.
+ assert.deepEqual(consumedGateRoots,['.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014','.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021']);
  assert.equal(gatePolicy,'metadata-repair-real-matrix-v1');
- for(const consumed of [consumedGateRoots[0],resolve(consumedGateRoots[0]),consumedGateRoots[0]+'/'])assert.throws(()=>createGateInvocation(consumed,source),/Consumed gate root/);
+ for(const old of consumedGateRoots)for(const consumed of [old,resolve(old),old+'/'])assert.throws(()=>createGateInvocation(consumed,source),/Consumed gate root/);
  for(const args of [['--resume'],['--root','x'],['--case','0'],['--acceptance']])assert.throws(()=>rejectGateArguments(args));
  assert.throws(()=>requireGateSource({...source,sha256:'changed'},snapshot));
  const task=createGateInvocation(root+'/exclusive',source);assert.throws(()=>createGateInvocation(root+'/exclusive',source));

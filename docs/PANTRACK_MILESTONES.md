@@ -818,7 +818,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   missing directory. All final audits passed. Next, repair the cleanup with a
   regression test, then run a separately authorized fresh gate; C4/M8 remain open.
   The cleanup repair and its real-SQLite regression passed with 110 suites. The
-  next gate needs rebinding for G2's recorded task profiles first.
+  next gate needs rebinding for G2's recorded task profiles first. That
+  [rebinding](C4_FULL_GATE_REBINDING_20261022.md) consumes the G2 root and accepts
+  drift only in audited gate-recorded profiles. It passed 110 suites and a live
+  read-only pre-check. The next gate still needs authorization; no checkbox advanced.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,
