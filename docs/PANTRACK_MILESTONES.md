@@ -817,6 +817,8 @@ For every numbered item, the assigned person follows the same delivery loop:
   reliability, then stopped at step 15. The shared fixture cleanup vacuums into a
   missing directory. All final audits passed. Next, repair the cleanup with a
   regression test, then run a separately authorized fresh gate; C4/M8 remain open.
+  The cleanup repair and its real-SQLite regression passed with 110 suites. The
+  next gate needs rebinding for G2's recorded task profiles first.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,

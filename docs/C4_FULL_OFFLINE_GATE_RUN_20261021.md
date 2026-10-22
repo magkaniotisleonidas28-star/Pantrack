@@ -104,13 +104,44 @@ All independent audits passed:
 The report keeps `passed: false`, `status: stopped`. No process remains and no
 retry ran. The invocation is permanently consumed with six unrun steps.
 
+## Repair — 2026-10-21
+
+`finishOfflineFixture` now creates the case directory with mode `0700`. It refuses
+a symlink or non-directory before `VACUUM INTO`, and `cleanupVerified` still
+requires a saved state. A regression in the [gate suite](../tests/po-cart-full-offline-gate.mjs)
+vacuums a real `node:sqlite` state into a missing `states/1` directory. It then
+checks the directory and file modes and the saved rows, and that a symlinked case
+directory is refused without writing through it. The old test pre-created its
+directory and faked the vacuum, which is why it missed this.
+
+Reverting the fix or dropping the symlink guard each makes the suite fail. Type
+checking, **110 suites** and build passed. `pnpm cart:browser-worker:check` was
+**not** run. It launches real local browsers and adds profiles, which would
+further change the profile state discussed below. Its real-browser confirmation
+belongs to the next gate.
+
+### Rebinding question for the next gate
+
+G2 left 130 new task profiles and reused 3 existing ones. All 133 are recorded
+in its `profiles/` records, nothing was removed, and lock files are back to 46
+with preflight `idle`. G1's `before` check requires profiles identical to the
+observation baseline, so it would now refuse every gate. Two options:
+
+- **Option A (recommended):** allow only changes confined to profiles recorded
+  by consumed gate roots whose final audits passed. Keep every other profile,
+  the active `803d991d…` profile and all 46 locks exact.
+- **Option B:** publish a fresh observation baseline under a new fixed root and
+  policy.
+
+Either way, the next gate also needs `full-offline-acceptance-task-20261021`
+added to `consumedGateRoots` and a new root.
+
 ## Next
 
-1. **Source-only repair:** create the case directory, private and canonical,
-   before the vacuum in `finishOfflineFixture`. Add a focused regression for a
-   missing directory, without weakening `cleanupVerified`.
-2. **Then a separately authorized fresh gate:** a new root bound like G1, with
-   the same procedure.
+1. **Repair:** done (above).
+2. **Rebinding:** consume the G2 root, choose the baseline option above, and
+   bind a new root.
+3. **Then a separately authorized fresh gate** with the same procedure.
 
 The October 14 hold, reservation and both consumed gate roots remain retained.
 This gate does not close C4/M8. Real-model, hosted, supplier, pilot and production

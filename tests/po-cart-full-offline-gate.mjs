@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {mkdtempSync,rmSync,readFileSync,writeFileSync,existsSync} from 'node:fs';
+import {mkdtempSync,rmSync,readFileSync,writeFileSync,existsSync,mkdirSync,symlinkSync,statSync} from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {createServer} from 'node:http';
@@ -51,5 +52,18 @@ try{
   assert.equal(cleanup.credentialsRevoked,true);assert.equal(cleanup.cleanupVerified,true);assert.equal(saved,true);assert.equal(server.listening,true);
   f.revoke=()=>{throw Error('private revocation failure');};const failed=await finishOfflineFixture({f,dir:root+'/partial-failed',origin:'http://127.0.0.1:'+server.address().port});assert.equal(failed.cleanupVerified,false);
  }finally{server.closeAllConnections();await new Promise(ok=>server.close(ok));}
+ // Regression (G2 step 15): a real SQLite state vacuums into a case directory
+ // that does not exist yet, as the browser worker check's states/<case> does.
+ const real=new DatabaseSync(':memory:');real.exec("CREATE TABLE kept(v);INSERT INTO kept VALUES ('state')");
+ const missing=root+'/missing/states/1',none={issuedCredentials:[],revoke:()=>{},sql:real};
+ const created=await finishOfflineFixture({f:none,dir:missing,origin:'http://127.0.0.1:1'});
+ assert.deepEqual(created,{credentialsRevoked:true,browserClosed:true,stateSaved:true,cleanupVerified:true});
+ assert.equal(statSync(missing).mode&0o777,0o700);assert.equal(statSync(missing+'/state.sqlite').mode&0o777,0o600);
+ const savedState=new DatabaseSync(missing+'/state.sqlite',{readOnly:true});assert.deepEqual(savedState.prepare('SELECT v FROM kept').all().map(r=>r.v),['state']);savedState.close();
+ // A symlinked case directory is refused rather than followed.
+ mkdirSync(root+'/elsewhere');symlinkSync(root+'/elsewhere',root+'/linked');
+ const linked=await finishOfflineFixture({f:none,dir:root+'/linked',origin:'http://127.0.0.1:1'});
+ assert.equal(linked.stateSaved,false);assert.equal(linked.cleanupVerified,false);assert.equal(existsSync(root+'/elsewhere/state.sqlite'),false);
+ real.close();
  console.log('PASS: fixed 21-step invocation, exclusive durable consumption/order, pipeline/source/evidence binding, argument rejection, first unexpected failure/interruption, expected faults, partial issuance/HTTP 401/state retention and cleanup failure; no browsers or provider requests.');
 }finally{rmSync(root,{recursive:true,force:true});}
