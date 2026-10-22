@@ -476,6 +476,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   found missing-tool failures on incoming `12de73b`; the
   [C2 portability/sync handoff](C2_STATUS_SYNC_20261013.md) records their repair.
   Automatic Cloudflare deployment configuration remains unverified.
+  **2026-10-22 desktop readiness:** the [C2 local-readiness record](C2_LOCAL_READINESS_20261022.md)
+  documents synchronization to `7a516ea`, the Vite watcher repair, actual source
+  reloads, the passing six-command local pipeline and preserved existing data.
+  Ten POSIX-specific suites are skipped on Windows. Hosted facts and C4/M8
+  acceptance are unchanged; development-release preparation is next.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   permitted browser use, café/account/location authorization, exact SKUs/packs,

@@ -1,7 +1,7 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-14. Based on the recorded acceptance decisions, merged source,
-current GitHub checks and read-only Cloudflare inspection. Detailed evidence is
+Updated: 2026-10-22 for local readiness. Hosted inspection and the historical
+verification table below remain dated October 14. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
 ## Where we are
@@ -19,14 +19,17 @@ records of its completion checks. Some tests passed, but the complete AI safety
 run is unfinished: its latest offline run timed out while adding the second
 item. C4/M8 therefore remain open.
 
-The online development app is behind GitHub. The six bug fixes are merged, and
-the new CI portability repair passed Windows/Linux checks on its reviewed branch.
+At the last inspection, the online development app was behind GitHub. The six
+bug fixes are merged, and the CI portability repair passed Windows/Linux checks
+on its reviewed branch.
 Online release/testing are still needed. No real supplier order or café pilot is
 complete.
 
-The local app-startup check also failed on this computer after the update.
-GitHub's Windows/Linux checks passed, but that does not prove this computer can
-start the app. This local problem needs a separate follow-up.
+This computer is now updated to the October 20 GitHub code, with a local startup
+fix. The [October 22 checks](C2_LOCAL_READINESS_20261022.md) passed the complete
+local pipeline, including sign-in and company isolation. The test runner
+executed 98 suites successfully and explicitly skipped ten POSIX-specific suites
+on Windows. Existing stock/history and saved configuration were preserved.
 
 **A checked box means complete within its stated scope.** Local means tested on
 a computer with fictional data. Sandbox means tested with a provider's test
@@ -36,7 +39,7 @@ account. Neither means approved for real customers or production.
 
 | Milestone | What it means | Current status |
 | --- | --- | --- |
-| M0 | Run the project on a computer. | Baseline complete; the current desktop startup problem is unresolved. |
+| M0 | Run the project on a computer. | Baseline complete; desktop startup and the full local pipeline passed again on October 22. |
 | M1 | Automatically check changes for errors. | Complete; the new missing-tool CI failure is repaired and covered by Windows/Linux branch checks. |
 | M2 | Accounts, company access and permissions. | Accepted for development; hosted signup/recovery and independent security review remain follow-ups. |
 | M3 | Reliable inventory, units and recipe history. | Accepted for development; newest fixes still need online validation. |
@@ -156,9 +159,9 @@ the full login/recovery workflow. See the [sync verification record](C2_STATUS_S
 
 ## What happens next, in order
 
-The local startup error needs its own C2 investigation. The source/CI repair in
-PR #10 does not fix it. Release preparation and bounded C4 evidence review can
-still proceed independently.
+The local startup error is repaired within the recorded October 22 scope.
+Development-release preparation is next. Bounded C4 work can proceed alongside
+it; the cart/browser acceptance gate remains unfinished.
 
 1. **Prepare a safe development release.** Review all 11 pending database updates,
    preservation of old data, backup/recovery and the Cloudflare deployment setup.

@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-16
+Updated: 2026-10-22
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -9,6 +9,21 @@ POS connections have been used.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Latest desktop verification — 2026-10-22
+
+The clean checkout was fast-forwarded by 26 commits to GitHub `main` at
+`7a516ea`. The [C2 local-readiness task](C2_LOCAL_READINESS_20261022.md) reproduced
+the startup timeout, then restored local startup by excluding generated
+runtime/state directories and other worktrees from Vite file watching. Source
+edits still publish reloads. The final six-command pipeline passed: 98 executed
+test suites plus ten explicit Windows skips, all 35 migration checks, build,
+local migration application with nothing pending, and the fictional HTTP smoke.
+Existing business rows and saved configuration were preserved.
+
+This updates desktop evidence only. The hosted inspection below remains dated
+October 14; no new GitHub CI, hosted acceptance, C4 browser/model gate or
+milestone completion is claimed. Development-release preparation is next.
 
 ## Verified snapshot — 2026-10-14
 
@@ -21,7 +36,7 @@ open. B8/M6 remains on hold for Toast approval/testing access.
 | --- | --- | --- |
 | Shared source | The incoming feature commits are `de970c8` and `12de73b`, adding the C4 AI evaluation/Metadata evidence above the merged PR [#8](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/8) and [#9](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/9). The checklist/CI synchronization follow-up is [PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10). | Source synchronization does not deploy the development Worker or close external acceptance gates. |
 | GitHub verification | Incoming `12de73b` [failed both OS jobs](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38506857157) because its preflight test could not launch `rg`. The focused Git-based source-enumeration repair at `456ad67` [passed Ubuntu and Windows CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38508252498). | [Incoming main Supabase Preview](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/115666379481) passed; PR preview was skipped by configuration. Preview success does not prove hosted signup/recovery or provider behavior. PR #10 records the final checklist/verification follow-up. |
-| Desktop local startup | The [fresh bounded C4 investigation](C4_SECOND_ADDITION_COMPATIBILITY_20261014.md) passed all twelve real local-browser jobs after the repaired receiver/teardown passed 92 suites and the full local pipeline. Its first normal case exercised SDK startup without a separate probe. Earlier cold optimization and Cloudflare runner entry-export failures remain recorded in [sync evidence](C2_STATUS_SYNC_20261013.md). | This proves the recorded local run only; it supplies no causal fix or cold-start reliability evidence for the earlier C2 failures. Browser, GitHub and hosted checks remain separate. |
+| Desktop local startup | The October 22 [C2 watcher repair and complete local pipeline](C2_LOCAL_READINESS_20261022.md) passed, including HTTP startup and actual source reloads. | Ten POSIX-specific suites are skipped on Windows. Earlier internal-runner failures remain historical; this is not a clean-cache reliability matrix, hosted validation or C4 acceptance. |
 | Six correctness/security fixes | All six are locally closed; BUG-01 was already on `main`, and PR #9 integrated BUG-02–06. The final stacked local evidence records 82 suites and the full pipeline. | These fixes do not constitute a full security review or hosted acceptance. See the [fix checklist](CORRECTNESS_SECURITY_FIX_CHECKLIST.md) and [original local integration evidence](BUG06_COUNT_RECEIPT_RACES.md); current combined-source verification is recorded separately. |
 | New C4 AI evidence | The [fresh full-gate attempt](C4_FULL_OFFLINE_GATE_20261014.md) stopped at reliability job 5; its partial cart, unresolved attempt and failed audit remain retained. The [credential-audit repair](C4_CREDENTIAL_AUDIT_REPAIR_20261015.md) passed locally. The October 15 [display-on investigation](C4_SECOND_ADDITION_DISPLAY_ON_20261015.md) then passed twelve fresh jobs with 1,500 ms delays, sixty mocked requests, healthy power evidence and the 95-suite preparation pipeline: **not reproduced with display on; cause unresolved**. | C4/M8 and real-model acceptance remain open. Both invocations are consumed; no retry is authorized. Owned cleanup and business preservation passed; strict artifact preservation found seventeen changed older browser cache/QuotaManager files. Historical carts/holds remain retained. Separately scope causal investigation/repair or a fresh complete gate; paid execution stays blocked. |
 | C4 preservation preflight | The [source-only profile guard](C4_PROFILE_PRESERVATION_PREFLIGHT_20261015.md), [stopped legacy cleanup](C4_LEGACY_PROFILE_CLEANUP_20261015.md) and [verification repair](C4_LEGACY_VERIFICATION_REPAIR_20261015.md) remain recorded. The [single remaining-profile attempt](C4_REMAINING_PROFILE_CLEANUP_20261015.md) passed eight focused suites and the 99-suite/full preparation pipeline, then stopped after SIGTERM only to leader 30082: captured helper 30095 had changed identity in a bracketed observation. | Eighteen historical processes are now gone; nine original processes rooted at 30474 and one live lock reference still block idle preflight. PID 4303 is absent, all 46 worker locks remain unarchived, and task guards are cleared. Both maintenance invocations are consumed; no retry or idle baseline followed. The earlier seventeen-file failure, partial cleanup audits and unresolved causes remain retained. |
@@ -48,9 +63,10 @@ The incoming CI failure is handled by the focused C2 portability repair in
 verification recorded in the [sync handoff](C2_STATUS_SYNC_20261013.md). The
 project order continues below.
 
-The desktop Cloudflare startup failure also needs a separate C2 investigation
-before claiming local browser readiness. Keep existing stock/history and private
-configuration intact; no cause or repair is established by the CI portability fix.
+Desktop startup is now verified locally after the separate
+[October 22 watcher repair](C2_LOCAL_READINESS_20261022.md). Existing stock/history
+and private configuration remain intact. The earlier CI portability repair and
+hosted acceptance remain separate evidence.
 
 1. **C2: prepare the development release.** Review the complete `0024`–`0034`
    upgrade, populated-data preservation, backup/restore and forward-repair plan;
