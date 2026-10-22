@@ -5,7 +5,9 @@ import {resolve} from 'node:path';
 import {readPrivate,writePrivate,profileLock} from './private-files.mjs';
 
 export const gatePolicy='metadata-repair-real-matrix-v1';
-export const fullGateRoot='.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014';
+// The 2026-10-14 invocation is consumed and retained; no invocation may reuse it.
+export const consumedGateRoots=Object.freeze(['.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014']);
+export const fullGateRoot='.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021';
 export const gateSteps=[
  ['metadata',['cart:browser-worker:check:ai:metadata']],
  ['reliability',['cart:browser-worker:check:reliability','--acceptance']],
@@ -39,6 +41,7 @@ export function validatePreparation(pipeline,snapshot=sourceSnapshot){
 export function rejectGateArguments(args){if(args.length)throw Error('Single-use full gate accepts no arguments, filters, resume or root override.');}
 export function gateAuditsPassed(audits){return audits?.passed===true&&['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified'].every(k=>audits[k]===true)&&audits.references?.length>=7;}
 export function createGateInvocation(root,source){
+ if(consumedGateRoots.some(old=>resolve(old)===resolve(root)))throw Error('Consumed gate root is retained and cannot be reused.');
  mkdirSync(root,{recursive:true,mode:0o700});const release=profileLock(root+'/runner');
  try{
   const path=root+'/task.json',fd=openSync(path,'wx',0o600),state={version:2,source,startedAt:new Date().toISOString(),steps:[]};

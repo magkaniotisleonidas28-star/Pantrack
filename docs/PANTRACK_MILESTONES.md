@@ -810,7 +810,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   preserved. Next, separately scope a fresh full offline gate. No checkbox
   advanced; C4/M8 remain open. The [fresh gate scope](C4_FULL_OFFLINE_GATE_SCOPE_20261021.md)
   defines G1, source-only rebinding with corrected preservation and a power
-  guard, then G2, one separately authorized run; nothing ran.
+  guard, then G2, one separately authorized run; nothing ran. [G1 rebinding](C4_FULL_GATE_REBINDING_20261021.md)
+  passed its focused suites, type checking, 110 suites and build. G2 will use an
+  external `caffeinate -di` and still needs authorization. No checkbox advanced.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,

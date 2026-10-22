@@ -11,6 +11,8 @@ rejectGateArguments(process.argv.slice(2));
 requireHistoricalProfilesIdle();
 const pipeline=readPrivate(root+'/pipeline-final.json'),source=validatePreparation(pipeline);
 if(JSON.stringify(readPrivate(root+'/freeze.json'))!==JSON.stringify(source))throw Error('Preparation freeze mismatch.');
+// The published observation baseline must still hold before the invocation is consumed.
+if(spawnSync('python3',['-I','-B','scripts/po-cart-worker/full-gate-audit.py','before'],{stdio:'ignore'}).status!==0)throw Error('Fresh baseline no longer holds.');
 const control={stopping:false};let preview,active,poll,assertSource;
 const children=[],previewCleanups=[];
 function evidenceRoots(){

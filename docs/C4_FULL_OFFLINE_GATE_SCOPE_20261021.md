@@ -95,13 +95,13 @@ investigation of that stage, not another gate.**
   hosted, supplier, pilot and production acceptance remain separate gates, so it
   would not close C4/M8 by itself.
 
-## Owner decisions requested
+## Owner decisions — 2026-10-21
 
-- Proceed with G1 as scoped (recommended).
-- Wire the display-on power guard into the gate runner (recommended), or rely
-  only on an external `caffeinate`.
-- Confirm the rule above: a repeat second-addition failure leads to causal
-  investigation.
+- **G1 proceeds as scoped.**
+- **Power:** wrap the G2 run in an external `caffeinate -di`. The power guard is
+  not wired into the runner.
+- **Stop routing:** a repeat second-addition failure with the display held on
+  routes to causal investigation, not another gate.
 
 ## Verification
 
