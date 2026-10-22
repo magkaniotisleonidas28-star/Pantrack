@@ -58,12 +58,15 @@ try{
  const missing=root+'/missing/states/1',none={issuedCredentials:[],revoke:()=>{},sql:real};
  const created=await finishOfflineFixture({f:none,dir:missing,origin:'http://127.0.0.1:1'});
  assert.deepEqual(created,{credentialsRevoked:true,browserClosed:true,stateSaved:true,cleanupVerified:true});
- assert.equal(statSync(missing).mode&0o777,0o700);assert.equal(statSync(missing+'/state.sqlite').mode&0o777,0o600);
+ // POSIX modes and unprivileged symlinks are unavailable on Windows.
+ if(process.platform!=='win32'){assert.equal(statSync(missing).mode&0o777,0o700);assert.equal(statSync(missing+'/state.sqlite').mode&0o777,0o600);}
  const savedState=new DatabaseSync(missing+'/state.sqlite',{readOnly:true});assert.deepEqual(savedState.prepare('SELECT v FROM kept').all().map(r=>r.v),['state']);savedState.close();
  // A symlinked case directory is refused rather than followed.
- mkdirSync(root+'/elsewhere');symlinkSync(root+'/elsewhere',root+'/linked');
- const linked=await finishOfflineFixture({f:none,dir:root+'/linked',origin:'http://127.0.0.1:1'});
- assert.equal(linked.stateSaved,false);assert.equal(linked.cleanupVerified,false);assert.equal(existsSync(root+'/elsewhere/state.sqlite'),false);
+ if(process.platform!=='win32'){
+  mkdirSync(root+'/elsewhere');symlinkSync(root+'/elsewhere',root+'/linked');
+  const linked=await finishOfflineFixture({f:none,dir:root+'/linked',origin:'http://127.0.0.1:1'});
+  assert.equal(linked.stateSaved,false);assert.equal(linked.cleanupVerified,false);assert.equal(existsSync(root+'/elsewhere/state.sqlite'),false);
+ }
  real.close();
  console.log('PASS: fixed 21-step invocation, exclusive durable consumption/order, pipeline/source/evidence binding, argument rejection, first unexpected failure/interruption, expected faults, partial issuance/HTTP 401/state retention and cleanup failure; no browsers or provider requests.');
 }finally{rmSync(root,{recursive:true,force:true});}
