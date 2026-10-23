@@ -147,5 +147,7 @@ All inference stays mocked, the stop rule is unchanged, and a repeat
 second-addition failure routes to causal investigation. Step 15 will be the first
 real-browser run of the cleanup repair.
 
+The gate then ran once; see the [G3 run record](C4_FULL_OFFLINE_GATE_RUN_20261022.md).
+
 Rollback reverts this commit. Both consumed roots, the observation baseline and
 all runtime state are untouched.

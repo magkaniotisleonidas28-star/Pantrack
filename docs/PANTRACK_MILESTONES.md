@@ -822,6 +822,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   [rebinding](C4_FULL_GATE_REBINDING_20261022.md) consumes the G2 root and accepts
   drift only in audited gate-recorded profiles. It passed 110 suites and a live
   read-only pre-check. The next gate still needs authorization; no checkbox advanced.
+  [G3](C4_FULL_OFFLINE_GATE_RUN_20261022.md) passed steps 1–20, including the
+  real-browser cleanup check, and stopped at step 21 (`cart:manager:check:launcher`)
+  with all audits passing. Next, reproduce that check in isolation; C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,
