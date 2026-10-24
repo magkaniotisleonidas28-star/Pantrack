@@ -1,7 +1,8 @@
 import "./scripts/sites-env.mjs";
+import { fileURLToPath } from "node:url";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import vinext from "vinext";
-import { defineConfig } from "vite";
+import { defineConfig, normalizePath } from "vite";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
 import { sites } from "./build/sites-vite-plugin";
 import { cartPreviewPlugin } from "./build/cart-preview-plugin";
@@ -9,6 +10,11 @@ import { cartPreviewPlugin } from "./build/cart-preview-plugin";
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const managedLinux = readExecutionProfile() === "managed-linux";
+// Private tool stores, generated state and other checkouts can contain hundreds
+// of thousands of files. Watching them delays server-module reads on Windows.
+const localWatchIgnored = [".sites-runtime", ".wrangler", ".vinext", "work"].map(
+  directory => `${normalizePath(fileURLToPath(new URL(`./${directory}`, import.meta.url)))}/**`,
+);
 
 export default defineConfig(async ({ command }) => {
   const a5LocalReview = command === "serve" && !managedLinux && process.env.PANTRACK_A5_REVIEW === "enabled";
@@ -22,7 +28,10 @@ export default defineConfig(async ({ command }) => {
     server: {
       host: "127.0.0.1",
       ...(managedLinux ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] } : {}),
-      ...(isCodexSeatbeltSandbox ? { watch: { useFsEvents: false, usePolling: true } } : {}),
+      watch: {
+        ignored: localWatchIgnored,
+        ...(isCodexSeatbeltSandbox ? { useFsEvents: false, usePolling: true } : {}),
+      },
     },
     plugins: [
       ...(cartReview ? [cartPreviewPlugin()] : []),

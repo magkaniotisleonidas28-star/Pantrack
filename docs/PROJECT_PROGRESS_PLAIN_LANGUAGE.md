@@ -1,7 +1,7 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-14. Based on the recorded acceptance decisions, merged source,
-current GitHub checks and read-only Cloudflare inspection. Detailed evidence is
+Updated: 2026-10-24 for release preparation and local PDF/Excel exports. The historical verification table
+below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
 ## Where we are
@@ -14,19 +14,41 @@ accepted for development. Clover passed its approved, limited sandbox tests.
 Restocking calculations and proposal history are built locally. Purchase-order
 and practice-cart components are also built locally.
 
+The [online update is now prepared](C2_DEV_RELEASE_PREPARATION_20261024.md):
+the backup restored correctly, all eleven database updates preserved existing
+records in rehearsal, and the release files passed local checks. The online app
+is still on its old version. The owner confirmed test data and no connected
+automatic-build repository, then chose to defer the online update for now. The
+prepared files and backup are retained; no maintenance or database update ran.
+
+The [local draft PDF](C4_DRAFT_PDF_LOCAL_EVIDENCE.md) is now built and tested.
+The practice screen can download a readable supplier list with exact quantities,
+estimated prices and review warnings. Missing prices stay clearly unavailable.
+This works with fictional examples on this computer; adding it to the signed-in
+app remains separate work.
+
+The [Excel download](C4_DRAFT_XLSX_LOCAL_EVIDENCE.md) is now built and tested too.
+It includes a summary and a sortable/filterable item list, preserves exact values
+as text, and keeps missing prices clearly unavailable. Editing the spreadsheet
+does not change Pantrack. Next, prepare the permission and saved-revision checks
+needed to connect both downloads to saved drafts in the signed-in app.
+
 The new commits add an optional AI reader for practice supplier carts and private
 records of its completion checks. Some tests passed, but the complete AI safety
 run is unfinished: its latest offline run timed out while adding the second
 item. C4/M8 therefore remain open.
 
-The online development app is behind GitHub. The six bug fixes are merged, and
-the new CI portability repair passed Windows/Linux checks on its reviewed branch.
+At the last inspection, the online development app was behind GitHub. The six
+bug fixes are merged, and the CI portability repair passed Windows/Linux checks
+on its reviewed branch.
 Online release/testing are still needed. No real supplier order or café pilot is
 complete.
 
-The local app-startup check also failed on this computer after the update.
-GitHub's Windows/Linux checks passed, but that does not prove this computer can
-start the app. This local problem needs a separate follow-up.
+This computer is now updated to the October 20 GitHub code, with a local startup
+fix. The [October 22 checks](C2_LOCAL_READINESS_20261022.md) passed the complete
+local pipeline, including sign-in and company isolation. The test runner
+executed 98 suites successfully and explicitly skipped ten POSIX-specific suites
+on Windows. Existing stock/history and saved configuration were preserved.
 
 **A checked box means complete within its stated scope.** Local means tested on
 a computer with fictional data. Sandbox means tested with a provider's test
@@ -36,7 +58,7 @@ account. Neither means approved for real customers or production.
 
 | Milestone | What it means | Current status |
 | --- | --- | --- |
-| M0 | Run the project on a computer. | Baseline complete; the current desktop startup problem is unresolved. |
+| M0 | Run the project on a computer. | Baseline complete; desktop startup and the full local pipeline passed again on October 22. |
 | M1 | Automatically check changes for errors. | Complete; the new missing-tool CI failure is repaired and covered by Windows/Linux branch checks. |
 | M2 | Accounts, company access and permissions. | Accepted for development; hosted signup/recovery and independent security review remain follow-ups. |
 | M3 | Reliable inventory, units and recipe history. | Accepted for development; newest fixes still need online validation. |
@@ -122,7 +144,7 @@ matrix completed. No paid retry is authorized.
 
 Still open: resolve that reliability failure and pass the fresh full AI gate,
 then separately authorized real-model validation, hosted privacy/safety,
-permitted Baldor access, production mappings, PDF/Excel exports, confirmation
+permitted Baldor access, production mappings, signed-in PDF/Excel exports, confirmation
 and approved receiving.
 
 Evidence: [C2 closeout](C2_M2_CLOSEOUT.md), [Baldor preparation](C3_BALDOR_PREPARATION.md),
@@ -156,13 +178,14 @@ the full login/recovery workflow. See the [sync verification record](C2_STATUS_S
 
 ## What happens next, in order
 
-The local startup error needs its own C2 investigation. The source/CI repair in
-PR #10 does not fix it. Release preparation and bounded C4 evidence review can
-still proceed independently.
+The local startup error is repaired within the recorded October 22 scope.
+Release preparation passed on October 24, but the owner deferred the online
+update. Independent local supplier/cart work can continue while it waits.
+The cart/browser acceptance gate remains unfinished.
 
-1. **Prepare a safe development release.** Review all 11 pending database updates,
-   preservation of old data, backup/recovery and the Cloudflare deployment setup.
-   Keep sales processing paused during the coordinated code/database change.
+1. **Online release is on hold.** The 11 updates and backup/recovery plan are
+   reviewed and rehearsed. Keep the preparation and resume only when the owner
+   requests it; independent local work can proceed meanwhile.
 2. **Authorize and perform that specific development release, then test it online.**
    Record the inventory, sales recovery/readiness and count/planning results with
    fictional data. The old stock history must stay intact.

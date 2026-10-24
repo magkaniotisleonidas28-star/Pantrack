@@ -1,16 +1,18 @@
 import {createServer} from 'node:http';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
+import {basename} from 'node:path';
 import {build} from 'esbuild';
 
 // Explicit in-memory asset allowlist; no app routes, DB, environment files or supplier transport.
 const root = new URL('../previews/c4-order-draft/', import.meta.url);
 const result = await build({entryPoints: [fileURLToPath(new URL('main.ts', root))], bundle: true,
-  platform: 'browser', format: 'esm', target: 'es2022', write: false});
+  platform: 'browser', format: 'esm', target: 'es2022', loader: {'.ttf': 'binary'}, write: false,
+  splitting: true, outdir: '.sites-runtime/order-draft-preview-assets', entryNames: 'main', chunkNames: '[name]-[hash]'});
 const assets = new Map([
   ['/', ['text/html; charset=utf-8', readFileSync(new URL('index.html', root))]],
   ['/styles.css', ['text/css; charset=utf-8', readFileSync(new URL('styles.css', root))]],
-  ['/main.js', ['text/javascript; charset=utf-8', result.outputFiles[0].contents]],
+  ...result.outputFiles.map(file => [`/${basename(file.path)}`, ['text/javascript; charset=utf-8', file.contents]]),
 ]);
 const server = createServer((request, response) => {
   if (!['127.0.0.1:5180', 'localhost:5180'].includes(request.headers.host)) {

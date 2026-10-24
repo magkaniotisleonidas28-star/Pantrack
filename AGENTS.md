@@ -37,6 +37,8 @@ this file concise; detailed workflow and prompt templates live in
   Wrangler recognizes nested blocks and keeps each trigger as one statement.
 - For scripted source edits, check match counts and inspect the changed block
   before verification.
+- In PowerShell, pass file globs through `rg --glob` against a directory; do not
+  pass unexpanded wildcard paths to `rg`.
 - Use complete current lines as patch context; reread the target block after
   a context mismatch before retrying.
 - Prefer a focused module and focused test over unrelated refactoring. Identify

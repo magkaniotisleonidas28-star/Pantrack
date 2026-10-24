@@ -476,6 +476,18 @@ For every numbered item, the assigned person follows the same delivery loop:
   found missing-tool failures on incoming `12de73b`; the
   [C2 portability/sync handoff](C2_STATUS_SYNC_20261013.md) records their repair.
   Automatic Cloudflare deployment configuration remains unverified.
+  **2026-10-22 desktop readiness:** the [C2 local-readiness record](C2_LOCAL_READINESS_20261022.md)
+  documents synchronization to `7a516ea`, the Vite watcher repair, actual source
+  reloads, the passing six-command local pipeline and preserved existing data.
+  Ten POSIX-specific suites are skipped on Windows. Hosted facts and C4/M8
+  acceptance are unchanged; development-release preparation is next.
+  **2026-10-24 release preparation:** the [C2 prepared release](C2_DEV_RELEASE_PREPARATION_20261024.md)
+  records fresh hosted reads/CI, private backup/restore and all eleven pending
+  migrations rehearsed without changing existing rows. The frozen bundle and
+  maintenance checks passed locally. The owner confirmed test data and no
+  connected Builds repository, then deferred the entire release on October 24.
+  Retain preparation and continue only independent local work until the owner
+  requests resumption; no hosted migration/deployment or acceptance advanced.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   permitted browser use, café/account/location authorization, exact SKUs/packs,
@@ -514,7 +526,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   [Audited draft editing and review](C4_PO_REVIEW_LOCAL_EVIDENCE.md) now pass
   locally with immutable revisions and review invalidation; migration `0027`
   is local only. True approval requires A/C quantity commitments and owner
-  spending controls. PDF/XLSX, cart execution and receiving remain separate;
+  spending controls. The [fictional PDF slice](C4_DRAFT_PDF_LOCAL_EVIDENCE.md)
+  now adds locally verified PDF downloads to the isolated draft/CSV preview,
+  preserving exact quantities, estimates, revisions and warnings with no writes.
+  The [fictional XLSX slice](C4_DRAFT_XLSX_LOCAL_EVIDENCE.md) now adds a native
+  workbook with exact literal cells, frozen/filterable headings and explicit
+  oversized/ambiguous-field refusals, independently read locally with no writes.
+  Signed-in/durable PDF/XLSX integration, cart execution and receiving remain separate;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable

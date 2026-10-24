@@ -62,6 +62,12 @@ above explicitly uses `--local`; the repository has no remote migration command.
 Vite and Wrangler share `.wrangler/state`. Do not edit an existing migration;
 generate an additive migration with `pnpm db:generate`.
 
+Vite excludes this checkout's `.sites-runtime`, `.wrangler`, `.vinext` and `work`
+directories from file watching. Generated caches/state and other worktrees do
+not trigger reloads; source edits still do. Restart the server after changing
+private preview configuration inside an excluded directory. See the
+[desktop startup repair](C2_LOCAL_READINESS_20261022.md).
+
 `pnpm local:setup` creates ignored `.env.local` and `.dev.vars` files. Rerunning
 it preserves existing values and appends variables newly added to `.env.example`.
 It generates `AUTH_ENCRYPTION_KEY` only when that variable is absent. Existing
