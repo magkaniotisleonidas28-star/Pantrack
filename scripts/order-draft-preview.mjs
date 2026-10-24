@@ -6,7 +6,7 @@ import {build} from 'esbuild';
 // Explicit in-memory asset allowlist; no app routes, DB, environment files or supplier transport.
 const root = new URL('../previews/c4-order-draft/', import.meta.url);
 const result = await build({entryPoints: [fileURLToPath(new URL('main.ts', root))], bundle: true,
-  platform: 'browser', format: 'esm', target: 'es2022', write: false});
+  platform: 'browser', format: 'esm', target: 'es2022', loader: {'.ttf': 'binary'}, write: false});
 const assets = new Map([
   ['/', ['text/html; charset=utf-8', readFileSync(new URL('index.html', root))]],
   ['/styles.css', ['text/css; charset=utf-8', readFileSync(new URL('styles.css', root))]],

@@ -11,6 +11,20 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 draft PDF — 2026-10-24
+
+The [fictional draft PDF slice](C4_DRAFT_PDF_LOCAL_EVIDENCE.md) adds Download PDF
+to the isolated draft/CSV preview. Supplier/account/location, proposal revisions,
+whole packs, exact stock quantities, estimates and review warnings are preserved.
+Every page is labeled as a fictional draft, missing prices stay unavailable,
+and invalid sources are blocked. Typecheck, application build, migration checks,
+99 executed suites plus ten Windows skips, actual Edge downloads and independent
+PDF reading/rendering passed. Export leaves fictional source/DB snapshots intact.
+
+This is local preview preparation only; no app API/schema or hosted deployment
+changed. C4/C5/M8 remain open and the online release below remains deferred.
+Next independent local slice: native XLSX for the same fictional snapshot.
+
 ## Latest development-release preparation — 2026-10-24
 
 The [C2 release packet](C2_DEV_RELEASE_PREPARATION_20261024.md) is technically

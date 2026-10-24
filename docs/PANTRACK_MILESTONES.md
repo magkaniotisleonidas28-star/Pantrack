@@ -526,7 +526,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   [Audited draft editing and review](C4_PO_REVIEW_LOCAL_EVIDENCE.md) now pass
   locally with immutable revisions and review invalidation; migration `0027`
   is local only. True approval requires A/C quantity commitments and owner
-  spending controls. PDF/XLSX, cart execution and receiving remain separate;
+  spending controls. The [fictional PDF slice](C4_DRAFT_PDF_LOCAL_EVIDENCE.md)
+  now adds locally verified PDF downloads to the isolated draft/CSV preview,
+  preserving exact quantities, estimates, revisions and warnings with no writes.
+  Signed-in/durable PDF integration, XLSX, cart execution and receiving remain separate;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable
