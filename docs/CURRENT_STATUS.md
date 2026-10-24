@@ -5,8 +5,8 @@ Updated: 2026-10-24
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
 Recorded acceptance uses development/fictional data and bounded provider sandbox
-tests. No café pilot or production acceptance is claimed. Owner confirmation of
-current hosted-data use is a precondition for the prepared development release.
+tests. No café pilot or production acceptance is claimed. The owner confirmed on
+October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
@@ -27,10 +27,12 @@ focused tests, build, frozen deployment dry run, production-bundle local HTTP
 and maintenance-response checks passed. The packet records a file-import plan
 for the used `0027`/`0029` splitter grouping issues and coordinated `0034` fencing.
 
-**The online update has not run.** Current-data use and Cloudflare Builds settings
-await owner confirmation; Builds API reads still return 403. The next action is
-explicit authorization of the exact maintenance, fresh-backup, migration and
-deployment sequence in the packet. No supplier/model execution or milestone
+**The online update is deferred at the owner's request.** The owner confirmed
+test data and no repository connected under Cloudflare Builds, then asked to
+skip this release for now. The Builds report is owner attestation; API reads
+still return 403. Keep the prepared candidate and private backup, and perform no
+maintenance, remote migration or deployment until the owner requests resumption.
+Local work may continue independently. No supplier/model execution or milestone
 acceptance is advanced.
 
 ## Latest desktop verification — 2026-10-22
@@ -92,15 +94,16 @@ Desktop startup is now verified locally after the separate
 and private configuration remain intact. The earlier CI portability repair and
 hosted acceptance remain separate evidence.
 
-1. **C2: authorize and execute the prepared development release.** The
+1. **C2: development release deferred by owner.** The
    [October 24 packet](C2_DEV_RELEASE_PREPARATION_20261024.md) reviews the complete
    `0024`–`0034` upgrade, populated-data preservation, backup/restore and forward
-   repair. Confirm current data use and Cloudflare Builds settings. BUG-02
+   repair. The owner confirmed test data and no connected Builds repository;
+   retain those answers and revalidate current state when resuming. BUG-02
    requires coordinated runtime/migration rollout with sales ingestion and
    recovery paused. See its
    [rollout limits](BUG02_SALES_OUTCOME_RECOVERY.md#compatibility-repair-and-rollback).
-   Technical preparation is complete; applying remote migrations and deploying
-   still require explicit authorization for that release.
+   Technical preparation is complete. Leave execution on hold until the owner
+   requests it and authorizes that release.
 2. **C2/A/B: validate the released fixes with fictional hosted data.** After an
    authorized development release, verify sign-in, inventory/history, sales
    recovery/readiness and count/planning regressions. Record results separately

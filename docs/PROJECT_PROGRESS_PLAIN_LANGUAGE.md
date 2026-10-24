@@ -17,8 +17,9 @@ and practice-cart components are also built locally.
 The [online update is now prepared](C2_DEV_RELEASE_PREPARATION_20261024.md):
 the backup restored correctly, all eleven database updates preserved existing
 records in rehearsal, and the release files passed local checks. The online app
-is still on its old version. Owner answers about current data use and automatic
-builds, plus approval of the specific release, are needed before execution.
+is still on its old version. The owner confirmed test data and no connected
+automatic-build repository, then chose to defer the online update for now. The
+prepared files and backup are retained; no maintenance or database update ran.
 
 The new commits add an optional AI reader for practice supplier carts and private
 records of its completion checks. Some tests passed, but the complete AI safety
@@ -166,13 +167,13 @@ the full login/recovery workflow. See the [sync verification record](C2_STATUS_S
 ## What happens next, in order
 
 The local startup error is repaired within the recorded October 22 scope.
-Release preparation passed on October 24; its owner confirmations and the
-authorized online update are next. The cart/browser acceptance gate remains
-unfinished.
+Release preparation passed on October 24, but the owner deferred the online
+update. Independent local supplier/cart work can continue while it waits.
+The cart/browser acceptance gate remains unfinished.
 
-1. **Confirm the prepared development release.** The 11 updates and backup/recovery
-   plan are reviewed and rehearsed. Confirm data use, automatic builds and the
-   specific release scope before the coordinated code/database change.
+1. **Online release is on hold.** The 11 updates and backup/recovery plan are
+   reviewed and rehearsed. Keep the preparation and resume only when the owner
+   requests it; independent local work can proceed meanwhile.
 2. **Authorize and perform that specific development release, then test it online.**
    Record the inventory, sales recovery/readiness and count/planning results with
    fictional data. The old stock history must stay intact.

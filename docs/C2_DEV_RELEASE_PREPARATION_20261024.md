@@ -7,10 +7,13 @@ The application candidate is frozen, the current hosted state has been read,
 the backup has been restored locally, and all eleven pending migrations have
 passed a populated-data rehearsal. **The online release has not been executed.**
 
-Owner confirmation of current data use, automatic-build configuration and the
-specific maintenance/migration/deployment operation is still required. No
-milestone checkbox advances from this preparation. This packet implements one
-C2 outcome; A8/M7 and C3–C5/M8 acceptance remain separate.
+**Owner decision: defer the entire online release for now.** The owner confirmed
+on October 24 that the app still contains test data and no repository is
+connected under Cloudflare Builds, then deferred the online release.
+Maintenance, remote migrations and deployment are not authorized. Keep the
+prepared files and private backup; resume only at the owner's request, with
+current-state and artifact revalidation. No milestone checkbox advances from
+this preparation. A8/M7 and C3–C5/M8 acceptance remain separate.
 
 | Item | Prepared target or observed state |
 | --- | --- |
@@ -22,7 +25,7 @@ C2 outcome; A8/M7 and C3–C5/M8 acceptance remain separate.
 | Remote ledger | 24 entries, exactly `0000`–`0023`; `0024`–`0034` remain pending. |
 | Runtime gates | Exact inventory enabled; Clover sync disabled; PO/cart preview gates absent. Supplier submission and automatic purchasing stay server-blocked. |
 | Bindings and scheduling | Expected D1 binding and nine secret-binding names present; no cron schedules. Secret values were not fetched or replaced. |
-| Automatic builds | Correct Worker-tag trigger/build reads returned 403. Configuration remains unverified; lack of permission is not evidence that automatic deployment is off. |
+| Automatic builds | The owner reports no repository connected. Worker-tag trigger/build API reads returned 403, so this is owner attestation rather than independent API verification. |
 
 The existing Wrangler OAuth login can read this Worker and D1. No credentials
 need to be pasted into chat. The two remote SQL metadata queries and final ledger
@@ -236,6 +239,7 @@ call or purchase occurred during preparation. Source/application contracts are
 unchanged. The only repository instruction change prevents repeated PowerShell
 `rg` wildcard mistakes; application SQL and migration metadata are untouched.
 
-**Next:** obtain the owner answers and explicit authorization for the exact
-prepared development release, then execute this checklist. Hosted A/B regression
-evidence and A8/M7 follow; C4/M8 and all purchasing gates remain open.
+**Next:** leave the online release deferred until the owner requests it. Local
+supplier/cart work can continue independently within its existing scope. Hosted
+A/B regression evidence and A8/M7 still require a later authorized release;
+C4/M8 and all purchasing gates remain open.

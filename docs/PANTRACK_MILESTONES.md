@@ -484,9 +484,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   **2026-10-24 release preparation:** the [C2 prepared release](C2_DEV_RELEASE_PREPARATION_20261024.md)
   records fresh hosted reads/CI, private backup/restore and all eleven pending
   migrations rehearsed without changing existing rows. The frozen bundle and
-  maintenance checks passed locally. Current data use, Builds configuration and
-  exact release authorization await the owner; no hosted migration/deployment
-  or acceptance advance occurred.
+  maintenance checks passed locally. The owner confirmed test data and no
+  connected Builds repository, then deferred the entire release on October 24.
+  Retain preparation and continue only independent local work until the owner
+  requests resumption; no hosted migration/deployment or acceptance advanced.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   permitted browser use, café/account/location authorization, exact SKUs/packs,
