@@ -49,6 +49,6 @@ try{
 }catch{console.error('Local manager demo stopped. Existing jobs, carts and private recovery files were retained.');process.exitCode=1;}
 finally{
   stopping=true;if(worker){worker.process.kill('SIGTERM');await worker.done;}
-  if(app){const cleanup=await cleanupPreview(app,appDone,appIdentity);if(!cleanup.verified)process.exitCode=1;}
+  if(app){const cleanup=await cleanupPreview(app,appDone,appIdentity);if(!cleanup.verified){console.error('Local application cleanup was not verified ('+(cleanup.failures.join(', ')||'unconfirmed')+').');process.exitCode=1;}}
   release();
 }

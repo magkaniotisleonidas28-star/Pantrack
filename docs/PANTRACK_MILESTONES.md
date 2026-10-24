@@ -812,6 +812,43 @@ For every numbered item, the assigned person follows the same delivery loop:
   already-active profile. Next separately scope the real one-instance/stale-lock
   operation and its fresh independent idle gates. No real maintenance or acceptance
   checkbox advance occurred; C4/M8 remain open.
+  The [single-instance maintenance plan](C4_SINGLE_INSTANCE_MAINTENANCE_PLAN_20261021.md)
+  observed, read-only, that all nine 30474 members had exited without a reboot
+  (cause unobserved). It found PID 4303 absent, preflight `idle` and all 46 locks
+  unchanged. The owner retired the fixed runner unexecuted and excluded
+  stale-lock archival. Next is a signal-free observation-baseline source task,
+  then one separately authorized run. No signal, archive, invocation, baseline or
+  checkbox advance occurred; C4/M8 remain open.
+  The [observation-baseline source](C4_OBSERVATION_BASELINE_SOURCE_20261021.md) adds
+  that fixed signal-free entrypoint and independent auditor. Its focused offline
+  suite, type checking, 109 suites and build passed. A live read-only dry check
+  found the gates currently satisfiable. The [single authorized run](C4_OBSERVATION_BASELINE_RUN_20261021.md)
+  passed with zero signals. It published a fresh baseline: idle profiles, equal
+  fingerprints, all 46 locks exact, and 46,678 business rows across 118 databases
+  preserved. Next, separately scope a fresh full offline gate. No checkbox
+  advanced; C4/M8 remain open. The [fresh gate scope](C4_FULL_OFFLINE_GATE_SCOPE_20261021.md)
+  defines G1, source-only rebinding with corrected preservation and a power
+  guard, then G2, one separately authorized run; nothing ran. [G1 rebinding](C4_FULL_GATE_REBINDING_20261021.md)
+  passed its focused suites, type checking, 110 suites and build. G2 will use an
+  external `caffeinate -di` and still needs authorization. No checkbox advanced.
+  [G2](C4_FULL_OFFLINE_GATE_RUN_20261021.md) passed steps 1–14, including 30/30
+  reliability, then stopped at step 15. The shared fixture cleanup vacuums into a
+  missing directory. All final audits passed. Next, repair the cleanup with a
+  regression test, then run a separately authorized fresh gate; C4/M8 remain open.
+  The cleanup repair and its real-SQLite regression passed with 110 suites. The
+  next gate needs rebinding for G2's recorded task profiles first. That
+  [rebinding](C4_FULL_GATE_REBINDING_20261022.md) consumes the G2 root and accepts
+  drift only in audited gate-recorded profiles. It passed 110 suites and a live
+  read-only pre-check. The next gate still needs authorization; no checkbox advanced.
+  [G3](C4_FULL_OFFLINE_GATE_RUN_20261022.md) passed steps 1–20, including the
+  real-browser cleanup check, and stopped at step 21 (`cart:manager:check:launcher`)
+  with all audits passing. An isolated reproduction found a harness restart race,
+  now repaired with 111 suites passing and 3/3 isolated real-check passes. Rebinding
+  first needs an owner decision on four worker locks left by G3's crash
+  scenarios. The [G4 rebinding](C4_FULL_GATE_REBINDING_20261024.md) accounts for
+  them with the audited-gate rule and adds safe failure summaries; 113 suites and
+  a live read-only pre-check passed. The next gate still needs authorization;
+  C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,
