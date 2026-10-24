@@ -77,6 +77,94 @@ three things:
 
 These are leads, not findings. No retry or re-run occurred.
 
+## Step 21 cause: harness restart race — 2026-10-24
+
+The owner authorized an isolated reproduction. It ran in a clean clone of this
+branch at `20359a8`, with its own `.sites-runtime`, fictional local data and ports
+5181/5182. The gate root was not involved, and no real profile, lock, baseline or
+evidence was touched. The gate was not re-run.
+
+1. **The plain check failed on its first run** with the same exit 1. Its only
+   message was `1 !== 0` from the final `launcher.stop()` in its `finally` block.
+   No `PASS` line was printed, so an earlier failure had been replaced by the
+   cleanup assertion.
+2. **An uncommitted instrumented copy** printed the original error. It was
+   `page.goto: net::ERR_ABORTED` on the first navigation after the graceful
+   restart. That restart itself succeeded.
+3. **A page-event trace showed the cause.** The page left open on the Vite dev
+   server logged `[vite] server connection lost. Polling for restart...` at the
+   stop. When the restarted server answered, the Vite 8.0.13 client called
+   `location.reload()`. Both of that reload's requests and the check's `page.goto`
+   ended in `ERR_ABORTED`.
+
+The race reproduced in all three runs that reached the restart. The confined
+browser context was not involved: it blocks with `ERR_BLOCKED_BY_CLIENT`, and only
+non-local origins. This is a harness defect. Product behavior was not involved.
+
+**Why the final stop exited 1 in the plain run is not established.** The
+launcher's unverified app cleanup set exit code 1 without printing anything. A
+second possibility was a supervisor poll racing credential revocation; it never
+appeared in five runs. The repair makes the first possibility report its fixed
+failure categories.
+
+**One clone run hit the open addition timeout instead.** The automation worker
+journal recorded `browserFailure.stage: "addition"`, a 10 s response wait, 0
+external requests, 0 checkout submissions and clean browser closure. That run
+fell inside a display-off interval (13:20:23–13:22:04 local, on battery). Runs
+with the display on passed. This is consistent with the
+[display-on investigation](C4_SECOND_ADDITION_DISPLAY_ON_20261015.md), but it is
+**not a causal finding**.
+
+### Repair
+
+| File | Change |
+| --- | --- |
+| [`launcher-check-lifecycle.mjs`](../scripts/po-cart-worker/launcher-check-lifecycle.mjs) | New. `restartDetached` moves the page to `about:blank` before the graceful stop and never starts after a failed stop. `withCleanup` always runs cleanup and reports an `AggregateError` when both the check and its cleanup fail. |
+| [`po-cart-manager-launcher-check.mjs`](../scripts/po-cart-manager-launcher-check.mjs) | Uses both. A failed stop now reports the exit code and the launcher's fixed status lines, which carry no credential or token. |
+| [`po-cart-manager-preview.mjs`](../scripts/po-cart-manager-preview.mjs) | An unverified app cleanup now prints its fixed failure categories before exiting 1. |
+
+The new [lifecycle suite](../tests/po-cart-launcher-check-lifecycle.mjs) models
+the observed dev client. A naive restart aborts the post-restart navigation, and
+the detached restart does not. The suite also covers order, a failed stop and all
+four outcome combinations of `withCleanup`, and pins the check and the launcher.
+
+Six planted defects were each caught:
+
+1. no detach;
+2. detaching after the stop;
+3. restarting after a failed stop;
+4. cleanup replacing the original failure;
+5. a swallowed cleanup failure;
+6. skipped cleanup.
+
+| Command | Result |
+| --- | --- |
+| `pnpm test po-cart-launcher-check-lifecycle` | Passed |
+| `pnpm typecheck` | Passed |
+| `pnpm test` | Passed, **111 suites** |
+| `pnpm build` | Passed |
+| `node scripts/po-cart-manager-launcher-check.mjs` in the isolated clone, under `caffeinate -di` | **Passed 3/3**, with no remaining process and ports free |
+
+The gate's safe-log filter still drops non-`PASS` lines, so a future step failure
+inside the gate would again be silent. It is part of the frozen gate runner and
+was not changed.
+
+## Gate-left worker locks (rebinding blocker)
+
+A read-only `baseline_holds()` run after the repair refused before reaching the
+profile comparison: `Worker locks/guards added or removed`. There are 50 locks
+against the baseline's 46. Each of the four added locks:
+
+- belongs to a G3-recorded profile;
+- holds exactly the worker PID G3 recorded for it;
+- names a process that is no longer running.
+
+Three were written during step 15 and one during step 19. Those steps contain
+three and one deliberate `SIGKILL` crash scenarios respectively. G2 stopped before
+any of them. **Every full gate run therefore leaves such locks**, and the current
+pre-check would refuse the next gate even after rebinding. Accepting or archiving
+them is an owner decision for the rebinding. Nothing was changed.
+
 ## Final audits
 
 All independent audits passed:
@@ -95,13 +183,11 @@ consumed.
 
 ## Next
 
-1. **Investigate step 21** (needs authorization). Reproduce
-   `cart:manager:check:launcher` with its full output in an isolated clean clone
-   that has its own `.sites-runtime`. Real profiles, locks and evidence then stay
-   untouched and the pre-gate baseline is not disturbed. Then repair, with a
-   regression test.
+1. **Investigate step 21:** done on 2026-10-24. The cause is a harness restart
+   race, now [repaired](#repair).
 2. **Rebinding.** Consume `…-20261022`; its 198 recorded profiles qualify under the
-   audited gate-profile rule. Then bind a new root.
+   audited gate-profile rule. Then bind a new root. First, the owner must decide
+   how to treat the [four gate-left worker locks](#gate-left-worker-locks-rebinding-blocker).
 3. **Then a separately authorized fresh gate.**
 
 Both earlier consumed roots, the retired preparation and the observation baseline

@@ -824,7 +824,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   read-only pre-check. The next gate still needs authorization; no checkbox advanced.
   [G3](C4_FULL_OFFLINE_GATE_RUN_20261022.md) passed steps 1–20, including the
   real-browser cleanup check, and stopped at step 21 (`cart:manager:check:launcher`)
-  with all audits passing. Next, reproduce that check in isolation; C4/M8 remain open.
+  with all audits passing. An isolated reproduction found a harness restart race,
+  now repaired with 111 suites passing and 3/3 isolated real-check passes. Rebinding
+  first needs an owner decision on four worker locks left by G3's crash
+  scenarios. C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,

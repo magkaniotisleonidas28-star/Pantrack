@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-22
+Updated: 2026-10-24
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -41,6 +41,7 @@ open. B8/M6 remains on hold for Toast approval/testing access.
 | C4 gate cleanup repair | `finishOfflineFixture` now creates the private case directory before `VACUUM INTO` and refuses symlinks. A [real-SQLite regression](C4_FULL_OFFLINE_GATE_RUN_20261021.md#repair--2026-10-21) covers it, and reverting the fix fails the suite. Type checking, 110 suites and build passed. | No real-browser check ran. G2's 133 recorded task profiles break G1's exact-baseline pre-check. Next: rebinding with a choice between allowing recorded gate profiles (recommended) or a fresh baseline, then a separately authorized gate. C4/M8 remain open. |
 | C4 gate rebinding for the next gate | The owner chose to allow recorded gate profiles. The [rebinding](C4_FULL_GATE_REBINDING_20261022.md) consumes the G2 root and binds `…-20261022`. The pre-check accepts drift only inside profiles recorded by a consumed, invoked gate whose retained audits pass and whose referenced evidence is unchanged. Seven planted defects were caught. Type checking, 110 suites and build passed. A live read-only pre-check passed: 32,366 changed entries, all inside G2's 133 recorded profiles. | Nothing ran or was written. Next: one separately authorized fresh gate under `caffeinate -di`, whose step 15 is the first real-browser run of the cleanup repair. C4/M8 remain open. |
 | C4 fresh full offline gate (G3) | After a CI portability fix (both platforms green), the [single authorized gate](C4_FULL_OFFLINE_GATE_RUN_20261022.md) passed **steps 1–20**. That includes 30/30 reliability and step 15, the first real-browser confirmation of the cleanup repair. It stopped at step 21, `cart:manager:check:launcher` (exit 1), about 9 s after the launcher's graceful restart. All final audits passed; no historical row changed and there were zero real requests. | Invocation consumed. The step-21 cause is not established because the safe log kept no error text. Next: an authorized isolated reproduction and repair, then rebinding and a separately authorized gate. C4/M8 remain open. |
+| C4 step-21 reproduction and repair | An isolated clean-clone reproduction found a [harness restart race](C4_FULL_OFFLINE_GATE_RUN_20261022.md#step-21-cause-harness-restart-race--2026-10-24): Vite's reconnect reload aborted the post-restart navigation, and the cleanup assertion masked that error. The check now leaves the page before the restart and keeps the original failure; the launcher reports its cleanup categories. Six planted defects were caught; 111 suites passed; the real check passed 3/3 in isolation. | Gate not re-run. A read-only pre-check found four worker locks left by G3's deliberate crash scenarios. The rebinding needs an owner decision on them. C4/M8 remain open. |
 | Hosted development code | A read-only Cloudflare deployment inspection still shows release `65373b3`, deployed at `2026-10-05T02:50:23Z`; active Worker version `ed5e9c65-31b7-432f-bff9-bf4df45e9b68`. | The merged PR #8/#9 work has not reached this Worker. |
 | Hosted development database | The read-only `d1_migrations` query returned 24 entries, `0000`–`0023`, with zero rows written and `changed_db=false`. Main contains 35 migrations. | All 11 migrations `0024`–`0034` are pending here. A release must review the entire ordered range, not just `0034`. This query did not inspect or validate all business data. |
 | Runtime gates | Exact inventory preview is enabled; Clover sales sync is disabled. Supplier submission and automatic purchasing remain disabled. | Existing gate state is not approval to use real services or place orders. |
@@ -197,7 +198,9 @@ configuration intact; no cause or repair is established by the CI portability fi
    task profiles break the exact-baseline pre-check. That [rebinding](C4_FULL_GATE_REBINDING_20261022.md)
    is done, accepting only drift recorded by audited gates. [G3](C4_FULL_OFFLINE_GATE_RUN_20261022.md)
    then passed steps 1–20 and stopped at step 21, the launcher restart check, with
-   all audits passing. Next is an authorized isolated reproduction of that check.
+   all audits passing. Its isolated reproduction found a harness restart race,
+   which is now repaired. Next is rebinding, after an owner decision on the four
+   worker locks that G3's deliberate crash scenarios left.
    Existing consumed allowances and unresolved carts stay retained. Hosted/model tests have their
    own configuration, budget and authorization gates.
 5. **C5: finish and accept M8 after M7 and the supplier gates.** Complete verified
