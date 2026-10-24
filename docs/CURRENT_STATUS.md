@@ -1,14 +1,37 @@
 # Pantrack current status
 
-Updated: 2026-10-22
+Updated: 2026-10-24
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
-No production customer data, real café sales, supplier orders, payments, or live
-POS connections have been used.
+Recorded acceptance uses development/fictional data and bounded provider sandbox
+tests. No café pilot or production acceptance is claimed. Owner confirmation of
+current hosted-data use is a precondition for the prepared development release.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Latest development-release preparation — 2026-10-24
+
+The [C2 release packet](C2_DEV_RELEASE_PREPARATION_20261024.md) is technically
+prepared for application commit `911fcb1`. Today's read-only inspection confirms
+the online Worker still runs `65373b3` and D1 still has `0000`–`0023`: all eleven
+`0024`–`0034` migrations remain pending. Windows and Ubuntu GitHub CI passed for
+`911fcb1`. Clover sync remains disabled, the expected nine secret-binding names
+remain present, and no cron schedules are configured.
+
+A private hosted backup was restored and upgraded locally: all 66 original
+application/ledger tables and 474 rows were preserved, and 40 new tables stayed
+empty. The resulting schema matches current source. Fresh local Wrangler apply,
+focused tests, build, frozen deployment dry run, production-bundle local HTTP
+and maintenance-response checks passed. The packet records a file-import plan
+for the used `0027`/`0029` splitter grouping issues and coordinated `0034` fencing.
+
+**The online update has not run.** Current-data use and Cloudflare Builds settings
+await owner confirmation; Builds API reads still return 403. The next action is
+explicit authorization of the exact maintenance, fresh-backup, migration and
+deployment sequence in the packet. No supplier/model execution or milestone
+acceptance is advanced.
 
 ## Latest desktop verification — 2026-10-22
 
@@ -21,9 +44,9 @@ test suites plus ten explicit Windows skips, all 35 migration checks, build,
 local migration application with nothing pending, and the fictional HTTP smoke.
 Existing business rows and saved configuration were preserved.
 
-This updates desktop evidence only. The hosted inspection below remains dated
-October 14; no new GitHub CI, hosted acceptance, C4 browser/model gate or
-milestone completion is claimed. Development-release preparation is next.
+This was desktop evidence only. Hosted facts and GitHub CI have since been
+refreshed in the October 24 preparation above; signed-in hosted acceptance,
+C4 browser/model gates and milestone completion remain separate.
 
 ## Verified snapshot — 2026-10-14
 
@@ -34,8 +57,8 @@ open. B8/M6 remains on hold for Toast approval/testing access.
 
 | Area | Verified position | Limit or next gate |
 | --- | --- | --- |
-| Shared source | The incoming feature commits are `de970c8` and `12de73b`, adding the C4 AI evaluation/Metadata evidence above the merged PR [#8](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/8) and [#9](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/9). The checklist/CI synchronization follow-up is [PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10). | Source synchronization does not deploy the development Worker or close external acceptance gates. |
-| GitHub verification | Incoming `12de73b` [failed both OS jobs](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38506857157) because its preflight test could not launch `rg`. The focused Git-based source-enumeration repair at `456ad67` [passed Ubuntu and Windows CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38508252498). | [Incoming main Supabase Preview](https://github.com/magkaniotisleonidas28-star/Pantrack/runs/115666379481) passed; PR preview was skipped by configuration. Preview success does not prove hosted signup/recovery or provider behavior. PR #10 records the final checklist/verification follow-up. |
+| Shared source | GitHub `main` is `911fcb1`, including the October 20 fixes and October 22 local-startup repair. | The October 24 release packet prepares this application source; it has not been deployed. |
+| GitHub verification | The [full Windows/Ubuntu CI run](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/39869805536) passed at `911fcb1`; today's API read also confirms successful Supabase Preview. | These are source/CI checks; they do not prove hosted signup/recovery, provider behavior or C4 acceptance. |
 | Desktop local startup | The October 22 [C2 watcher repair and complete local pipeline](C2_LOCAL_READINESS_20261022.md) passed, including HTTP startup and actual source reloads. | Ten POSIX-specific suites are skipped on Windows. Earlier internal-runner failures remain historical; this is not a clean-cache reliability matrix, hosted validation or C4 acceptance. |
 | Six correctness/security fixes | All six are locally closed; BUG-01 was already on `main`, and PR #9 integrated BUG-02–06. The final stacked local evidence records 82 suites and the full pipeline. | These fixes do not constitute a full security review or hosted acceptance. See the [fix checklist](CORRECTNESS_SECURITY_FIX_CHECKLIST.md) and [original local integration evidence](BUG06_COUNT_RECEIPT_RACES.md); current combined-source verification is recorded separately. |
 | New C4 AI evidence | The [fresh full-gate attempt](C4_FULL_OFFLINE_GATE_20261014.md) stopped at reliability job 5; its partial cart, unresolved attempt and failed audit remain retained. The [credential-audit repair](C4_CREDENTIAL_AUDIT_REPAIR_20261015.md) passed locally. The October 15 [display-on investigation](C4_SECOND_ADDITION_DISPLAY_ON_20261015.md) then passed twelve fresh jobs with 1,500 ms delays, sixty mocked requests, healthy power evidence and the 95-suite preparation pipeline: **not reproduced with display on; cause unresolved**. | C4/M8 and real-model acceptance remain open. Both invocations are consumed; no retry is authorized. Owned cleanup and business preservation passed; strict artifact preservation found seventeen changed older browser cache/QuotaManager files. Historical carts/holds remain retained. Separately scope causal investigation/repair or a fresh complete gate; paid execution stays blocked. |
@@ -52,9 +75,10 @@ open. B8/M6 remains on hold for Toast approval/testing access.
 | Runtime gates | Exact inventory preview is enabled; Clover sales sync is disabled. Supplier submission and automatic purchasing remain disabled. | Existing gate state is not approval to use real services or place orders. |
 | Cloudflare Git/build connection | The Workers Builds trigger and build APIs both returned `403` with the existing credential. | Automatic deployment configuration remains independently unverified. GitHub CI success does not prove Cloudflare Builds is configured. |
 
-The deployment and database reads above were refreshed on 2026-10-14. No remote
-migration, deployment, supplier/POS call, purchase or historical stock repair was
-performed for this update.
+Deployment, database, binding and schedule reads were refreshed on 2026-10-24.
+A private read-only export was used for the release rehearsal. No remote
+migration, deployment, supplier/POS call, purchase or historical stock repair
+was performed. Earlier supplier evidence retains its own dates and limitations.
 
 ## Current next-step checklist
 
@@ -68,13 +92,15 @@ Desktop startup is now verified locally after the separate
 and private configuration remain intact. The earlier CI portability repair and
 hosted acceptance remain separate evidence.
 
-1. **C2: prepare the development release.** Review the complete `0024`–`0034`
-   upgrade, populated-data preservation, backup/restore and forward-repair plan;
-   confirm the Cloudflare deployment configuration. BUG-02 requires coordinated
-   runtime/migration rollout with sales ingestion and recovery paused. See its
+1. **C2: authorize and execute the prepared development release.** The
+   [October 24 packet](C2_DEV_RELEASE_PREPARATION_20261024.md) reviews the complete
+   `0024`–`0034` upgrade, populated-data preservation, backup/restore and forward
+   repair. Confirm current data use and Cloudflare Builds settings. BUG-02
+   requires coordinated runtime/migration rollout with sales ingestion and
+   recovery paused. See its
    [rollout limits](BUG02_SALES_OUTCOME_RECOVERY.md#compatibility-repair-and-rollback).
-   Preparation can proceed locally; applying remote migrations and deploying
-   require explicit authorization for that release.
+   Technical preparation is complete; applying remote migrations and deploying
+   still require explicit authorization for that release.
 2. **C2/A/B: validate the released fixes with fictional hosted data.** After an
    authorized development release, verify sign-in, inventory/history, sales
    recovery/readiness and count/planning regressions. Record results separately
