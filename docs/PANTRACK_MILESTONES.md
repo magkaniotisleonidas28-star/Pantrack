@@ -529,7 +529,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   spending controls. The [fictional PDF slice](C4_DRAFT_PDF_LOCAL_EVIDENCE.md)
   now adds locally verified PDF downloads to the isolated draft/CSV preview,
   preserving exact quantities, estimates, revisions and warnings with no writes.
-  Signed-in/durable PDF integration, XLSX, cart execution and receiving remain separate;
+  The [fictional XLSX slice](C4_DRAFT_XLSX_LOCAL_EVIDENCE.md) now adds a native
+  workbook with exact literal cells, frozen/filterable headings and explicit
+  oversized/ambiguous-field refusals, independently read locally with no writes.
+  Signed-in/durable PDF/XLSX integration, cart execution and receiving remain separate;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable

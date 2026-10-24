@@ -3,6 +3,7 @@ import {buildSupplierOrderDraft, draftStockDisplay, draftEstimateDisplay,
 import {FICTIONAL_COMPANY, fictionalDraftExamples} from './fixtures';
 import {serializeSupplierDraftPdf} from './pdf';
 import pdfFont from './assets/NotoSans-Regular.ttf';
+import {serializeSupplierDraftXlsx} from './xlsx';
 
 function element<T = HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -12,6 +13,7 @@ function element<T = HTMLElement>(id: string): T {
 const example = element<HTMLSelectElement>('example');
 const copy = element<HTMLButtonElement>('copy'), download = element<HTMLButtonElement>('download');
 const pdfDownload = element<HTMLButtonElement>('download-pdf');
+const excelDownload = element<HTMLButtonElement>('download-excel');
 const status = element('status'), error = element('error'), content = element('draft');
 const text = element<HTMLTextAreaElement>('text-export'), textPanel = element<HTMLDetailsElement>('text-panel');
 let current: SupplierOrderDraft | null = null;
@@ -28,6 +30,7 @@ function clear(): void {
   generation++; current = null; content.replaceChildren(); text.value = '';
   copy.disabled = true; download.disabled = true; textPanel.hidden = true; textPanel.open = false;
   pdfDownload.disabled = true; pdfDownload.textContent = 'Download PDF'; pdfDownload.removeAttribute('aria-busy');
+  excelDownload.disabled = true; excelDownload.textContent = 'Download Excel'; excelDownload.removeAttribute('aria-busy');
   error.hidden = true; error.textContent = ''; status.textContent = '';
 }
 function review(): void {
@@ -55,6 +58,7 @@ function review(): void {
     content.appendChild(refs); content.appendChild(lines); content.appendChild(notes); text.value = serializeSupplierDraftText(current);
     copy.disabled = false; download.disabled = false; textPanel.hidden = false;
     pdfDownload.disabled = false;
+    excelDownload.disabled = false;
     status.textContent = 'Fictional draft ready for review. Exporting records no order or stock change.';
   } catch {
     error.textContent = 'Draft unavailable: the source is invalid, changed, canceled, duplicated or outside the selected company/supplier/account/location. Review the source before exporting.';
@@ -104,6 +108,31 @@ pdfDownload.addEventListener('click', async () => {
   } finally {
     if (requestGeneration === generation) {
       pdfDownload.disabled = current === null; pdfDownload.textContent = 'Download PDF'; pdfDownload.removeAttribute('aria-busy');
+    }
+  }
+});
+excelDownload.addEventListener('click', async () => {
+  if (!current || excelDownload.disabled) return;
+  const requestGeneration = generation;
+  excelDownload.disabled = true; excelDownload.textContent = 'Preparing Excel…'; excelDownload.setAttribute('aria-busy', 'true');
+  error.hidden = true; error.textContent = '';
+  status.textContent = 'Preparing the fictional draft Excel file…';
+  try {
+    const bytes = await serializeSupplierDraftXlsx(current);
+    if (requestGeneration !== generation) return;
+    const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    const link = document.createElement('a'); link.href = url; link.download = 'pantrack-fictional-review-draft.xlsx';
+    document.body.appendChild(link);
+    try {link.click();} finally {link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);}
+    status.textContent = 'Fictional Excel file downloaded. Prices remain estimates; no order recorded.';
+  } catch (failure) {
+    if (requestGeneration !== generation) return;
+    error.textContent = failure instanceof TypeError ? 'Excel unavailable. Reload the preview or use the text, CSV or PDF export.' :
+      failure instanceof Error ? `Excel unavailable: ${failure.message}` : 'Excel unavailable. Try again or use the text or CSV export.';
+    error.hidden = false; status.textContent = '';
+  } finally {
+    if (requestGeneration === generation) {
+      excelDownload.disabled = current === null; excelDownload.textContent = 'Download Excel'; excelDownload.removeAttribute('aria-busy');
     }
   }
 });

@@ -11,6 +11,22 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 draft Excel — 2026-10-24
+
+The [fictional Excel slice](C4_DRAFT_XLSX_LOCAL_EVIDENCE.md) adds a genuine XLSX
+download beside PDF/CSV in the isolated preview. Draft/Lines sheets retain exact
+text quantities, estimates, revisions, supplier context and review warnings,
+with filterable/frozen headings and safe literal cells. Missing prices remain
+unavailable; oversized or ambiguous values are refused without truncation.
+Typecheck, build, all 35 migration checks, 100 executed suites plus ten Windows
+skips, actual Edge downloads and independent ZIP/XML/openpyxl checks passed.
+Repeated exports preserve fictional source/DB snapshots and make no provider calls.
+
+This is local preparation only. C4/C5/M8 remain open, and the online release
+stays deferred. Next bounded C4 outcome: a server-authorized, revision-bound
+export snapshot for saved PO drafts, including manual lines and financial access,
+before connecting both formats to the signed-in manager workflow.
+
 ## Latest local C4 draft PDF — 2026-10-24
 
 The [fictional draft PDF slice](C4_DRAFT_PDF_LOCAL_EVIDENCE.md) adds Download PDF
@@ -23,7 +39,7 @@ PDF reading/rendering passed. Export leaves fictional source/DB snapshots intact
 
 This is local preview preparation only; no app API/schema or hosted deployment
 changed. C4/C5/M8 remain open and the online release below remains deferred.
-Next independent local slice: native XLSX for the same fictional snapshot.
+The follow-up Excel slice is recorded above; saved-draft integration remains separate.
 
 ## Latest development-release preparation — 2026-10-24
 
