@@ -1,9 +1,10 @@
 """Independent read-only preservation audit; never emits business rows or secrets."""
 import json,hashlib,sqlite3,collections,os,re,sys,subprocess,importlib.util
 from pathlib import Path
-root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022')
+root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024')
 # Consumed gate roots stay retained; one whose final audits all passed accounts for the profiles it recorded.
-CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021')]
+CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022')]
 GATE_AUDITS=['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified','passed']
 # Every local database is captured, including cart-review and other review states.
 DATABASE_BASES=[Path('.wrangler/state'),Path('.sites-runtime')]
@@ -51,8 +52,8 @@ def capture():
  save('rollback-manifest.json',dict(restore=[],remove=[]))
  return dict(passed=True,protectedArtifacts=len(protected),historicalCarts=len(store),databases=len(entries),historicalDatabaseRows=rows,sourceFiles=len(files))
 def gate_profiles(obs):
- """Profile directories recorded by consumed gates whose retained final audits all passed."""
- names=set()
+ """Profile directories, with their recorded worker PIDs, from consumed gates whose retained final audits all passed."""
+ names={}
  for gate in CONSUMED:
   audits=json.loads((gate/'final-audit.json').read_text()) if (gate/'task.json').is_file() and (gate/'final-audit.json').is_file() else {}
   # A gate without complete passing audits accounts for nothing; its profiles must stay exact.
@@ -63,10 +64,25 @@ def gate_profiles(obs):
   records=sorted((gate/'profiles').glob('*.json')) if (gate/'profiles').is_dir() else []
   assert process['passed'] is True and process['profilesClear'] is True and preservation['passed'] is True and process['profiles']==len(records),'Gate audit evidence changed'
   for record in records:
-   path=Path(json.loads(record.read_text())['path'])
+   value=json.loads(record.read_text());path=Path(value['path'])
    assert path.parent==obs.PROFILES.resolve() and re.fullmatch('[0-9a-f]{64}',path.name) and path.name!=obs.PROFILE,'Unexpected gate profile record'
-   names.add(path.name)
+   assert type(value['workerPid']) is int and value['workerPid']>0,'Unexpected gate profile record'
+   names.setdefault(path.name,set()).add(value['workerPid'])
  return names
+def gate_locks(obs,gates):
+ """Worker locks left by a passing gate's deliberate crash scenarios. Each names a
+ recorded profile, holds exactly a worker PID that gate recorded for it, and that
+ process is gone. Reclaim guards and every other lock are never accounted."""
+ historical={Path(p['path']).name for p in json.loads(obs.LOCK_HISTORY.read_text())};running=obs.process_rows()
+ accounted=set()
+ for path in sorted(obs.PROFILES.iterdir()):
+  if not path.name.endswith(('.lock','.lock.reclaim')) or path.name in historical:continue
+  assert path.name.endswith('.lock') and path.name[:-5] in gates,'Worker locks/guards added or removed'
+  obs.lock_fields(path);value=path.read_bytes()
+  assert re.fullmatch(rb'[1-9][0-9]*',value) and int(value) in gates[path.name[:-5]],'Unaccounted worker lock'
+  assert int(value) not in running,'Gate worker lock owner present'
+  accounted.add(path.name)
+ return accounted
 def baseline_holds():
  obs=module('gate_observation_audit','observation-baseline-audit.py')
  report=json.loads((BASELINE/'report.json').read_text());summary=json.loads((BASELINE/'verification-summary.json').read_text())
@@ -75,15 +91,18 @@ def baseline_holds():
  expected=digest(json.dumps(second['entries'],sort_keys=True,separators=(',',':')).encode())
  assert second['sha256']==expected==fresh['profiles']['sha256'],'Baseline fingerprint changed'
  preflight=obs.preflight();assert preflight['passed'] is True and preflight['status']=='idle','Profiles are not idle'
- obs.processes();obs.worker_locks();obs.singleton()
- gates=gate_profiles(obs);current=obs.fingerprint()
+ gates=gate_profiles(obs);locks=gate_locks(obs,gates)
+ obs.processes();obs.worker_locks(locks);obs.singleton()
+ current=obs.fingerprint()
  changed=sorted(k for k in current['entries'].keys()|second['entries'].keys() if current['entries'].get(k)!=second['entries'].get(k))
- # Only entries inside a passing gate's recorded profile directories may differ;
- # top-level lock files, the active profile and every other profile stay exact.
- assert all(k.split('/')[0] in gates for k in changed),'Profiles changed since the baseline'
- obs.processes();obs.worker_locks();obs.singleton()
- return dict(passed=True,baseline=fresh['profiles']['sha256'],profileEntries=len(current['entries']),gateProfiles=len(gates),gateChangedEntries=len(changed),
-             gateChangedProfiles=len({k.split('/')[0] for k in changed}),preflight='idle',workerLocks=46)
+ # Only entries inside a passing gate's recorded profile directories, and that gate's
+ # accounted new lock files, may differ; historical locks, the active profile and
+ # every other profile stay exact.
+ assert all(k.split('/')[0] in gates or (k in locks and k not in second['entries']) for k in changed),'Profiles changed since the baseline'
+ assert gate_locks(obs,gates)==locks,'Worker locks changed during the check'
+ obs.processes();obs.worker_locks(locks);obs.singleton()
+ return dict(passed=True,baseline=fresh['profiles']['sha256'],profileEntries=len(current['entries']),gateProfiles=len(gates),gateChangedEntries=len(changed),gateLocks=len(locks),
+             gateChangedProfiles=len({k.split('/')[0] for k in changed if k not in locks}),preflight='idle',workerLocks=46)
 def audit():
  baseline=read('baseline.json')
  for f in baseline['protectedFiles']:

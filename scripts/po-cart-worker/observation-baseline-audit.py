@@ -175,12 +175,14 @@ def lock_fields(path):
     return result
 
 
-def worker_locks():
+def worker_locks(accounted=frozenset()):
+    """`accounted` names extra locks a caller has already verified; historical locks stay exact."""
     historical_pids()
     entries = json.loads(LOCK_HISTORY.read_text())
     assert len(entries) == len({Path(p['path']).name for p in entries}) == LOCK_COUNT, 'Worker-lock evidence changed'
     current = {p.name for p in PROFILES.iterdir() if p.name.endswith(('.lock', '.lock.reclaim'))}
-    assert current == {Path(p['path']).name for p in entries}, 'Worker locks/guards added or removed'
+    historical = {Path(p['path']).name for p in entries}
+    assert not historical & set(accounted) and current == historical | set(accounted), 'Worker locks/guards added or removed'
     for entry in entries:
         assert lock_fields(PROFILES / Path(entry['path']).name) == {key: entry[key] for key in ['ino', 'dev', 'mode', 'mtimeNs', 'sha256']}, 'Worker-lock metadata changed'
     assert (PROFILES / 'e151abec389352a225974f0bb7057ad3df9b6f2b30f6c4fdd16bba2a55a06bcf.lock').read_bytes() == b'4303', 'Stale-lock bytes changed'

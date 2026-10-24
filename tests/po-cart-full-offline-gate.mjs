@@ -4,16 +4,26 @@ import {DatabaseSync} from 'node:sqlite';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {createServer} from 'node:http';
-import {fullGateRoot,consumedGateRoots,gatePolicy,gateSteps,requireGateSource,rejectGateArguments,createGateInvocation,runFullGate,validatePreparation,fileHash,inspectGateStep,gateAuditsPassed} from '../scripts/po-cart-worker/acceptance-gate.mjs';
+import {fullGateRoot,consumedGateRoots,gatePolicy,gateSteps,requireGateSource,rejectGateArguments,createGateInvocation,runFullGate,validatePreparation,fileHash,inspectGateStep,gateAuditsPassed,failureSummary} from '../scripts/po-cart-worker/acceptance-gate.mjs';
 import {writePrivate,readPrivate} from '../scripts/po-cart-worker/private-files.mjs';
 import {finishOfflineFixture} from '../scripts/po-cart-worker/offline-case-cleanup.mjs';
 const root=mkdtempSync(join(tmpdir(),'full-offline-gate-')),source={files:1,sha256:'frozen'},snapshot=()=>source;
 try{
  assert.equal(gateAuditsPassed({passed:true}),false);
- assert.equal(fullGateRoot,'.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022');assert.equal(gateSteps.length,21);
- // Both consumed gate roots stay retained; the paid-allowance policy binding is unchanged.
- assert.deepEqual(consumedGateRoots,['.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014','.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021']);
+ assert.equal(fullGateRoot,'.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024');assert.equal(gateSteps.length,21);
+ // Every consumed gate root stays retained; the paid-allowance policy binding is unchanged.
+ assert.deepEqual(consumedGateRoots,['.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014','.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021','.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022']);
  assert.equal(gatePolicy,'metadata-repair-real-matrix-v1');
+ // A failed step's log gains fixed-shape facts only; message text and private values never pass.
+ const secret='fictional-secret-'+'q'.repeat(24),failed=['AssertionError [ERR_ASSERTION]: token '+secret+' mismatch',
+  '    at Object.stop (file:///Users/someone/Pantrack/scripts/po-cart-manager-launcher-check.mjs:14:86)',
+  'page.goto: net::ERR_ABORTED at http://127.0.0.1:5181/?token='+secret,'locator.waitFor: Timeout 45000ms exceeded.',
+  'Local application cleanup was not verified (group_remaining, '+secret+', exit_timeout).',
+  '    at /private/scripts/'+secret+'.mjs:3:1','    at file:///tmp/'+secret+'/tests/missing-suite.mjs:9:2'].join('\n');
+ assert.equal(failureSummary(1,failed),'FAILURE summary: exit=1 kinds=AssertionError codes=ERR_ASSERTION,net::ERR_ABORTED timeoutsMs=45000 at=scripts/po-cart-manager-launcher-check.mjs:14 cleanup=group_remaining,exit_timeout\n');
+ assert.ok(!failureSummary(1,failed).includes(secret));assert.equal(failureSummary(0,failed),'');
+ assert.equal(failureSummary(null,'no recognised facts '+secret),'FAILURE summary: exit=signal kinds= codes= timeoutsMs= at= cleanup=\n');
+ const runner=readFileSync('scripts/po-cart-ai-gate.mjs','utf8');assert.match(runner,/writeFileSync\(path,safeLog\(output\)\+failureSummary\(exitCode,output\),\{flag:'wx',mode:0o600\}\)/);
  for(const old of consumedGateRoots)for(const consumed of [old,resolve(old),old+'/'])assert.throws(()=>createGateInvocation(consumed,source),/Consumed gate root/);
  for(const args of [['--resume'],['--root','x'],['--case','0'],['--acceptance']])assert.throws(()=>rejectGateArguments(args));
  assert.throws(()=>requireGateSource({...source,sha256:'changed'},snapshot));

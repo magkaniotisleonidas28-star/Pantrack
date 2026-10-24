@@ -845,7 +845,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   with all audits passing. An isolated reproduction found a harness restart race,
   now repaired with 111 suites passing and 3/3 isolated real-check passes. Rebinding
   first needs an owner decision on four worker locks left by G3's crash
-  scenarios. C4/M8 remain open.
+  scenarios. The [G4 rebinding](C4_FULL_GATE_REBINDING_20261024.md) accounts for
+  them with the audited-gate rule and adds safe failure summaries; 113 suites and
+  a live read-only pre-check passed. The next gate still needs authorization;
+  C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,

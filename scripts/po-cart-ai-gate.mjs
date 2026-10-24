@@ -1,7 +1,7 @@
 import {spawn,spawnSync} from 'node:child_process';
 import {readdirSync,existsSync,writeFileSync,chmodSync} from 'node:fs';
 import {writePrivate,readPrivate} from './po-cart-worker/private-files.mjs';
-import {fullGateRoot as root,sourceSnapshot,fileHash,validateGate,validatePreparation,rejectGateArguments,runFullGate} from './po-cart-worker/acceptance-gate.mjs';
+import {fullGateRoot as root,sourceSnapshot,fileHash,failureSummary,validateGate,validatePreparation,rejectGateArguments,runFullGate} from './po-cart-worker/acceptance-gate.mjs';
 import {evaluationPreflight} from './po-cart-worker/evaluation-preflight.mjs';
 import {capturePreview,observePreviewExit,cleanupPreview,verifyPreviewPorts,processControls} from './po-cart-worker/second-addition-cleanup.mjs';
 import {issuedGateCredentials} from './po-cart-worker/full-gate-runtime.mjs';
@@ -62,7 +62,7 @@ try{
   let stoppingChild;const interrupt=setInterval(()=>{if(control.stopping&&!stoppingChild)stoppingChild=stopChild(active);},1000);
   await active.done;clearInterval(interrupt);if(stoppingChild)await stoppingChild;
   const exitCode=active.child.exitCode,cleanup=await stopChild(active);active=undefined;
-  const path=root+'/'+index+'-'+id.replaceAll(':','-')+'.log';writeFileSync(path,safeLog(output),{flag:'wx',mode:0o600});
+  const path=root+'/'+index+'-'+id.replaceAll(':','-')+'.log';writeFileSync(path,safeLog(output)+failureSummary(exitCode,output),{flag:'wx',mode:0o600});
   const cleanupPath=root+'/'+index+'-process.json';writePrivate(cleanupPath,cleanup);
   const evidence=evidenceRoots().filter(path=>!before.has(path)).flatMap(evidenceFiles);
   writePrivate(root+'/'+index+'-evidence.json',evidence);

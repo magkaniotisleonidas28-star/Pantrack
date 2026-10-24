@@ -162,8 +162,9 @@ against the baseline's 46. Each of the four added locks:
 Three were written during step 15 and one during step 19. Those steps contain
 three and one deliberate `SIGKILL` crash scenarios respectively. G2 stopped before
 any of them. **Every full gate run therefore leaves such locks**, and the current
-pre-check would refuse the next gate even after rebinding. Accepting or archiving
-them is an owner decision for the rebinding. Nothing was changed.
+pre-check would refuse the next gate even after rebinding. The owner chose to
+account for them; see the [rebinding record](C4_FULL_GATE_REBINDING_20261024.md).
+Nothing was changed.
 
 ## Final audits
 
@@ -185,9 +186,8 @@ consumed.
 
 1. **Investigate step 21:** done on 2026-10-24. The cause is a harness restart
    race, now [repaired](#repair).
-2. **Rebinding.** Consume `…-20261022`; its 198 recorded profiles qualify under the
-   audited gate-profile rule. Then bind a new root. First, the owner must decide
-   how to treat the [four gate-left worker locks](#gate-left-worker-locks-rebinding-blocker).
+2. **Rebinding:** done on 2026-10-24. The owner chose to account for gate-left
+   locks; see the [rebinding record](C4_FULL_GATE_REBINDING_20261024.md).
 3. **Then a separately authorized fresh gate.**
 
 Both earlier consumed roots, the retired preparation and the observation baseline
