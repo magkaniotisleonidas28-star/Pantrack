@@ -70,6 +70,17 @@ def fingerprint(root=None):
                 sha256=digest(json.dumps(entries, sort_keys=True, separators=(',', ':')).encode()))
 
 
+def open_readonly(path):
+    """Open SQLite read-only. A WAL-format copy without -wal/-shm sidecars has no
+    uncommitted frames, so it opens immutable instead of failing to open."""
+    uri = 'file:' + str(path) + '?mode=ro'
+    with Path(path).open('rb') as stream:
+        header = stream.read(20)
+    if len(header) == 20 and header[18] == 2 and not any(os.path.lexists(str(path) + suffix) for suffix in ['-wal', '-shm']):
+        uri += '&immutable=1'
+    return sqlite3.connect(uri, uri=True)
+
+
 def audit_preservation():
     baseline = read('baseline.json')
     for f in baseline['protectedFiles']:
@@ -82,7 +93,7 @@ def audit_preservation():
     rows = ordinary = bookkeeping = 0
     deltas = []
     for entry in read('database-before.json'):
-        connection = sqlite3.connect('file:' + entry['path'] + '?mode=ro', uri=True)
+        connection = open_readonly(entry['path'])
         names = {r[0] for r in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         assert names == {t['name'] for t in entry['tables']}, 'Database tables changed'
         tables = []
