@@ -1,11 +1,14 @@
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {readFileSync,mkdirSync,openSync,writeFileSync,fsyncSync,closeSync} from 'node:fs';
+import {readFileSync,existsSync,mkdirSync,openSync,writeFileSync,fsyncSync,closeSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {readPrivate,writePrivate,profileLock} from './private-files.mjs';
 
 export const gatePolicy='metadata-repair-real-matrix-v1';
-export const fullGateRoot='.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014';
+// Consumed invocations are retained; no invocation may reuse one.
+export const consumedGateRoots=Object.freeze(['.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014','.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021',
+ '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022','.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024']);
+export const fullGateRoot='.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025';
 export const gateSteps=[
  ['metadata',['cart:browser-worker:check:ai:metadata']],
  ['reliability',['cart:browser-worker:check:reliability','--acceptance']],
@@ -26,6 +29,20 @@ export function sourceSnapshot(root=process.cwd()){
  return {files:files.length,sha256:hash.digest('hex')};
 }
 export const fileHash=path=>createHash('sha256').update(readFileSync(path)).digest('hex');
+const cleanupCategories=['ownership_unverified','signal_failed','exit_timeout','group_remaining','port_occupied','observation_failed','spawn_error','unconfirmed'];
+// A failed step's log keeps only fixed-shape facts: never message text, which can carry
+// private values. Locations must name existing repository files.
+export function failureSummary(exitCode,output){
+ if(exitCode===0)return '';
+ const unique=(pattern,pick=m=>m[0],limit=8)=>[...new Set([...output.matchAll(pattern)].map(pick))].slice(0,limit);
+ const fields={exit:exitCode??'signal',
+  kinds:unique(/\b(?:Assertion|Type|Range|Reference|Syntax|Timeout|Aggregate)?Error(?=[\s:\[]|$)/gm),
+  codes:unique(/\b(?:net::)?ERR_[A-Z0-9_]{2,60}\b/g),
+  timeoutsMs:unique(/\bTimeout (\d{1,7})ms exceeded/g,m=>m[1]),
+  at:unique(/(?:^|[\s(\/])((?:scripts|tests)\/[A-Za-z0-9_.\/-]{1,160}\.(?:mjs|js|ts|py)):(\d{1,6})\b/gm,m=>m[1]+':'+m[2],16).filter(v=>existsSync(v.split(':')[0])).slice(0,8),
+  cleanup:unique(/\bLocal application cleanup was not verified \(([^)\n]{1,200})\)/g,m=>m[1]).flatMap(v=>v.split(', ')).filter(v=>cleanupCategories.includes(v))};
+ return 'FAILURE summary: '+Object.entries(fields).map(([k,v])=>k+'='+(Array.isArray(v)?v.join(','):v)).join(' ')+'\n';
+}
 export function requireGateSource(expected,snapshot=sourceSnapshot){
  const current=snapshot();
  if(!expected||current.files!==expected.files||current.sha256!==expected.sha256)throw Error('Frozen gate source changed.');
@@ -39,6 +56,7 @@ export function validatePreparation(pipeline,snapshot=sourceSnapshot){
 export function rejectGateArguments(args){if(args.length)throw Error('Single-use full gate accepts no arguments, filters, resume or root override.');}
 export function gateAuditsPassed(audits){return audits?.passed===true&&['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified'].every(k=>audits[k]===true)&&audits.references?.length>=7;}
 export function createGateInvocation(root,source){
+ if(consumedGateRoots.some(old=>resolve(old)===resolve(root)))throw Error('Consumed gate root is retained and cannot be reused.');
  mkdirSync(root,{recursive:true,mode:0o700});const release=profileLock(root+'/runner');
  try{
   const path=root+'/task.json',fd=openSync(path,'wx',0o600),state={version:2,source,startedAt:new Date().toISOString(),steps:[]};
