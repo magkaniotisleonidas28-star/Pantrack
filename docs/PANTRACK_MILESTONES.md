@@ -847,8 +847,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   first needs an owner decision on four worker locks left by G3's crash
   scenarios. The [G4 rebinding](C4_FULL_GATE_REBINDING_20261024.md) accounts for
   them with the audited-gate rule and adds safe failure summaries; 113 suites and
-  a live read-only pre-check passed. The next gate still needs authorization;
-  C4/M8 remain open.
+  a live read-only pre-check passed. [G4](C4_FULL_OFFLINE_GATE_RUN_20261024.md)
+  passed steps 1–20 and stopped at step 21's final graceful stop, with all audits
+  passing. The check revoked the supervisor's credential before stopping the
+  launcher. Cleanup now stops first and revokes against the app alone; 113 suites
+  and 3/3 isolated real-check passes. The G5 rebinding is done. The next gate still
+  needs authorization; C4/M8 remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,

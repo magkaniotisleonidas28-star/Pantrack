@@ -105,7 +105,9 @@ non-local origins. This is a harness defect. Product behavior was not involved.
 launcher's unverified app cleanup set exit code 1 without printing anything. A
 second possibility was a supervisor poll racing credential revocation; it never
 appeared in five runs. The repair makes the first possibility report its fixed
-failure categories.
+failure categories. G4 later showed the second cause: the check revoked the
+supervisor's credential before stopping it. See the
+[G4 record](C4_FULL_OFFLINE_GATE_RUN_20261024.md#step-21-cause-credential-revocation-before-the-final-stop).
 
 **One clone run hit the open addition timeout instead.** The automation worker
 journal recorded `browserFailure.stage: "addition"`, a 10 s response wait, 0

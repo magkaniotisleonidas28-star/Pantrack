@@ -1,10 +1,10 @@
 """Independent read-only preservation audit; never emits business rows or secrets."""
 import json,hashlib,sqlite3,collections,os,re,sys,subprocess,importlib.util
 from pathlib import Path
-root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024')
+root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025')
 # Consumed gate roots stay retained; one whose final audits all passed accounts for the profiles it recorded.
 CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),
-          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022')]
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024')]
 GATE_AUDITS=['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified','passed']
 # Every local database is captured, including cart-review and other review states.
 DATABASE_BASES=[Path('.wrangler/state'),Path('.sites-runtime')]

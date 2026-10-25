@@ -7,8 +7,8 @@ import {readPrivate,writePrivate,profileLock} from './private-files.mjs';
 export const gatePolicy='metadata-repair-real-matrix-v1';
 // Consumed invocations are retained; no invocation may reuse one.
 export const consumedGateRoots=Object.freeze(['.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014','.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021',
- '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022']);
-export const fullGateRoot='.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024';
+ '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022','.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024']);
+export const fullGateRoot='.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025';
 export const gateSteps=[
  ['metadata',['cart:browser-worker:check:ai:metadata']],
  ['reliability',['cart:browser-worker:check:reliability','--acceptance']],
