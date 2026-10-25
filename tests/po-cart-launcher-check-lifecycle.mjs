@@ -90,5 +90,5 @@ assert.doesNotMatch(check,/if\(launcher\)\{const r=await fetch/);assert.doesNotM
 const app=check.slice(check.indexOf('async function startApp(){'),check.indexOf('let launcher,browser;'));
 assert.ok(app.includes('for(const port of [5181,5182])')&&app.indexOf('probe.listen(port')>0&&app.indexOf('probe.listen(port')<app.indexOf("spawn(process.execPath,['scripts/po-cart-browser-worker-preview.mjs']"),'The revocation app starts only on free ports');
 assert.match(app,/registerGateChild\(app\)/);assert.match(app,/return withCleanup\(async\(\)=>\{throw Error\('Local application startup failed\.'\);\},stop\);/);
-assert.match(check,/revoke:async file=>\{\n.*assert\.equal\(result\.status,0,'Fixture credential revocation failed'\);\n.*assert\.equal\(r\.status,401\);/);
+assert.match(check,/revoke:async file=>\{\r?\n.*assert\.equal\(result\.status,0,'Fixture credential revocation failed'\);\r?\n.*assert\.equal\(r\.status,401\);/);
 console.log('PASS: launcher check leaves the dev-server page before its graceful restart, a failed stop never restarts, cleanup always runs and never replaces the original failure, unverified app cleanup reports fixed categories, and credentials are revoked only after the launcher stops, against the app alone.');
