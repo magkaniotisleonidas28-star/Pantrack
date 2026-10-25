@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-24 for release preparation, local PDF/Excel and saved-export checks. The historical verification table
+Updated: 2026-10-25 for release preparation and local saved-draft PDF/Excel. The historical verification table
 below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -36,8 +36,11 @@ The [saved-draft export checks](C4_SAVED_DRAFT_EXPORT_LOCAL_EVIDENCE.md) now pas
 locally. Only a manager or owner from the correct company can read the export,
 and it must match the current saved revision. Changed or canceled drafts are
 blocked; manual items, quantities and missing prices keep their saved values.
-Next, adapt PDF/Excel generation to this saved data, then add the download
-controls to the signed-in manager screen. Those controls are not connected yet.
+The [saved-draft PDF/Excel adapter](C4_SAVED_DRAFT_DOCUMENTS_LOCAL_EVIDENCE.md)
+now uses those saved values with the existing document engines. Browser downloads
+and independent file readers passed, including manual items, missing prices and
+long quantities. Next, connect the download controls to the selected saved draft
+in the signed-in manager screen. Those controls are not connected yet.
 
 The new commits add an optional AI reader for practice supplier carts and private
 records of its completion checks. Some tests passed, but the complete AI safety

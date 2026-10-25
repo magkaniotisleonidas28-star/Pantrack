@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-24
+Updated: 2026-10-25
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,21 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Latest local C4 saved-draft documents — 2026-10-25
+
+The [saved-draft document adapter](C4_SAVED_DRAFT_DOCUMENTS_LOCAL_EVIDENCE.md)
+now generates PDF/XLSX from the existing authorized export response, including
+manual/non-stock items, saved supplier packs and reviewed revisions. It reuses
+the existing PDF layout and Excel escaping engines. Ten actual local browser
+downloads passed independent inspection, with exact quantities, missing/zero
+prices, revision/draft labels and a readable 50-item PDF. The full suite passed:
+103 executed suites plus ten explicit Windows skips.
+
+This completes the saved-document adapter locally. Signed-in manager download
+controls are the next bounded C4 task; they still need the authorized fetch,
+selection-change/error states and local font asset. C4/C5/M8 remain open, and
+the online release remains deferred. No API/schema or purchasing gate changed.
 
 ## Latest local C4 saved-draft export snapshot — 2026-10-24
 
@@ -23,8 +38,8 @@ typecheck, build, all 35 migration checks, fresh local apply and HTTP smoke.
 A separate real-framework check passed with the preview gate temporarily enabled.
 
 This completes the permission/revision foundation locally; it adds no migration
-or signed-in download buttons. Next bounded C4 outcome: adapt PDF/XLSX output to
-the saved export contract, followed by manager-screen wiring. C4/C5/M8 remain
+or signed-in download buttons. Its PDF/XLSX adapter is now recorded above;
+manager-screen wiring remains the next task. C4/C5/M8 remain
 open, and the online release remains deferred.
 
 ## Latest local C4 draft Excel — 2026-10-24

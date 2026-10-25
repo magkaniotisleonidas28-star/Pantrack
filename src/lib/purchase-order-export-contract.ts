@@ -23,39 +23,37 @@ const line = z.object({id:text,kind:z.enum(['stock','non_stock']),productId:text
     warnings:reasons,reviewReasons:reasons,editReason:z.string().max(2000).nullable()}).nullable(),
 });
 // Only document fields and version references are selected; registry profile contents stay out.
-const snapshotSchema = z.object({contract:z.enum(['pantrack.purchase-order-draft.v1','pantrack.purchase-order-draft.v2']),
+const documentSchema = z.object({contract:z.enum(['pantrack.purchase-order-draft.v1','pantrack.purchase-order-draft.v2']),
   companyId:text,id:text,number:text,source:z.enum(['manual','proposals','registry']),currency:z.literal('USD'),
   supplier:z.object({id:text,name:text,email:z.string().email().max(254).nullable(),accountId:text,locationId:text,
     deliveryAddress:z.string().min(1).max(1000)}),
   capMinor:minor,notes:z.string().max(1000),createdAt:z.string().datetime(),lines:z.array(line).min(1).max(50),
-  knownSubtotalMinor:minor,pricesComplete:z.boolean(),warnings:reasons,
+  knownSubtotalMinor:minor,pricesComplete:z.boolean(),warnings:reasons});
+const snapshotSchema = documentSchema.extend({
   registry:z.object({profile:z.object({companyId:text,id:text,version}),
     group:z.object({accountId:text,locationId:text}).optional()}).optional()});
+export const PURCHASE_ORDER_EXPORT_LABEL = 'Draft — no order placed.';
+export const PURCHASE_ORDER_EXPORT_LIMITATIONS = [
+  'Saved draft revision only; current stock, supplier mappings and sales readiness have not been revalidated.',
+  'Prices are estimates. The known subtotal excludes unavailable estimates and unconfirmed fees and delivery.',
+  'Exporting records no supplier submission, purchase approval, reservation or inventory change.',
+] as const;
+const exportSchema = z.object({contract:z.literal('pantrack.purchase-order-export.v1'),
+  label:z.literal(PURCHASE_ORDER_EXPORT_LABEL),revision:version,status:z.enum(['draft','reviewed']),
+  draft:documentSchema.strict(),supplierReference:z.object({id:text,version,accountId:text,locationId:text}).strict().optional(),
+  review:z.object({contentRevision:version,actor:text,at:z.string().datetime()}).strict().optional(),
+  limitations:z.tuple([z.literal(PURCHASE_ORDER_EXPORT_LIMITATIONS[0]),
+    z.literal(PURCHASE_ORDER_EXPORT_LIMITATIONS[1]),z.literal(PURCHASE_ORDER_EXPORT_LIMITATIONS[2])])}).strict();
 const rowSchema = z.object({company_id:text,id:text,number:text,supplier_id:text,
   current_revision:z.number().int().positive().max(Number.MAX_SAFE_INTEGER),current_status:z.enum(['draft','reviewed','canceled']),
   revision_status:z.enum(['draft','reviewed','canceled']),snapshot_json:z.string().max(1_000_000),
   event_kind:z.enum(['create','edit','review','cancel']),event_actor:text,event_at:z.string().datetime()});
 
-export function buildPurchaseOrderExport(value:unknown, selection:PurchaseOrderExportRequest) {
-  const broken = ():never => poFail('storage_failure','The saved draft cannot be exported. Reload it before trying again.');
-  const result = rowSchema.safeParse(value);
-  if(!result.success)return broken();
-  const row=result.data;
-  if(row.current_revision!==selection.revision||row.current_status==='canceled') {
-    poFail('conflict','The draft changed or was canceled. Reload it before exporting.');
-  }
-  let decoded:unknown;
-  try{decoded=JSON.parse(row.snapshot_json);}catch{return broken();}
-  const parsed=snapshotSchema.safeParse(decoded);
-  if(!parsed.success)return broken();
-  const draft=parsed.data;
-  if(row.company_id!==selection.companyId||row.id!==selection.orderId||draft.companyId!==selection.companyId||
-    draft.id!==row.id||draft.number!==row.number||draft.supplier.id!==row.supplier_id||row.revision_status!==row.current_status||
-    (row.current_status==='reviewed'?row.event_kind!=='review'||row.current_revision<2:!['create','edit'].includes(row.event_kind)))return broken();
+const broken = ():never => poFail('storage_failure','The saved draft cannot be exported. Reload it before trying again.');
+
+// Shared by the database projection and document capture; neither recomputes live sources.
+function validateDocument(draft:z.infer<typeof documentSchema>):void {
   if(new Set(draft.lines.map(item=>item.id)).size!==draft.lines.length)return broken();
-  if(draft.source==='registry'&&(!draft.registry?.group||draft.registry.profile.companyId!==draft.companyId||draft.registry.profile.id!==draft.supplier.id||
-    draft.contract!=='pantrack.purchase-order-draft.v2'))return broken();
-  if(draft.source!=='registry'&&draft.registry!==undefined)return broken();
   for(const item of draft.lines){
     if(item.kind==='non_stock'){
       if(item.productId!==null||item.stockUnitsPerPack!==null||item.stockQuantity!==null||item.configId!==null||item.configVersion!==null||item.proposal!==null)return broken();
@@ -76,16 +74,44 @@ export function buildPurchaseOrderExport(value:unknown, selection:PurchaseOrderE
   const subtotal=draft.lines.reduce((sum,item)=>sum+BigInt(item.estimatedLineMinor??'0'),BigInt(0));
   if(subtotal.toString()!==draft.knownSubtotalMinor||subtotal>BigInt(draft.capMinor)||BigInt(draft.capMinor)<=0||
     draft.pricesComplete!==draft.lines.every(item=>item.estimatedLineMinor!==null))return broken();
+}
+
+/** Validate/copy a previously authorized response before asynchronous document generation.
+ * This is structural validation, not authentication, a signature or a fresh database read. */
+export function capturePurchaseOrderExport(value:unknown) {
+  const parsed=exportSchema.safeParse(value);
+  if(!parsed.success)return broken();
+  const snapshot=parsed.data,{draft,supplierReference:reference}=snapshot;
+  validateDocument(draft);
+  if(draft.source==='registry'?(draft.contract!=='pantrack.purchase-order-draft.v2'||!reference||reference.id!==draft.supplier.id):reference!==undefined)return broken();
+  if(snapshot.status==='reviewed'?(!snapshot.review||snapshot.review.contentRevision!==snapshot.revision-1):snapshot.review!==undefined)return broken();
+  return frozenCopy(snapshot);
+}
+export type PurchaseOrderExportSnapshot = ReturnType<typeof capturePurchaseOrderExport>;
+
+export function buildPurchaseOrderExport(value:unknown, selection:PurchaseOrderExportRequest):PurchaseOrderExportSnapshot {
+  const result = rowSchema.safeParse(value);
+  if(!result.success)return broken();
+  const row=result.data;
+  if(row.current_revision!==selection.revision||row.current_status==='canceled') {
+    poFail('conflict','The draft changed or was canceled. Reload it before exporting.');
+  }
+  let decoded:unknown;
+  try{decoded=JSON.parse(row.snapshot_json);}catch{return broken();}
+  const parsed=snapshotSchema.safeParse(decoded);
+  if(!parsed.success)return broken();
+  const draft=parsed.data;
+  if(row.company_id!==selection.companyId||row.id!==selection.orderId||draft.companyId!==selection.companyId||
+    draft.id!==row.id||draft.number!==row.number||draft.supplier.id!==row.supplier_id||row.revision_status!==row.current_status||
+    (row.current_status==='reviewed'?row.event_kind!=='review'||row.current_revision<2:!['create','edit'].includes(row.event_kind)))return broken();
+  if(draft.source==='registry'&&(!draft.registry?.group||draft.registry.profile.companyId!==draft.companyId||draft.registry.profile.id!==draft.supplier.id||
+    draft.contract!=='pantrack.purchase-order-draft.v2'))return broken();
+  if(draft.source!=='registry'&&draft.registry!==undefined)return broken();
   const {registry,...document}=draft;
-  return frozenCopy({contract:'pantrack.purchase-order-export.v1' as const,label:'Draft — no order placed.' as const,
+  return capturePurchaseOrderExport({contract:'pantrack.purchase-order-export.v1',label:PURCHASE_ORDER_EXPORT_LABEL,
     revision:row.current_revision,status:row.current_status,draft:document,
     ...(registry?{supplierReference:{id:registry.profile.id,version:registry.profile.version,
       accountId:registry.group!.accountId,locationId:registry.group!.locationId}}:{}),
     ...(row.current_status==='reviewed'?{review:{contentRevision:row.current_revision-1,actor:row.event_actor,at:row.event_at}}:{}),
-    limitations:[
-      'Saved draft revision only; current stock, supplier mappings and sales readiness have not been revalidated.',
-      'Prices are estimates. The known subtotal excludes unavailable estimates and unconfirmed fees and delivery.',
-      'Exporting records no supplier submission, purchase approval, reservation or inventory change.',
-    ]});
+    limitations:PURCHASE_ORDER_EXPORT_LIMITATIONS});
 }
-export type PurchaseOrderExportSnapshot = ReturnType<typeof buildPurchaseOrderExport>;

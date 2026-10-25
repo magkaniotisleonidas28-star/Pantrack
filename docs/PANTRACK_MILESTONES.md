@@ -536,8 +536,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   now passes local company/owner/manager and current-revision checks in one
   read-only database statement, preserving manual/non-stock/proposal/registry
   values with no writes. Full local checks and real-framework HTTP passed;
-  no schema change. Adapting document generation and adding signed-in PDF/XLSX
-  controls remain separate outcomes, as do cart execution and receiving;
+  no schema change. The [saved-document adapter](C4_SAVED_DRAFT_DOCUMENTS_LOCAL_EVIDENCE.md)
+  now reuses the PDF/XLSX engines for saved manual/non-stock/proposal/registry
+  drafts, preserving revisions and exact values with no writes. Local browser
+  downloads and independent readers passed. Signed-in PDF/XLSX controls remain
+  the next document task, with cart execution and receiving separate;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable

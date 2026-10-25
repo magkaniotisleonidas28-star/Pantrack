@@ -39,6 +39,8 @@ this file concise; detailed workflow and prompt templates live in
   before verification.
 - In PowerShell, pass file globs through `rg --glob` against a directory; do not
   pass unexpanded wildcard paths to `rg`.
+- Use absolute paths for evidence outside the current worktree; main-checkout
+  runtime paths must not resolve relative to a feature worktree.
 - Use complete current lines as patch context; reread the target block after
   a context mismatch before retrying.
 - Prefer a focused module and focused test over unrelated refactoring. Identify
