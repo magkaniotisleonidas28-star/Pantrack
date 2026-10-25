@@ -851,8 +851,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   passed steps 1–20 and stopped at step 21's final graceful stop, with all audits
   passing. The check revoked the supervisor's credential before stopping the
   launcher. Cleanup now stops first and revokes against the app alone; 113 suites
-  and 3/3 isolated real-check passes. The G5 rebinding is done. The next gate still
-  needs authorization; C4/M8 remain open.
+  and 3/3 isolated real-check passes. [G5](C4_FULL_OFFLINE_GATE_RUN_20261025.md)
+  then passed all 21 steps and every final audit. That is local mocked-provider
+  evidence only; the second-addition original cause stays unresolved and C4/M8
+  remain open.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,

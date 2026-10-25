@@ -216,7 +216,10 @@ The new root is absent.
 
 ## Next
 
-1. **A separately authorized fresh gate (G5).** Run the frozen six-command
+[G5](C4_FULL_OFFLINE_GATE_RUN_20261025.md) has since run, and it passed all 21
+steps.
+
+1. **A separately authorized fresh gate (G5):** done. Run the frozen six-command
    preparation, `capture`, a scratch `finish` dry run and the `before` check, then
    invoke `caffeinate -di pnpm cart:browser-worker:gate:ai` once.
 2. All inference stays mocked, and the stop rule is unchanged. A repeat
