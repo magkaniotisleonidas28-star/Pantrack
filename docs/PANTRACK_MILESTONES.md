@@ -532,7 +532,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   The [fictional XLSX slice](C4_DRAFT_XLSX_LOCAL_EVIDENCE.md) now adds a native
   workbook with exact literal cells, frozen/filterable headings and explicit
   oversized/ambiguous-field refusals, independently read locally with no writes.
-  Signed-in/durable PDF/XLSX integration, cart execution and receiving remain separate;
+  The [saved-draft export snapshot](C4_SAVED_DRAFT_EXPORT_LOCAL_EVIDENCE.md)
+  now passes local company/owner/manager and current-revision checks in one
+  read-only database statement, preserving manual/non-stock/proposal/registry
+  values with no writes. Full local checks and real-framework HTTP passed;
+  no schema change. Adapting document generation and adding signed-in PDF/XLSX
+  controls remain separate outcomes, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable

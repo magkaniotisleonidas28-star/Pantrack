@@ -11,6 +11,22 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 saved-draft export snapshot — 2026-10-24
+
+The [saved-draft export foundation](C4_SAVED_DRAFT_EXPORT_LOCAL_EVIDENCE.md)
+adds a read-only JSON endpoint for an explicitly selected current PO revision.
+Server-side owner/manager membership, company, revision and cancellation checks
+are bound to one database read. Saved manual/non-stock/proposal/registry values,
+missing prices and exact quantities are preserved without database/provider
+writes. Full local checks passed: 102 executed suites plus ten Windows skips,
+typecheck, build, all 35 migration checks, fresh local apply and HTTP smoke.
+A separate real-framework check passed with the preview gate temporarily enabled.
+
+This completes the permission/revision foundation locally; it adds no migration
+or signed-in download buttons. Next bounded C4 outcome: adapt PDF/XLSX output to
+the saved export contract, followed by manager-screen wiring. C4/C5/M8 remain
+open, and the online release remains deferred.
+
 ## Latest local C4 draft Excel — 2026-10-24
 
 The [fictional Excel slice](C4_DRAFT_XLSX_LOCAL_EVIDENCE.md) adds a genuine XLSX
@@ -23,9 +39,9 @@ skips, actual Edge downloads and independent ZIP/XML/openpyxl checks passed.
 Repeated exports preserve fictional source/DB snapshots and make no provider calls.
 
 This is local preparation only. C4/C5/M8 remain open, and the online release
-stays deferred. Next bounded C4 outcome: a server-authorized, revision-bound
-export snapshot for saved PO drafts, including manual lines and financial access,
-before connecting both formats to the signed-in manager workflow.
+stays deferred. The server-authorized, revision-bound saved-draft export
+foundation is now recorded above; document generation and signed-in manager
+controls remain separate outcomes.
 
 ## Latest local C4 draft PDF — 2026-10-24
 
