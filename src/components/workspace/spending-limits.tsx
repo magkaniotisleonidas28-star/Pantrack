@@ -32,11 +32,13 @@ export default function SpendingLimitsPanel({companyId,active,onEnabledChange,on
   const [form,setForm]=useState<Form>(formOf(null)),[zone,setZone]=useState(''),[password,setPassword]=useState('');
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
   const [confirming,setConfirming]=useState(''),[uncertain,setUncertain]=useState(false);
-  const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false);
+  const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false),prompt=useRef<HTMLFormElement|null>(null);
   const zones=useMemo(()=>{try{return Intl.supportedValuesOf('timeZone');}catch{return [];}},[]);
   const baseline=JSON.stringify([formOf(status?.limits??null),status?.timeZone?.timeZone??'']);
   const dirty=!!status&&JSON.stringify([form,zone])!==baseline;
   useEffect(()=>onDirtyChange(dirty||uncertain||!!confirming),[dirty,uncertain,confirming,onDirtyChange]);
+  // The prompt opens at the top of the panel; bring all of it into view, not just the focused field.
+  useEffect(()=>{if(confirming)prompt.current?.scrollIntoView({block:'start'});},[confirming]);
   function adopt(next:SpendingLimitsStatus){setStatus(next);setForm(formOf(next.limits));setZone(next.timeZone?.timeZone??'');}
   useEffect(()=>{let live=true;void limitsRequest<SpendingLimitsStatus>(companyId).then(data=>{if(live){adopt(data);setEnabled(true);onEnabledChange(true);}})
     .catch(e=>{if(live){setEnabled(false);onEnabledChange(false);if(!(e instanceof LimitsRequestError&&[403,404].includes(e.status)))setError(e.message);}});
@@ -89,7 +91,7 @@ export default function SpendingLimitsPanel({companyId,active,onEnabledChange,on
   return <section className="po-preview" data-spending-limits><div className="po-heading"><div><div className="eyebrow">SPENDING LIMITS</div><h1>Owner spending limits</h1>
     <p>Only you, the owner, can see or change these. Pantrack refuses to prepare a cart that would go over any limit. {status?.notice}</p></div></div>
     {error&&<div role="alert" className="error">{error}</div>}{notice&&<p role="status" className="notice">{notice}</p>}
-    {confirming&&<form className="po-section" onSubmit={confirm} aria-label="Confirm your password"><fieldset disabled={busy}><legend>Confirm your password</legend>
+    {confirming&&<form ref={prompt} className="po-section" onSubmit={confirm} aria-label="Confirm your password"><fieldset disabled={busy}><legend>Confirm your password</legend>
       <p>{confirming} Tightening a limit never asks for this.</p>
       <label>Current password<Input type="password" autoComplete="current-password" autoFocus required value={password} onChange={e=>setPassword(e.target.value)}/></label>
       <div className="inventory-actions"><Button type="submit">Confirm and save</Button><Button type="button" variant="outline" onClick={cancelPending}>Cancel</Button></div></fieldset></form>}
