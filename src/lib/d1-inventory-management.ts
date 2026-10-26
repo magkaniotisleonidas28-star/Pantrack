@@ -1,5 +1,5 @@
-import type {Product} from './pantry';
-import {defaultSettings, type InventoryRecord} from './inventory';
+import type { Product } from './pantry';
+import { defaultSettings, type InventoryRecord } from './inventory';
 import {
   CURATED_UNIT_IDS,
   curatedUnit,
@@ -8,7 +8,7 @@ import {
   toCanonical,
   type UnitDefinition,
 } from './inventory-quantities';
-import type {ExactQuantity, UnitDimension} from './inventory-consumption-contract';
+import type { ExactQuantity, UnitDimension } from './inventory-consumption-contract';
 import type {
   ActivationInput,
   ArchiveInput,
@@ -30,55 +30,120 @@ import type {
   RecipeDraftInput,
   RecipeVersionView,
 } from './inventory-management-contract';
-import {legacyM3Review} from './legacy-m3-review';
-import {packageTotal} from './stock-pack-quantities';
-import {formatCanonical} from './inventory-quantities';
-import {changePlanningUnit,holdAmbiguousPlanning,planningUnitsSql,type PlanningUnitRow} from './inventory-planning-units';
+import { legacyM3Review } from './legacy-m3-review';
+import { packageTotal } from './stock-pack-quantities';
+import { formatCanonical } from './inventory-quantities';
+import {
+  changePlanningUnit,
+  holdAmbiguousPlanning,
+  planningUnitsSql,
+  type PlanningUnitRow,
+} from './inventory-planning-units';
 
 const ZERO = BigInt(0);
 const MILLION = BigInt(1_000_000);
-const RFC_3339 = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?(Z|[+-](\d{2}):(\d{2}))$/;
+const RFC_3339 =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,9}))?(Z|[+-](\d{2}):(\d{2}))$/;
 
-type Clock = {now(): Date};
+type Clock = { now(): Date };
+
 type BalanceRow = {
-  product_id: string; config_id: string; dimension: UnitDimension; on_hand_minor: string;
-  incoming_minor: string; estimated_used_minor: string; version: number;
-  latest_count_effective_at: string | null; updated_at: string;
-  company_id:string; stock_unit_id: string; stock_unit_version: number; stock_unit_label: string;
-  unit_kind:string;unit_numerator:string;unit_denominator:string;
-  purchase_unit_label:string;purchase_quantity_minor:string;
-  purchase_entered_amount:string|null;purchase_entered_unit_id:string|null;
+  product_id: string;
+  config_id: string;
+  dimension: UnitDimension;
+  on_hand_minor: string;
+  incoming_minor: string;
+  estimated_used_minor: string;
+  version: number;
+  latest_count_effective_at: string | null;
+  updated_at: string;
+  company_id: string;
+  stock_unit_id: string;
+  stock_unit_version: number;
+  stock_unit_label: string;
+  unit_kind: string;
+  unit_numerator: string;
+  unit_denominator: string;
+  purchase_unit_label: string;
+  purchase_quantity_minor: string;
+  purchase_entered_amount: string | null;
+  purchase_entered_unit_id: string | null;
 };
+
 type UnitRow = {
-  unit_id: string; version: number; kind: string; dimension: UnitDimension | null;
-  label: string; numerator: string | null; denominator: string | null;
+  unit_id: string;
+  version: number;
+  kind: string;
+  dimension: UnitDimension | null;
+  label: string;
+  numerator: string | null;
+  denominator: string | null;
 };
+
 type ConfigRow = {
-  id: string; version: number; status: string; stock_unit_id: string; stock_unit_version: number;
-  purchase_unit_label?: string; purchase_quantity_minor?: string | null;
-  purchase_entered_amount?:string|null;purchase_entered_unit_id?:string|null;
-  effective_from?: string; created_by?: string;
+  id: string;
+  version: number;
+  status: string;
+  stock_unit_id: string;
+  stock_unit_version: number;
+  purchase_unit_label?: string;
+  purchase_quantity_minor?: string | null;
+  purchase_entered_amount?: string | null;
+  purchase_entered_unit_id?: string | null;
+  effective_from?: string;
+  created_by?: string;
 };
+
 type StoredMovementRow = {
-  product_id: string; action: string; entered_amount: string | null; entered_unit_id: string | null;
-  balance_version_before: number; effective_at: string; actor: string; note: string; waste_reason: string | null;
+  product_id: string;
+  action: string;
+  entered_amount: string | null;
+  entered_unit_id: string | null;
+  balance_version_before: number;
+  effective_at: string;
+  actor: string;
+  note: string;
+  waste_reason: string | null;
 };
+
 type StoredCountRow = {
-  product_id: string; entered_amount: string; entered_unit_id: string | null;
-  effective_at: string; actor: string; note: string; balance_version_before:number|null;
+  product_id: string;
+  entered_amount: string;
+  entered_unit_id: string | null;
+  effective_at: string;
+  actor: string;
+  note: string;
+  balance_version_before: number | null;
 };
-type LegacyRow = {data: string; version: number};
+
+type LegacyRow = { data: string; version: number };
+
 type RecipeRow = {
-  recipe_id: string; id: string; version: number; status: 'draft' | 'active' | 'archived';
-  name: string; active_from: string | null; active_to: string | null;
+  recipe_id: string;
+  id: string;
+  version: number;
+  status: 'draft' | 'active' | 'archived';
+  name: string;
+  active_from: string | null;
+  active_to: string | null;
 };
+
 type ModifierRow = {
-  recipe_id: string; modifier_id: string; id: string; version: number;
-  status: 'draft' | 'active' | 'archived'; active_from: string | null; active_to: string | null; name: string;
+  recipe_id: string;
+  modifier_id: string;
+  id: string;
+  version: number;
+  status: 'draft' | 'active' | 'archived';
+  active_from: string | null;
+  active_to: string | null;
+  name: string;
 };
 
 export class InventoryManagementError extends Error {
-  constructor(public readonly code: string, message: string) {
+  constructor(
+    public readonly code: string,
+    message: string,
+  ) {
     super(message);
     this.name = 'InventoryManagementError';
   }
@@ -91,23 +156,54 @@ function validId(value: string) {
 function instant(value: string): number | null {
   const match = RFC_3339.exec(value);
   if (!match) return null;
-  const [, yearText, monthText, dayText, hourText, minuteText, secondText, , , offsetHourText = '0', offsetMinuteText = '0'] = match;
-  const year = Number(yearText), month = Number(monthText), day = Number(dayText);
-  const hour = Number(hourText), minute = Number(minuteText), second = Number(secondText);
+  const [
+    ,
+    yearText,
+    monthText,
+    dayText,
+    hourText,
+    minuteText,
+    secondText,
+    ,
+    ,
+    offsetHourText = '0',
+    offsetMinuteText = '0',
+  ] = match;
+  const year = Number(yearText),
+    month = Number(monthText),
+    day = Number(dayText);
+  const hour = Number(hourText),
+    minute = Number(minuteText),
+    second = Number(secondText);
   const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  const days = [31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
-  if (year < 1 || month < 1 || month > 12 || day < 1 || day > days[month - 1] || hour > 23 || minute > 59 || second > 59 || Number(offsetHourText) > 23 || Number(offsetMinuteText) > 59) return null;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > days[month - 1] ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59 ||
+    Number(offsetHourText) > 23 ||
+    Number(offsetMinuteText) > 59
+  )
+    return null;
   const parsed = Date.parse(value);
   return Number.isFinite(parsed) ? parsed : null;
 }
 
 function parseJson<T>(value: string, label: string): T {
-  try { return JSON.parse(value) as T; }
-  catch { throw new InventoryManagementError('corrupt_store', `Persisted ${label} JSON is invalid.`); }
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    throw new InventoryManagementError('corrupt_store', `Persisted ${label} JSON is invalid.`);
+  }
 }
 
 function exact(dimension: UnitDimension, minor: string): ExactQuantity {
-  const value = {dimension, minor};
+  const value = { dimension, minor };
   readCanonical(value);
   return value;
 }
@@ -123,258 +219,952 @@ function positive(value: ExactQuantity, message: string) {
 function legacyNumber(value: ExactQuantity, unit: UnitDefinition) {
   const minor = readCanonical(value);
   const scale = value.dimension === 'count' ? BigInt(1) : MILLION;
-  const numerator = BigInt(unit.numerator), denominator = BigInt(unit.denominator);
+  const numerator = BigInt(unit.numerator),
+    denominator = BigInt(unit.denominator);
   const negative = minor < ZERO;
   const absolute = negative ? -minor : minor;
   const scaledNumerator = absolute * denominator * BigInt(1000);
   const scaledDenominator = numerator * scale;
-  const rounded = scaledNumerator / scaledDenominator + (scaledNumerator % scaledDenominator * BigInt(2) >= scaledDenominator ? BigInt(1) : ZERO);
-  if (rounded > BigInt(Number.MAX_SAFE_INTEGER)) throw new InventoryManagementError('invalid_quantity', 'Legacy inventory projection exceeds its safe numeric range.');
+  const rounded =
+    scaledNumerator / scaledDenominator +
+    ((scaledNumerator % scaledDenominator) * BigInt(2) >= scaledDenominator ? BigInt(1) : ZERO);
+  if (rounded > BigInt(Number.MAX_SAFE_INTEGER))
+    throw new InventoryManagementError(
+      'invalid_quantity',
+      'Legacy inventory projection exceeds its safe numeric range.',
+    );
   return Number(negative ? -rounded : rounded) / 1000;
 }
 
 export class D1InventoryManagementService implements InventoryManagementService {
   private readonly clock: Clock;
-  constructor(private readonly db: D1Database, options: {clock?: Clock} = {}) {
-    this.clock = options.clock ?? {now: () => new Date()};
+
+  constructor(
+    private readonly db: D1Database,
+    options: { clock?: Clock } = {},
+  ) {
+    this.clock = options.clock ?? { now: () => new Date() };
   }
 
   private now() {
     const now = this.clock.now();
-    if (!Number.isFinite(now.getTime())) throw new InventoryManagementError('invalid_time', 'Server time is invalid.');
+    if (!Number.isFinite(now.getTime()))
+      throw new InventoryManagementError('invalid_time', 'Server time is invalid.');
     return now.toISOString();
   }
 
   private normalizedTime(value: string, futureAllowed = false) {
     const parsed = instant(value);
     const now = this.clock.now().getTime();
-    if (parsed === null || (!futureAllowed && parsed > now)) throw new InventoryManagementError('invalid_time', 'Enter a valid occurrence time that is not in the future.');
+    if (parsed === null || (!futureAllowed && parsed > now))
+      throw new InventoryManagementError(
+        'invalid_time',
+        'Enter a valid occurrence time that is not in the future.',
+      );
     return new Date(parsed).toISOString();
   }
 
   private async product(companyId: string, productId: string) {
-    if (!validId(companyId) || !validId(productId)) throw new InventoryManagementError('invalid_identity', 'Company and product identities are required.');
-    const row = await this.db.prepare('SELECT 1 AS found FROM products WHERE owner=? AND id=?').bind(companyId,productId).first<{found:number}>();
-    if (!row) throw new InventoryManagementError('not_found', 'Product was not found in this company.');
+    if (!validId(companyId) || !validId(productId))
+      throw new InventoryManagementError(
+        'invalid_identity',
+        'Company and product identities are required.',
+      );
+    const row = await this.db
+      .prepare('SELECT 1 AS found FROM products WHERE owner=? AND id=?')
+      .bind(companyId, productId)
+      .first<{ found: number }>();
+    if (!row)
+      throw new InventoryManagementError('not_found', 'Product was not found in this company.');
   }
 
-  private async unit(companyId: string, productId: string, unitId: string, version?: number): Promise<UnitDefinition> {
-    const row = await this.db.prepare(`SELECT unit_id,version,kind,dimension,label,numerator,denominator FROM product_unit_versions
-      WHERE company_id=? AND product_id=? AND unit_id=?${version === undefined ? ' ORDER BY version DESC LIMIT 1' : ' AND version=?'}`)
-      .bind(...(version === undefined ? [companyId,productId,unitId] : [companyId,productId,unitId,version])).first<UnitRow>();
-    if (!row || !row.dimension || !row.numerator || !row.denominator) throw new InventoryManagementError('unit_unclassified', 'Select a classified unit for this product.');
+  private async unit(
+    companyId: string,
+    productId: string,
+    unitId: string,
+    version?: number,
+  ): Promise<UnitDefinition> {
+    const row = await this.db
+      .prepare(
+        `SELECT unit_id,version,kind,dimension,label,numerator,denominator FROM product_unit_versions
+      WHERE company_id=? AND product_id=? AND unit_id=?${version === undefined ? ' ORDER BY version DESC LIMIT 1' : ' AND version=?'}`,
+      )
+      .bind(
+        ...(version === undefined
+          ? [companyId, productId, unitId]
+          : [companyId, productId, unitId, version]),
+      )
+      .first<UnitRow>();
+    if (!row || !row.dimension || !row.numerator || !row.denominator)
+      throw new InventoryManagementError(
+        'unit_unclassified',
+        'Select a classified unit for this product.',
+      );
     if (row.kind === 'curated') {
       const resolved = curatedUnit(row.unit_id);
-      if (resolved.dimension !== row.dimension || resolved.numerator !== row.numerator || resolved.denominator !== row.denominator) throw new InventoryManagementError('corrupt_store', 'Persisted curated unit does not match the catalog.');
+      if (
+        resolved.dimension !== row.dimension ||
+        resolved.numerator !== row.numerator ||
+        resolved.denominator !== row.denominator
+      )
+        throw new InventoryManagementError(
+          'corrupt_store',
+          'Persisted curated unit does not match the catalog.',
+        );
       return resolved;
     }
-    if (row.kind !== 'custom') throw new InventoryManagementError('unit_unclassified', 'Select a classified unit for this product.');
-    return customUnit({id:row.unit_id,version:row.version,label:row.label,dimension:row.dimension,numerator:row.numerator,denominator:row.denominator,companyId,productId});
+    if (row.kind !== 'custom')
+      throw new InventoryManagementError(
+        'unit_unclassified',
+        'Select a classified unit for this product.',
+      );
+    return customUnit({
+      id: row.unit_id,
+      version: row.version,
+      label: row.label,
+      dimension: row.dimension,
+      numerator: row.numerator,
+      denominator: row.denominator,
+      companyId,
+      productId,
+    });
   }
 
   private async prepareUnit(companyId: string, productId: string, input: ManagedUnitInput) {
-    if (input.kind === 'curated') return {unit: curatedUnit(input.id), version: 1};
-    const latest = await this.db.prepare('SELECT MAX(version) AS version FROM product_unit_versions WHERE company_id=? AND product_id=? AND unit_id=?')
-      .bind(companyId,productId,input.id).first<{version:number|null}>();
+    if (input.kind === 'curated') return { unit: curatedUnit(input.id), version: 1 };
+    const latest = await this.db
+      .prepare(
+        'SELECT MAX(version) AS version FROM product_unit_versions WHERE company_id=? AND product_id=? AND unit_id=?',
+      )
+      .bind(companyId, productId, input.id)
+      .first<{ version: number | null }>();
     const version = Number(latest?.version ?? 0) + 1;
-    return {unit: customUnit({...input,version,companyId,productId}), version};
+    return { unit: customUnit({ ...input, version, companyId, productId }), version };
   }
 
   private async balance(companyId: string, productId: string) {
-    return this.db.prepare(`SELECT b.product_id,b.config_id,b.dimension,b.on_hand_minor,b.incoming_minor,b.estimated_used_minor,
+    return this.db
+      .prepare(
+        `SELECT b.product_id,b.config_id,b.dimension,b.on_hand_minor,b.incoming_minor,b.estimated_used_minor,
       b.version,b.latest_count_effective_at,b.updated_at,c.stock_unit_id,c.stock_unit_version,u.label AS stock_unit_label,b.company_id,u.kind AS unit_kind,u.numerator AS unit_numerator,u.denominator AS unit_denominator,c.purchase_unit_label,c.purchase_quantity_minor,c.purchase_entered_amount,c.purchase_entered_unit_id
       FROM inventory_balances_exact b JOIN inventory_config_versions c
         ON c.company_id=b.company_id AND c.product_id=b.product_id AND c.id=b.config_id
       JOIN product_unit_versions u ON u.company_id=c.company_id AND u.product_id=c.product_id
         AND u.unit_id=c.stock_unit_id AND u.version=c.stock_unit_version
-      WHERE b.company_id=? AND b.product_id=?`).bind(companyId,productId).first<BalanceRow>();
+      WHERE b.company_id=? AND b.product_id=?`,
+      )
+      .bind(companyId, productId)
+      .first<BalanceRow>();
   }
 
   private record(row: BalanceRow): ManagedInventoryRecord {
-    const measurementUnit:UnitDefinition=row.unit_kind==='custom'
-      ? customUnit({id:row.stock_unit_id,version:row.stock_unit_version,label:row.stock_unit_label,dimension:row.dimension,numerator:row.unit_numerator,denominator:row.unit_denominator,companyId:row.company_id,productId:row.product_id})
-      : curatedUnit(row.stock_unit_id);
+    const measurementUnit: UnitDefinition =
+      row.unit_kind === 'custom'
+        ? customUnit({
+            id: row.stock_unit_id,
+            version: row.stock_unit_version,
+            label: row.stock_unit_label,
+            dimension: row.dimension,
+            numerator: row.unit_numerator,
+            denominator: row.unit_denominator,
+            companyId: row.company_id,
+            productId: row.product_id,
+          })
+        : curatedUnit(row.stock_unit_id);
     return {
-      productId:row.product_id,configId:row.config_id,dimension:row.dimension,stockUnitId:row.stock_unit_id,
-      stockUnitLabel:row.stock_unit_label,onHand:exact(row.dimension,row.on_hand_minor),incoming:exact(row.dimension,row.incoming_minor),
-      estimatedUsed:exact(row.dimension,row.estimated_used_minor),version:row.version,latestCountEffectiveAt:row.latest_count_effective_at,
-      measurementUnit,purchase:{label:row.purchase_unit_label,quantity:exact(row.dimension,row.purchase_quantity_minor),enteredAmount:row.purchase_entered_amount,enteredUnitId:row.purchase_entered_unit_id},
+      productId: row.product_id,
+      configId: row.config_id,
+      dimension: row.dimension,
+      stockUnitId: row.stock_unit_id,
+      stockUnitLabel: row.stock_unit_label,
+      onHand: exact(row.dimension, row.on_hand_minor),
+      incoming: exact(row.dimension, row.incoming_minor),
+      estimatedUsed: exact(row.dimension, row.estimated_used_minor),
+      version: row.version,
+      latestCountEffectiveAt: row.latest_count_effective_at,
+      measurementUnit,
+      purchase: {
+        label: row.purchase_unit_label,
+        quantity: exact(row.dimension, row.purchase_quantity_minor),
+        enteredAmount: row.purchase_entered_amount,
+        enteredUnitId: row.purchase_entered_unit_id,
+      },
     };
   }
 
   private async legacy(companyId: string, productId: string) {
-    return this.db.prepare('SELECT data,version FROM inventory WHERE company_id=? AND product_id=?').bind(companyId,productId).first<LegacyRow>();
+    return this.db
+      .prepare('SELECT data,version FROM inventory WHERE company_id=? AND product_id=?')
+      .bind(companyId, productId)
+      .first<LegacyRow>();
   }
 
   private legacyRecord(row: LegacyRow | null, productId: string, at: string): InventoryRecord {
-    if (!row) return {productId,settings:{...defaultSettings},onHand:0,incoming:0,lastCount:null,updated:at,version:0,estimatedUsed:0};
-    const record = parseJson<InventoryRecord>(row.data,'legacy inventory');
-    if (record.productId !== productId || record.version !== row.version) throw new InventoryManagementError('corrupt_store','Legacy inventory identity is invalid.');
+    if (!row)
+      return {
+        productId,
+        settings: { ...defaultSettings },
+        onHand: 0,
+        incoming: 0,
+        lastCount: null,
+        updated: at,
+        version: 0,
+        estimatedUsed: 0,
+      };
+    const record = parseJson<InventoryRecord>(row.data, 'legacy inventory');
+    if (record.productId !== productId || record.version !== row.version)
+      throw new InventoryManagementError('corrupt_store', 'Legacy inventory identity is invalid.');
     return record;
   }
 
-  async createStock(input: ConfigureInventoryInput & {name:string;supplier?:string;sku?:string}) {
-    const fingerprint=JSON.stringify(input),result={productId:input.productId};
-    const receipt=async()=>{const row=await this.db.prepare('SELECT kind,fingerprint,result_json FROM inventory_setup_operations WHERE company_id=? AND operation_id=?').bind(input.companyId,input.operationId).first<{kind:string;fingerprint:string;result_json:string}>();if(!row)return null;if(row.kind!=='stock_create'||row.fingerprint!==fingerprint)throw new InventoryManagementError('operation_conflict','This stock save reference has different details.');return JSON.parse(row.result_json) as typeof result;};
-    const saved=await receipt();if(saved)return saved;
-    if(await this.db.prepare('SELECT 1 AS found FROM products WHERE owner=? AND id=?').bind(input.companyId,input.productId).first())throw new InventoryManagementError('operation_conflict','This product already exists. Choose it from the stock list.');
-    if(!validId(input.companyId)||!validId(input.productId)||!input.name.trim()||input.name.length>150||(input.openingAmount===undefined&&!input.openingPackages))throw new InventoryManagementError('invalid_input','Enter a stock item name, units, and opening count.');
-    const product:Product={id:input.productId,name:input.name.trim(),supplier:input.supplier?.trim()??'',sku:input.sku?.trim()??'',pack:input.purchaseUnitLabel,unit:input.purchaseUnitLabel,price:0,priceKnown:false,category:'Stock',url:'',sample:false};
-    const prefix=[this.db.prepare(`INSERT INTO inventory_setup_operations(company_id,operation_id,kind,fingerprint,result_json,write_guard,created_at) VALUES (?,?,'stock_create',?,?,CASE WHEN NOT EXISTS(SELECT 1 FROM products WHERE owner=? AND id=?) THEN 1 ELSE 0 END,?)`).bind(input.companyId,input.operationId,fingerprint,JSON.stringify(result),input.companyId,input.productId,this.now()),this.db.prepare('INSERT INTO products(owner,id,data) VALUES(?,?,?)').bind(input.companyId,input.productId,JSON.stringify(product))];
-    try{await this.configureInternal(input,prefix);}catch(error){const replay=await receipt();if(replay)return replay;if(String(error).includes('inventory_setup_write_guard'))throw new InventoryManagementError('operation_conflict','This product already exists. Choose it from the stock list.');throw error;}
+  async createStock(
+    input: ConfigureInventoryInput & { name: string; supplier?: string; sku?: string },
+  ) {
+    const fingerprint = JSON.stringify(input),
+      result = { productId: input.productId };
+    const receipt = async () => {
+      const row = await this.db
+        .prepare(
+          'SELECT kind,fingerprint,result_json FROM inventory_setup_operations WHERE company_id=? AND operation_id=?',
+        )
+        .bind(input.companyId, input.operationId)
+        .first<{ kind: string; fingerprint: string; result_json: string }>();
+      if (!row) return null;
+      if (row.kind !== 'stock_create' || row.fingerprint !== fingerprint)
+        throw new InventoryManagementError(
+          'operation_conflict',
+          'This stock save reference has different details.',
+        );
+      return JSON.parse(row.result_json) as typeof result;
+    };
+    const saved = await receipt();
+    if (saved) return saved;
+    if (
+      await this.db
+        .prepare('SELECT 1 AS found FROM products WHERE owner=? AND id=?')
+        .bind(input.companyId, input.productId)
+        .first()
+    )
+      throw new InventoryManagementError(
+        'operation_conflict',
+        'This product already exists. Choose it from the stock list.',
+      );
+    if (
+      !validId(input.companyId) ||
+      !validId(input.productId) ||
+      !input.name.trim() ||
+      input.name.length > 150 ||
+      (input.openingAmount === undefined && !input.openingPackages)
+    )
+      throw new InventoryManagementError(
+        'invalid_input',
+        'Enter a stock item name, units, and opening count.',
+      );
+    const product: Product = {
+      id: input.productId,
+      name: input.name.trim(),
+      supplier: input.supplier?.trim() ?? '',
+      sku: input.sku?.trim() ?? '',
+      pack: input.purchaseUnitLabel,
+      unit: input.purchaseUnitLabel,
+      price: 0,
+      priceKnown: false,
+      category: 'Stock',
+      url: '',
+      sample: false,
+    };
+    const prefix = [
+      this.db
+        .prepare(
+          `INSERT INTO inventory_setup_operations(company_id,operation_id,kind,fingerprint,result_json,write_guard,created_at) VALUES (?,?,'stock_create',?,?,CASE WHEN NOT EXISTS(SELECT 1 FROM products WHERE owner=? AND id=?) THEN 1 ELSE 0 END,?)`,
+        )
+        .bind(
+          input.companyId,
+          input.operationId,
+          fingerprint,
+          JSON.stringify(result),
+          input.companyId,
+          input.productId,
+          this.now(),
+        ),
+      this.db
+        .prepare('INSERT INTO products(owner,id,data) VALUES(?,?,?)')
+        .bind(input.companyId, input.productId, JSON.stringify(product)),
+    ];
+    try {
+      await this.configureInternal(input, prefix);
+    } catch (error) {
+      const replay = await receipt();
+      if (replay) return replay;
+      if (String(error).includes('inventory_setup_write_guard'))
+        throw new InventoryManagementError(
+          'operation_conflict',
+          'This product already exists. Choose it from the stock list.',
+        );
+      throw error;
+    }
     return result;
   }
 
   async configure(input: ConfigureInventoryInput): Promise<ManagedInventoryRecord> {
-    if(input.purchaseContentUnitId||input.openingPackages||input.expectedConfigId)return this.configureWithReceipt(input);
-    await this.product(input.companyId,input.productId);
+    if (input.purchaseContentUnitId || input.openingPackages || input.expectedConfigId)
+      return this.configureWithReceipt(input);
+    await this.product(input.companyId, input.productId);
     return this.configureInternal(input);
   }
-  private async configureWithReceipt(input:ConfigureInventoryInput):Promise<ManagedInventoryRecord>{
-    const fingerprint=JSON.stringify(input);
-    const receipt=async()=>{const row=await this.db.prepare('SELECT kind,fingerprint FROM inventory_setup_operations WHERE company_id=? AND operation_id=?').bind(input.companyId,input.operationId).first<{kind:string;fingerprint:string}>();if(!row)return false;if(row.kind!=='stock_configure'||row.fingerprint!==fingerprint)throw new InventoryManagementError('operation_conflict','This stock setup reference has different details.');return true;};
-    const current=async()=>{const row=await this.balance(input.companyId,input.productId);if(!row)throw new InventoryManagementError('corrupt_store','Saved stock is unavailable.');return this.record(row);};
-    if(await receipt())return current();
-    if(await this.db.prepare('SELECT 1 AS found FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=?').bind(input.companyId,input.productId,input.operationId).first())throw new InventoryManagementError('operation_conflict','This setup reference was already used. Start a new stock edit.');
-    await this.product(input.companyId,input.productId);
-    const guard=input.expectedConfigId?'EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)':'NOT EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=?)';
-    const prefix=[this.db.prepare(`INSERT INTO inventory_setup_operations(company_id,operation_id,kind,fingerprint,result_json,write_guard,created_at) VALUES (?,?,'stock_configure',?,?,CASE WHEN ${guard} THEN 1 ELSE 0 END,?)`).bind(input.companyId,input.operationId,fingerprint,JSON.stringify({productId:input.productId}),input.companyId,input.productId,...(input.expectedConfigId?[input.expectedConfigId]:[]),this.now())];
-    try{return await this.configureInternal(input,prefix);}catch(error){if(await receipt())return current();if(String(error).includes('inventory_setup_write_guard'))throw new InventoryManagementError('concurrent_update','The package setup changed. Refresh before saving.');throw error;}
+
+  private async configureWithReceipt(
+    input: ConfigureInventoryInput,
+  ): Promise<ManagedInventoryRecord> {
+    const fingerprint = JSON.stringify(input);
+    const receipt = async () => {
+      const row = await this.db
+        .prepare(
+          'SELECT kind,fingerprint FROM inventory_setup_operations WHERE company_id=? AND operation_id=?',
+        )
+        .bind(input.companyId, input.operationId)
+        .first<{ kind: string; fingerprint: string }>();
+      if (!row) return false;
+      if (row.kind !== 'stock_configure' || row.fingerprint !== fingerprint)
+        throw new InventoryManagementError(
+          'operation_conflict',
+          'This stock setup reference has different details.',
+        );
+      return true;
+    };
+    const current = async () => {
+      const row = await this.balance(input.companyId, input.productId);
+      if (!row) throw new InventoryManagementError('corrupt_store', 'Saved stock is unavailable.');
+      return this.record(row);
+    };
+    if (await receipt()) return current();
+    if (
+      await this.db
+        .prepare(
+          'SELECT 1 AS found FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=?',
+        )
+        .bind(input.companyId, input.productId, input.operationId)
+        .first()
+    )
+      throw new InventoryManagementError(
+        'operation_conflict',
+        'This setup reference was already used. Start a new stock edit.',
+      );
+    await this.product(input.companyId, input.productId);
+    const guard = input.expectedConfigId
+      ? 'EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)'
+      : 'NOT EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=?)';
+    const prefix = [
+      this.db
+        .prepare(
+          `INSERT INTO inventory_setup_operations(company_id,operation_id,kind,fingerprint,result_json,write_guard,created_at) VALUES (?,?,'stock_configure',?,?,CASE WHEN ${guard} THEN 1 ELSE 0 END,?)`,
+        )
+        .bind(
+          input.companyId,
+          input.operationId,
+          fingerprint,
+          JSON.stringify({ productId: input.productId }),
+          input.companyId,
+          input.productId,
+          ...(input.expectedConfigId ? [input.expectedConfigId] : []),
+          this.now(),
+        ),
+    ];
+    try {
+      return await this.configureInternal(input, prefix);
+    } catch (error) {
+      if (await receipt()) return current();
+      if (String(error).includes('inventory_setup_write_guard'))
+        throw new InventoryManagementError(
+          'concurrent_update',
+          'The package setup changed. Refresh before saving.',
+        );
+      throw error;
+    }
   }
-  private async configureInternal(input:ConfigureInventoryInput,prefix:D1PreparedStatement[]=[]):Promise<ManagedInventoryRecord>{
-    if (!validId(input.operationId) || !validId(input.actor) || !input.purchaseUnitLabel.trim()) throw new InventoryManagementError('invalid_input','Configuration identity, actor, and purchase unit are required.');
+
+  private async configureInternal(
+    input: ConfigureInventoryInput,
+    prefix: D1PreparedStatement[] = [],
+  ): Promise<ManagedInventoryRecord> {
+    if (!validId(input.operationId) || !validId(input.actor) || !input.purchaseUnitLabel.trim())
+      throw new InventoryManagementError(
+        'invalid_input',
+        'Configuration identity, actor, and purchase unit are required.',
+      );
     const effectiveAt = this.normalizedTime(input.effectiveAt);
     const at = this.now();
-    const existing = await this.db.prepare(`SELECT id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,
+    const existing = await this.db
+      .prepare(
+        `SELECT id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,
       purchase_quantity_minor,purchase_entered_amount,purchase_entered_unit_id,effective_from,created_by FROM inventory_config_versions
-      WHERE company_id=? AND product_id=? AND id=?`).bind(input.companyId,input.productId,input.operationId).first<ConfigRow>();
+      WHERE company_id=? AND product_id=? AND id=?`,
+      )
+      .bind(input.companyId, input.productId, input.operationId)
+      .first<ConfigRow>();
     if (existing) {
-      const existingUnit = await this.unit(input.companyId,input.productId,existing.stock_unit_id,existing.stock_unit_version);
-      const contentUnit=input.purchaseContentUnitId&&input.purchaseContentUnitId!==existingUnit.id?curatedUnit(input.purchaseContentUnitId):existingUnit;
-      const requestedPurchase = toCanonical(input.purchaseAmount,contentUnit,{companyId:input.companyId,productId:input.productId},{dimension:existingUnit.dimension});
-      const sameUnit = input.stockUnit.kind === existingUnit.kind && input.stockUnit.id === existingUnit.id &&
-        (input.stockUnit.kind === 'curated' || (input.stockUnit.label === existingUnit.label && input.stockUnit.dimension === existingUnit.dimension &&
-          input.stockUnit.numerator === existingUnit.numerator && input.stockUnit.denominator === existingUnit.denominator));
-      const opening=await this.db.prepare('SELECT entered_amount FROM inventory_reconciliations WHERE company_id=? AND id=?').bind(input.companyId,`count:${input.operationId}`).first<{entered_amount:string}>();
-      if (existing.status !== 'active' || !sameUnit || existing.purchase_unit_label !== input.purchaseUnitLabel.trim() ||
-          existing.purchase_quantity_minor !== requestedPurchase.minor || (input.purchaseContentUnitId!==undefined&&(existing.purchase_entered_amount!==input.purchaseAmount||existing.purchase_entered_unit_id!==input.purchaseContentUnitId)) || existing.effective_from !== effectiveAt || existing.created_by !== input.actor ||
-          (opening?.entered_amount??undefined)!==input.openingAmount) {
-        throw new InventoryManagementError('operation_conflict','That configuration operation identity was already used for different input.');
+      const existingUnit = await this.unit(
+        input.companyId,
+        input.productId,
+        existing.stock_unit_id,
+        existing.stock_unit_version,
+      );
+      const contentUnit =
+        input.purchaseContentUnitId && input.purchaseContentUnitId !== existingUnit.id
+          ? curatedUnit(input.purchaseContentUnitId)
+          : existingUnit;
+      const requestedPurchase = toCanonical(
+        input.purchaseAmount,
+        contentUnit,
+        { companyId: input.companyId, productId: input.productId },
+        { dimension: existingUnit.dimension },
+      );
+      const sameUnit =
+        input.stockUnit.kind === existingUnit.kind &&
+        input.stockUnit.id === existingUnit.id &&
+        (input.stockUnit.kind === 'curated' ||
+          (input.stockUnit.label === existingUnit.label &&
+            input.stockUnit.dimension === existingUnit.dimension &&
+            input.stockUnit.numerator === existingUnit.numerator &&
+            input.stockUnit.denominator === existingUnit.denominator));
+      const opening = await this.db
+        .prepare('SELECT entered_amount FROM inventory_reconciliations WHERE company_id=? AND id=?')
+        .bind(input.companyId, `count:${input.operationId}`)
+        .first<{ entered_amount: string }>();
+      if (
+        existing.status !== 'active' ||
+        !sameUnit ||
+        existing.purchase_unit_label !== input.purchaseUnitLabel.trim() ||
+        existing.purchase_quantity_minor !== requestedPurchase.minor ||
+        (input.purchaseContentUnitId !== undefined &&
+          (existing.purchase_entered_amount !== input.purchaseAmount ||
+            existing.purchase_entered_unit_id !== input.purchaseContentUnitId)) ||
+        existing.effective_from !== effectiveAt ||
+        existing.created_by !== input.actor ||
+        (opening?.entered_amount ?? undefined) !== input.openingAmount
+      ) {
+        throw new InventoryManagementError(
+          'operation_conflict',
+          'That configuration operation identity was already used for different input.',
+        );
       }
-      const replay = await this.balance(input.companyId,input.productId);
-      if (!replay || replay.config_id !== existing.id) throw new InventoryManagementError('operation_conflict','That configuration is no longer the active version. Use a new operation identity.');
+      const replay = await this.balance(input.companyId, input.productId);
+      if (!replay || replay.config_id !== existing.id)
+        throw new InventoryManagementError(
+          'operation_conflict',
+          'That configuration is no longer the active version. Use a new operation identity.',
+        );
       return this.record(replay);
     }
-    const {unit,version:unitVersion} = await this.prepareUnit(input.companyId,input.productId,input.stockUnit);
-    const contentUnit=input.purchaseContentUnitId&&input.purchaseContentUnitId!==unit.id?curatedUnit(input.purchaseContentUnitId):unit;
-    const purchase = toCanonical(input.purchaseAmount,contentUnit,{companyId:input.companyId,productId:input.productId},{dimension:unit.dimension});
-    if(input.openingAmount!==undefined&&input.openingPackages)throw new InventoryManagementError('invalid_input','Choose one opening count method.');
-    positive(purchase,'Purchase quantity must be positive.');
-    const prior = await this.balance(input.companyId,input.productId);
-    const active = await this.db.prepare("SELECT id,version,status,stock_unit_id,stock_unit_version FROM inventory_config_versions WHERE company_id=? AND product_id=? AND status='active'")
-      .bind(input.companyId,input.productId).first<ConfigRow>();
-    const legacy = await this.legacy(input.companyId,input.productId);
-    const history=await this.db.prepare(planningUnitsSql+' AND c.product_id=?').bind(input.companyId,input.productId).all<PlanningUnitRow>();
-    const legacyRecord = holdAmbiguousPlanning(this.legacyRecord(legacy,input.productId,at),history.results);
-    const nextVersion = Number((await this.db.prepare('SELECT MAX(version) AS version FROM inventory_config_versions WHERE company_id=? AND product_id=?').bind(input.companyId,input.productId).first<{version:number|null}>())?.version ?? 0)+1;
+    const { unit, version: unitVersion } = await this.prepareUnit(
+      input.companyId,
+      input.productId,
+      input.stockUnit,
+    );
+    const contentUnit =
+      input.purchaseContentUnitId && input.purchaseContentUnitId !== unit.id
+        ? curatedUnit(input.purchaseContentUnitId)
+        : unit;
+    const purchase = toCanonical(
+      input.purchaseAmount,
+      contentUnit,
+      { companyId: input.companyId, productId: input.productId },
+      { dimension: unit.dimension },
+    );
+    if (input.openingAmount !== undefined && input.openingPackages)
+      throw new InventoryManagementError('invalid_input', 'Choose one opening count method.');
+    positive(purchase, 'Purchase quantity must be positive.');
+    const prior = await this.balance(input.companyId, input.productId);
+    const active = await this.db
+      .prepare(
+        "SELECT id,version,status,stock_unit_id,stock_unit_version FROM inventory_config_versions WHERE company_id=? AND product_id=? AND status='active'",
+      )
+      .bind(input.companyId, input.productId)
+      .first<ConfigRow>();
+    const legacy = await this.legacy(input.companyId, input.productId);
+    const history = await this.db
+      .prepare(planningUnitsSql + ' AND c.product_id=?')
+      .bind(input.companyId, input.productId)
+      .all<PlanningUnitRow>();
+    const legacyRecord = holdAmbiguousPlanning(
+      this.legacyRecord(legacy, input.productId, at),
+      history.results,
+    );
+    const nextVersion =
+      Number(
+        (
+          await this.db
+            .prepare(
+              'SELECT MAX(version) AS version FROM inventory_config_versions WHERE company_id=? AND product_id=?',
+            )
+            .bind(input.companyId, input.productId)
+            .first<{ version: number | null }>()
+        )?.version ?? 0,
+      ) + 1;
     let opening: ExactQuantity | null = null;
     if (!prior || prior.dimension !== unit.dimension) {
-      if (input.openingAmount === undefined&&!input.openingPackages) throw new InventoryManagementError('opening_count_required','A fresh physical count is required for initial classification or a dimension change.');
-      opening = input.openingPackages?packageTotal(purchase,input.openingPackages,unit,{companyId:input.companyId,productId:input.productId}):toCanonical(input.openingAmount!,unit,{companyId:input.companyId,productId:input.productId});
-      if (readCanonical(opening) < ZERO) throw new InventoryManagementError('invalid_quantity','Physical counts cannot be negative.');
-    }
-    else if(input.openingAmount!==undefined||input.openingPackages)throw new InventoryManagementError('invalid_input','Record a physical count separately after a same-dimension unit change.');
+      if (input.openingAmount === undefined && !input.openingPackages)
+        throw new InventoryManagementError(
+          'opening_count_required',
+          'A fresh physical count is required for initial classification or a dimension change.',
+        );
+      opening = input.openingPackages
+        ? packageTotal(purchase, input.openingPackages, unit, {
+            companyId: input.companyId,
+            productId: input.productId,
+          })
+        : toCanonical(input.openingAmount!, unit, {
+            companyId: input.companyId,
+            productId: input.productId,
+          });
+      if (readCanonical(opening) < ZERO)
+        throw new InventoryManagementError(
+          'invalid_quantity',
+          'Physical counts cannot be negative.',
+        );
+    } else if (input.openingAmount !== undefined || input.openingPackages)
+      throw new InventoryManagementError(
+        'invalid_input',
+        'Record a physical count separately after a same-dimension unit change.',
+      );
     if (prior && prior.dimension !== unit.dimension) {
-      const event = await this.db.prepare('SELECT 1 AS found FROM inventory_events_exact WHERE company_id=? AND product_id=? LIMIT 1').bind(input.companyId,input.productId).first();
-      const recipe = await this.db.prepare('SELECT 1 AS found FROM recipe_version_ingredients WHERE company_id=? AND product_id=? LIMIT 1').bind(input.companyId,input.productId).first();
-      if (event || recipe || prior.latest_count_effective_at || readCanonical(exact(prior.dimension,prior.incoming_minor)) !== ZERO) throw new InventoryManagementError('unit_incompatible','The inventory dimension cannot change after counts, movements, incoming stock, or recipe use.');
+      const event = await this.db
+        .prepare(
+          'SELECT 1 AS found FROM inventory_events_exact WHERE company_id=? AND product_id=? LIMIT 1',
+        )
+        .bind(input.companyId, input.productId)
+        .first();
+      const recipe = await this.db
+        .prepare(
+          'SELECT 1 AS found FROM recipe_version_ingredients WHERE company_id=? AND product_id=? LIMIT 1',
+        )
+        .bind(input.companyId, input.productId)
+        .first();
+      if (
+        event ||
+        recipe ||
+        prior.latest_count_effective_at ||
+        readCanonical(exact(prior.dimension, prior.incoming_minor)) !== ZERO
+      )
+        throw new InventoryManagementError(
+          'unit_incompatible',
+          'The inventory dimension cannot change after counts, movements, incoming stock, or recipe use.',
+        );
     }
     const legacyVersion = legacy?.version ?? 0;
     const balanceVersion = prior?.version ?? 0;
-    const onHand = opening ?? (prior ? exact(prior.dimension,prior.on_hand_minor) : exact(unit.dimension,'0'));
-    const incoming = prior && prior.dimension === unit.dimension ? exact(unit.dimension,prior.incoming_minor) : exact(unit.dimension,'0');
-    const estimated = prior && prior.dimension === unit.dimension ? exact(unit.dimension,prior.estimated_used_minor) : exact(unit.dimension,'0');
-    changePlanningUnit(legacyRecord,prior?await this.unit(input.companyId,input.productId,prior.stock_unit_id,prior.stock_unit_version):null,unit);
-    legacyRecord.settings.unit=unit.label;
-    legacyRecord.settings.unitsPerPack=legacyNumber(purchase,unit);
-    legacyRecord.onHand=legacyNumber(onHand,unit);
-    legacyRecord.incoming=legacyNumber(incoming,unit);
-    legacyRecord.estimatedUsed=legacyNumber(estimated,unit);
-    legacyRecord.lastCount=opening?effectiveAt:legacyRecord.lastCount;
-    legacyRecord.updated=at;
-    legacyRecord.version=legacyVersion+1;
-    const unitStatement = this.db.prepare(`INSERT OR IGNORE INTO product_unit_versions(
+    const onHand =
+      opening ?? (prior ? exact(prior.dimension, prior.on_hand_minor) : exact(unit.dimension, '0'));
+    const incoming =
+      prior && prior.dimension === unit.dimension
+        ? exact(unit.dimension, prior.incoming_minor)
+        : exact(unit.dimension, '0');
+    const estimated =
+      prior && prior.dimension === unit.dimension
+        ? exact(unit.dimension, prior.estimated_used_minor)
+        : exact(unit.dimension, '0');
+    changePlanningUnit(
+      legacyRecord,
+      prior
+        ? await this.unit(
+            input.companyId,
+            input.productId,
+            prior.stock_unit_id,
+            prior.stock_unit_version,
+          )
+        : null,
+      unit,
+    );
+    legacyRecord.settings.unit = unit.label;
+    legacyRecord.settings.unitsPerPack = legacyNumber(purchase, unit);
+    legacyRecord.onHand = legacyNumber(onHand, unit);
+    legacyRecord.incoming = legacyNumber(incoming, unit);
+    legacyRecord.estimatedUsed = legacyNumber(estimated, unit);
+    legacyRecord.lastCount = opening ? effectiveAt : legacyRecord.lastCount;
+    legacyRecord.updated = at;
+    legacyRecord.version = legacyVersion + 1;
+    const unitStatement = this.db
+      .prepare(
+        `INSERT OR IGNORE INTO product_unit_versions(
       company_id,product_id,unit_id,version,kind,dimension,label,numerator,denominator,created_by,created_at,retired_at
-    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)`).bind(input.companyId,input.productId,unit.id,unitVersion,unit.kind,unit.dimension,unit.label,unit.numerator,unit.denominator,input.actor,at);
-    const statements: D1PreparedStatement[]=[...prefix,
-      this.db.prepare("DELETE FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status='pending' AND NOT EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)").bind(input.companyId,input.productId,input.operationId,input.companyId,input.productId,input.operationId),
+    ) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)`,
+      )
+      .bind(
+        input.companyId,
+        input.productId,
+        unit.id,
+        unitVersion,
+        unit.kind,
+        unit.dimension,
+        unit.label,
+        unit.numerator,
+        unit.denominator,
+        input.actor,
+        at,
+      );
+    const statements: D1PreparedStatement[] = [
+      ...prefix,
+      this.db
+        .prepare(
+          "DELETE FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status='pending' AND NOT EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)",
+        )
+        .bind(
+          input.companyId,
+          input.productId,
+          input.operationId,
+          input.companyId,
+          input.productId,
+          input.operationId,
+        ),
       unitStatement,
-      this.db.prepare(`INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,purchase_entered_amount,purchase_entered_unit_id,legacy_units_per_pack,effective_from,replaced_at,created_by,created_at)
-        VALUES (?,?,?,?,'pending',?,?,?,?,?,?,NULL,?,NULL,?,?)`).bind(input.companyId,input.productId,input.operationId,nextVersion,unit.id,unitVersion,input.purchaseUnitLabel.trim(),purchase.minor,input.purchaseAmount,input.purchaseContentUnitId??unit.id,effectiveAt,input.actor,at),
+      this.db
+        .prepare(
+          `INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,purchase_entered_amount,purchase_entered_unit_id,legacy_units_per_pack,effective_from,replaced_at,created_by,created_at)
+        VALUES (?,?,?,?,'pending',?,?,?,?,?,?,NULL,?,NULL,?,?)`,
+        )
+        .bind(
+          input.companyId,
+          input.productId,
+          input.operationId,
+          nextVersion,
+          unit.id,
+          unitVersion,
+          input.purchaseUnitLabel.trim(),
+          purchase.minor,
+          input.purchaseAmount,
+          input.purchaseContentUnitId ?? unit.id,
+          effectiveAt,
+          input.actor,
+          at,
+        ),
     ];
-    if (prior) statements.push(this.db.prepare(`UPDATE inventory_balances_exact SET config_id=?,dimension=?,on_hand_minor=?,incoming_minor=?,estimated_used_minor=?,version=?,latest_count_effective_at=?,updated_at=?
-      WHERE company_id=? AND product_id=? AND version=?`).bind(input.operationId,unit.dimension,onHand.minor,incoming.minor,estimated.minor,balanceVersion+1,opening?effectiveAt:prior.latest_count_effective_at,at,input.companyId,input.productId,balanceVersion));
-    else statements.push(this.db.prepare(`INSERT INTO inventory_balances_exact(company_id,product_id,config_id,dimension,on_hand_minor,incoming_minor,estimated_used_minor,version,latest_count_effective_at,updated_at)
-      VALUES (?,?,?,?,?,'0','0',1,?,?)`).bind(input.companyId,input.productId,input.operationId,unit.dimension,onHand.minor,effectiveAt,at));
-    if (active) statements.push(this.db.prepare("UPDATE inventory_config_versions SET status='archived',replaced_at=? WHERE company_id=? AND product_id=? AND id=? AND status='active' AND EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)").bind(at,input.companyId,input.productId,active.id,input.companyId,input.productId,input.operationId));
-    statements.push(this.db.prepare("UPDATE inventory_config_versions SET status='active' WHERE company_id=? AND product_id=? AND id=? AND status='pending' AND EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)").bind(input.companyId,input.productId,input.operationId,input.companyId,input.productId,input.operationId));
+    if (prior)
+      statements.push(
+        this.db
+          .prepare(
+            `UPDATE inventory_balances_exact SET config_id=?,dimension=?,on_hand_minor=?,incoming_minor=?,estimated_used_minor=?,version=?,latest_count_effective_at=?,updated_at=?
+      WHERE company_id=? AND product_id=? AND version=?`,
+          )
+          .bind(
+            input.operationId,
+            unit.dimension,
+            onHand.minor,
+            incoming.minor,
+            estimated.minor,
+            balanceVersion + 1,
+            opening ? effectiveAt : prior.latest_count_effective_at,
+            at,
+            input.companyId,
+            input.productId,
+            balanceVersion,
+          ),
+      );
+    else
+      statements.push(
+        this.db
+          .prepare(
+            `INSERT INTO inventory_balances_exact(company_id,product_id,config_id,dimension,on_hand_minor,incoming_minor,estimated_used_minor,version,latest_count_effective_at,updated_at)
+      VALUES (?,?,?,?,?,'0','0',1,?,?)`,
+          )
+          .bind(
+            input.companyId,
+            input.productId,
+            input.operationId,
+            unit.dimension,
+            onHand.minor,
+            effectiveAt,
+            at,
+          ),
+      );
+    if (active)
+      statements.push(
+        this.db
+          .prepare(
+            "UPDATE inventory_config_versions SET status='archived',replaced_at=? WHERE company_id=? AND product_id=? AND id=? AND status='active' AND EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)",
+          )
+          .bind(
+            at,
+            input.companyId,
+            input.productId,
+            active.id,
+            input.companyId,
+            input.productId,
+            input.operationId,
+          ),
+      );
+    statements.push(
+      this.db
+        .prepare(
+          "UPDATE inventory_config_versions SET status='active' WHERE company_id=? AND product_id=? AND id=? AND status='pending' AND EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?)",
+        )
+        .bind(
+          input.companyId,
+          input.productId,
+          input.operationId,
+          input.companyId,
+          input.productId,
+          input.operationId,
+        ),
+    );
     if (opening) {
       statements.push(
-        this.db.prepare(`INSERT INTO inventory_reconciliations(company_id,id,product_id,config_id,dimension,measured_minor,entered_amount,entered_unit_id,legacy_unit_label,estimate_before_minor,variance_minor,effective_at,recorded_at,actor,note,opening)
-          SELECT ?,?,?,?,?,?,?,?,?,NULL,NULL,?,?,?,'',1 WHERE EXISTS(SELECT 1 FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status='active')`).bind(input.companyId,`count:${input.operationId}`,input.productId,input.operationId,unit.dimension,opening.minor,input.openingPackages?formatCanonical(opening):input.openingAmount!,input.openingPackages?{mass:'g',volume:'mL',count:'each'}[unit.dimension]:unit.id,null,effectiveAt,at,input.actor,input.companyId,input.productId,input.operationId),
-        this.db.prepare(`INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key)
-          SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,'',NULL WHERE EXISTS(SELECT 1 FROM inventory_reconciliations WHERE company_id=? AND id=?)`).bind(input.companyId,`count:${input.operationId}`,input.productId,input.operationId,'count',unit.dimension,opening.minor,input.openingPackages?formatCanonical(opening):input.openingAmount!,input.openingPackages?{mass:'g',volume:'mL',count:'each'}[unit.dimension]:unit.id,balanceVersion,balanceVersion+1,effectiveAt,at,input.actor,input.companyId,`count:${input.operationId}`),
+        this.db
+          .prepare(
+            `INSERT INTO inventory_reconciliations(company_id,id,product_id,config_id,dimension,measured_minor,entered_amount,entered_unit_id,legacy_unit_label,estimate_before_minor,variance_minor,effective_at,recorded_at,actor,note,opening)
+          SELECT ?,?,?,?,?,?,?,?,?,NULL,NULL,?,?,?,'',1 WHERE EXISTS(SELECT 1 FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status='active')`,
+          )
+          .bind(
+            input.companyId,
+            `count:${input.operationId}`,
+            input.productId,
+            input.operationId,
+            unit.dimension,
+            opening.minor,
+            input.openingPackages ? formatCanonical(opening) : input.openingAmount!,
+            input.openingPackages
+              ? { mass: 'g', volume: 'mL', count: 'each' }[unit.dimension]
+              : unit.id,
+            null,
+            effectiveAt,
+            at,
+            input.actor,
+            input.companyId,
+            input.productId,
+            input.operationId,
+          ),
+        this.db
+          .prepare(
+            `INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key)
+          SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,'',NULL WHERE EXISTS(SELECT 1 FROM inventory_reconciliations WHERE company_id=? AND id=?)`,
+          )
+          .bind(
+            input.companyId,
+            `count:${input.operationId}`,
+            input.productId,
+            input.operationId,
+            'count',
+            unit.dimension,
+            opening.minor,
+            input.openingPackages ? formatCanonical(opening) : input.openingAmount!,
+            input.openingPackages
+              ? { mass: 'g', volume: 'mL', count: 'each' }[unit.dimension]
+              : unit.id,
+            balanceVersion,
+            balanceVersion + 1,
+            effectiveAt,
+            at,
+            input.actor,
+            input.companyId,
+            `count:${input.operationId}`,
+          ),
       );
     }
-    statements.push(legacy ? this.db.prepare('UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=? AND EXISTS(SELECT 1 FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status=\'active\')').bind(JSON.stringify(legacyRecord),legacyVersion+1,input.companyId,input.productId,legacyVersion,input.companyId,input.productId,input.operationId)
-      : this.db.prepare('INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status=\'active\')').bind(input.companyId,input.productId,JSON.stringify(legacyRecord),1,input.companyId,input.productId,input.operationId));
+    statements.push(
+      legacy
+        ? this.db
+            .prepare(
+              "UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=? AND EXISTS(SELECT 1 FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status='active')",
+            )
+            .bind(
+              JSON.stringify(legacyRecord),
+              legacyVersion + 1,
+              input.companyId,
+              input.productId,
+              legacyVersion,
+              input.companyId,
+              input.productId,
+              input.operationId,
+            )
+        : this.db
+            .prepare(
+              "INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=? AND status='active')",
+            )
+            .bind(
+              input.companyId,
+              input.productId,
+              JSON.stringify(legacyRecord),
+              1,
+              input.companyId,
+              input.productId,
+              input.operationId,
+            ),
+    );
     // If the balance CAS lost, deliberately collide with the pending row so D1
     // rolls the whole transactional batch back instead of retaining a dead draft.
-    statements.push(this.db.prepare(`INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,legacy_units_per_pack,effective_from,replaced_at,created_by,created_at)
+    statements.push(
+      this.db
+        .prepare(
+          `INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,legacy_units_per_pack,effective_from,replaced_at,created_by,created_at)
       SELECT ?,?,?,?,'pending',?,?,?,?,NULL,?,NULL,?,? WHERE NOT EXISTS(
         SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND config_id=?
-      )`).bind(input.companyId,input.productId,input.operationId,nextVersion,unit.id,unitVersion,input.purchaseUnitLabel.trim(),purchase.minor,effectiveAt,input.actor,at,input.companyId,input.productId,input.operationId));
-    try{await this.db.batch(statements);}catch(error){
-      if(await this.db.prepare('SELECT 1 AS found FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=?').bind(input.companyId,input.productId,input.operationId).first())return this.configure(input);
-      const current=await this.balance(input.companyId,input.productId);
-      if(current&&current.version!==balanceVersion)throw new InventoryManagementError('concurrent_update','Inventory changed while it was being configured. Refresh and retry.');
+      )`,
+        )
+        .bind(
+          input.companyId,
+          input.productId,
+          input.operationId,
+          nextVersion,
+          unit.id,
+          unitVersion,
+          input.purchaseUnitLabel.trim(),
+          purchase.minor,
+          effectiveAt,
+          input.actor,
+          at,
+          input.companyId,
+          input.productId,
+          input.operationId,
+        ),
+    );
+    try {
+      await this.db.batch(statements);
+    } catch (error) {
+      if (
+        await this.db
+          .prepare(
+            'SELECT 1 AS found FROM inventory_config_versions WHERE company_id=? AND product_id=? AND id=?',
+          )
+          .bind(input.companyId, input.productId, input.operationId)
+          .first()
+      )
+        return this.configure(input);
+      const current = await this.balance(input.companyId, input.productId);
+      if (current && current.version !== balanceVersion)
+        throw new InventoryManagementError(
+          'concurrent_update',
+          'Inventory changed while it was being configured. Refresh and retry.',
+        );
       throw error;
     }
-    const configured=await this.balance(input.companyId,input.productId);
-    if(!configured||configured.config_id!==input.operationId)throw new InventoryManagementError('concurrent_update','Inventory changed while it was being configured. Refresh and retry.');
+    const configured = await this.balance(input.companyId, input.productId);
+    if (!configured || configured.config_id !== input.operationId)
+      throw new InventoryManagementError(
+        'concurrent_update',
+        'Inventory changed while it was being configured. Refresh and retry.',
+      );
     return this.record(configured);
   }
 
-  private async movementState(input: InventoryMovementInput | InventoryCountInput,canonical=false) {
-    await this.product(input.companyId,input.productId);
-    if(!validId(input.operationId)||!validId(input.actor)||!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<0)throw new InventoryManagementError('invalid_input','Operation identity, actor, and expected version are required.');
-    const row=await this.balance(input.companyId,input.productId);
-    if(!row)throw new InventoryManagementError('inventory_not_configured','Classify this product and record an opening count first.');
-    const unit=canonical?curatedUnit(input.unitId):await this.unit(input.companyId,input.productId,input.unitId);
-    if(unit.dimension!==row.dimension)throw new InventoryManagementError('unit_incompatible','The entered unit has a different dimension.');
-    const effectiveAt=this.normalizedTime(input.effectiveAt);
-    return {row,unit,effectiveAt,at:this.now(),legacy:await this.legacy(input.companyId,input.productId)};
+  private async movementState(
+    input: InventoryMovementInput | InventoryCountInput,
+    canonical = false,
+  ) {
+    await this.product(input.companyId, input.productId);
+    if (
+      !validId(input.operationId) ||
+      !validId(input.actor) ||
+      !Number.isSafeInteger(input.expectedVersion) ||
+      input.expectedVersion < 0
+    )
+      throw new InventoryManagementError(
+        'invalid_input',
+        'Operation identity, actor, and expected version are required.',
+      );
+    const row = await this.balance(input.companyId, input.productId);
+    if (!row)
+      throw new InventoryManagementError(
+        'inventory_not_configured',
+        'Classify this product and record an opening count first.',
+      );
+    const unit = canonical
+      ? curatedUnit(input.unitId)
+      : await this.unit(input.companyId, input.productId, input.unitId);
+    if (unit.dimension !== row.dimension)
+      throw new InventoryManagementError(
+        'unit_incompatible',
+        'The entered unit has a different dimension.',
+      );
+    const effectiveAt = this.normalizedTime(input.effectiveAt);
+    return {
+      row,
+      unit,
+      effectiveAt,
+      at: this.now(),
+      legacy: await this.legacy(input.companyId, input.productId),
+    };
   }
 
   /** Exact stock-unit minors that confirmed supplier orders still owe for a product. */
-  async orderIncomingOwed(companyId:string,productId:string):Promise<bigint>{
-    const rows=await this.db.prepare('SELECT quantity_minor,received_minor,released_minor FROM inventory_order_incoming WHERE company_id=? AND product_id=?')
-      .bind(companyId,productId).all<{quantity_minor:string;received_minor:string;released_minor:string}>();
-    return rows.results.reduce((sum,r)=>sum+BigInt(r.quantity_minor)-BigInt(r.received_minor)-BigInt(r.released_minor),ZERO);
+  async orderIncomingOwed(companyId: string, productId: string): Promise<bigint> {
+    const rows = await this.db
+      .prepare(
+        'SELECT quantity_minor,received_minor,released_minor FROM inventory_order_incoming WHERE company_id=? AND product_id=?',
+      )
+      .bind(companyId, productId)
+      .all<{ quantity_minor: string; received_minor: string; released_minor: string }>();
+    return rows.results.reduce(
+      (sum, r) =>
+        sum + BigInt(r.quantity_minor) - BigInt(r.received_minor) - BigInt(r.released_minor),
+      ZERO,
+    );
   }
-  async orderIncoming(companyId:string,confirmationId:string):Promise<OrderIncomingRow[]>{
-    const rows=await this.db.prepare(`SELECT line_id,product_id,config_id,dimension,quantity_minor,received_minor,released_minor,event_id,actor,created_at
-      FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=? ORDER BY line_id`).bind(companyId,confirmationId)
-      .all<{line_id:string;product_id:string;config_id:string;dimension:UnitDimension;quantity_minor:string;received_minor:string;released_minor:string;event_id:string;actor:string;created_at:string}>();
-    return rows.results.map(r=>({lineId:r.line_id,productId:r.product_id,configId:r.config_id,dimension:r.dimension,quantityMinor:r.quantity_minor,
-      receivedMinor:r.received_minor,releasedMinor:r.released_minor,eventId:r.event_id,actor:r.actor,createdAt:r.created_at}));
+
+  async orderIncoming(companyId: string, confirmationId: string): Promise<OrderIncomingRow[]> {
+    const rows = await this.db
+      .prepare(
+        `SELECT line_id,product_id,config_id,dimension,quantity_minor,received_minor,released_minor,event_id,actor,created_at
+      FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=? ORDER BY line_id`,
+      )
+      .bind(companyId, confirmationId)
+      .all<{
+        line_id: string;
+        product_id: string;
+        config_id: string;
+        dimension: UnitDimension;
+        quantity_minor: string;
+        received_minor: string;
+        released_minor: string;
+        event_id: string;
+        actor: string;
+        created_at: string;
+      }>();
+    return rows.results.map((r) => ({
+      lineId: r.line_id,
+      productId: r.product_id,
+      configId: r.config_id,
+      dimension: r.dimension,
+      quantityMinor: r.quantity_minor,
+      receivedMinor: r.received_minor,
+      releasedMinor: r.released_minor,
+      eventId: r.event_id,
+      actor: r.actor,
+      createdAt: r.created_at,
+    }));
   }
-  async orderReceipts(companyId:string,confirmationId:string):Promise<OrderReceiptRow[]>{
-    const rows=await this.db.prepare(`SELECT receipt_id,line_id,product_id,accepted_minor,released_minor,excess_minor,stock_added,delivered_at,event_id,actor,created_at
-      FROM inventory_order_receipts WHERE company_id=? AND confirmation_id=? ORDER BY created_at,receipt_id,line_id`).bind(companyId,confirmationId)
-      .all<{receipt_id:string;line_id:string;product_id:string;accepted_minor:string;released_minor:string;excess_minor:string;stock_added:number;delivered_at:string;event_id:string;actor:string;created_at:string}>();
-    return rows.results.map(r=>({receiptId:r.receipt_id,lineId:r.line_id,productId:r.product_id,acceptedMinor:r.accepted_minor,releasedMinor:r.released_minor,
-      excessMinor:r.excess_minor,stockAdded:r.stock_added===1,deliveredAt:r.delivered_at,eventId:r.event_id,actor:r.actor,createdAt:r.created_at}));
+
+  async orderReceipts(companyId: string, confirmationId: string): Promise<OrderReceiptRow[]> {
+    const rows = await this.db
+      .prepare(
+        `SELECT receipt_id,line_id,product_id,accepted_minor,released_minor,excess_minor,stock_added,delivered_at,event_id,actor,created_at
+      FROM inventory_order_receipts WHERE company_id=? AND confirmation_id=? ORDER BY created_at,receipt_id,line_id`,
+      )
+      .bind(companyId, confirmationId)
+      .all<{
+        receipt_id: string;
+        line_id: string;
+        product_id: string;
+        accepted_minor: string;
+        released_minor: string;
+        excess_minor: string;
+        stock_added: number;
+        delivered_at: string;
+        event_id: string;
+        actor: string;
+        created_at: string;
+      }>();
+    return rows.results.map((r) => ({
+      receiptId: r.receipt_id,
+      lineId: r.line_id,
+      productId: r.product_id,
+      acceptedMinor: r.accepted_minor,
+      releasedMinor: r.released_minor,
+      excessMinor: r.excess_minor,
+      stockAdded: r.stock_added === 1,
+      deliveredAt: r.delivered_at,
+      eventId: r.event_id,
+      actor: r.actor,
+      createdAt: r.created_at,
+    }));
   }
   /**
    * A's receipt posting port for one approved delivery. Returns statements for the caller's own batch.
@@ -383,64 +1173,230 @@ export class D1InventoryManagementService implements InventoryManagementService 
    * count was already counted, so it reduces incoming without adding stock again. Every precondition
    * is re-checked inside the batch, and any failure aborts all of it.
    */
-  async orderReceiptStatements(input:OrderReceiptInput):Promise<D1PreparedStatement[]>{
-    const amount=/^(0|[1-9][0-9]{0,17})$/;
-    if(!validId(input.companyId)||!validId(input.confirmationId)||!validId(input.receiptId)||!validId(input.actor)||!input.lines.length||input.lines.length>100)
-      throw new InventoryManagementError('invalid_input','A confirmation, receipt, actor and 1–100 lines are required.');
-    if(new Set(input.lines.map(l=>l.lineId)).size!==input.lines.length||input.lines.some(l=>!validId(l.lineId)||![l.acceptedMinor,l.releasedMinor,l.excessMinor].every(v=>amount.test(v))
-        ||(l.acceptedMinor==='0'&&l.releasedMinor==='0'&&l.excessMinor==='0')))
-      throw new InventoryManagementError('invalid_input','Each line needs a unique identity and exact whole amounts, at least one of them positive.');
-    const deliveredAt=this.normalizedTime(input.deliveredAt);
-    const guard=(sql:string,args:(string|number)[])=>this.db.prepare(`INSERT INTO inventory_port_guards(reason) SELECT 'stale' WHERE NOT EXISTS (${sql})`).bind(...args);
+  async orderReceiptStatements(input: OrderReceiptInput): Promise<D1PreparedStatement[]> {
+    const amount = /^(0|[1-9][0-9]{0,17})$/;
+    if (
+      !validId(input.companyId) ||
+      !validId(input.confirmationId) ||
+      !validId(input.receiptId) ||
+      !validId(input.actor) ||
+      !input.lines.length ||
+      input.lines.length > 100
+    )
+      throw new InventoryManagementError(
+        'invalid_input',
+        'A confirmation, receipt, actor and 1–100 lines are required.',
+      );
+    if (
+      new Set(input.lines.map((l) => l.lineId)).size !== input.lines.length ||
+      input.lines.some(
+        (l) =>
+          !validId(l.lineId) ||
+          ![l.acceptedMinor, l.releasedMinor, l.excessMinor].every((v) => amount.test(v)) ||
+          (l.acceptedMinor === '0' && l.releasedMinor === '0' && l.excessMinor === '0'),
+      )
+    )
+      throw new InventoryManagementError(
+        'invalid_input',
+        'Each line needs a unique identity and exact whole amounts, at least one of them positive.',
+      );
+    const deliveredAt = this.normalizedTime(input.deliveredAt);
+    const guard = (sql: string, args: (string | number)[]) =>
+      this.db
+        .prepare(
+          `INSERT INTO inventory_port_guards(reason) SELECT 'stale' WHERE NOT EXISTS (${sql})`,
+        )
+        .bind(...args);
     // A receipt is posted once, as a whole.
-    const unposted='SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory_order_receipts WHERE company_id=? AND receipt_id=?)';
-    if(!await this.db.prepare(unposted).bind(input.companyId,input.receiptId).first())
-      throw new InventoryManagementError('operation_conflict','This delivery receipt was already posted.');
-    const owed=new Map((await this.orderIncoming(input.companyId,input.confirmationId)).map(r=>[r.lineId,r]));
-    const lines=input.lines.map(l=>{
-      const order=owed.get(l.lineId);
-      if(!order)throw new InventoryManagementError('invalid_input','Each line must belong to this confirmed supplier order.');
-      const remaining=BigInt(order.quantityMinor)-BigInt(order.receivedMinor)-BigInt(order.releasedMinor),resolved=BigInt(l.acceptedMinor)+BigInt(l.releasedMinor);
-      if(resolved>remaining)throw new InventoryManagementError('invalid_quantity','A line cannot receive or release more than the order still owes.');
-      if(l.excessMinor!=='0'&&(l.releasedMinor!=='0'||l.acceptedMinor==='0'||resolved!==remaining))
-        throw new InventoryManagementError('invalid_quantity','Excess is only possible on the delivery that completes everything the order owes for that line.');
-      return {...l,order};
+    const unposted =
+      'SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory_order_receipts WHERE company_id=? AND receipt_id=?)';
+    if (!(await this.db.prepare(unposted).bind(input.companyId, input.receiptId).first()))
+      throw new InventoryManagementError(
+        'operation_conflict',
+        'This delivery receipt was already posted.',
+      );
+    const owed = new Map(
+      (await this.orderIncoming(input.companyId, input.confirmationId)).map((r) => [r.lineId, r]),
+    );
+    const lines = input.lines.map((l) => {
+      const order = owed.get(l.lineId);
+      if (!order)
+        throw new InventoryManagementError(
+          'invalid_input',
+          'Each line must belong to this confirmed supplier order.',
+        );
+      const remaining =
+          BigInt(order.quantityMinor) - BigInt(order.receivedMinor) - BigInt(order.releasedMinor),
+        resolved = BigInt(l.acceptedMinor) + BigInt(l.releasedMinor);
+      if (resolved > remaining)
+        throw new InventoryManagementError(
+          'invalid_quantity',
+          'A line cannot receive or release more than the order still owes.',
+        );
+      if (
+        l.excessMinor !== '0' &&
+        (l.releasedMinor !== '0' || l.acceptedMinor === '0' || resolved !== remaining)
+      )
+        throw new InventoryManagementError(
+          'invalid_quantity',
+          'Excess is only possible on the delivery that completes everything the order owes for that line.',
+        );
+      return { ...l, order };
     });
-    const at=this.now(),statements:D1PreparedStatement[]=[guard(unposted,[input.companyId,input.receiptId])];
-    for(const productId of [...new Set(lines.map(l=>l.order.productId))]){
-      const mine=lines.filter(l=>l.order.productId===productId);
-      await this.product(input.companyId,productId);
-      const row=await this.balance(input.companyId,productId);
-      if(!row)throw new InventoryManagementError('inventory_not_configured','Classify this product and record an opening count first.');
-      if(mine.some(l=>l.order.dimension!==row.dimension))throw new InventoryManagementError('unit_incompatible','The order line has a different unit dimension than current stock.');
-      if(row.latest_count_effective_at&&Date.parse(at)<=Date.parse(row.latest_count_effective_at))throw new InventoryManagementError('before_count_cutoff','Stock movements must occur after the latest physical count.');
+    const at = this.now(),
+      statements: D1PreparedStatement[] = [guard(unposted, [input.companyId, input.receiptId])];
+    for (const productId of [...new Set(lines.map((l) => l.order.productId))]) {
+      const mine = lines.filter((l) => l.order.productId === productId);
+      await this.product(input.companyId, productId);
+      const row = await this.balance(input.companyId, productId);
+      if (!row)
+        throw new InventoryManagementError(
+          'inventory_not_configured',
+          'Classify this product and record an opening count first.',
+        );
+      if (mine.some((l) => l.order.dimension !== row.dimension))
+        throw new InventoryManagementError(
+          'unit_incompatible',
+          'The order line has a different unit dimension than current stock.',
+        );
+      if (
+        row.latest_count_effective_at &&
+        Date.parse(at) <= Date.parse(row.latest_count_effective_at)
+      )
+        throw new InventoryManagementError(
+          'before_count_cutoff',
+          'Stock movements must occur after the latest physical count.',
+        );
       // Count-cutoff reconciliation: a physical count at or after the delivery already included it.
-      const counted=row.latest_count_effective_at!==null&&Date.parse(deliveredAt)<=Date.parse(row.latest_count_effective_at);
-      const sum=(pick:(l:typeof mine[number])=>string)=>mine.reduce((total,l)=>total+BigInt(pick(l)),ZERO);
-      const stock=counted?ZERO:sum(l=>l.acceptedMinor)+sum(l=>l.excessMinor),leaving=sum(l=>l.acceptedMinor)+sum(l=>l.releasedMinor);
-      const onHand=readCanonical(exact(row.dimension,row.on_hand_minor))+stock,incoming=readCanonical(exact(row.dimension,row.incoming_minor))-leaving;
-      const legacy=await this.legacy(input.companyId,productId),stockUnit=await this.unit(input.companyId,productId,row.stock_unit_id,row.stock_unit_version);
-      const legacyRecord=this.legacyRecord(legacy,productId,at);legacyRecord.onHand=legacyNumber(exact(row.dimension,String(onHand)),stockUnit);
-      legacyRecord.incoming=legacyNumber(exact(row.dimension,String(incoming)),stockUnit);legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
-      const eventId=`order-receipt:${input.receiptId}:${productId}`;
-      const note=counted?`Received supplier order; already included in the physical count at ${row.latest_count_effective_at}`:'Received supplier order';
+      const counted =
+        row.latest_count_effective_at !== null &&
+        Date.parse(deliveredAt) <= Date.parse(row.latest_count_effective_at);
+      const sum = (pick: (l: (typeof mine)[number]) => string) =>
+        mine.reduce((total, l) => total + BigInt(pick(l)), ZERO);
+      const stock = counted ? ZERO : sum((l) => l.acceptedMinor) + sum((l) => l.excessMinor),
+        leaving = sum((l) => l.acceptedMinor) + sum((l) => l.releasedMinor);
+      const onHand = readCanonical(exact(row.dimension, row.on_hand_minor)) + stock,
+        incoming = readCanonical(exact(row.dimension, row.incoming_minor)) - leaving;
+      const legacy = await this.legacy(input.companyId, productId),
+        stockUnit = await this.unit(
+          input.companyId,
+          productId,
+          row.stock_unit_id,
+          row.stock_unit_version,
+        );
+      const legacyRecord = this.legacyRecord(legacy, productId, at);
+      legacyRecord.onHand = legacyNumber(exact(row.dimension, String(onHand)), stockUnit);
+      legacyRecord.incoming = legacyNumber(exact(row.dimension, String(incoming)), stockUnit);
+      legacyRecord.updated = at;
+      legacyRecord.version = (legacy?.version ?? 0) + 1;
+      const eventId = `order-receipt:${input.receiptId}:${productId}`;
+      const note = counted
+        ? `Received supplier order; already included in the physical count at ${row.latest_count_effective_at}`
+        : 'Received supplier order';
       statements.push(
-        guard('SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=? AND config_id=? AND dimension=? AND on_hand_minor=? AND incoming_minor=?',
-          [input.companyId,productId,row.version,row.config_id,row.dimension,row.on_hand_minor,row.incoming_minor]),
-        legacy?guard('SELECT 1 FROM inventory WHERE company_id=? AND product_id=? AND version=?',[input.companyId,productId,legacy.version])
-          :guard('SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory WHERE company_id=? AND product_id=?)',[input.companyId,productId]),
+        guard(
+          'SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=? AND config_id=? AND dimension=? AND on_hand_minor=? AND incoming_minor=?',
+          [
+            input.companyId,
+            productId,
+            row.version,
+            row.config_id,
+            row.dimension,
+            row.on_hand_minor,
+            row.incoming_minor,
+          ],
+        ),
+        legacy
+          ? guard('SELECT 1 FROM inventory WHERE company_id=? AND product_id=? AND version=?', [
+              input.companyId,
+              productId,
+              legacy.version,
+            ])
+          : guard(
+              'SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory WHERE company_id=? AND product_id=?)',
+              [input.companyId, productId],
+            ),
         // Receipt rows go first: each grows its order line, which lowers what orders owe before incoming drops.
-        ...mine.flatMap(l=>[
-          guard('SELECT 1 FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=? AND line_id=? AND received_minor=? AND released_minor=?',
-            [input.companyId,input.confirmationId,l.lineId,l.order.receivedMinor,l.order.releasedMinor]),
-          this.db.prepare(`INSERT INTO inventory_order_receipts(company_id,receipt_id,confirmation_id,line_id,product_id,accepted_minor,released_minor,excess_minor,stock_added,delivered_at,event_id,actor,created_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(input.companyId,input.receiptId,input.confirmationId,l.lineId,productId,l.acceptedMinor,l.releasedMinor,l.excessMinor,counted?0:1,deliveredAt,eventId,input.actor,at)]),
-        this.db.prepare(`INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
-          VALUES (?,?,?,?,'order_receipt',?,?,NULL,NULL,?,?,?,?,?,?,NULL,NULL)`).bind(input.companyId,eventId,productId,row.config_id,row.dimension,String(stock),row.version,row.version+1,counted?at:deliveredAt,at,input.actor,note),
-        this.db.prepare('UPDATE inventory_balances_exact SET on_hand_minor=?,incoming_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=?')
-          .bind(String(onHand),String(incoming),row.version+1,at,input.companyId,productId,row.version),
-        legacy?this.db.prepare('UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=?').bind(JSON.stringify(legacyRecord),legacyRecord.version,input.companyId,productId,legacy.version)
-          :this.db.prepare('INSERT INTO inventory(company_id,product_id,data,version) VALUES (?,?,?,?)').bind(input.companyId,productId,JSON.stringify(legacyRecord),legacyRecord.version));
+        ...mine.flatMap((l) => [
+          guard(
+            'SELECT 1 FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=? AND line_id=? AND received_minor=? AND released_minor=?',
+            [
+              input.companyId,
+              input.confirmationId,
+              l.lineId,
+              l.order.receivedMinor,
+              l.order.releasedMinor,
+            ],
+          ),
+          this.db
+            .prepare(
+              `INSERT INTO inventory_order_receipts(company_id,receipt_id,confirmation_id,line_id,product_id,accepted_minor,released_minor,excess_minor,stock_added,delivered_at,event_id,actor,created_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+            )
+            .bind(
+              input.companyId,
+              input.receiptId,
+              input.confirmationId,
+              l.lineId,
+              productId,
+              l.acceptedMinor,
+              l.releasedMinor,
+              l.excessMinor,
+              counted ? 0 : 1,
+              deliveredAt,
+              eventId,
+              input.actor,
+              at,
+            ),
+        ]),
+        this.db
+          .prepare(
+            `INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
+          VALUES (?,?,?,?,'order_receipt',?,?,NULL,NULL,?,?,?,?,?,?,NULL,NULL)`,
+          )
+          .bind(
+            input.companyId,
+            eventId,
+            productId,
+            row.config_id,
+            row.dimension,
+            String(stock),
+            row.version,
+            row.version + 1,
+            counted ? at : deliveredAt,
+            at,
+            input.actor,
+            note,
+          ),
+        this.db
+          .prepare(
+            'UPDATE inventory_balances_exact SET on_hand_minor=?,incoming_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=?',
+          )
+          .bind(
+            String(onHand),
+            String(incoming),
+            row.version + 1,
+            at,
+            input.companyId,
+            productId,
+            row.version,
+          ),
+        legacy
+          ? this.db
+              .prepare(
+                'UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=?',
+              )
+              .bind(
+                JSON.stringify(legacyRecord),
+                legacyRecord.version,
+                input.companyId,
+                productId,
+                legacy.version,
+              )
+          : this.db
+              .prepare('INSERT INTO inventory(company_id,product_id,data,version) VALUES (?,?,?,?)')
+              .bind(input.companyId, productId, JSON.stringify(legacyRecord), legacyRecord.version),
+      );
     }
     return statements;
   }
@@ -449,285 +1405,1338 @@ export class D1InventoryManagementService implements InventoryManagementService 
    * confirmed line to incoming exactly once and never replace manual or other-order incoming.
    * Every precondition is re-checked inside the batch, and any failure aborts all of it.
    */
-  async orderIncomingStatements(input:OrderIncomingInput):Promise<D1PreparedStatement[]>{
-    if(!validId(input.companyId)||!validId(input.confirmationId)||!validId(input.actor)||!input.lines.length||input.lines.length>100)
-      throw new InventoryManagementError('invalid_input','A confirmation, actor and 1–100 lines are required.');
-    if(new Set(input.lines.map(l=>l.lineId)).size!==input.lines.length||input.lines.some(l=>!validId(l.lineId)||!validId(l.productId)||!validId(l.configId)||!/^[1-9][0-9]{0,17}$/.test(l.quantityMinor)))
-      throw new InventoryManagementError('invalid_input','Each line needs a unique identity and a positive exact quantity.');
-    const guard=(sql:string,args:(string|number)[])=>this.db.prepare(`INSERT INTO inventory_port_guards(reason) SELECT 'stale' WHERE NOT EXISTS (${sql})`).bind(...args);
+  async orderIncomingStatements(input: OrderIncomingInput): Promise<D1PreparedStatement[]> {
+    if (
+      !validId(input.companyId) ||
+      !validId(input.confirmationId) ||
+      !validId(input.actor) ||
+      !input.lines.length ||
+      input.lines.length > 100
+    )
+      throw new InventoryManagementError(
+        'invalid_input',
+        'A confirmation, actor and 1–100 lines are required.',
+      );
+    if (
+      new Set(input.lines.map((l) => l.lineId)).size !== input.lines.length ||
+      input.lines.some(
+        (l) =>
+          !validId(l.lineId) ||
+          !validId(l.productId) ||
+          !validId(l.configId) ||
+          !/^[1-9][0-9]{0,17}$/.test(l.quantityMinor),
+      )
+    )
+      throw new InventoryManagementError(
+        'invalid_input',
+        'Each line needs a unique identity and a positive exact quantity.',
+      );
+    const guard = (sql: string, args: (string | number)[]) =>
+      this.db
+        .prepare(
+          `INSERT INTO inventory_port_guards(reason) SELECT 'stale' WHERE NOT EXISTS (${sql})`,
+        )
+        .bind(...args);
     // A confirmation is applied once, as a whole.
-    const unapplied='SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=?)';
-    if(!await this.db.prepare(unapplied).bind(input.companyId,input.confirmationId).first())
-      throw new InventoryManagementError('operation_conflict','This supplier confirmation already added incoming stock.');
-    const at=this.now(),statements:D1PreparedStatement[]=[guard(unapplied,[input.companyId,input.confirmationId])];
-    for(const productId of [...new Set(input.lines.map(l=>l.productId))]){
-      const lines=input.lines.filter(l=>l.productId===productId);
-      await this.product(input.companyId,productId);
-      const row=await this.balance(input.companyId,productId);
-      if(!row)throw new InventoryManagementError('inventory_not_configured','Classify this product and record an opening count first.');
+    const unapplied =
+      'SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=?)';
+    if (!(await this.db.prepare(unapplied).bind(input.companyId, input.confirmationId).first()))
+      throw new InventoryManagementError(
+        'operation_conflict',
+        'This supplier confirmation already added incoming stock.',
+      );
+    const at = this.now(),
+      statements: D1PreparedStatement[] = [
+        guard(unapplied, [input.companyId, input.confirmationId]),
+      ];
+    for (const productId of [...new Set(input.lines.map((l) => l.productId))]) {
+      const lines = input.lines.filter((l) => l.productId === productId);
+      await this.product(input.companyId, productId);
+      const row = await this.balance(input.companyId, productId);
+      if (!row)
+        throw new InventoryManagementError(
+          'inventory_not_configured',
+          'Classify this product and record an opening count first.',
+        );
       // Frozen quantities are exact stock-unit minors, so only the unit dimension must still match.
-      if(lines.some(l=>l.dimension!==row.dimension))throw new InventoryManagementError('unit_incompatible','The confirmed quantity has a different unit dimension than current stock.');
-      if(row.latest_count_effective_at&&Date.parse(at)<=Date.parse(row.latest_count_effective_at))throw new InventoryManagementError('before_count_cutoff','Stock movements must occur after the latest physical count.');
-      const added=lines.reduce((sum,l)=>sum+BigInt(l.quantityMinor),ZERO),next=readCanonical(exact(row.dimension,row.incoming_minor))+added;
-      const legacy=await this.legacy(input.companyId,productId),stockUnit=await this.unit(input.companyId,productId,row.stock_unit_id,row.stock_unit_version);
-      const legacyRecord=this.legacyRecord(legacy,productId,at);legacyRecord.incoming=legacyNumber(exact(row.dimension,String(next)),stockUnit);legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
-      const eventId=`order-incoming:${input.confirmationId}:${productId}`;
+      if (lines.some((l) => l.dimension !== row.dimension))
+        throw new InventoryManagementError(
+          'unit_incompatible',
+          'The confirmed quantity has a different unit dimension than current stock.',
+        );
+      if (
+        row.latest_count_effective_at &&
+        Date.parse(at) <= Date.parse(row.latest_count_effective_at)
+      )
+        throw new InventoryManagementError(
+          'before_count_cutoff',
+          'Stock movements must occur after the latest physical count.',
+        );
+      const added = lines.reduce((sum, l) => sum + BigInt(l.quantityMinor), ZERO),
+        next = readCanonical(exact(row.dimension, row.incoming_minor)) + added;
+      const legacy = await this.legacy(input.companyId, productId),
+        stockUnit = await this.unit(
+          input.companyId,
+          productId,
+          row.stock_unit_id,
+          row.stock_unit_version,
+        );
+      const legacyRecord = this.legacyRecord(legacy, productId, at);
+      legacyRecord.incoming = legacyNumber(exact(row.dimension, String(next)), stockUnit);
+      legacyRecord.updated = at;
+      legacyRecord.version = (legacy?.version ?? 0) + 1;
+      const eventId = `order-incoming:${input.confirmationId}:${productId}`;
       statements.push(
-        guard('SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=? AND config_id=? AND dimension=? AND incoming_minor=?',
-          [input.companyId,productId,row.version,row.config_id,row.dimension,row.incoming_minor]),
-        legacy?guard('SELECT 1 FROM inventory WHERE company_id=? AND product_id=? AND version=?',[input.companyId,productId,legacy.version])
-          :guard('SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory WHERE company_id=? AND product_id=?)',[input.companyId,productId]),
-        ...lines.map(l=>this.db.prepare(`INSERT INTO inventory_order_incoming(company_id,confirmation_id,line_id,product_id,config_id,dimension,quantity_minor,received_minor,event_id,actor,created_at)
-          VALUES (?,?,?,?,?,?,?,'0',?,?,?)`).bind(input.companyId,input.confirmationId,l.lineId,productId,l.configId,l.dimension,l.quantityMinor,eventId,input.actor,at)),
-        this.db.prepare(`INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
-          VALUES (?,?,?,?,'order_incoming',?,?,NULL,NULL,?,?,?,?,?,?,NULL,NULL)`).bind(input.companyId,eventId,productId,row.config_id,row.dimension,String(added),row.version,row.version+1,at,at,input.actor,'Confirmed supplier order'),
-        this.db.prepare('UPDATE inventory_balances_exact SET incoming_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=?')
-          .bind(String(next),row.version+1,at,input.companyId,productId,row.version),
-        legacy?this.db.prepare('UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=?').bind(JSON.stringify(legacyRecord),legacyRecord.version,input.companyId,productId,legacy.version)
-          :this.db.prepare('INSERT INTO inventory(company_id,product_id,data,version) VALUES (?,?,?,?)').bind(input.companyId,productId,JSON.stringify(legacyRecord),legacyRecord.version));
+        guard(
+          'SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=? AND config_id=? AND dimension=? AND incoming_minor=?',
+          [
+            input.companyId,
+            productId,
+            row.version,
+            row.config_id,
+            row.dimension,
+            row.incoming_minor,
+          ],
+        ),
+        legacy
+          ? guard('SELECT 1 FROM inventory WHERE company_id=? AND product_id=? AND version=?', [
+              input.companyId,
+              productId,
+              legacy.version,
+            ])
+          : guard(
+              'SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory WHERE company_id=? AND product_id=?)',
+              [input.companyId, productId],
+            ),
+        ...lines.map((l) =>
+          this.db
+            .prepare(
+              `INSERT INTO inventory_order_incoming(company_id,confirmation_id,line_id,product_id,config_id,dimension,quantity_minor,received_minor,event_id,actor,created_at)
+          VALUES (?,?,?,?,?,?,?,'0',?,?,?)`,
+            )
+            .bind(
+              input.companyId,
+              input.confirmationId,
+              l.lineId,
+              productId,
+              l.configId,
+              l.dimension,
+              l.quantityMinor,
+              eventId,
+              input.actor,
+              at,
+            ),
+        ),
+        this.db
+          .prepare(
+            `INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
+          VALUES (?,?,?,?,'order_incoming',?,?,NULL,NULL,?,?,?,?,?,?,NULL,NULL)`,
+          )
+          .bind(
+            input.companyId,
+            eventId,
+            productId,
+            row.config_id,
+            row.dimension,
+            String(added),
+            row.version,
+            row.version + 1,
+            at,
+            at,
+            input.actor,
+            'Confirmed supplier order',
+          ),
+        this.db
+          .prepare(
+            'UPDATE inventory_balances_exact SET incoming_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=?',
+          )
+          .bind(String(next), row.version + 1, at, input.companyId, productId, row.version),
+        legacy
+          ? this.db
+              .prepare(
+                'UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=?',
+              )
+              .bind(
+                JSON.stringify(legacyRecord),
+                legacyRecord.version,
+                input.companyId,
+                productId,
+                legacy.version,
+              )
+          : this.db
+              .prepare('INSERT INTO inventory(company_id,product_id,data,version) VALUES (?,?,?,?)')
+              .bind(input.companyId, productId, JSON.stringify(legacyRecord), legacyRecord.version),
+      );
     }
     return statements;
   }
 
-  async recordMovement(input: InventoryMovementInput,prefix:D1PreparedStatement[]=[],canonical=false) {
-    await this.product(input.companyId,input.productId);
-    if(!validId(input.operationId)||!validId(input.actor)||!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<0)throw new InventoryManagementError('invalid_input','Operation identity, actor, and expected version are required.');
-    const effectiveAt=this.normalizedTime(input.effectiveAt);
-    const eventId=`movement:${input.operationId}`;
-    if(input.wasteReason!==undefined&&(input.action!=='waste'||!['end_of_day','spilled','spoiled','preparation_error','other'].includes(input.wasteReason)))throw new InventoryManagementError('invalid_input','Select a valid waste reason.');
-    const storedMovement=()=>this.db.prepare(`SELECT product_id,action,entered_amount,entered_unit_id,balance_version_before,effective_at,actor,note,waste_reason
-      FROM inventory_events_exact WHERE company_id=? AND id=?`).bind(input.companyId,eventId).first<StoredMovementRow>();
-    const verifyMovement=(stored:StoredMovementRow)=>{
-      if(stored.product_id!==input.productId||stored.action!==input.action||stored.entered_amount!==input.amount||stored.entered_unit_id!==input.unitId||
-          stored.balance_version_before!==input.expectedVersion||stored.effective_at!==effectiveAt||stored.actor!==input.actor||stored.note!==input.note.trim()||stored.waste_reason!==(input.wasteReason??null)){
-        throw new InventoryManagementError('operation_conflict','That movement operation identity was already used for different input.');
+  async recordMovement(
+    input: InventoryMovementInput,
+    prefix: D1PreparedStatement[] = [],
+    canonical = false,
+  ) {
+    await this.product(input.companyId, input.productId);
+    if (
+      !validId(input.operationId) ||
+      !validId(input.actor) ||
+      !Number.isSafeInteger(input.expectedVersion) ||
+      input.expectedVersion < 0
+    )
+      throw new InventoryManagementError(
+        'invalid_input',
+        'Operation identity, actor, and expected version are required.',
+      );
+    const effectiveAt = this.normalizedTime(input.effectiveAt);
+    const eventId = `movement:${input.operationId}`;
+    if (
+      input.wasteReason !== undefined &&
+      (input.action !== 'waste' ||
+        !['end_of_day', 'spilled', 'spoiled', 'preparation_error', 'other'].includes(
+          input.wasteReason,
+        ))
+    )
+      throw new InventoryManagementError('invalid_input', 'Select a valid waste reason.');
+    const storedMovement = () =>
+      this.db
+        .prepare(
+          `SELECT product_id,action,entered_amount,entered_unit_id,balance_version_before,effective_at,actor,note,waste_reason
+      FROM inventory_events_exact WHERE company_id=? AND id=?`,
+        )
+        .bind(input.companyId, eventId)
+        .first<StoredMovementRow>();
+    const verifyMovement = (stored: StoredMovementRow) => {
+      if (
+        stored.product_id !== input.productId ||
+        stored.action !== input.action ||
+        stored.entered_amount !== input.amount ||
+        stored.entered_unit_id !== input.unitId ||
+        stored.balance_version_before !== input.expectedVersion ||
+        stored.effective_at !== effectiveAt ||
+        stored.actor !== input.actor ||
+        stored.note !== input.note.trim() ||
+        stored.waste_reason !== (input.wasteReason ?? null)
+      ) {
+        throw new InventoryManagementError(
+          'operation_conflict',
+          'That movement operation identity was already used for different input.',
+        );
       }
     };
-    const stored=await storedMovement();
-    if(stored){
+    const stored = await storedMovement();
+    if (stored) {
       verifyMovement(stored);
-      const replay=await this.balance(input.companyId,input.productId);
-      if(!replay)throw new InventoryManagementError('corrupt_store','Updated inventory is missing.');
+      const replay = await this.balance(input.companyId, input.productId);
+      if (!replay)
+        throw new InventoryManagementError('corrupt_store', 'Updated inventory is missing.');
       return this.record(replay);
     }
     // Confirm an existing receipt before applying today's unit conversion:
     // a later custom-unit revision must not invalidate an earlier saved entry.
-    const {row,unit,at,legacy}=await this.movementState(input,canonical);
-    const amount=toCanonical(input.amount,unit,{companyId:input.companyId,productId:input.productId});if(input.action!=='incoming')positive(amount,'Movement quantity must be positive.');
-    const onHand=readCanonical(exact(row.dimension,row.on_hand_minor)),incoming=readCanonical(exact(row.dimension,row.incoming_minor)),used=readCanonical(exact(row.dimension,row.estimated_used_minor));
-    if(row.latest_count_effective_at&&Date.parse(effectiveAt)<=Date.parse(row.latest_count_effective_at))throw new InventoryManagementError('before_count_cutoff','Stock movements must occur after the latest physical count.');
-    let nextOnHand=onHand,nextIncoming=incoming,nextUsed=used,delta=ZERO;
+    const { row, unit, at, legacy } = await this.movementState(input, canonical);
+    const amount = toCanonical(input.amount, unit, {
+      companyId: input.companyId,
+      productId: input.productId,
+    });
+    if (input.action !== 'incoming') positive(amount, 'Movement quantity must be positive.');
+    const onHand = readCanonical(exact(row.dimension, row.on_hand_minor)),
+      incoming = readCanonical(exact(row.dimension, row.incoming_minor)),
+      used = readCanonical(exact(row.dimension, row.estimated_used_minor));
+    if (
+      row.latest_count_effective_at &&
+      Date.parse(effectiveAt) <= Date.parse(row.latest_count_effective_at)
+    )
+      throw new InventoryManagementError(
+        'before_count_cutoff',
+        'Stock movements must occur after the latest physical count.',
+      );
+    let nextOnHand = onHand,
+      nextIncoming = incoming,
+      nextUsed = used,
+      delta = ZERO;
     // Confirmed supplier orders keep their incoming until their own receiving; manual edits stay above it.
-    const owed=input.action==='receive'||input.action==='incoming'?await this.orderIncomingOwed(input.companyId,input.productId):ZERO;
-    if(input.action==='receive'){nextOnHand+=readCanonical(amount);delta=readCanonical(amount);if(input.fromIncoming){const reduced=nextIncoming>readCanonical(amount)?nextIncoming-readCanonical(amount):ZERO;nextIncoming=reduced>owed?reduced:owed<nextIncoming?owed:nextIncoming;}}
-    if(input.action==='use'||input.action==='waste'){if(readCanonical(amount)>nextOnHand)throw new InventoryManagementError('invalid_quantity','Quantity exceeds recorded stock. Record a fresh count first.');nextOnHand-=readCanonical(amount);nextUsed+=readCanonical(amount);delta=-readCanonical(amount);}
-    if(input.action==='incoming'){nextIncoming=readCanonical(amount);delta=nextIncoming-incoming;
-      if(nextIncoming<owed){const unit=await this.unit(input.companyId,input.productId,row.stock_unit_id,row.stock_unit_version);
-        throw new InventoryManagementError('invalid_quantity',`Expected incoming cannot be less than ${legacyNumber(exact(row.dimension,String(owed)),unit)} ${unit.label} still due from confirmed supplier orders.`);}}
-    const stockUnit=await this.unit(input.companyId,input.productId,row.stock_unit_id,row.stock_unit_version);
-    const legacyRecord=this.legacyRecord(legacy,input.productId,at);legacyRecord.onHand=legacyNumber(exact(row.dimension,String(nextOnHand)),stockUnit);legacyRecord.incoming=legacyNumber(exact(row.dimension,String(nextIncoming)),stockUnit);legacyRecord.estimatedUsed=legacyNumber(exact(row.dimension,String(nextUsed)),stockUnit);legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
-    await this.db.batch([...prefix,
-      this.db.prepare(`INSERT OR IGNORE INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
-        SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,? WHERE EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=?)`).bind(input.companyId,eventId,input.productId,row.config_id,input.action,row.dimension,String(delta),input.amount,input.unitId,input.expectedVersion,input.expectedVersion+1,effectiveAt,at,input.actor,input.note.trim(),input.wasteReason??null,input.companyId,input.productId,input.expectedVersion),
-      this.db.prepare(`UPDATE inventory_balances_exact SET on_hand_minor=?,incoming_minor=?,estimated_used_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1`).bind(String(nextOnHand),String(nextIncoming),String(nextUsed),input.expectedVersion+1,at,input.companyId,input.productId,input.expectedVersion),
-      legacy?this.db.prepare('UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1').bind(JSON.stringify(legacyRecord),legacyRecord.version,input.companyId,input.productId,legacy.version):this.db.prepare('INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE changes()=1').bind(input.companyId,input.productId,JSON.stringify(legacyRecord),legacyRecord.version),
+    const owed =
+      input.action === 'receive' || input.action === 'incoming'
+        ? await this.orderIncomingOwed(input.companyId, input.productId)
+        : ZERO;
+    if (input.action === 'receive') {
+      nextOnHand += readCanonical(amount);
+      delta = readCanonical(amount);
+      if (input.fromIncoming) {
+        const reduced =
+          nextIncoming > readCanonical(amount) ? nextIncoming - readCanonical(amount) : ZERO;
+        nextIncoming = reduced > owed ? reduced : owed < nextIncoming ? owed : nextIncoming;
+      }
+    }
+    if (input.action === 'use' || input.action === 'waste') {
+      if (readCanonical(amount) > nextOnHand)
+        throw new InventoryManagementError(
+          'invalid_quantity',
+          'Quantity exceeds recorded stock. Record a fresh count first.',
+        );
+      nextOnHand -= readCanonical(amount);
+      nextUsed += readCanonical(amount);
+      delta = -readCanonical(amount);
+    }
+    if (input.action === 'incoming') {
+      nextIncoming = readCanonical(amount);
+      delta = nextIncoming - incoming;
+      if (nextIncoming < owed) {
+        const unit = await this.unit(
+          input.companyId,
+          input.productId,
+          row.stock_unit_id,
+          row.stock_unit_version,
+        );
+        throw new InventoryManagementError(
+          'invalid_quantity',
+          `Expected incoming cannot be less than ${legacyNumber(exact(row.dimension, String(owed)), unit)} ${unit.label} still due from confirmed supplier orders.`,
+        );
+      }
+    }
+    const stockUnit = await this.unit(
+      input.companyId,
+      input.productId,
+      row.stock_unit_id,
+      row.stock_unit_version,
+    );
+    const legacyRecord = this.legacyRecord(legacy, input.productId, at);
+    legacyRecord.onHand = legacyNumber(exact(row.dimension, String(nextOnHand)), stockUnit);
+    legacyRecord.incoming = legacyNumber(exact(row.dimension, String(nextIncoming)), stockUnit);
+    legacyRecord.estimatedUsed = legacyNumber(exact(row.dimension, String(nextUsed)), stockUnit);
+    legacyRecord.updated = at;
+    legacyRecord.version = (legacy?.version ?? 0) + 1;
+    // changes() links these statements; keep the batch ordered and atomic.
+    await this.db.batch([
+      ...prefix,
+      this.db
+        .prepare(
+          `INSERT OR IGNORE INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
+        SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,? WHERE EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=?)`,
+        )
+        .bind(
+          input.companyId,
+          eventId,
+          input.productId,
+          row.config_id,
+          input.action,
+          row.dimension,
+          String(delta),
+          input.amount,
+          input.unitId,
+          input.expectedVersion,
+          input.expectedVersion + 1,
+          effectiveAt,
+          at,
+          input.actor,
+          input.note.trim(),
+          input.wasteReason ?? null,
+          input.companyId,
+          input.productId,
+          input.expectedVersion,
+        ),
+      this.db
+        .prepare(
+          `UPDATE inventory_balances_exact SET on_hand_minor=?,incoming_minor=?,estimated_used_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1`,
+        )
+        .bind(
+          String(nextOnHand),
+          String(nextIncoming),
+          String(nextUsed),
+          input.expectedVersion + 1,
+          at,
+          input.companyId,
+          input.productId,
+          input.expectedVersion,
+        ),
+      legacy
+        ? this.db
+            .prepare(
+              'UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1',
+            )
+            .bind(
+              JSON.stringify(legacyRecord),
+              legacyRecord.version,
+              input.companyId,
+              input.productId,
+              legacy.version,
+            )
+        : this.db
+            .prepare(
+              'INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE changes()=1',
+            )
+            .bind(
+              input.companyId,
+              input.productId,
+              JSON.stringify(legacyRecord),
+              legacyRecord.version,
+            ),
     ]);
     // D1 acknowledgments may include more than the direct INSERT changes. Read
     // the committed receipt and verify its entire payload, including race losers.
-    const committed=await storedMovement();
-    if(!committed)throw new InventoryManagementError('concurrent_update','Inventory changed. Refresh and retry.');
+    const committed = await storedMovement();
+    if (!committed)
+      throw new InventoryManagementError(
+        'concurrent_update',
+        'Inventory changed. Refresh and retry.',
+      );
     verifyMovement(committed);
-    const updated=await this.balance(input.companyId,input.productId);if(!updated)throw new InventoryManagementError('corrupt_store','Updated inventory is missing.');return this.record(updated);
+    const updated = await this.balance(input.companyId, input.productId);
+    if (!updated)
+      throw new InventoryManagementError('corrupt_store', 'Updated inventory is missing.');
+    return this.record(updated);
   }
 
-  async recordCount(input: InventoryCountInput,prefix:D1PreparedStatement[]=[],canonical=false) {
-    await this.product(input.companyId,input.productId);
-    if(!validId(input.operationId)||!validId(input.actor)||!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<0)throw new InventoryManagementError('invalid_input','Operation identity, actor, and expected version are required.');
-    const effectiveAt=this.normalizedTime(input.effectiveAt);
-    const id=`count:${input.operationId}`;
-    const storedCount=()=>this.db.prepare(`SELECT r.product_id,r.entered_amount,r.entered_unit_id,r.effective_at,r.actor,r.note,e.balance_version_before
+  async recordCount(
+    input: InventoryCountInput,
+    prefix: D1PreparedStatement[] = [],
+    canonical = false,
+  ) {
+    await this.product(input.companyId, input.productId);
+    if (
+      !validId(input.operationId) ||
+      !validId(input.actor) ||
+      !Number.isSafeInteger(input.expectedVersion) ||
+      input.expectedVersion < 0
+    )
+      throw new InventoryManagementError(
+        'invalid_input',
+        'Operation identity, actor, and expected version are required.',
+      );
+    const effectiveAt = this.normalizedTime(input.effectiveAt);
+    const id = `count:${input.operationId}`;
+    const storedCount = () =>
+      this.db
+        .prepare(
+          `SELECT r.product_id,r.entered_amount,r.entered_unit_id,r.effective_at,r.actor,r.note,e.balance_version_before
       FROM inventory_reconciliations r LEFT JOIN inventory_events_exact e
       ON e.company_id=r.company_id AND e.id=r.id AND e.product_id=r.product_id AND e.action='count'
-      WHERE r.company_id=? AND r.id=?`).bind(input.companyId,id).first<StoredCountRow>();
-    const verifyCount=(stored:StoredCountRow)=>{
-      if(stored.balance_version_before===null)throw new InventoryManagementError('corrupt_store','The saved count is missing its exact event receipt.');
-      if(stored.product_id!==input.productId||stored.entered_amount!==input.amount||stored.entered_unit_id!==input.unitId||
-          stored.balance_version_before!==input.expectedVersion||stored.effective_at!==effectiveAt||stored.actor!==input.actor||stored.note!==input.note.trim()){
-        throw new InventoryManagementError('operation_conflict','That count operation identity was already used for different input.');
+      WHERE r.company_id=? AND r.id=?`,
+        )
+        .bind(input.companyId, id)
+        .first<StoredCountRow>();
+    const verifyCount = (stored: StoredCountRow) => {
+      if (stored.balance_version_before === null)
+        throw new InventoryManagementError(
+          'corrupt_store',
+          'The saved count is missing its exact event receipt.',
+        );
+      if (
+        stored.product_id !== input.productId ||
+        stored.entered_amount !== input.amount ||
+        stored.entered_unit_id !== input.unitId ||
+        stored.balance_version_before !== input.expectedVersion ||
+        stored.effective_at !== effectiveAt ||
+        stored.actor !== input.actor ||
+        stored.note !== input.note.trim()
+      ) {
+        throw new InventoryManagementError(
+          'operation_conflict',
+          'That count operation identity was already used for different input.',
+        );
       }
     };
     // Match historical entered values before applying today's custom conversion.
-    const stored=await storedCount();
-    if(stored){
+    const stored = await storedCount();
+    if (stored) {
       verifyCount(stored);
-      const replay=await this.balance(input.companyId,input.productId);
-      if(!replay)throw new InventoryManagementError('corrupt_store','Updated inventory is missing.');
+      const replay = await this.balance(input.companyId, input.productId);
+      if (!replay)
+        throw new InventoryManagementError('corrupt_store', 'Updated inventory is missing.');
       return this.record(replay);
     }
-    const {row,unit,at,legacy}=await this.movementState(input,canonical);
-    const measured=toCanonical(input.amount,unit,{companyId:input.companyId,productId:input.productId});if(readCanonical(measured)<ZERO)throw new InventoryManagementError('invalid_quantity','Physical counts cannot be negative.');
-    const latestEvent=await this.db.prepare('SELECT effective_at FROM inventory_events_exact WHERE company_id=? AND product_id=? ORDER BY effective_at DESC LIMIT 1').bind(input.companyId,input.productId).first<{effective_at:string}>();
-    if((row.latest_count_effective_at&&Date.parse(effectiveAt)<=Date.parse(row.latest_count_effective_at))||(latestEvent&&Date.parse(effectiveAt)<=Date.parse(latestEvent.effective_at)))throw new InventoryManagementError('invalid_time','A physical count must be later than every existing count and stock movement.');
-    const before=exact(row.dimension,row.on_hand_minor),opening=row.latest_count_effective_at===null,variance=readCanonical(measured)-readCanonical(before);
-    const stockUnit=await this.unit(input.companyId,input.productId,row.stock_unit_id,row.stock_unit_version);
-    const legacyRecord=this.legacyRecord(legacy,input.productId,at);legacyRecord.onHand=legacyNumber(measured,stockUnit);legacyRecord.estimatedUsed=0;legacyRecord.lastCount=effectiveAt;legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
-    await this.db.batch([...prefix,
-      this.db.prepare(`INSERT OR IGNORE INTO inventory_reconciliations(company_id,id,product_id,config_id,dimension,measured_minor,entered_amount,entered_unit_id,legacy_unit_label,estimate_before_minor,variance_minor,effective_at,recorded_at,actor,note,opening)
-        SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=?)`).bind(input.companyId,id,input.productId,row.config_id,row.dimension,measured.minor,input.amount,input.unitId,null,opening?null:before.minor,opening?null:String(variance),effectiveAt,at,input.actor,input.note.trim(),opening?1:0,input.companyId,input.productId,input.expectedVersion),
-      this.db.prepare(`INSERT OR IGNORE INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key)
-        SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL WHERE changes()=1`).bind(input.companyId,id,input.productId,row.config_id,'count',row.dimension,opening?measured.minor:String(variance),input.amount,input.unitId,input.expectedVersion,input.expectedVersion+1,effectiveAt,at,input.actor,input.note.trim()),
-      this.db.prepare(`UPDATE inventory_balances_exact SET on_hand_minor=?,estimated_used_minor='0',version=?,latest_count_effective_at=?,updated_at=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1`).bind(measured.minor,input.expectedVersion+1,effectiveAt,at,input.companyId,input.productId,input.expectedVersion),
-      legacy?this.db.prepare('UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1').bind(JSON.stringify(legacyRecord),legacyRecord.version,input.companyId,input.productId,legacy.version):this.db.prepare('INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE changes()=1').bind(input.companyId,input.productId,JSON.stringify(legacyRecord),legacyRecord.version),
+    const { row, unit, at, legacy } = await this.movementState(input, canonical);
+    const measured = toCanonical(input.amount, unit, {
+      companyId: input.companyId,
+      productId: input.productId,
+    });
+    if (readCanonical(measured) < ZERO)
+      throw new InventoryManagementError('invalid_quantity', 'Physical counts cannot be negative.');
+    const latestEvent = await this.db
+      .prepare(
+        'SELECT effective_at FROM inventory_events_exact WHERE company_id=? AND product_id=? ORDER BY effective_at DESC LIMIT 1',
+      )
+      .bind(input.companyId, input.productId)
+      .first<{ effective_at: string }>();
+    if (
+      (row.latest_count_effective_at &&
+        Date.parse(effectiveAt) <= Date.parse(row.latest_count_effective_at)) ||
+      (latestEvent && Date.parse(effectiveAt) <= Date.parse(latestEvent.effective_at))
+    )
+      throw new InventoryManagementError(
+        'invalid_time',
+        'A physical count must be later than every existing count and stock movement.',
+      );
+    const before = exact(row.dimension, row.on_hand_minor),
+      opening = row.latest_count_effective_at === null,
+      variance = readCanonical(measured) - readCanonical(before);
+    const stockUnit = await this.unit(
+      input.companyId,
+      input.productId,
+      row.stock_unit_id,
+      row.stock_unit_version,
+    );
+    const legacyRecord = this.legacyRecord(legacy, input.productId, at);
+    legacyRecord.onHand = legacyNumber(measured, stockUnit);
+    legacyRecord.estimatedUsed = 0;
+    legacyRecord.lastCount = effectiveAt;
+    legacyRecord.updated = at;
+    legacyRecord.version = (legacy?.version ?? 0) + 1;
+    // changes() links these statements; keep the batch ordered and atomic.
+    await this.db.batch([
+      ...prefix,
+      this.db
+        .prepare(
+          `INSERT OR IGNORE INTO inventory_reconciliations(company_id,id,product_id,config_id,dimension,measured_minor,entered_amount,entered_unit_id,legacy_unit_label,estimate_before_minor,variance_minor,effective_at,recorded_at,actor,note,opening)
+        SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=?)`,
+        )
+        .bind(
+          input.companyId,
+          id,
+          input.productId,
+          row.config_id,
+          row.dimension,
+          measured.minor,
+          input.amount,
+          input.unitId,
+          null,
+          opening ? null : before.minor,
+          opening ? null : String(variance),
+          effectiveAt,
+          at,
+          input.actor,
+          input.note.trim(),
+          opening ? 1 : 0,
+          input.companyId,
+          input.productId,
+          input.expectedVersion,
+        ),
+      this.db
+        .prepare(
+          `INSERT OR IGNORE INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key)
+        SELECT ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL WHERE changes()=1`,
+        )
+        .bind(
+          input.companyId,
+          id,
+          input.productId,
+          row.config_id,
+          'count',
+          row.dimension,
+          opening ? measured.minor : String(variance),
+          input.amount,
+          input.unitId,
+          input.expectedVersion,
+          input.expectedVersion + 1,
+          effectiveAt,
+          at,
+          input.actor,
+          input.note.trim(),
+        ),
+      this.db
+        .prepare(
+          `UPDATE inventory_balances_exact SET on_hand_minor=?,estimated_used_minor='0',version=?,latest_count_effective_at=?,updated_at=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1`,
+        )
+        .bind(
+          measured.minor,
+          input.expectedVersion + 1,
+          effectiveAt,
+          at,
+          input.companyId,
+          input.productId,
+          input.expectedVersion,
+        ),
+      legacy
+        ? this.db
+            .prepare(
+              'UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=? AND changes()=1',
+            )
+            .bind(
+              JSON.stringify(legacyRecord),
+              legacyRecord.version,
+              input.companyId,
+              input.productId,
+              legacy.version,
+            )
+        : this.db
+            .prepare(
+              'INSERT INTO inventory(company_id,product_id,data,version) SELECT ?,?,?,? WHERE changes()=1',
+            )
+            .bind(
+              input.companyId,
+              input.productId,
+              JSON.stringify(legacyRecord),
+              legacyRecord.version,
+            ),
     ]);
-    const committed=await storedCount();
-    if(!committed)throw new InventoryManagementError('concurrent_update','Inventory changed. Refresh and retry.');
+    const committed = await storedCount();
+    if (!committed)
+      throw new InventoryManagementError(
+        'concurrent_update',
+        'Inventory changed. Refresh and retry.',
+      );
     verifyCount(committed);
-    const updated=await this.balance(input.companyId,input.productId);if(!updated)throw new InventoryManagementError('corrupt_store','Updated inventory is missing.');return this.record(updated);
+    const updated = await this.balance(input.companyId, input.productId);
+    if (!updated)
+      throw new InventoryManagementError('corrupt_store', 'Updated inventory is missing.');
+    return this.record(updated);
   }
 
-  async recipeAmounts(companyId:string,values:RecipeAmountInput[],signed=false){
-    if(!values.length||values.length>50||new Set(values.map(v=>v.productId)).size!==values.length)throw new InventoryManagementError('invalid_recipe','Recipes require one entry per ingredient.');
-    const result=[];
-    for(const value of values){
-      await this.product(companyId,value.productId);
-      const balance=await this.balance(companyId,value.productId);
-      if(!balance)throw new InventoryManagementError('unit_unclassified','Configure this ingredient and its opening count first.');
-      let unit:UnitDefinition;
-      try{unit=await this.unit(companyId,value.productId,value.unitId);}
-      catch(error){
-        if(!(error instanceof InventoryManagementError)||error.code!=='unit_unclassified')throw error;
-        if(await this.db.prepare('SELECT 1 AS found FROM product_unit_versions WHERE company_id=? AND product_id=? AND unit_id=?').bind(companyId,value.productId,value.unitId).first())throw error;
+  async recipeAmounts(companyId: string, values: RecipeAmountInput[], signed = false) {
+    if (
+      !values.length ||
+      values.length > 50 ||
+      new Set(values.map((v) => v.productId)).size !== values.length
+    )
+      throw new InventoryManagementError(
+        'invalid_recipe',
+        'Recipes require one entry per ingredient.',
+      );
+    const result = [];
+    for (const value of values) {
+      await this.product(companyId, value.productId);
+      const balance = await this.balance(companyId, value.productId);
+      if (!balance)
+        throw new InventoryManagementError(
+          'unit_unclassified',
+          'Configure this ingredient and its opening count first.',
+        );
+      let unit: UnitDefinition;
+      try {
+        unit = await this.unit(companyId, value.productId, value.unitId);
+      } catch (error) {
+        if (!(error instanceof InventoryManagementError) || error.code !== 'unit_unclassified')
+          throw error;
+        if (
+          await this.db
+            .prepare(
+              'SELECT 1 AS found FROM product_unit_versions WHERE company_id=? AND product_id=? AND unit_id=?',
+            )
+            .bind(companyId, value.productId, value.unitId)
+            .first()
+        )
+          throw error;
         // Stable curated units can express a copied historical quantity without
         // reinterpreting a custom unit. Persist their definitions with the draft.
-        unit=curatedUnit(value.unitId);
+        unit = curatedUnit(value.unitId);
       }
-      if(unit.kind==='custom'&&CURATED_UNIT_IDS.some(id=>id===unit.id))throw new InventoryManagementError('unit_incompatible','This custom unit uses a standard unit ID. Give it a distinct ID in stock setup before using it in a new rule.');
-      if(unit.dimension!==balance.dimension)throw new InventoryManagementError('unit_incompatible','Choose a unit compatible with this ingredient.');
-      const quantity=toCanonical(value.amount,unit,{companyId,productId:value.productId},{signed});
-      if(!signed&&readCanonical(quantity)<=ZERO)throw new InventoryManagementError('invalid_quantity','Recipe quantities must be positive.');
-      result.push({...value,unit,quantity});
+      if (unit.kind === 'custom' && CURATED_UNIT_IDS.some((id) => id === unit.id))
+        throw new InventoryManagementError(
+          'unit_incompatible',
+          'This custom unit uses a standard unit ID. Give it a distinct ID in stock setup before using it in a new rule.',
+        );
+      if (unit.dimension !== balance.dimension)
+        throw new InventoryManagementError(
+          'unit_incompatible',
+          'Choose a unit compatible with this ingredient.',
+        );
+      const quantity = toCanonical(
+        value.amount,
+        unit,
+        { companyId, productId: value.productId },
+        { signed },
+      );
+      if (!signed && readCanonical(quantity) <= ZERO)
+        throw new InventoryManagementError(
+          'invalid_quantity',
+          'Recipe quantities must be positive.',
+        );
+      result.push({ ...value, unit, quantity });
     }
     return result;
   }
 
-  recipeUnitStatement(companyId:string,value:{productId:string;unit:UnitDefinition},actor:string,at:string){
-    const unit=value.unit;
-    return this.db.prepare(`INSERT OR IGNORE INTO product_unit_versions(company_id,product_id,unit_id,version,kind,dimension,label,numerator,denominator,created_by,created_at)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?)`).bind(companyId,value.productId,unit.id,unit.version,unit.kind,unit.dimension,unit.label,unit.numerator,unit.denominator,actor,at);
+  recipeUnitStatement(
+    companyId: string,
+    value: { productId: string; unit: UnitDefinition },
+    actor: string,
+    at: string,
+  ) {
+    const unit = value.unit;
+    return this.db
+      .prepare(
+        `INSERT OR IGNORE INTO product_unit_versions(company_id,product_id,unit_id,version,kind,dimension,label,numerator,denominator,created_by,created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      )
+      .bind(
+        companyId,
+        value.productId,
+        unit.id,
+        unit.version,
+        unit.kind,
+        unit.dimension,
+        unit.label,
+        unit.numerator,
+        unit.denominator,
+        actor,
+        at,
+      );
   }
 
-  private async requireBuilderForChoices(companyId:string,recipeId:string,modifierId?:string){
-    const row=await this.db.prepare("SELECT c.groups_json FROM recipe_version_choices c JOIN recipe_versions r ON r.company_id=c.company_id AND r.recipe_id=c.recipe_id AND r.id=c.version_id WHERE r.company_id=? AND r.recipe_id=? AND r.status='active'").bind(companyId,recipeId).first<{groups_json:string}>();
-    const groups=row?JSON.parse(row.groups_json) as Array<{modifierIds:string[]}>:[];
-    if(groups.length&&(!modifierId||groups.some(g=>g.modifierIds.includes(modifierId))))throw new InventoryManagementError('invalid_recipe','Use Edit recipe to save required choices and their ingredient rules together.');
+  private async requireBuilderForChoices(companyId: string, recipeId: string, modifierId?: string) {
+    const row = await this.db
+      .prepare(
+        "SELECT c.groups_json FROM recipe_version_choices c JOIN recipe_versions r ON r.company_id=c.company_id AND r.recipe_id=c.recipe_id AND r.id=c.version_id WHERE r.company_id=? AND r.recipe_id=? AND r.status='active'",
+      )
+      .bind(companyId, recipeId)
+      .first<{ groups_json: string }>();
+    const groups = row ? (JSON.parse(row.groups_json) as Array<{ modifierIds: string[] }>) : [];
+    if (groups.length && (!modifierId || groups.some((g) => g.modifierIds.includes(modifierId))))
+      throw new InventoryManagementError(
+        'invalid_recipe',
+        'Use Edit recipe to save required choices and their ingredient rules together.',
+      );
   }
 
   async saveRecipeDraft(input: RecipeDraftInput): Promise<RecipeVersionView> {
-    await this.requireBuilderForChoices(input.companyId,input.recipeId);
-    if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.draftId)||!validId(input.actor)||!input.name.trim())throw new InventoryManagementError('invalid_recipe','Recipe identity, name, and actor are required.');
-    const amounts=await this.recipeAmounts(input.companyId,input.ingredients),at=this.now();
-    const existing=await this.db.prepare('SELECT status FROM recipe_versions WHERE company_id=? AND recipe_id=? AND id=?').bind(input.companyId,input.recipeId,input.draftId).first<{status:string}>();
-    const nextVersion=Number((await this.db.prepare('SELECT MAX(version) AS version FROM recipe_versions WHERE company_id=? AND recipe_id=?').bind(input.companyId,input.recipeId).first<{version:number|null}>())?.version??0)+1;
-    const statements:D1PreparedStatement[]=[this.db.prepare('INSERT OR IGNORE INTO recipe_lineages(company_id,id,created_by,created_at) VALUES (?,?,?,?)').bind(input.companyId,input.recipeId,input.actor,at)];
-    if(existing){if(existing.status!=='draft')throw new InventoryManagementError('immutable_version','Activated recipe versions cannot be edited.');statements.push(this.db.prepare('DELETE FROM recipe_version_ingredients WHERE company_id=? AND recipe_id=? AND version_id=?').bind(input.companyId,input.recipeId,input.draftId),this.db.prepare("UPDATE recipe_versions SET name=? WHERE company_id=? AND recipe_id=? AND id=? AND status='draft'").bind(input.name.trim(),input.companyId,input.recipeId,input.draftId));}
-    else statements.push(this.db.prepare(`INSERT INTO recipe_versions(company_id,recipe_id,id,version,status,name,active_from,active_to,legacy,created_by,created_at) VALUES (?,?,?,?,'draft',?,NULL,NULL,0,?,?)`).bind(input.companyId,input.recipeId,input.draftId,nextVersion,input.name.trim(),input.actor,at));
-    amounts.forEach((value,index)=>statements.push(this.recipeUnitStatement(input.companyId,value,input.actor,at),this.db.prepare(`INSERT INTO recipe_version_ingredients(company_id,recipe_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id,legacy_unit_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)`).bind(input.companyId,input.recipeId,input.draftId,index,value.productId,value.unit.id,value.unit.version,value.quantity.dimension,value.quantity.minor,value.amount,value.unitId)));
-    await this.db.batch(statements);return this.requiredRecipe(input.companyId,input.recipeId,input.draftId);
+    await this.requireBuilderForChoices(input.companyId, input.recipeId);
+    if (
+      !validId(input.companyId) ||
+      !validId(input.recipeId) ||
+      !validId(input.draftId) ||
+      !validId(input.actor) ||
+      !input.name.trim()
+    )
+      throw new InventoryManagementError(
+        'invalid_recipe',
+        'Recipe identity, name, and actor are required.',
+      );
+    const amounts = await this.recipeAmounts(input.companyId, input.ingredients),
+      at = this.now();
+    const existing = await this.db
+      .prepare('SELECT status FROM recipe_versions WHERE company_id=? AND recipe_id=? AND id=?')
+      .bind(input.companyId, input.recipeId, input.draftId)
+      .first<{ status: string }>();
+    const nextVersion =
+      Number(
+        (
+          await this.db
+            .prepare(
+              'SELECT MAX(version) AS version FROM recipe_versions WHERE company_id=? AND recipe_id=?',
+            )
+            .bind(input.companyId, input.recipeId)
+            .first<{ version: number | null }>()
+        )?.version ?? 0,
+      ) + 1;
+    const statements: D1PreparedStatement[] = [
+      this.db
+        .prepare(
+          'INSERT OR IGNORE INTO recipe_lineages(company_id,id,created_by,created_at) VALUES (?,?,?,?)',
+        )
+        .bind(input.companyId, input.recipeId, input.actor, at),
+    ];
+    if (existing) {
+      if (existing.status !== 'draft')
+        throw new InventoryManagementError(
+          'immutable_version',
+          'Activated recipe versions cannot be edited.',
+        );
+      statements.push(
+        this.db
+          .prepare(
+            'DELETE FROM recipe_version_ingredients WHERE company_id=? AND recipe_id=? AND version_id=?',
+          )
+          .bind(input.companyId, input.recipeId, input.draftId),
+        this.db
+          .prepare(
+            "UPDATE recipe_versions SET name=? WHERE company_id=? AND recipe_id=? AND id=? AND status='draft'",
+          )
+          .bind(input.name.trim(), input.companyId, input.recipeId, input.draftId),
+      );
+    } else
+      statements.push(
+        this.db
+          .prepare(
+            `INSERT INTO recipe_versions(company_id,recipe_id,id,version,status,name,active_from,active_to,legacy,created_by,created_at) VALUES (?,?,?,?,'draft',?,NULL,NULL,0,?,?)`,
+          )
+          .bind(
+            input.companyId,
+            input.recipeId,
+            input.draftId,
+            nextVersion,
+            input.name.trim(),
+            input.actor,
+            at,
+          ),
+      );
+    amounts.forEach((value, index) =>
+      statements.push(
+        this.recipeUnitStatement(input.companyId, value, input.actor, at),
+        this.db
+          .prepare(
+            `INSERT INTO recipe_version_ingredients(company_id,recipe_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id,legacy_unit_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)`,
+          )
+          .bind(
+            input.companyId,
+            input.recipeId,
+            input.draftId,
+            index,
+            value.productId,
+            value.unit.id,
+            value.unit.version,
+            value.quantity.dimension,
+            value.quantity.minor,
+            value.amount,
+            value.unitId,
+          ),
+      ),
+    );
+    await this.db.batch(statements);
+    return this.requiredRecipe(input.companyId, input.recipeId, input.draftId);
   }
 
   async activateRecipe(input: ActivationInput) {
-    await this.requireBuilderForChoices(input.companyId,input.recipeId);
-    if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.versionId)||!validId(input.actor))throw new InventoryManagementError('invalid_recipe','Recipe identity, version, and actor are required.');
-    const at=this.now();
-    const draft=await this.requiredRecipe(input.companyId,input.recipeId,input.versionId);
-    if(draft.status==='archived')throw new InventoryManagementError('immutable_version','Archived recipe versions cannot be activated.');
-    const current=await this.db.prepare("SELECT id,legacy FROM recipe_versions WHERE company_id=? AND recipe_id=? AND status='active'").bind(input.companyId,input.recipeId).first<{id:string;legacy:number}>();
-    const expected=input.expectedActiveVersionId??(current?.legacy===1?current.id:null);
-    const legacy={id:draft.recipeId,name:draft.name,ingredients:draft.ingredients.map(i=>({productId:i.productId,quantity:Number(i.amount),unit:i.unitId}))};
-    const statements:D1PreparedStatement[]=[];
-    if(expected)statements.push(this.db.prepare("UPDATE recipe_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND id=? AND status='active'").bind(at,input.companyId,input.recipeId,expected));
-    statements.push(expected
-      ? this.db.prepare(`UPDATE recipe_versions SET status='active',active_from=?,active_to=NULL WHERE company_id=? AND recipe_id=? AND id=? AND status='draft'
+    await this.requireBuilderForChoices(input.companyId, input.recipeId);
+    if (
+      !validId(input.companyId) ||
+      !validId(input.recipeId) ||
+      !validId(input.versionId) ||
+      !validId(input.actor)
+    )
+      throw new InventoryManagementError(
+        'invalid_recipe',
+        'Recipe identity, version, and actor are required.',
+      );
+    const at = this.now();
+    const draft = await this.requiredRecipe(input.companyId, input.recipeId, input.versionId);
+    if (draft.status === 'archived')
+      throw new InventoryManagementError(
+        'immutable_version',
+        'Archived recipe versions cannot be activated.',
+      );
+    const current = await this.db
+      .prepare(
+        "SELECT id,legacy FROM recipe_versions WHERE company_id=? AND recipe_id=? AND status='active'",
+      )
+      .bind(input.companyId, input.recipeId)
+      .first<{ id: string; legacy: number }>();
+    const expected = input.expectedActiveVersionId ?? (current?.legacy === 1 ? current.id : null);
+    const legacy = {
+      id: draft.recipeId,
+      name: draft.name,
+      ingredients: draft.ingredients.map((i) => ({
+        productId: i.productId,
+        quantity: Number(i.amount),
+        unit: i.unitId,
+      })),
+    };
+    const statements: D1PreparedStatement[] = [];
+    if (expected)
+      statements.push(
+        this.db
+          .prepare(
+            "UPDATE recipe_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND id=? AND status='active'",
+          )
+          .bind(at, input.companyId, input.recipeId, expected),
+      );
+    statements.push(
+      expected
+        ? this.db
+            .prepare(
+              `UPDATE recipe_versions SET status='active',active_from=?,active_to=NULL WHERE company_id=? AND recipe_id=? AND id=? AND status='draft'
           AND NOT EXISTS(SELECT 1 FROM recipe_versions WHERE company_id=? AND recipe_id=? AND status='active')
-          AND EXISTS(SELECT 1 FROM recipe_versions WHERE company_id=? AND recipe_id=? AND id=? AND status='archived' AND active_to=?)`).bind(at,input.companyId,input.recipeId,input.versionId,input.companyId,input.recipeId,input.companyId,input.recipeId,expected,at)
-      : this.db.prepare(`UPDATE recipe_versions SET status='active',active_from=?,active_to=NULL WHERE company_id=? AND recipe_id=? AND id=? AND status='draft'
-          AND NOT EXISTS(SELECT 1 FROM recipe_versions WHERE company_id=? AND recipe_id=? AND status='active')`).bind(at,input.companyId,input.recipeId,input.versionId,input.companyId,input.recipeId));
-    statements.push(this.db.prepare(`INSERT INTO recipes(company_id,id,data)
+          AND EXISTS(SELECT 1 FROM recipe_versions WHERE company_id=? AND recipe_id=? AND id=? AND status='archived' AND active_to=?)`,
+            )
+            .bind(
+              at,
+              input.companyId,
+              input.recipeId,
+              input.versionId,
+              input.companyId,
+              input.recipeId,
+              input.companyId,
+              input.recipeId,
+              expected,
+              at,
+            )
+        : this.db
+            .prepare(
+              `UPDATE recipe_versions SET status='active',active_from=?,active_to=NULL WHERE company_id=? AND recipe_id=? AND id=? AND status='draft'
+          AND NOT EXISTS(SELECT 1 FROM recipe_versions WHERE company_id=? AND recipe_id=? AND status='active')`,
+            )
+            .bind(
+              at,
+              input.companyId,
+              input.recipeId,
+              input.versionId,
+              input.companyId,
+              input.recipeId,
+            ),
+    );
+    statements.push(
+      this.db
+        .prepare(
+          `INSERT INTO recipes(company_id,id,data)
       SELECT ?,?,? WHERE EXISTS(SELECT 1 FROM recipe_versions WHERE company_id=? AND recipe_id=? AND id=? AND status='active')
-      ON CONFLICT(company_id,id) DO UPDATE SET data=excluded.data`).bind(input.companyId,input.recipeId,JSON.stringify(legacy),input.companyId,input.recipeId,input.versionId));
-    await this.db.batch(statements);const version=await this.requiredRecipe(input.companyId,input.recipeId,input.versionId);if(version.status!=='active')throw new InventoryManagementError('concurrent_update','The active recipe changed. Refresh and retry.');
+      ON CONFLICT(company_id,id) DO UPDATE SET data=excluded.data`,
+        )
+        .bind(
+          input.companyId,
+          input.recipeId,
+          JSON.stringify(legacy),
+          input.companyId,
+          input.recipeId,
+          input.versionId,
+        ),
+    );
+    await this.db.batch(statements);
+    const version = await this.requiredRecipe(input.companyId, input.recipeId, input.versionId);
+    if (version.status !== 'active')
+      throw new InventoryManagementError(
+        'concurrent_update',
+        'The active recipe changed. Refresh and retry.',
+      );
     return version;
   }
 
   async archiveRecipe(input: ArchiveInput) {
-    if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.versionId)||!validId(input.actor))throw new InventoryManagementError('invalid_recipe','Recipe identity, version, and actor are required.');
-    const at=this.now();
+    if (
+      !validId(input.companyId) ||
+      !validId(input.recipeId) ||
+      !validId(input.versionId) ||
+      !validId(input.actor)
+    )
+      throw new InventoryManagementError(
+        'invalid_recipe',
+        'Recipe identity, version, and actor are required.',
+      );
+    const at = this.now();
     await this.db.batch([
-      this.db.prepare("UPDATE recipe_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND id=? AND status='active'").bind(at,input.companyId,input.recipeId,input.versionId),
-      this.db.prepare('DELETE FROM recipes WHERE company_id=? AND id=? AND changes()=1').bind(input.companyId,input.recipeId),
+      this.db
+        .prepare(
+          "UPDATE recipe_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND id=? AND status='active'",
+        )
+        .bind(at, input.companyId, input.recipeId, input.versionId),
+      this.db
+        .prepare('DELETE FROM recipes WHERE company_id=? AND id=? AND changes()=1')
+        .bind(input.companyId, input.recipeId),
     ]);
-    const version=await this.requiredRecipe(input.companyId,input.recipeId,input.versionId);
-    if(version.status!=='archived')throw new InventoryManagementError('concurrent_update','Only the current active recipe version can be archived.');
+    const version = await this.requiredRecipe(input.companyId, input.recipeId, input.versionId);
+    if (version.status !== 'archived')
+      throw new InventoryManagementError(
+        'concurrent_update',
+        'Only the current active recipe version can be archived.',
+      );
     return version;
   }
 
   async saveModifierDraft(input: ModifierDraftInput): Promise<ModifierVersionView> {
-    await this.requireBuilderForChoices(input.companyId,input.recipeId,input.modifierId);
-    if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.modifierId)||!validId(input.draftId)||!validId(input.actor)||!input.name.trim())throw new InventoryManagementError('invalid_modifier','Modifier identity, name, and actor are required.');
-    const amounts=await this.recipeAmounts(input.companyId,input.deltas.map(v=>({...v,amount:v.signed&&!v.amount.startsWith('-')?`-${v.amount}`:v.amount})),true),at=this.now();
-    const recipe=await this.db.prepare('SELECT 1 AS found FROM recipe_lineages WHERE company_id=? AND id=?').bind(input.companyId,input.recipeId).first();if(!recipe)throw new InventoryManagementError('not_found','Recipe lineage was not found.');
-    const lineage=await this.db.prepare('SELECT name FROM recipe_modifier_lineages WHERE company_id=? AND recipe_id=? AND id=?').bind(input.companyId,input.recipeId,input.modifierId).first<{name:string}>();
-    if(lineage&&lineage.name!==input.name.trim())throw new InventoryManagementError('immutable_version','A modifier lineage name cannot change after it is created. Create a new modifier identity.');
-    const existing=await this.db.prepare('SELECT status FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=?').bind(input.companyId,input.recipeId,input.modifierId,input.draftId).first<{status:string}>();
-    const nextVersion=Number((await this.db.prepare('SELECT MAX(version) AS version FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=?').bind(input.companyId,input.recipeId,input.modifierId).first<{version:number|null}>())?.version??0)+1;
-    const statements:D1PreparedStatement[]=[this.db.prepare('INSERT OR IGNORE INTO recipe_modifier_lineages(company_id,recipe_id,id,name,created_by,created_at) VALUES (?,?,?,?,?,?)').bind(input.companyId,input.recipeId,input.modifierId,input.name.trim(),input.actor,at)];
-    if(existing){if(existing.status!=='draft')throw new InventoryManagementError('immutable_version','Activated modifier versions cannot be edited.');statements.push(this.db.prepare('DELETE FROM recipe_modifier_deltas WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=?').bind(input.companyId,input.recipeId,input.modifierId,input.draftId));}
-    else statements.push(this.db.prepare(`INSERT INTO recipe_modifier_versions(company_id,recipe_id,modifier_id,id,version,status,active_from,active_to,created_by,created_at) VALUES (?,?,?,?,?,'draft',NULL,NULL,?,?)`).bind(input.companyId,input.recipeId,input.modifierId,input.draftId,nextVersion,input.actor,at));
-    amounts.forEach((value,index)=>statements.push(this.recipeUnitStatement(input.companyId,value,input.actor,at),this.db.prepare(`INSERT INTO recipe_modifier_deltas(company_id,recipe_id,modifier_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).bind(input.companyId,input.recipeId,input.modifierId,input.draftId,index,value.productId,value.unit.id,value.unit.version,value.quantity.dimension,value.quantity.minor,value.amount,value.unitId)));
-    await this.db.batch(statements);return this.requiredModifier(input.companyId,input.recipeId,input.modifierId,input.draftId);
+    await this.requireBuilderForChoices(input.companyId, input.recipeId, input.modifierId);
+    if (
+      !validId(input.companyId) ||
+      !validId(input.recipeId) ||
+      !validId(input.modifierId) ||
+      !validId(input.draftId) ||
+      !validId(input.actor) ||
+      !input.name.trim()
+    )
+      throw new InventoryManagementError(
+        'invalid_modifier',
+        'Modifier identity, name, and actor are required.',
+      );
+    const amounts = await this.recipeAmounts(
+        input.companyId,
+        input.deltas.map((v) => ({
+          ...v,
+          amount: v.signed && !v.amount.startsWith('-') ? `-${v.amount}` : v.amount,
+        })),
+        true,
+      ),
+      at = this.now();
+    const recipe = await this.db
+      .prepare('SELECT 1 AS found FROM recipe_lineages WHERE company_id=? AND id=?')
+      .bind(input.companyId, input.recipeId)
+      .first();
+    if (!recipe) throw new InventoryManagementError('not_found', 'Recipe lineage was not found.');
+    const lineage = await this.db
+      .prepare(
+        'SELECT name FROM recipe_modifier_lineages WHERE company_id=? AND recipe_id=? AND id=?',
+      )
+      .bind(input.companyId, input.recipeId, input.modifierId)
+      .first<{ name: string }>();
+    if (lineage && lineage.name !== input.name.trim())
+      throw new InventoryManagementError(
+        'immutable_version',
+        'A modifier lineage name cannot change after it is created. Create a new modifier identity.',
+      );
+    const existing = await this.db
+      .prepare(
+        'SELECT status FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=?',
+      )
+      .bind(input.companyId, input.recipeId, input.modifierId, input.draftId)
+      .first<{ status: string }>();
+    const nextVersion =
+      Number(
+        (
+          await this.db
+            .prepare(
+              'SELECT MAX(version) AS version FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=?',
+            )
+            .bind(input.companyId, input.recipeId, input.modifierId)
+            .first<{ version: number | null }>()
+        )?.version ?? 0,
+      ) + 1;
+    const statements: D1PreparedStatement[] = [
+      this.db
+        .prepare(
+          'INSERT OR IGNORE INTO recipe_modifier_lineages(company_id,recipe_id,id,name,created_by,created_at) VALUES (?,?,?,?,?,?)',
+        )
+        .bind(
+          input.companyId,
+          input.recipeId,
+          input.modifierId,
+          input.name.trim(),
+          input.actor,
+          at,
+        ),
+    ];
+    if (existing) {
+      if (existing.status !== 'draft')
+        throw new InventoryManagementError(
+          'immutable_version',
+          'Activated modifier versions cannot be edited.',
+        );
+      statements.push(
+        this.db
+          .prepare(
+            'DELETE FROM recipe_modifier_deltas WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=?',
+          )
+          .bind(input.companyId, input.recipeId, input.modifierId, input.draftId),
+      );
+    } else
+      statements.push(
+        this.db
+          .prepare(
+            `INSERT INTO recipe_modifier_versions(company_id,recipe_id,modifier_id,id,version,status,active_from,active_to,created_by,created_at) VALUES (?,?,?,?,?,'draft',NULL,NULL,?,?)`,
+          )
+          .bind(
+            input.companyId,
+            input.recipeId,
+            input.modifierId,
+            input.draftId,
+            nextVersion,
+            input.actor,
+            at,
+          ),
+      );
+    amounts.forEach((value, index) =>
+      statements.push(
+        this.recipeUnitStatement(input.companyId, value, input.actor, at),
+        this.db
+          .prepare(
+            `INSERT INTO recipe_modifier_deltas(company_id,recipe_id,modifier_id,version_id,position,product_id,unit_id,unit_version,dimension,quantity_minor,entered_amount,entered_unit_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+          )
+          .bind(
+            input.companyId,
+            input.recipeId,
+            input.modifierId,
+            input.draftId,
+            index,
+            value.productId,
+            value.unit.id,
+            value.unit.version,
+            value.quantity.dimension,
+            value.quantity.minor,
+            value.amount,
+            value.unitId,
+          ),
+      ),
+    );
+    await this.db.batch(statements);
+    return this.requiredModifier(input.companyId, input.recipeId, input.modifierId, input.draftId);
   }
 
   async activateModifier(input: ModifierActivationInput) {
-    await this.requireBuilderForChoices(input.companyId,input.recipeId,input.modifierId);
-    if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.modifierId)||!validId(input.versionId)||!validId(input.actor))throw new InventoryManagementError('invalid_modifier','Modifier identity, version, and actor are required.');
-    const at=this.now(),statements:D1PreparedStatement[]=[];
-    const draft=await this.requiredModifier(input.companyId,input.recipeId,input.modifierId,input.versionId);
-    if(draft.status==='archived')throw new InventoryManagementError('immutable_version','Archived modifier versions cannot be activated.');
-    if(input.expectedActiveVersionId)statements.push(this.db.prepare("UPDATE recipe_modifier_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='active'").bind(at,input.companyId,input.recipeId,input.modifierId,input.expectedActiveVersionId));
-    statements.push(input.expectedActiveVersionId
-      ? this.db.prepare(`UPDATE recipe_modifier_versions SET status='active',active_from=?,active_to=NULL WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='draft'
+    await this.requireBuilderForChoices(input.companyId, input.recipeId, input.modifierId);
+    if (
+      !validId(input.companyId) ||
+      !validId(input.recipeId) ||
+      !validId(input.modifierId) ||
+      !validId(input.versionId) ||
+      !validId(input.actor)
+    )
+      throw new InventoryManagementError(
+        'invalid_modifier',
+        'Modifier identity, version, and actor are required.',
+      );
+    const at = this.now(),
+      statements: D1PreparedStatement[] = [];
+    const draft = await this.requiredModifier(
+      input.companyId,
+      input.recipeId,
+      input.modifierId,
+      input.versionId,
+    );
+    if (draft.status === 'archived')
+      throw new InventoryManagementError(
+        'immutable_version',
+        'Archived modifier versions cannot be activated.',
+      );
+    if (input.expectedActiveVersionId)
+      statements.push(
+        this.db
+          .prepare(
+            "UPDATE recipe_modifier_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='active'",
+          )
+          .bind(
+            at,
+            input.companyId,
+            input.recipeId,
+            input.modifierId,
+            input.expectedActiveVersionId,
+          ),
+      );
+    statements.push(
+      input.expectedActiveVersionId
+        ? this.db
+            .prepare(
+              `UPDATE recipe_modifier_versions SET status='active',active_from=?,active_to=NULL WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='draft'
           AND NOT EXISTS(SELECT 1 FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=? AND status='active')
-          AND EXISTS(SELECT 1 FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='archived' AND active_to=?)`).bind(at,input.companyId,input.recipeId,input.modifierId,input.versionId,input.companyId,input.recipeId,input.modifierId,input.companyId,input.recipeId,input.modifierId,input.expectedActiveVersionId,at)
-      : this.db.prepare(`UPDATE recipe_modifier_versions SET status='active',active_from=?,active_to=NULL WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='draft'
-          AND NOT EXISTS(SELECT 1 FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=? AND status='active')`).bind(at,input.companyId,input.recipeId,input.modifierId,input.versionId,input.companyId,input.recipeId,input.modifierId));
-    await this.db.batch(statements);const version=await this.requiredModifier(input.companyId,input.recipeId,input.modifierId,input.versionId);if(version.status!=='active')throw new InventoryManagementError('concurrent_update','The active modifier changed. Refresh and retry.');return version;
-  }
-
-  async archiveModifier(input: ArchiveInput & {modifierId:string}) {
-    await this.requireBuilderForChoices(input.companyId,input.recipeId,input.modifierId);
-    if(!validId(input.companyId)||!validId(input.recipeId)||!validId(input.modifierId)||!validId(input.versionId)||!validId(input.actor))throw new InventoryManagementError('invalid_modifier','Modifier identity, version, and actor are required.');
-    const at=this.now();
-    await this.db.prepare("UPDATE recipe_modifier_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='active'").bind(at,input.companyId,input.recipeId,input.modifierId,input.versionId).run();
-    const version=await this.requiredModifier(input.companyId,input.recipeId,input.modifierId,input.versionId);
-    if(version.status!=='archived')throw new InventoryManagementError('concurrent_update','Only the current active modifier version can be archived.');
+          AND EXISTS(SELECT 1 FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='archived' AND active_to=?)`,
+            )
+            .bind(
+              at,
+              input.companyId,
+              input.recipeId,
+              input.modifierId,
+              input.versionId,
+              input.companyId,
+              input.recipeId,
+              input.modifierId,
+              input.companyId,
+              input.recipeId,
+              input.modifierId,
+              input.expectedActiveVersionId,
+              at,
+            )
+        : this.db
+            .prepare(
+              `UPDATE recipe_modifier_versions SET status='active',active_from=?,active_to=NULL WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='draft'
+          AND NOT EXISTS(SELECT 1 FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=? AND status='active')`,
+            )
+            .bind(
+              at,
+              input.companyId,
+              input.recipeId,
+              input.modifierId,
+              input.versionId,
+              input.companyId,
+              input.recipeId,
+              input.modifierId,
+            ),
+    );
+    await this.db.batch(statements);
+    const version = await this.requiredModifier(
+      input.companyId,
+      input.recipeId,
+      input.modifierId,
+      input.versionId,
+    );
+    if (version.status !== 'active')
+      throw new InventoryManagementError(
+        'concurrent_update',
+        'The active modifier changed. Refresh and retry.',
+      );
     return version;
   }
 
-  private async requiredRecipe(companyId:string,recipeId:string,versionId:string){const all=await this.read(companyId);const value=all.recipes.find(v=>v.recipeId===recipeId&&v.versionId===versionId);if(!value)throw new InventoryManagementError('not_found','Recipe version was not found.');return value;}
-  private async requiredModifier(companyId:string,recipeId:string,modifierId:string,versionId:string){const all=await this.read(companyId);const value=all.modifiers.find(v=>v.recipeId===recipeId&&v.modifierId===modifierId&&v.versionId===versionId);if(!value)throw new InventoryManagementError('not_found','Modifier version was not found.');return value;}
+  async archiveModifier(input: ArchiveInput & { modifierId: string }) {
+    await this.requireBuilderForChoices(input.companyId, input.recipeId, input.modifierId);
+    if (
+      !validId(input.companyId) ||
+      !validId(input.recipeId) ||
+      !validId(input.modifierId) ||
+      !validId(input.versionId) ||
+      !validId(input.actor)
+    )
+      throw new InventoryManagementError(
+        'invalid_modifier',
+        'Modifier identity, version, and actor are required.',
+      );
+    const at = this.now();
+    await this.db
+      .prepare(
+        "UPDATE recipe_modifier_versions SET status='archived',active_to=? WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='active'",
+      )
+      .bind(at, input.companyId, input.recipeId, input.modifierId, input.versionId)
+      .run();
+    const version = await this.requiredModifier(
+      input.companyId,
+      input.recipeId,
+      input.modifierId,
+      input.versionId,
+    );
+    if (version.status !== 'archived')
+      throw new InventoryManagementError(
+        'concurrent_update',
+        'Only the current active modifier version can be archived.',
+      );
+    return version;
+  }
+
+  private async requiredRecipe(companyId: string, recipeId: string, versionId: string) {
+    const all = await this.read(companyId);
+    const value = all.recipes.find((v) => v.recipeId === recipeId && v.versionId === versionId);
+    if (!value) throw new InventoryManagementError('not_found', 'Recipe version was not found.');
+    return value;
+  }
+
+  private async requiredModifier(
+    companyId: string,
+    recipeId: string,
+    modifierId: string,
+    versionId: string,
+  ) {
+    const all = await this.read(companyId);
+    const value = all.modifiers.find(
+      (v) => v.recipeId === recipeId && v.modifierId === modifierId && v.versionId === versionId,
+    );
+    if (!value) throw new InventoryManagementError('not_found', 'Modifier version was not found.');
+    return value;
+  }
 
   async read(companyId: string): Promise<InventoryManagementView> {
-    if(!validId(companyId))throw new InventoryManagementError('invalid_identity','Company identity is required.');
-    const balances=await this.db.prepare(`SELECT b.product_id,b.config_id,b.dimension,b.on_hand_minor,b.incoming_minor,b.estimated_used_minor,b.version,b.latest_count_effective_at,b.updated_at,c.stock_unit_id,c.stock_unit_version,u.label AS stock_unit_label,b.company_id,u.kind AS unit_kind,u.numerator AS unit_numerator,u.denominator AS unit_denominator,c.purchase_unit_label,c.purchase_quantity_minor,c.purchase_entered_amount,c.purchase_entered_unit_id FROM inventory_balances_exact b JOIN inventory_config_versions c ON c.company_id=b.company_id AND c.product_id=b.product_id AND c.id=b.config_id JOIN product_unit_versions u ON u.company_id=c.company_id AND u.product_id=c.product_id AND u.unit_id=c.stock_unit_id AND u.version=c.stock_unit_version WHERE b.company_id=? ORDER BY b.product_id`).bind(companyId).all<BalanceRow>();
-    const reconciliations=await this.db.prepare(`SELECT id,product_id,dimension,measured_minor,estimate_before_minor,variance_minor,effective_at,recorded_at,actor,note,opening FROM inventory_reconciliations WHERE company_id=? AND dimension IS NOT NULL AND measured_minor IS NOT NULL ORDER BY effective_at DESC,id`).bind(companyId).all<{id:string;product_id:string;dimension:UnitDimension;measured_minor:string;estimate_before_minor:string|null;variance_minor:string|null;effective_at:string;recorded_at:string;actor:string;note:string;opening:number}>();
-    const recipes=await this.db.prepare("SELECT recipe_id,id,version,status,name,active_from,active_to FROM recipe_versions WHERE company_id=? AND legacy=0 ORDER BY recipe_id,version DESC").bind(companyId).all<RecipeRow>();
-    const legacyRecipes=await this.db.prepare("SELECT recipe_id,id,name FROM recipe_versions WHERE company_id=? AND legacy=1 AND status='active' ORDER BY recipe_id").bind(companyId).all<{recipe_id:string;id:string;name:string}>();
-    const choiceRows=await this.db.prepare('SELECT recipe_id,version_id,groups_json FROM recipe_version_choices WHERE company_id=?').bind(companyId).all<{recipe_id:string;version_id:string;groups_json:string}>();
-    const recipeViews:RecipeVersionView[]=[];
-    for(const row of recipes.results){const ingredients=await this.db.prepare('SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_version_ingredients WHERE company_id=? AND recipe_id=? AND version_id=? ORDER BY position').bind(companyId,row.recipe_id,row.id).all<{product_id:string;entered_amount:string;entered_unit_id:string;dimension:UnitDimension;quantity_minor:string}>();recipeViews.push({recipeId:row.recipe_id,versionId:row.id,version:row.version,status:row.status,name:row.name,activeFrom:row.active_from,activeTo:row.active_to,choices:JSON.parse(choiceRows.results.find(c=>c.recipe_id===row.recipe_id&&c.version_id===row.id)?.groups_json??'[]'),ingredients:ingredients.results.map(i=>({productId:i.product_id,amount:i.entered_amount,unitId:i.entered_unit_id,quantity:exact(i.dimension,i.quantity_minor)}))});}
-    const modifiers=await this.db.prepare(`SELECT v.recipe_id,v.modifier_id,v.id,v.version,v.status,v.active_from,v.active_to,l.name FROM recipe_modifier_versions v JOIN recipe_modifier_lineages l ON l.company_id=v.company_id AND l.recipe_id=v.recipe_id AND l.id=v.modifier_id WHERE v.company_id=? ORDER BY v.recipe_id,v.modifier_id,v.version DESC`).bind(companyId).all<ModifierRow>();
-    const modifierViews:ModifierVersionView[]=[];
-    for(const row of modifiers.results){const deltas=await this.db.prepare('SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_modifier_deltas WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=? ORDER BY position').bind(companyId,row.recipe_id,row.modifier_id,row.id).all<{product_id:string;entered_amount:string;entered_unit_id:string;dimension:UnitDimension;quantity_minor:string}>();modifierViews.push({recipeId:row.recipe_id,modifierId:row.modifier_id,versionId:row.id,version:row.version,status:row.status,name:row.name,activeFrom:row.active_from,activeTo:row.active_to,deltas:deltas.results.map(i=>({productId:i.product_id,amount:i.entered_amount,unitId:i.entered_unit_id,quantity:exact(i.dimension,i.quantity_minor)}))});}
-    return {records:balances.results.map(row=>this.record(row)),reconciliations:reconciliations.results.map(row=>({id:row.id,productId:row.product_id,measured:exact(row.dimension,row.measured_minor),estimateBefore:row.estimate_before_minor===null?null:exact(row.dimension,row.estimate_before_minor),variance:row.variance_minor===null?null:exact(row.dimension,row.variance_minor),effectiveAt:row.effective_at,recordedAt:row.recorded_at,actor:row.actor,note:row.note,opening:Boolean(row.opening)})),legacyRecipeIds:legacyRecipes.results.map(row=>row.recipe_id),legacyRecipes:legacyRecipes.results.map(row=>({recipeId:row.recipe_id,versionId:row.id,name:row.name})),recipes:recipeViews,modifiers:modifierViews,legacyReview:await legacyM3Review(this.db,companyId)};
+    if (!validId(companyId))
+      throw new InventoryManagementError('invalid_identity', 'Company identity is required.');
+    const balances = await this.db
+      .prepare(
+        `SELECT b.product_id,b.config_id,b.dimension,b.on_hand_minor,b.incoming_minor,b.estimated_used_minor,b.version,b.latest_count_effective_at,b.updated_at,c.stock_unit_id,c.stock_unit_version,u.label AS stock_unit_label,b.company_id,u.kind AS unit_kind,u.numerator AS unit_numerator,u.denominator AS unit_denominator,c.purchase_unit_label,c.purchase_quantity_minor,c.purchase_entered_amount,c.purchase_entered_unit_id FROM inventory_balances_exact b JOIN inventory_config_versions c ON c.company_id=b.company_id AND c.product_id=b.product_id AND c.id=b.config_id JOIN product_unit_versions u ON u.company_id=c.company_id AND u.product_id=c.product_id AND u.unit_id=c.stock_unit_id AND u.version=c.stock_unit_version WHERE b.company_id=? ORDER BY b.product_id`,
+      )
+      .bind(companyId)
+      .all<BalanceRow>();
+    const reconciliations = await this.db
+      .prepare(
+        `SELECT id,product_id,dimension,measured_minor,estimate_before_minor,variance_minor,effective_at,recorded_at,actor,note,opening FROM inventory_reconciliations WHERE company_id=? AND dimension IS NOT NULL AND measured_minor IS NOT NULL ORDER BY effective_at DESC,id`,
+      )
+      .bind(companyId)
+      .all<{
+        id: string;
+        product_id: string;
+        dimension: UnitDimension;
+        measured_minor: string;
+        estimate_before_minor: string | null;
+        variance_minor: string | null;
+        effective_at: string;
+        recorded_at: string;
+        actor: string;
+        note: string;
+        opening: number;
+      }>();
+    const recipes = await this.db
+      .prepare(
+        'SELECT recipe_id,id,version,status,name,active_from,active_to FROM recipe_versions WHERE company_id=? AND legacy=0 ORDER BY recipe_id,version DESC',
+      )
+      .bind(companyId)
+      .all<RecipeRow>();
+    const legacyRecipes = await this.db
+      .prepare(
+        "SELECT recipe_id,id,name FROM recipe_versions WHERE company_id=? AND legacy=1 AND status='active' ORDER BY recipe_id",
+      )
+      .bind(companyId)
+      .all<{ recipe_id: string; id: string; name: string }>();
+    const choiceRows = await this.db
+      .prepare(
+        'SELECT recipe_id,version_id,groups_json FROM recipe_version_choices WHERE company_id=?',
+      )
+      .bind(companyId)
+      .all<{ recipe_id: string; version_id: string; groups_json: string }>();
+    const recipeViews: RecipeVersionView[] = [];
+    for (const row of recipes.results) {
+      const ingredients = await this.db
+        .prepare(
+          'SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_version_ingredients WHERE company_id=? AND recipe_id=? AND version_id=? ORDER BY position',
+        )
+        .bind(companyId, row.recipe_id, row.id)
+        .all<{
+          product_id: string;
+          entered_amount: string;
+          entered_unit_id: string;
+          dimension: UnitDimension;
+          quantity_minor: string;
+        }>();
+      recipeViews.push({
+        recipeId: row.recipe_id,
+        versionId: row.id,
+        version: row.version,
+        status: row.status,
+        name: row.name,
+        activeFrom: row.active_from,
+        activeTo: row.active_to,
+        choices: JSON.parse(
+          choiceRows.results.find((c) => c.recipe_id === row.recipe_id && c.version_id === row.id)
+            ?.groups_json ?? '[]',
+        ),
+        ingredients: ingredients.results.map((i) => ({
+          productId: i.product_id,
+          amount: i.entered_amount,
+          unitId: i.entered_unit_id,
+          quantity: exact(i.dimension, i.quantity_minor),
+        })),
+      });
+    }
+    const modifiers = await this.db
+      .prepare(
+        `SELECT v.recipe_id,v.modifier_id,v.id,v.version,v.status,v.active_from,v.active_to,l.name FROM recipe_modifier_versions v JOIN recipe_modifier_lineages l ON l.company_id=v.company_id AND l.recipe_id=v.recipe_id AND l.id=v.modifier_id WHERE v.company_id=? ORDER BY v.recipe_id,v.modifier_id,v.version DESC`,
+      )
+      .bind(companyId)
+      .all<ModifierRow>();
+    const modifierViews: ModifierVersionView[] = [];
+    for (const row of modifiers.results) {
+      const deltas = await this.db
+        .prepare(
+          'SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_modifier_deltas WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=? ORDER BY position',
+        )
+        .bind(companyId, row.recipe_id, row.modifier_id, row.id)
+        .all<{
+          product_id: string;
+          entered_amount: string;
+          entered_unit_id: string;
+          dimension: UnitDimension;
+          quantity_minor: string;
+        }>();
+      modifierViews.push({
+        recipeId: row.recipe_id,
+        modifierId: row.modifier_id,
+        versionId: row.id,
+        version: row.version,
+        status: row.status,
+        name: row.name,
+        activeFrom: row.active_from,
+        activeTo: row.active_to,
+        deltas: deltas.results.map((i) => ({
+          productId: i.product_id,
+          amount: i.entered_amount,
+          unitId: i.entered_unit_id,
+          quantity: exact(i.dimension, i.quantity_minor),
+        })),
+      });
+    }
+    return {
+      records: balances.results.map((row) => this.record(row)),
+      reconciliations: reconciliations.results.map((row) => ({
+        id: row.id,
+        productId: row.product_id,
+        measured: exact(row.dimension, row.measured_minor),
+        estimateBefore:
+          row.estimate_before_minor === null
+            ? null
+            : exact(row.dimension, row.estimate_before_minor),
+        variance: row.variance_minor === null ? null : exact(row.dimension, row.variance_minor),
+        effectiveAt: row.effective_at,
+        recordedAt: row.recorded_at,
+        actor: row.actor,
+        note: row.note,
+        opening: Boolean(row.opening),
+      })),
+      legacyRecipeIds: legacyRecipes.results.map((row) => row.recipe_id),
+      legacyRecipes: legacyRecipes.results.map((row) => ({
+        recipeId: row.recipe_id,
+        versionId: row.id,
+        name: row.name,
+      })),
+      recipes: recipeViews,
+      modifiers: modifierViews,
+      legacyReview: await legacyM3Review(this.db, companyId),
+    };
   }
 }
