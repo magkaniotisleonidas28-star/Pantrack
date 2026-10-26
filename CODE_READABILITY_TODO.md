@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S19** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S20** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **9 of 22 Completed; 10 Blocked (recorded handoffs/holds); 0 In Progress; 3 Pending**.
+- Cleanup sections: **9 of 22 Completed; 11 Blocked (recorded handoffs/holds); 0 In Progress; 2 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -104,7 +104,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S17 | Purchasing, cart, spending and document workspace components | 17 | Blocked: receiving/JSX/source pins; safe files verified |
 | S18 | Owned styles, static site, standalone previews and assets | 32 | Blocked: visual/receiving holds; safe files verified |
 | S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Blocked: formatter/receiving holds; safe files verified |
-| S20 | Operational CLIs, lifecycle diagnostics, shell and Python audits | 88 | Pending |
+| S20 | Operational CLIs, lifecycle diagnostics, shell and Python audits | 88 | Blocked: source-pin/receiving holds; safe files verified |
 | S21 | Documentation, architecture navigation and managed instructions | 218 + 1 upstream | Pending |
 | S22 | Final consistency, preservation review and handoff | whole project | Pending |
 
@@ -635,24 +635,32 @@ No live integration, real browser/maintenance/gate, historical runtime state or 
 
 ## S20 — Operational CLIs, lifecycle diagnostics, shell and Python audits
 
-Status: Pending. Depends on: S19; S01/S11 runtime boundaries.
+Status: Blocked for source pins and receiving CLI; 82 safe files verified. Depends on: S19; S01/S11 runtime boundaries.
 
 **Files:** All remaining `scripts/**` entrypoints, preview/fixture/HTTP tools, gate/preflight/cleanup/investigation controllers and ten Python auditors assigned in the inventory.
 
-- [ ] S20.1 — Review ordinary CLI wrappers first, then Node controllers, then independent Python auditors and shell launchers; keep argument/refusal/env contracts explicit.
-- [ ] S20.2 — Explain exclusive consumption, private/durable writes, captured process ownership, source identity, fixed bindings, primary-versus-audit failures and bounded disposal.
-- [ ] S20.3 — Format only when injected actual-lifecycle tests and independent audit comparisons prove invariants; keep SQL, regex, process metadata, signal timing and exception categories intact.
-- [ ] S20.4 — Preserve Python optimization refusal, Unix-only guards, Windows compatibility, executable shebangs, file modes and shell quoting. Do not adopt a new abstraction for process ownership or retries.
-- [ ] S20.5 — Leave byte-pinned or uncertain operational code Blocked. Never update historical proof hashes, bypass source checks, create an allowance, resume a consumed attempt, reclaim locks or run real browser/maintenance/full-gate CLIs for readability verification.
+- [x] S20.1 — Review ordinary CLI wrappers first, then Node controllers, then independent Python auditors and shell launchers; keep argument/refusal/env contracts explicit.
+- [x] S20.2 — Explain exclusive consumption, private/durable writes, captured process ownership, source identity, fixed bindings, primary-versus-audit failures and bounded disposal.
+- [x] S20.3 — Format only when injected actual-lifecycle tests and independent audit comparisons prove invariants; keep SQL, regex, process metadata, signal timing and exception categories intact.
+- [x] S20.4 — Preserve Python optimization refusal, Unix-only guards, Windows compatibility, executable shebangs, file modes and shell quoting. Do not adopt a new abstraction for process ownership or retries.
+- [!] S20.5 — Six source-pinned files await a compatible proof and one receiving CLI awaits integration; the safe portion is verified. Leave byte-pinned or uncertain operational code Blocked. Never update historical proof hashes, bypass source checks, create an allowance, resume a consumed attempt, reclaim locks or run real browser/maintenance/full-gate CLIs for readability verification.
 
 **Focused command:** `pnpm test po-cart-browser-lifecycle po-cart-browser-lifecycle-validation po-cart-shutdown-matrix po-cart-shutdown-observation po-cart-maintenance-lifecycle po-cart-maintenance-audit po-cart-single-instance-maintenance po-cart-launcher-check-lifecycle po-cart-observation-baseline po-cart-full-gate-audit po-cart-preview-cleanup`.
 
 **Verification:** Run isolated/injected lifecycle and auditor suites, full tests, typecheck/build, scoped JS lint, Python parse/AST checks and shell syntax checks for changed scripts. Confirm protected evidence and fixed policy constants remain unchanged; no collected real run is part of cleanup.
 
-- [ ] S20.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S20.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S20.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S20.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** Seventy-three operational JavaScript modules use consistent formatting, with 141 whitespace-only declaration/method boundaries. The review moved through ordinary wrappers/fixtures and previews, worker/HTTP commands, internal helpers and lifecycle controllers. The complete import/function inventory identifies all 78 JavaScript modules. Existing comments explain private durable writes, fixed invocation bindings, captured ownership, strict signal checks, persisted observations, primary-versus-audit failures and bounded disposal; formatting makes those responsibilities visible without introducing a new abstraction.
+
+Full syntax/types/comments/literals/emitted-runtime signatures match `550257c` for every changed module. SQL, regexes, environment/argument contracts, all fixed roots/policies/historical hashes, case order, source refusal, deadlines, minimal environments/proxies, signal targets and cleanup categories are unchanged. Four fixture-chain formatter refusals converged in two equivalent passes and then passed independent stable-candidate debug checks; the original refusal log is retained. All ten Python sources retain exact bytes, AST/tokens and file modes and pass parse/compile checks without execution. Nine are reviewed unchanged; `full-gate-audit.py` is a source-pin hold. No shell file is assigned here, so no changed-shell check applies.
+
+**Seven holds:** `po-cart-manager-launcher-check.mjs`, `po-cart-manager-preview.mjs`, `po-cart-ai-gate.mjs`, `po-cart-second-addition-check.mjs`, `po-cart-second-addition-display-on-check.mjs` and `po-cart-worker/full-gate-audit.py` remain unchanged because regression assertions/replacements depend on exact source spelling. The receiving delivery UI CLI remains absent. These files require a separate compatible-proof/integration handoff; no assertions, tolerances, source checks or histories were changed to permit formatting.
+
+All eleven focused suites above passed before and after. Full `pnpm test` passed all 139 suites; section format, typecheck, 40-migration database check, build and diff check passed on frozen source. Scoped lint exited 0 with ten inherited warnings matching the integration baseline exactly. Python parse/compile/AST/token/mode and complete source equivalence receipts are recorded under `.sites-runtime/readability/S20/`; exact commands/exits/durations/log hashes/source digest are in inventory `sectionReviews.S20`.
+
+The lifecycle evidence is local/macOS injected-controller and independent-audit evidence only. No real browser/maintenance/full-gate/paid command, power-setting operation, historical process/profile/lock, protected evidence or consumed attempt was touched. No sandbox/pilot/production or milestone acceptance follows. Five local commits group fixtures, preview/local tools, worker/HTTP commands, internal helpers and controllers. Rollback is those source/docs commits only. S21 documentation/navigation is next; source-pin and receiving holds stay open.
 
 ## S21 — Documentation, architecture navigation and managed instructions
 
@@ -716,6 +724,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S17 | Eight safe purchasing/cart/catalog/download/client/editor modules formatted; 21 declaration/method boundaries | Seven focused baseline/final and all 139 suites; equivalence/format/typecheck/db/build/diff pass; scoped inherited lint one error/two warnings matched | Three local commits; eight JSX/source-pin and three receiving UI holds remain Blocked; independent S18 next |
 | 2026-10-26 / S18 | Five preview/config files formatted; declaration plus thirteen assets/docs reviewed unchanged; seven boundaries; font/license/static bytes retained | Five focused baseline/final and all 139 suites; scoped lint/format/typecheck/db/build/diff, in-memory standalone bundle, CSS parse/XML/assets/local links/font hashes pass | Two local commits; thirteen CSS/HTML visual and one receiving CSS hold remain Blocked; independent S19 next |
 | 2026-10-26 / S19 | 144 test modules formatted; 340 boundaries; two fixtures unchanged; all 5,640 static assertion sites preserved | Baseline/final 139 suites (Mac, zero skips); guard/format/type/db/build/diff pass; scoped lint 29 inherited warnings match baseline; full equivalence and fixture hashes pass | Seven local commits; four formatter and three receiving holds remain Blocked; S20 next |
+| 2026-10-26 / S20 | 73 JavaScript scripts formatted; 141 boundaries; nine safe Python auditors reviewed unchanged | Eleven focused baseline/final and all 139 suites; format/type/db/build/diff; ten scoped inherited lint warnings match; full compiler equivalence and ten unchanged Python AST/token/mode checks pass | Five local commits; six source pins and one receiving hold remain Blocked; no real operational run; S21 next |
 
 ## Final report requirements
 
