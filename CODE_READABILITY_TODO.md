@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S03 present files are verified; its receiving-contract hold remains Blocked**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S04 safe D1/history work is verified; receiving holds remain in S03/S04**.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **2 of 22 Completed; 1 Blocked (S03 receiving handoff; 25 safe files verified); 19 Pending**.
+- Cleanup sections: **2 of 22 Completed; 2 Blocked (S03/S04 receiving handoffs; safe files verified); 18 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -88,7 +88,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S01 | Project configuration, tooling and baseline checks | 38 + 7 cleanup additions | Completed |
 | S02 | Shared primitives, bounded requests and public errors | 3 | Completed |
 | S03 | Shared data models, exact quantities and contracts | 24 + 1 upstream | Blocked: receiving addition; present files verified |
-| S04 | D1 access and immutable database history | 84 | Pending |
+| S04 | D1 access and immutable database history | 84 | Blocked: schema/journal/receiving; safe files verified |
 | S05 | Authentication, tenant authorization and memberships | 9 | Pending |
 | S06 | Inventory, recipes, waste and replenishment services | 26 | Pending |
 | S07 | Sales ingestion, register bridge and Clover | 16 | Pending |
@@ -203,23 +203,27 @@ Commit: `style(readability): expand shared data and validation contracts`. Remai
 
 ## S04 — D1 access and immutable database history
 
-Status: Pending. Depends on: S03.
+Status: Blocked only for receiving-owned schema/journal/migration review; 82 safe files verified. Depends on: S03 present contracts (verified); its absent receiving contract is not used here.
 
 **Files:** `src/db/raw.ts`, `src/db/index.ts`, `src/db/schema.ts`, all `drizzle/*.sql` and `drizzle/meta/*`.
 
-- [ ] S04.1 — Clarify D1 binding access and schema grouping/comments without changing schema declarations or generated SQL.
-- [ ] S04.2 — Review all 40 committed SQL migrations and their metadata as immutable history. Preserve their bytes and ordering; do not reformat used SQL, journal entries or snapshots.
-- [ ] S04.3 — Preserve table/column/index/trigger names, constraints, prepared bindings, timestamp storage and Wrangler trigger splitting. No new migration or schema generation belongs to cleanup.
-- [ ] S04.4 — Keep schema/journal and pending 0040 migration/snapshot changes Blocked until the receiving owner finishes; do not enter or reserve the migration queue.
+- [!] S04.1 — D1 raw/index access cleanup is Completed. Schema grouping/comments remain Blocked by the receiving owner; declarations and generated SQL are unchanged.
+- [x] S04.2 — Review all 40 committed SQL migrations and their metadata as immutable history. Preserve their bytes and ordering; do not reformat used SQL, journal entries or snapshots.
+- [x] S04.3 — Preserve table/column/index/trigger names, constraints, prepared bindings, timestamp storage and Wrangler trigger splitting. No new migration or schema generation belongs to cleanup.
+- [!] S04.4 — Keep schema/journal and pending 0040 migration/snapshot changes Blocked until the receiving owner finishes; do not enter or reserve the migration queue.
 
 **Focused command:** `pnpm test ci-migrations m3-data-foundations m4-data-foundations c4-main-upgrade`.
 
 **Verification:** Run `pnpm db:check`, focused migration suites, typecheck and build. Compare committed migration hashes and schema metadata. Any apply is restricted to this worktree’s fresh local database.
 
-- [ ] S04.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S04.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S04.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S04.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** `src/db/raw.ts` and `src/db/index.ts` formatted; binding lookup, exported helpers, error text and schema registration match pre-section source. Forty used SQL files (226 trigger definitions) and forty snapshots reviewed unchanged; all retain baseline hashes. Present held `schema.ts` and journal also retain baseline bytes. No schema, migration, binding, query or application behavior changed; no migration queue was entered.
+
+The first baseline command contained a nonexistent suite and refused before running tests (exit 1, `baseline.log`). The exact planned command was then run before edits: `pnpm test ci-migrations m3-data-foundations m4-data-foundations c4-main-upgrade` passed all four suites before and after. Final scoped lint, format/equivalence check, typecheck, `db:check` (40 ordered migrations/fresh SQLite/schema match), build and diff check passed against frozen source. Exact results/log hashes/source digest: inventory `sectionReviews.S04`; logs: `.sites-runtime/readability/S04/`. No new HTTP or schema behavior required another apply/smoke; S01 integrated apply/smoke remains separately recorded. Local/macOS evidence only.
+
+Commit: `style(readability): clarify D1 bindings and preserve database history`. Remaining Blocked: receiving-owned schema/journal and absent `0040` SQL/snapshot additions, pending integration/handoff. S05 can independently format present identity modules while leaving its shared wrapper held. Rollback: revert only the two helper formatting edits and cleanup records; no database rollback is needed.
 
 ## S05 — Authentication, tenant authorization and memberships
 
@@ -587,6 +591,8 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S02 | Three shared helper modules; consistent spacing/wrapping and two stream/UTF-8 comments | 3 focused suites before/after; guard/format, scoped lint, typecheck/build/diff all pass | Local section commit; next S03; no S02 hold |
 
 | 2026-10-26 / S03 | 25 present models/contracts formatted; 163 declaration boundaries; type-parenthesis guard refinement reproduced and tested | 11 baseline/12 final focused suites; all 139 suites; scoped lint, guard/format, typecheck/db/build/diff pass; 299 ordered exports unchanged | Local section commit; absent receiving contract explicitly Blocked; S04 independent D1/history review next |
+
+| 2026-10-26 / S04 | Two D1 helpers formatted; 40 SQL/40 snapshots reviewed unchanged, including 226 trigger definitions | Four planned baseline/final suites and scoped lint/format/typecheck/db/build/diff pass; wrong initial suite selection retained separately | Local section commit; receiving schema/journal/new migration holds explicit; independent S05 next |
 
 ## Final report requirements
 

@@ -1775,362 +1775,482 @@
     {
       "path": "drizzle/0000_amused_ben_grimm.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "f8c5e6b36cb6da20fa719cb9f27e56cc857bbf8f0f02f787739a8bdda8f310f2",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "f8c5e6b36cb6da20fa719cb9f27e56cc857bbf8f0f02f787739a8bdda8f310f2"
     },
     {
       "path": "drizzle/0001_massive_morg.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "7ed5308e044ffed6d8203b85af6c7a3fbfd5b22a26de5fb415fddf4f6917477b",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "7ed5308e044ffed6d8203b85af6c7a3fbfd5b22a26de5fb415fddf4f6917477b"
     },
     {
       "path": "drizzle/0002_dashing_imperial_guard.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "e6d96c45fdefe8706ef0263bf74283a3a33289080071d2b77b4d4951cf2b93f0",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "e6d96c45fdefe8706ef0263bf74283a3a33289080071d2b77b4d4951cf2b93f0"
     },
     {
       "path": "drizzle/0003_typical_paladin.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "76e50fa2fc5ed22a07588065871f56350dfc15eb3e1dc6f05f956a1b826fedf5",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "76e50fa2fc5ed22a07588065871f56350dfc15eb3e1dc6f05f956a1b826fedf5"
     },
     {
       "path": "drizzle/0004_majestic_meltdown.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "2b8a56fba60152735f2e52da18a383d370775a9daf4187df0d9494179380cde7",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "2b8a56fba60152735f2e52da18a383d370775a9daf4187df0d9494179380cde7"
     },
     {
       "path": "drizzle/0005_chemical_maverick.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "a2f16b633d0b3e89060e4c295bb2cb877e1295d97fcd14ee281ce9178e1034ec",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "a2f16b633d0b3e89060e4c295bb2cb877e1295d97fcd14ee281ce9178e1034ec"
     },
     {
       "path": "drizzle/0006_sudden_natasha_romanoff.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "cd8b948bf8d3329e5e6688abe32776728e25e318a73faad6fd70e5ae34a33c34",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "cd8b948bf8d3329e5e6688abe32776728e25e318a73faad6fd70e5ae34a33c34"
     },
     {
       "path": "drizzle/0007_wonderful_mentallo.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "42beb8baf4532c6783b92c32bbfa658776ecc4cf3606bf12e7fc9e2c4548fc1f",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "42beb8baf4532c6783b92c32bbfa658776ecc4cf3606bf12e7fc9e2c4548fc1f"
     },
     {
       "path": "drizzle/0008_m2_auth_memberships.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "a2646525d289e6f894068e3515eb3f8816455d1d2c05a4c46a9350f164833024",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "a2646525d289e6f894068e3515eb3f8816455d1d2c05a4c46a9350f164833024"
     },
     {
       "path": "drizzle/0009_clammy_doctor_octopus.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "4faabad911710e7eb565020dea3e3f521b93a0782ae81592d7bba71b8e26f412",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "4faabad911710e7eb565020dea3e3f521b93a0782ae81592d7bba71b8e26f412"
     },
     {
       "path": "drizzle/0010_aromatic_the_initiative.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "d9d5d921a738ad430eb049ff0d54e5fe7ad5517dca5b53ef8ed1cf580625822e",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "d9d5d921a738ad430eb049ff0d54e5fe7ad5517dca5b53ef8ed1cf580625822e"
     },
     {
       "path": "drizzle/0011_slimy_vargas.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "8d777ff9fab4a6ba6c2a6ae47b4d558c51840aeaff9cb1f736bfbb4f5e77593c",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "8d777ff9fab4a6ba6c2a6ae47b4d558c51840aeaff9cb1f736bfbb4f5e77593c"
     },
     {
       "path": "drizzle/0012_tough_rage.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "ac7a845a8e57110d27e6f37a5d9f0f8b912682ed2a44e84c4ccf4ba596195c1c",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "ac7a845a8e57110d27e6f37a5d9f0f8b912682ed2a44e84c4ccf4ba596195c1c"
     },
     {
       "path": "drizzle/0013_low_stick.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "eef007aac1f76539d5e0a7943bf73df333d09f2827966f0a9aef4975fe05a35b",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "eef007aac1f76539d5e0a7943bf73df333d09f2827966f0a9aef4975fe05a35b"
     },
     {
       "path": "drizzle/0014_clammy_speed_demon.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "09bc5ebe051f5072ecd61725a270b58497bbacd03c997ef86214e3d1188b1189",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "09bc5ebe051f5072ecd61725a270b58497bbacd03c997ef86214e3d1188b1189"
     },
     {
       "path": "drizzle/0015_silky_overlord.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "6f764c13cdd68a449cdbb99ea679910acb8df3a6886913dfcf8c691f6e9f8c8a",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "6f764c13cdd68a449cdbb99ea679910acb8df3a6886913dfcf8c691f6e9f8c8a"
     },
     {
       "path": "drizzle/0016_light_hedge_knight.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "c474090220a464d8620751bb43b71a6a50ee8b1ff4b5bc228e7356ae5e1e804e",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "c474090220a464d8620751bb43b71a6a50ee8b1ff4b5bc228e7356ae5e1e804e"
     },
     {
       "path": "drizzle/0017_confused_electro.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "0bd45563b079e7f66b72b3855ad7e58d414294f36e06960022490e51ecee630e",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "0bd45563b079e7f66b72b3855ad7e58d414294f36e06960022490e51ecee630e"
     },
     {
       "path": "drizzle/0018_w1_quick_waste.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "ba2a9dd7320b9b18229f9cc6e5975cd61455da7a7855c43e353cc799cbafad6f",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "ba2a9dd7320b9b18229f9cc6e5975cd61455da7a7855c43e353cc799cbafad6f"
     },
     {
       "path": "drizzle/0019_w2_menu_waste.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "6312c0966d57be6ae8481c58b6fb490c5259b8a1412fd6b2e95b10f003575de6",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "6312c0966d57be6ae8481c58b6fb490c5259b8a1412fd6b2e95b10f003575de6"
     },
     {
       "path": "drizzle/0020_w2_recipe_choices.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "8af2f60076a2b459550a9aed85b309bf212a4f6b100c9468b5e5ed5c62bd404b",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "8af2f60076a2b459550a9aed85b309bf212a4f6b100c9468b5e5ed5c62bd404b"
     },
     {
       "path": "drizzle/0021_w2_purchase_measurements.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "5e0a85ddf6bc57f58e4fdc65a892e0a94acb96bbc304ba28d1d52d140007fabf",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "5e0a85ddf6bc57f58e4fdc65a892e0a94acb96bbc304ba28d1d52d140007fabf"
     },
     {
       "path": "drizzle/0022_repair_replenishment_state_guard.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "2e558cb2d7025447d8b0b02fe512bb8f7fb45e41803be128b600c1815ffe9a2f",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "2e558cb2d7025447d8b0b02fe512bb8f7fb45e41803be128b600c1815ffe9a2f"
     },
     {
       "path": "drizzle/0023_auth_recovery_fence.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "d0edd7e3726ebeba739b750e1570a3921354e2a7c5f27a54385e4b2de925ba8c",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "d0edd7e3726ebeba739b750e1570a3921354e2a7c5f27a54385e4b2de925ba8c"
     },
     {
       "path": "drizzle/0024_supplier_simulation.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "1e7e609abbf61c66164e70d6b82dde0b628c7165ff6800c5fa8ecb611cb39e2d",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "1e7e609abbf61c66164e70d6b82dde0b628c7165ff6800c5fa8ecb611cb39e2d"
     },
     {
       "path": "drizzle/0025_purchase_order_drafts.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "6e2c06047dc267fd9a5392331d8b36ada8a361fc66be9118b5ed0c583dafe020",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "6e2c06047dc267fd9a5392331d8b36ada8a361fc66be9118b5ed0c583dafe020"
     },
     {
       "path": "drizzle/0026_purchasing_supplier_registry.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "e64f8418bf8466718cfba806713bae4900062357e78e669168628642c1afa83e",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "e64f8418bf8466718cfba806713bae4900062357e78e669168628642c1afa83e"
     },
     {
       "path": "drizzle/0027_purchase_order_draft_review.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "18133f8284c0fd123fd0e7f751ce2bf57695c6454aba315f952182592eae52fd",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "18133f8284c0fd123fd0e7f751ce2bf57695c6454aba315f952182592eae52fd"
     },
     {
       "path": "drizzle/0028_po_cart_authorizations.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "1415d1987b5796e17975b127e7f0321d20ce8bd40f45963819b175bb5d371b8e",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "1415d1987b5796e17975b127e7f0321d20ce8bd40f45963819b175bb5d371b8e"
     },
     {
       "path": "drizzle/0029_po_cart_jobs.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "5fb1bdb29050f289e52327f6d5c50e9a1ade26a6db3561d7206224ee94898ea1",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "5fb1bdb29050f289e52327f6d5c50e9a1ade26a6db3561d7206224ee94898ea1"
     },
     {
       "path": "drizzle/0030_po_cart_worker_transport.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "ae74464a64e65ef444ca2f14d8a63b64339ccbbb9411ff842cb3d6b2c99f5165",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "ae74464a64e65ef444ca2f14d8a63b64339ccbbb9411ff842cb3d6b2c99f5165"
     },
     {
       "path": "drizzle/0031_po_cart_local_browser.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "e31ecc060bf34bab56d689e26a78a2db8a1df84d5850af749014ccd052f6e1f3",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "e31ecc060bf34bab56d689e26a78a2db8a1df84d5850af749014ccd052f6e1f3"
     },
     {
       "path": "drizzle/0032_po_cart_browser_sessions.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "c1132d3b5fbd9f67916666945875fdc2f27abb9302d2d72f952eb0d27084d6ee",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "c1132d3b5fbd9f67916666945875fdc2f27abb9302d2d72f952eb0d27084d6ee"
     },
     {
       "path": "drizzle/0033_po_cart_reconciliation.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "3114ae98882de73cfe655b0400dc597a426b9777a68b52609b5018c884de1673",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "3114ae98882de73cfe655b0400dc597a426b9777a68b52609b5018c884de1673"
     },
     {
       "path": "drizzle/0034_sales_inventory_outcome_fence.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "2d56427fee1e01a301c33d14e488c6bb332f3b1a439c67d19b302f5e62e92f86",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "2d56427fee1e01a301c33d14e488c6bb332f3b1a439c67d19b302f5e62e92f86"
     },
     {
       "path": "drizzle/0035_owner_spending_limits.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "5ed72f683ea6481d6e71cbaa38a9434589ccfda5d3cf7b1f7835dfa204f18de5",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "5ed72f683ea6481d6e71cbaa38a9434589ccfda5d3cf7b1f7835dfa204f18de5"
     },
     {
       "path": "drizzle/0036_owner_spending_limits_d1_patterns.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "a7550e5cce3b98223d3f46691ebc6ce9ada818e994e2edabc74e4ab4534fe4cb",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "a7550e5cce3b98223d3f46691ebc6ce9ada818e994e2edabc74e4ab4534fe4cb"
     },
     {
       "path": "drizzle/0037_inventory_order_incoming.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "1413cd1001283b45c7d5b626fdfd16c29f5b72cd95f1346e9948c8893b397fa2",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "1413cd1001283b45c7d5b626fdfd16c29f5b72cd95f1346e9948c8893b397fa2"
     },
     {
       "path": "drizzle/0038_po_cart_confirmations.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "4e16cc0bc2044d4859e6f17b0f1c2849770ed8a679b7089019dcb9f6901512a0",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "4e16cc0bc2044d4859e6f17b0f1c2849770ed8a679b7089019dcb9f6901512a0"
     },
     {
       "path": "drizzle/0039_inventory_order_receipts.sql",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "6c80f26777f59847b09d707185d07fa91baa9697c8e2b9eb6143803a0236ffc8",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "6c80f26777f59847b09d707185d07fa91baa9697c8e2b9eb6143803a0236ffc8"
     },
     {
       "path": "drizzle/0040_po_cart_deliveries.sql",
@@ -2144,362 +2264,482 @@
     {
       "path": "drizzle/meta/0000_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "06d21af43321082fa8ad7ac93d8277582bacfd741ee021d94f72de8765ed3695",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "06d21af43321082fa8ad7ac93d8277582bacfd741ee021d94f72de8765ed3695"
     },
     {
       "path": "drizzle/meta/0001_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "90aff5f6605289b7f324b3ab8d88c301f8bd963a3f1bfcbd1fe17300e202d71f",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "90aff5f6605289b7f324b3ab8d88c301f8bd963a3f1bfcbd1fe17300e202d71f"
     },
     {
       "path": "drizzle/meta/0002_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "5c4f6a7c2afbb8585b75a05e77e5b79fe040fbb6eeb185b87f72882b0950905d",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "5c4f6a7c2afbb8585b75a05e77e5b79fe040fbb6eeb185b87f72882b0950905d"
     },
     {
       "path": "drizzle/meta/0003_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "9ce2f93a1a40b7ff182a576f19ad62d11876889532622066db7848ecf3519505",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "9ce2f93a1a40b7ff182a576f19ad62d11876889532622066db7848ecf3519505"
     },
     {
       "path": "drizzle/meta/0004_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "4ac8609a9c251a4c632939ee7ed3cdc09cf1f99c12bbbef7c729f930d5c835df",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "4ac8609a9c251a4c632939ee7ed3cdc09cf1f99c12bbbef7c729f930d5c835df"
     },
     {
       "path": "drizzle/meta/0005_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "b3edca1790a40ede0749f3dd79ad66cc0639e0489e1547a3aa181567727a5915",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "b3edca1790a40ede0749f3dd79ad66cc0639e0489e1547a3aa181567727a5915"
     },
     {
       "path": "drizzle/meta/0006_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "006f3fae63358a73d728533f3c604d930cb19b44d9c31ae8cd9b584f5cb3ec98",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "006f3fae63358a73d728533f3c604d930cb19b44d9c31ae8cd9b584f5cb3ec98"
     },
     {
       "path": "drizzle/meta/0007_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "f7e763a3e62f51e3588e9f3e4a2edb034de4f30229f8eb46ecb4ddd55c941c29",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "f7e763a3e62f51e3588e9f3e4a2edb034de4f30229f8eb46ecb4ddd55c941c29"
     },
     {
       "path": "drizzle/meta/0008_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "d90397583ddabaea42a227eaf84a505eaf2cd8359244829c95963002c8164bea",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "d90397583ddabaea42a227eaf84a505eaf2cd8359244829c95963002c8164bea"
     },
     {
       "path": "drizzle/meta/0009_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "688b28b855913d8266cb35fe49eb585c4b747ddee7653f70faccdb683bb4f41a",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "688b28b855913d8266cb35fe49eb585c4b747ddee7653f70faccdb683bb4f41a"
     },
     {
       "path": "drizzle/meta/0010_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "9ade476def7b6cedc9ac45d70d7c4611b62dfb5022f9f6b979b1cde567ee2e54",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "9ade476def7b6cedc9ac45d70d7c4611b62dfb5022f9f6b979b1cde567ee2e54"
     },
     {
       "path": "drizzle/meta/0011_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "fe9f019e97a544ae6d013e93dab325940061bc7c4318ece40b1bcea37996fef5",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "fe9f019e97a544ae6d013e93dab325940061bc7c4318ece40b1bcea37996fef5"
     },
     {
       "path": "drizzle/meta/0012_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "4e6664ee93fc28d7cc33acd5310b0af5d20eb955a7379ca0b4d14fa220f6861a",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "4e6664ee93fc28d7cc33acd5310b0af5d20eb955a7379ca0b4d14fa220f6861a"
     },
     {
       "path": "drizzle/meta/0013_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "d49d8edf6378fdd61ecbc756c7e936628e3821bfeb2d9b991667955dbcb7903d",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "d49d8edf6378fdd61ecbc756c7e936628e3821bfeb2d9b991667955dbcb7903d"
     },
     {
       "path": "drizzle/meta/0014_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "21a1f9f8be0754d3a09ec9ccebb64a90f8bbe121a59e9622329c350fba37f8fe",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "21a1f9f8be0754d3a09ec9ccebb64a90f8bbe121a59e9622329c350fba37f8fe"
     },
     {
       "path": "drizzle/meta/0015_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "c8c15894fdfda03c9a0f5a4b2b3f19d5895e04d2e682268ad7da227a40981eff",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "c8c15894fdfda03c9a0f5a4b2b3f19d5895e04d2e682268ad7da227a40981eff"
     },
     {
       "path": "drizzle/meta/0016_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "55edc3ea8c53485cc54eac06ab38447b0af11811de37e8e6267c92045ad12a46",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "55edc3ea8c53485cc54eac06ab38447b0af11811de37e8e6267c92045ad12a46"
     },
     {
       "path": "drizzle/meta/0017_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "2d7501b66c3a6cf86172bc67e56b025f982a449247fb5a726a07e686d7c60528",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "2d7501b66c3a6cf86172bc67e56b025f982a449247fb5a726a07e686d7c60528"
     },
     {
       "path": "drizzle/meta/0018_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "6dad9b779d138f7861a9300071d09d412d8a590c254fa9912aed0b3c717c645d",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "6dad9b779d138f7861a9300071d09d412d8a590c254fa9912aed0b3c717c645d"
     },
     {
       "path": "drizzle/meta/0019_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "7766b075b3de308064837d953e326141ecf8e043f1a3e81f04c1e027170b6ea2",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "7766b075b3de308064837d953e326141ecf8e043f1a3e81f04c1e027170b6ea2"
     },
     {
       "path": "drizzle/meta/0020_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "d0fd836ed25b16d1438291ed764433de5657e9e968710f1ce4db39a48fb2c62f",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "d0fd836ed25b16d1438291ed764433de5657e9e968710f1ce4db39a48fb2c62f"
     },
     {
       "path": "drizzle/meta/0021_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "ccccc35bd2533743b7404f02768e9c93e05ac3773c36e53d3a1f9ed7e00dbd55",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "ccccc35bd2533743b7404f02768e9c93e05ac3773c36e53d3a1f9ed7e00dbd55"
     },
     {
       "path": "drizzle/meta/0022_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "df45526eddc1961693429603dcd0901eedcdd795f469a1e8a46bc6efe3221878",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "df45526eddc1961693429603dcd0901eedcdd795f469a1e8a46bc6efe3221878"
     },
     {
       "path": "drizzle/meta/0023_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "a751ff1721affc4ed88f0b95f9851a48b48b473532829db4fcc256ba6fb8ce10",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "a751ff1721affc4ed88f0b95f9851a48b48b473532829db4fcc256ba6fb8ce10"
     },
     {
       "path": "drizzle/meta/0024_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "58ac74c86b8ff343d37c4cc02006ed12b697b1d163c1c8b9e3dbce83904a8c4d",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "58ac74c86b8ff343d37c4cc02006ed12b697b1d163c1c8b9e3dbce83904a8c4d"
     },
     {
       "path": "drizzle/meta/0025_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "e12bc806fbd2000d09285483ec7f1a4361e3a36057e50e360a868ac6fc4e8c5d",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "e12bc806fbd2000d09285483ec7f1a4361e3a36057e50e360a868ac6fc4e8c5d"
     },
     {
       "path": "drizzle/meta/0026_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "342cac673310d76d813b857dee99461a1d389cc07e3036c5450a97189aca1017",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "342cac673310d76d813b857dee99461a1d389cc07e3036c5450a97189aca1017"
     },
     {
       "path": "drizzle/meta/0027_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "26b88511a59ec2d8b5afe274d1573dc4485db78a8ff4d99d0c0a34bc74b5ae8a",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "26b88511a59ec2d8b5afe274d1573dc4485db78a8ff4d99d0c0a34bc74b5ae8a"
     },
     {
       "path": "drizzle/meta/0028_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "f06b524cb14a947b6590ebfd49ddbe05a61f1b5a03e5db956625434b9507ce1a",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "f06b524cb14a947b6590ebfd49ddbe05a61f1b5a03e5db956625434b9507ce1a"
     },
     {
       "path": "drizzle/meta/0029_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "7e3ecd0bf053b31db89a55a7c52a7149c0b186a0655209cd4f479fe1bcd0b66d",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "7e3ecd0bf053b31db89a55a7c52a7149c0b186a0655209cd4f479fe1bcd0b66d"
     },
     {
       "path": "drizzle/meta/0030_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "3f1943c95b33e268096a999c351c085d5d66bead86af7d209dff8ec332de45fd",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "3f1943c95b33e268096a999c351c085d5d66bead86af7d209dff8ec332de45fd"
     },
     {
       "path": "drizzle/meta/0031_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "c935e3b0ba8ecdeb33c62d201add3dfb2d0731235fa21d5820d75e5723ddeecc",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "c935e3b0ba8ecdeb33c62d201add3dfb2d0731235fa21d5820d75e5723ddeecc"
     },
     {
       "path": "drizzle/meta/0032_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "0dfa99316ff757abc9722bf08bc016403f7c49403b340f710b1aee3b90acf8fa",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "0dfa99316ff757abc9722bf08bc016403f7c49403b340f710b1aee3b90acf8fa"
     },
     {
       "path": "drizzle/meta/0033_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "48812037f4f0d1f4f8217a67a23ae29284506f727be28688e5488d429d23d9a6",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "48812037f4f0d1f4f8217a67a23ae29284506f727be28688e5488d429d23d9a6"
     },
     {
       "path": "drizzle/meta/0034_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "e4d44760a50ceb7e8992968c801cd804436e99c62c408ec2f5010d3f48ff0669",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "e4d44760a50ceb7e8992968c801cd804436e99c62c408ec2f5010d3f48ff0669"
     },
     {
       "path": "drizzle/meta/0035_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "380e2cea18299f283a9180d36c393fecdf5f984ac825695e8d6269737c4ef771",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "380e2cea18299f283a9180d36c393fecdf5f984ac825695e8d6269737c4ef771"
     },
     {
       "path": "drizzle/meta/0036_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "e147705ff291fed38a5a38c7960d596194f2fc3b3a30bde4afe8e956f6622c2e",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "e147705ff291fed38a5a38c7960d596194f2fc3b3a30bde4afe8e956f6622c2e"
     },
     {
       "path": "drizzle/meta/0037_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "9af41b46593f2c2b26e77302ada3b42d2900918dad0e2d48f697e858069b455c",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "9af41b46593f2c2b26e77302ada3b42d2900918dad0e2d48f697e858069b455c"
     },
     {
       "path": "drizzle/meta/0038_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "42c8d9cf834669f39b103428069a4ae40a233c3bd7168f532fb3df8596cc52bc",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "42c8d9cf834669f39b103428069a4ae40a233c3bd7168f532fb3df8596cc52bc"
     },
     {
       "path": "drizzle/meta/0039_snapshot.json",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "immutable-migration-history",
       "baselineTracked": true,
       "baselineSha256": "555e17e5949bc083369e7d3ad2653fe17bfaee4f166878edc7fe25235821b773",
-      "results": []
+      "results": [
+        "Reviewed immutable migration/snapshot unchanged; baseline bytes preserved. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "555e17e5949bc083369e7d3ad2653fe17bfaee4f166878edc7fe25235821b773"
     },
     {
       "path": "drizzle/meta/0040_snapshot.json",
@@ -5881,20 +6121,26 @@
     {
       "path": "src/db/index.ts",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "dc7610b00b918e0ffff1360a63626f16655ced3064b2eaf96095a4101fb14bcd",
-      "results": []
+      "results": [
+        "D1 binding helper formatting reviewed; imports, messages, env binding and schema registration equivalent. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "991de9c107b00a37ad6540bf3540e2efe1eb2c30a04203daf4bd36f83f62d230"
     },
     {
       "path": "src/db/raw.ts",
       "section": "S04",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "dfa867d4319a1f750e1764687890b3189442d0f26f3191dc2f9d4c151330c3e6",
-      "results": []
+      "results": [
+        "D1 binding helper formatting reviewed; imports, messages, env binding and schema registration equivalent. Four focused suites, scoped lint, typecheck/build/db check pass; see sectionReviews.S04."
+      ],
+      "cleanupSha256": "89f33f9b79825d12cb656bf014ad630dff6e4c15ff1afe4a882388969768d665"
     },
     {
       "path": "src/db/schema.ts",
@@ -8704,6 +8950,82 @@
       "sourceDigest": "10a3511f93fefdcc2bc4b432df008b98a9052a53374997b4ae72f5711d5b9fed",
       "review": "All 25 present modules equivalent to pre-section HEAD, including 299 ordered exports and complete types/schema structures; 163 whitespace-only declaration boundaries separated. No exported names, calculations, SQL, defaults, messages, field order or authorization changed. Type-query parentheses normalized in formatter after a failing regression then passing meaningful grouping tests; all 139 suites pass.",
       "unblocker": "Integrate the receiving-counts owner branch and inspect the absent delivery contract; no competing implementation. S04 raw/index and immutable-history reviews are independent of that missing contract."
+    },
+    "S04": {
+      "outcome": "Blocked",
+      "safeFilesCompleted": 82,
+      "heldFiles": [
+        "drizzle/0040_po_cart_deliveries.sql",
+        "drizzle/meta/0040_snapshot.json",
+        "drizzle/meta/_journal.json",
+        "src/db/schema.ts"
+      ],
+      "baseline": {
+        "command": "pnpm test ci-migrations m3-data-foundations m4-data-foundations c4-main-upgrade",
+        "exit": 0,
+        "suites": 4,
+        "log": ".sites-runtime/readability/S04/baseline-planned.log"
+      },
+      "preparationFailure": {
+        "command": "pnpm test ci-migrations local-d1-database inventory-management-d1 inventory-cutoffs-d1",
+        "exit": 1,
+        "reason": "Unknown suite name; refused before suite execution. Corrected to the planned existing suites before source edits.",
+        "log": ".sites-runtime/readability/S04/baseline.log"
+      },
+      "final": [
+        {
+          "command": "pnpm test ci-migrations m3-data-foundations m4-data-foundations c4-main-upgrade",
+          "exit": 0,
+          "seconds": 1.5,
+          "log": ".sites-runtime/readability/S04/final/0-test.log",
+          "logSha256": "5b3de5eb45796ba9c5b6f010db9d06403ea4136db2c4eb06fa7bfb223396edcb"
+        },
+        {
+          "command": "pnpm format:check --section S04",
+          "exit": 0,
+          "seconds": 0.5,
+          "log": ".sites-runtime/readability/S04/final/1-format-check.log",
+          "logSha256": "5af932fd9ab7fc76e6b6e7ee8c0a9ddcfd3cfd1014e05b15db82499ae68ac9a2"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/db/index.ts src/db/raw.ts",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S04/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 3.9,
+          "log": ".sites-runtime/readability/S04/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.5,
+          "log": ".sites-runtime/readability/S04/final/4-db-check.log",
+          "logSha256": "721835c407c17cd1aa6b4cd81f8455f206c8a78915441b8c5193b4d29b4bbb23"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 5.7,
+          "log": ".sites-runtime/readability/S04/final/5-build.log",
+          "logSha256": "7a90875f051c671fd093871afda32e71a3d468f978eb5b814e8809a5181ea459"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S04/final/6-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "1e76269c9e94738b11b82f9f307cd60f57d7dbfd376292e40bf7ee28fc8ffa7d",
+      "review": "Two binding helpers equivalent to pre-section source. Forty SQL files (226 trigger definitions), forty metadata snapshots and the present held schema/journal retain baseline bytes. No migration or database behavior change.",
+      "unblocker": "Receiving-counts integration/handoff before schema/journal/new migration review; S05 safe identity modules do not depend on the absent delivery tables."
     }
   }
 }
