@@ -112,6 +112,8 @@ Built and verified locally: [Part 2 evidence](C4_DELIVERY_RECEIVING_LOCAL_EVIDEN
 
 ## Part 3 — order closure
 
+Built and verified locally: [Part 3 evidence](C4_ORDER_CLOSURE_LOCAL_EVIDENCE.md).
+
 - The order **closes** when every line is fully received or marked "won't arrive".
   The manager can also close it explicitly once nothing more is expected.
 - **The budget:**

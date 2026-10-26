@@ -162,4 +162,4 @@ The planted defects caught:
   - Turn off `PANTRACK_CART_PREVIEW`.
   - Never delete counts or rewrite used migrations; forward repair uses a new
     migration.
-- **Next, Part 3:** order closure, which frees the order's in-progress spending hold.
+- **Next, Part 3:** [order closure](C4_ORDER_CLOSURE_LOCAL_EVIDENCE.md), which frees the order's in-progress spending hold.
