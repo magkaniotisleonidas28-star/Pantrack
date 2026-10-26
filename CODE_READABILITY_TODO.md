@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S08 supplier/draft/purchasing services are Completed; S09 is next**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S09 history/document/download services are Completed; S10 is next**.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **5 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 14 Pending**.
+- Cleanup sections: **6 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 13 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -93,7 +93,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S06 | Inventory, recipes, waste and replenishment services | 26 | Completed |
 | S07 | Sales ingestion, register bridge and Clover | 16 | Completed |
 | S08 | Supplier registry, draft foundations and gated purchasing | 9 | Completed |
-| S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Pending |
+| S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Completed |
 | S10 | Durable cart authorization, jobs and spending limits | 3 | Pending |
 | S11 | Browser-session services and worker implementation | 28 | Pending |
 | S12 | Supplier confirmation, incoming stock and receiving | 1 | Pending |
@@ -329,23 +329,31 @@ Commits: registry/draft persistence `7e569d7`; simulation/gated adapters/tracker
 
 ## S09 — Purchase-order history, export models and document downloads
 
-Status: Pending. Depends on: S08.
+Status: Completed. Depends on: S08.
 
 **Files:** `purchase-order-*` history/export/document/download modules, their D1 adapters, `draft-document-pdf.ts`, `draft-document-xlsx.ts`.
 
-- [ ] S09.1 — Group filtering, pagination, snapshot capture, formatting, serialization and download lifetime code by existing responsibility.
-- [ ] S09.2 — Expand date/DST/product matching and PDF/Excel transformations; explain saved-revision provenance, full-result bounds and immutable snapshots.
-- [ ] S09.3 — Clarify cancellation, stale continuation suppression, second authorization/fingerprint checks and object URL/download ownership.
-- [ ] S09.4 — Preserve field/order/locale/date semantics, file names/MIME types, cell escaping, font handling, archive entries, no-partial-export rules and read-only persistence. No library upgrade.
+- [x] S09.1 — Group filtering, pagination, snapshot capture, formatting, serialization and download lifetime code by existing responsibility.
+- [x] S09.2 — Expand date/DST/product matching and PDF/Excel transformations; explain saved-revision provenance, full-result bounds and immutable snapshots.
+- [x] S09.3 — Clarify cancellation, stale continuation suppression, second authorization/fingerprint checks and object URL/download ownership.
+- [x] S09.4 — Preserve field/order/locale/date semantics, file names/MIME types, cell escaping, font handling, archive entries, no-partial-export rules and read-only export persistence. No library upgrade.
 
-**Focused command:** `pnpm test purchase-order-history purchase-order-history-products purchase-order-history-dates purchase-order-exports purchase-order-history-exports purchase-order-documents purchase-order-history-documents purchase-order-downloads purchase-order-history-downloads supplier-order-draft-pdf supplier-order-draft-xlsx`.
+- [x] S09.5 — Preserve the newly integrated archive ports: prepare before object write, observations before decisions, create-only storage, fenced publication, permanent replay and authorization rechecks. No production journal, R2 binding or route is added.
+
+**Focused command:** `pnpm test purchase-order-history purchase-order-history-products purchase-order-history-dates purchase-order-exports purchase-order-history-exports purchase-order-documents purchase-order-history-documents purchase-order-downloads purchase-order-history-downloads supplier-order-draft-pdf supplier-order-draft-xlsx purchase-order-document-archive`.
 
 **Verification:** Run the document/history/lifecycle suites, full tests, scoped lint, typecheck and build. Use existing independent PDF/Excel readers and assert zero export writes.
 
-- [ ] S09.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S09.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S09.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S09.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All thirteen modules formatted; 35 whitespace-only declaration/method boundaries separated. Existing history filtering/one-snapshot export reads, PDF/Excel projections/layout, download cancellation/second checks and archive preparation/observation/write/verification/publish phases are easier to scan. Modules and nested layout/state helpers remain cohesive; no new abstraction, visual instruction or comment was added.
+
+All thirteen modules match pre-section `ac8d2a3` syntax/types/exports/literals/comments/emitted runtime. SQL/binding order, field/locale/date/DST/product semantics, snapshot/size bounds, no-partial results, serialization/escaping, layout coordinates/operators/text, filenames/MIME, font handling, cancellation/authorization/fingerprint checks and Blob/link/URL cleanup are unchanged. All three font/license files retain baseline hashes. Archive prepare-before-write, observe-before-decide, create-only objects, fenced publish, permanent replay and current-access checks are preserved; no production journal/R2/route/schema was added.
+
+Baseline eleven document/history suites and the separately added upstream archive conformance suite passed. The combined final focused command passed all twelve suites, including independent PDF/XLSX readers, both native formats/source kinds, file-backed SQLite/create-only fixture objects, unknown-write cross-process recovery and zero export writes. Full `pnpm test` passed all 139 suites. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. Scoped ESLint exited 0 retaining two inherited archive unused import/value warnings. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S09`; logs: `.sites-runtime/readability/S09/`. No browser/pixel walkthrough was run because layout instructions/runtime remain equivalent; this is local/macOS evidence, not external storage/provider acceptance.
+
+Commits: history/export reads `b9e6c9b`; rendering/download flows `133a092`; archive/tracker `style(readability): clarify immutable document archive lifecycle`. No S09 hold remains; earlier receiving holds remain open. Rollback: those three source/docs commits only. Next: S10 cart authorizations, jobs and spending limits.
 
 ## S10 — Durable cart authorization, jobs and spending limits
 
@@ -615,6 +623,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S06 | 26 domain modules formatted; 77 declaration/method boundaries; two ordered-batch rationale comments | Twelve focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains one inherited warning | Three local commits grouped by inventory, waste and replenishment; no S06 hold; S07 next |
 | 2026-10-26 / S07 | Fifteen sales/POS/Clover modules formatted; one SQL helper reviewed unchanged; 58 declaration/method boundaries | Ten focused baseline/final suites and full 139 suites pass; equivalent syntax/types/runtime; scoped lint/format/typecheck/db/build/diff pass | Two local commits grouped by core and adapters; no S07 hold; S08 next |
 | 2026-10-26 / S08 | Nine supplier/draft/gated-purchasing modules formatted; 111 declaration/method boundaries | Eight focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains one inherited any error (exit 1) | Two local commits grouped by persistence and simulated/gated flows; no S08 source hold; S09 next |
+| 2026-10-26 / S09 | Thirteen history/document/download/archive modules formatted; 35 boundaries; three font/license hashes preserved | Twelve focused baseline/final suites with independent readers and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; two inherited scoped lint warnings | Three local commits grouped by reads, rendering/downloads and archive; no S09 hold; S10 next |
 
 ## Final report requirements
 

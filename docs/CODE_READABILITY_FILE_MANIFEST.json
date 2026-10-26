@@ -6509,29 +6509,41 @@
     {
       "path": "src/lib/d1-purchase-order-exports.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b456d60a2b594696d3c868826c20b12ec81e9315e9b31b2778b929deef8f6b75",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "b61b69fe9243191b18e8c663d937863ab1d56cce1e5d27db34c427b15f719c6a"
     },
     {
       "path": "src/lib/d1-purchase-order-history-exports.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5331d8a71616547e2f26ec872b150f8a67d0b54e1f22300423029dd42a47e91c",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "a152368b3320af4d96b7ebe117f4bd447ca71223e350254b415c864c9dae205a"
     },
     {
       "path": "src/lib/d1-purchase-order-history.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2515ddec1121565a40e41db503c4211cf88b2ab9301c79dabac1a61909081b3a",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "fa21ebc5538104c1d91e9524c8b898272d03c639a2ba20ec1933a4454ae044d2"
     },
     {
       "path": "src/lib/d1-purchasing-suppliers.ts",
@@ -6718,20 +6730,28 @@
     {
       "path": "src/lib/draft-document-pdf.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "363c444966f535d7ca5c67e0d33347bd7e14f76caf135722986b4fe6fc23fdad",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "ea2f9101c4cff050db3302a516926e16487501fa761daf03b5f68c1752ddbb92"
     },
     {
       "path": "src/lib/draft-document-xlsx.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "32bfe6dae64c710b1cae6ca1d92e5cf1e53d1eebaafc9fffdfd663919bcb5da9",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "e26b3893bec8c34b64d7eb0d5fe3ff7c50e8bedbd77ded285b95d44bd27039f5"
     },
     {
       "path": "src/lib/exact-inventory-gate.ts",
@@ -7117,7 +7137,7 @@
     {
       "path": "src/lib/purchase-order-document-archive-sources.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": false,
       "baselineSha256": null,
@@ -7125,13 +7145,16 @@
       "reviewBaselineCommit": "59d3d90",
       "reviewBaselineSha256": "b4a0a3a4334eaf3ceb0ad6da9a3e50b41eb65558c119ec0ece861d1e910fd0e3",
       "results": [
-        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section."
-      ]
+        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section.",
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "414feb5fa8ab1cb631fddc5b917233798cc519c86f2a2fa9e0885855a7316e87"
     },
     {
       "path": "src/lib/purchase-order-document-archive.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": false,
       "baselineSha256": null,
@@ -7140,26 +7163,37 @@
       "reviewBaselineSha256": "0779521b46c0e2450da7de500ffcd0f7b1ab8a6a6f3af2d643926c2e3525dd25",
       "results": [
         "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section.",
-        "Integration lint baseline: two inherited unused-variable/import warnings in this file; do not change semantics or suppress rules to hide them."
-      ]
+        "Integration lint baseline: two inherited unused-variable/import warnings in this file; do not change semantics or suppress rules to hide them.",
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "61976b08743e737833738a9c9fad95fb278e24217e523c98bf72670ad3be21c7"
     },
     {
       "path": "src/lib/purchase-order-documents.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "36bafb7863cfe0a32602e502c70d4077bf29055df7e207029065cfee43ede1a7",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "e865745a6551cd003f3480369322372f831dc57e710a7f1dc3106037a2170af2"
     },
     {
       "path": "src/lib/purchase-order-download.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "55d4f521556e1d65a5a9582522605b44f88a990c0c2b01be016a267e6d6fb392",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "de3e331cca0f25641704026053d9f065c395553da296a597ebd1a19e70d9055f"
     },
     {
       "path": "src/lib/purchase-order-export-contract.ts",
@@ -7188,29 +7222,41 @@
     {
       "path": "src/lib/purchase-order-history-dates.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "373266ce449e682004ee3201c6e8d86c727c0efe673f52770f805ab5cfa1e5f7",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "9c18113cdfb009719f5cd52d8c4fe5796e8e67de1fb91283378a356e407183d7"
     },
     {
       "path": "src/lib/purchase-order-history-documents.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f0fda038178ab2d4434a38da78a68fc857b78a8ac2cfc37032b8f334bc040a11",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "637b99bdce8bc911798e7afe3210c3e003d0cfa89605c2a31e6a53657b8acc39"
     },
     {
       "path": "src/lib/purchase-order-history-download.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a553a1a00260453709837693cf338c1064daac959eb8009ebbc314b8bde8980f",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "0146b1ce26fdd459ade5b28da8f9dcce1c510c8799d0805b0036118d99e24346"
     },
     {
       "path": "src/lib/purchase-order-history-export-contract.ts",
@@ -7227,11 +7273,15 @@
     {
       "path": "src/lib/purchase-order-history-sql.ts",
       "section": "S09",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "82bf5f3d99b28908a54c3823c0e5931482542579055e32213b2a85aad2aba4a9",
-      "results": []
+      "results": [
+        "S09 preparation: full history/export/layout/download/archive source reviewed before edits. Actual layout/text/MIME/escaping, cancellation/auth checks, source snapshots and create-only/fenced archive behavior must remain unchanged; verification In Progress.",
+        "S09 formatting/declaration separation reviewed against ac8d2a3; no type/literal/runtime or layout/transport/archive behavior change. Twelve focused baseline/final suites and full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining two inherited archive warnings. Fonts/licenses unchanged; see sectionReviews.S09."
+      ],
+      "cleanupSha256": "3e2e3c9914f272c2f48180fabd0f979b720f9262e466ef2c63bc13d33bf0913a"
     },
     {
       "path": "src/lib/purchasing-engine.ts",
@@ -9595,7 +9645,11 @@
         }
       ],
       "review": "All nine modules equivalent to pre-section source, including complete types/exports/comments/literals and emitted runtime. One hundred eleven whitespace-only declaration/method boundaries separated. Unconditional pilot block, dormant safety checks, registered network-free connector requirement, immutable versions/receipts, exactly approved quote, source/member/budget guard order, fenced lease release, unknown reservations, transport and crypto preserved. Full 139 suites pass; scoped lint retains the one inherited any error.",
-      "compatibility": "No runtime/config/schema/API/UI or real supplier/Stripe call, no purchasing/sync enablement. Local/macOS fake-provider evidence only."
+      "compatibility": "No runtime/config/schema/API/UI or real supplier/Stripe call, no purchasing/sync enablement. Local/macOS fake-provider evidence only.",
+      "commits": [
+        "7e569d7",
+        "ac8d2a3"
+      ]
     },
     "S01": {
       "outcome": "Completed",
@@ -9608,6 +9662,95 @@
         "e9c6cd6"
       ],
       "note": "Original receipt retained as recorded. Later formatter type-parenthesis refinement is separately verified in S03 c55651c."
+    },
+    "S09": {
+      "outcome": "Completed",
+      "safeFilesCompleted": 13,
+      "heldFiles": [],
+      "preSectionCommit": "ac8d2a3",
+      "codeCommits": [
+        "b9e6c9b",
+        "133a092",
+        "style(readability): clarify immutable document archive lifecycle"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm test purchase-order-history purchase-order-history-products purchase-order-history-dates purchase-order-exports purchase-order-history-exports purchase-order-documents purchase-order-history-documents purchase-order-downloads purchase-order-history-downloads supplier-order-draft-pdf supplier-order-draft-xlsx",
+          "exit": 0,
+          "suites": 11,
+          "log": ".sites-runtime/readability/S09/baseline.log"
+        },
+        {
+          "command": "pnpm test purchase-order-document-archive",
+          "exit": 0,
+          "suites": 1,
+          "log": ".sites-runtime/readability/S09/baseline-archive.log"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm test purchase-order-history purchase-order-history-products purchase-order-history-dates purchase-order-exports purchase-order-history-exports purchase-order-documents purchase-order-history-documents purchase-order-downloads purchase-order-history-downloads supplier-order-draft-pdf supplier-order-draft-xlsx purchase-order-document-archive",
+          "exit": 0,
+          "seconds": 45.2,
+          "log": ".sites-runtime/readability/S09/final/0-test.log",
+          "logSha256": "73e695856f6276de8853670d1bbb9b6a21a8ae97b52c313ffeea025d0b40bb4a"
+        },
+        {
+          "command": "pnpm format:check --section S09",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S09/final/1-format-check.log",
+          "logSha256": "a4761cb5069074b50ebb3b0692fdf2dae741588c2ad5a3a303fd6ffe582bc344"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/lib/d1-purchase-order-exports.ts src/lib/d1-purchase-order-history-exports.ts src/lib/d1-purchase-order-history.ts src/lib/draft-document-pdf.ts src/lib/draft-document-xlsx.ts src/lib/purchase-order-document-archive-sources.ts src/lib/purchase-order-document-archive.ts src/lib/purchase-order-documents.ts src/lib/purchase-order-download.ts src/lib/purchase-order-history-dates.ts src/lib/purchase-order-history-documents.ts src/lib/purchase-order-history-download.ts src/lib/purchase-order-history-sql.ts",
+          "exit": 0,
+          "seconds": 1.0,
+          "log": ".sites-runtime/readability/S09/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "5644e5b46c6479763f73c8e9e3dd6472ee705a147c6f125066ab1861daf7c3e5"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 3.0,
+          "log": ".sites-runtime/readability/S09/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.3,
+          "log": ".sites-runtime/readability/S09/final/4-test.log",
+          "logSha256": "6ab0af0548ea2ae8f7be5943d3f72f8834462cea7c4dfbb7f543089425b97a65"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S09/final/5-db-check.log",
+          "logSha256": "d269a4e15094dcbf9c78663a473b52cadcf3548b7c10e27b13ff73202f0613a4"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 5.9,
+          "log": ".sites-runtime/readability/S09/final/6-build.log",
+          "logSha256": "50a7d57f2d7fbda57e494f40938a6b6e651e8a5bdd5a38b8f02e6cf007b9ec28"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S09/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "30ae95219ef054f72b0989062ab22f947739b3ce658cb0db81ddcebea939e911",
+      "review": "All thirteen modules equivalent to pre-section source, including complete types/exports/comments/literals, SQL/templates and emitted runtime. Thirty-five whitespace-only declaration/method boundaries separated. Three font/license files retain baseline hashes. Layout operators/coordinates/text, filters/DST/serialization, MIME/filenames, escaping, snapshots, cancellation/auth checks, URL cleanup and immutable create-only/fenced archive behavior preserved. Full 139 suites and independent native PDF/XLSX readers pass. Scoped lint exits 0 with the same two inherited archive warnings.",
+      "limitations": [
+        "No visual/layout instruction changed; no browser or pixel-render walkthrough was run.",
+        "Local/macOS fake-provider and file-backed fixture evidence only; no production archive journal, R2 binding, route, schema or live integration."
+      ]
     }
   }
 }
