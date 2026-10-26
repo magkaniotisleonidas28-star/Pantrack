@@ -1,23 +1,47 @@
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,realpathSync,rmSync,existsSync,statSync,readdirSync} from 'node:fs';
-import {tmpdir} from 'node:os';
-import {join,resolve} from 'node:path';
-import {spawnSync} from 'node:child_process';
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  existsSync,
+  statSync,
+  readdirSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 // POSIX-only: exercises the python3 preservation auditor with SQLite fixtures.
-if(process.platform==='win32'){console.log('SKIP po-cart-full-gate-audit on Windows: requires python3 SQLite fixtures and POSIX modes.');process.exit(0);}
-const auditPath=resolve('scripts/po-cart-worker/full-gate-audit.py');
+if (process.platform === 'win32') {
+  console.log(
+    'SKIP po-cart-full-gate-audit on Windows: requires python3 SQLite fixtures and POSIX modes.',
+  );
+  process.exit(0);
+}
+const auditPath = resolve('scripts/po-cart-worker/full-gate-audit.py');
 // The real gate root legitimately exists during gate preparation and its own
 // test step; this suite must leave it and both consumed roots exactly as it found them.
-const gateRoots=['20261014','20261021','20261022','20261024','20261025'].map(day=>'.sites-runtime/po-cart-workers/full-offline-acceptance-task-'+day);
-const gateListing=()=>gateRoots.map(root=>existsSync(root)?readdirSync(root).sort().map(name=>[name,statSync(root+'/'+name).mtimeMs]):null);
-const gateBefore=gateListing();
-const sandbox=realpathSync(mkdtempSync(join(tmpdir(),'pantrack-full-gate-audit-')));
-let count=0;
+const gateRoots = ['20261014', '20261021', '20261022', '20261024', '20261025'].map(
+  (day) => '.sites-runtime/po-cart-workers/full-offline-acceptance-task-' + day,
+);
+const gateListing = () =>
+  gateRoots.map((root) =>
+    existsSync(root)
+      ? readdirSync(root)
+          .sort()
+          .map((name) => [name, statSync(root + '/' + name).mtimeMs])
+      : null,
+  );
+const gateBefore = gateListing();
+const sandbox = realpathSync(mkdtempSync(join(tmpdir(), 'pantrack-full-gate-audit-')));
+let count = 0;
 
 // Every case runs the real auditor functions against temporary bases; only the
 // fixed paths and the observation-baseline module are redirected.
-const harness=`
+const harness = `
 import importlib.util,json,pathlib,sqlite3,shutil,sys,types
 s=importlib.util.spec_from_file_location('audit',sys.argv[1]);a=importlib.util.module_from_spec(s);s.loader.exec_module(a)
 base=pathlib.Path(sys.argv[2]);mode=sys.argv[3];step=sys.argv[4]
@@ -68,14 +92,24 @@ else:
         delta=json.loads((a.root/'database-delta.json').read_text());result['added']=sum(t['added'] for d in delta for t in d['tables'])
 print(json.dumps(result))
 `;
-function audit(mode,step){
- const base=join(sandbox,String(++count));mkdirSync(base);
- const run=(m,s)=>{const r=spawnSync('python3',['-c',harness,auditPath,base,m,s],{encoding:'utf8',env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'}});
-  assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout.trim().split('\n').pop());};
- if(step==='capture')return run(mode,'capture');
- assert.equal(run('pass','capture').passed,true);return run(mode,'finish');
+
+function audit(mode, step) {
+  const base = join(sandbox, String(++count));
+  mkdirSync(base);
+  const run = (m, s) => {
+    const r = spawnSync('python3', ['-c', harness, auditPath, base, m, s], {
+      encoding: 'utf8',
+      env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
+    });
+    assert.equal(r.status, 0, r.stderr);
+    return JSON.parse(r.stdout.trim().split('\n').pop());
+  };
+  if (step === 'capture') return run(mode, 'capture');
+  assert.equal(run('pass', 'capture').passed, true);
+  return run(mode, 'finish');
 }
-const before=`
+
+const before = `
 import importlib.util,json,os,pathlib,sys,types
 s=importlib.util.spec_from_file_location('audit',sys.argv[1]);a=importlib.util.module_from_spec(s);s.loader.exec_module(a)
 s=importlib.util.spec_from_file_location('observation',pathlib.Path(sys.argv[1]).with_name('observation-baseline-audit.py'));real=importlib.util.module_from_spec(s);s.loader.exec_module(real)
@@ -143,66 +177,149 @@ try:result=a.baseline_holds();result['checks']=calls
 except Exception as error:result=dict(passed=False,error=str(error))
 print(json.dumps(result))
 `;
-function baselineCheck(mode){
- const base=join(sandbox,String(++count));mkdirSync(base);
- const r=spawnSync('python3',['-c',before,auditPath,base,mode],{encoding:'utf8',env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'}});
- assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout.trim().split('\n').pop());
+
+function baselineCheck(mode) {
+  const base = join(sandbox, String(++count));
+  mkdirSync(base);
+  const r = spawnSync('python3', ['-c', before, auditPath, base, mode], {
+    encoding: 'utf8',
+    env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
+  });
+  assert.equal(r.status, 0, r.stderr);
+  return JSON.parse(r.stdout.trim().split('\n').pop());
 }
 
-try{
- // Capture covers every database, including review states and sidecar-less WAL copies.
- const captured=audit('pass','capture');
- assert.equal(captured.passed,true);assert.equal(captured.databases,4);assert.equal(captured.historicalDatabaseRows,7);
- assert.deepEqual(captured.paths,['backups/copy.sqlite','cart-review-state/v3/review.sqlite','live.sqlite','wrangler/main.sqlite']);
- assert.deepEqual(captured.protected,['budget/ledger.json','cart-browser-results.json:absent','evaluation/state.json:absent','workers/evidence/report.json']);
- for(const mode of ['twice','invoked','consumed0','consumed1']){const r=audit(mode,'capture');assert.equal(r.passed,false,mode);}
+try {
+  // Capture covers every database, including review states and sidecar-less WAL copies.
+  const captured = audit('pass', 'capture');
+  assert.equal(captured.passed, true);
+  assert.equal(captured.databases, 4);
+  assert.equal(captured.historicalDatabaseRows, 7);
+  assert.deepEqual(captured.paths, [
+    'backups/copy.sqlite',
+    'cart-review-state/v3/review.sqlite',
+    'live.sqlite',
+    'wrangler/main.sqlite',
+  ]);
+  assert.deepEqual(captured.protected, [
+    'budget/ledger.json',
+    'cart-browser-results.json:absent',
+    'evaluation/state.json:absent',
+    'workers/evidence/report.json',
+  ]);
+  for (const mode of ['twice', 'invoked', 'consumed0', 'consumed1']) {
+    const r = audit(mode, 'capture');
+    assert.equal(r.passed, false, mode);
+  }
 
- // The finish audit allows classified additions and refuses any historical loss.
- const clean=audit('pass','finish');assert.equal(clean.passed,true);assert.equal(clean.historicalDatabaseRows,7);assert.equal(clean.added,0);
- const added=audit('added_rows','finish');assert.equal(added.passed,true);assert.equal(added.added,1);
- assert.equal(audit('modules_changed','finish').passed,true);
- for(const mode of ['changed_row','removed_row','removed_db','protected_changed','absent_created','cart_changed','inventory']){
-  const r=audit(mode,'finish');assert.equal(r.passed,false,mode);
- }
+  // The finish audit allows classified additions and refuses any historical loss.
+  const clean = audit('pass', 'finish');
+  assert.equal(clean.passed, true);
+  assert.equal(clean.historicalDatabaseRows, 7);
+  assert.equal(clean.added, 0);
+  const added = audit('added_rows', 'finish');
+  assert.equal(added.passed, true);
+  assert.equal(added.added, 1);
+  assert.equal(audit('modules_changed', 'finish').passed, true);
+  for (const mode of [
+    'changed_row',
+    'removed_row',
+    'removed_db',
+    'protected_changed',
+    'absent_created',
+    'cart_changed',
+    'inventory',
+  ]) {
+    const r = audit(mode, 'finish');
+    assert.equal(r.passed, false, mode);
+  }
 
- // The pre-invocation check requires the published baseline to hold exactly.
- const holds=baselineCheck('pass');
- assert.equal(holds.passed,true);assert.deepEqual(holds.checks,['processes','locks','singleton','processes','locks','singleton']);
- assert.equal(holds.gateProfiles,2);assert.equal(holds.gateChangedEntries,0);assert.equal(holds.gateLocks,0);
- // A lock left by the passing gate's crash scenarios, holding that profile's recorded PID with its owner gone, is accounted.
- const gateLock=baselineCheck('gate_lock');
- assert.equal(gateLock.passed,true);assert.equal(gateLock.gateLocks,1);assert.equal(gateLock.gateChangedEntries,1);assert.equal(gateLock.gateChangedProfiles,0);
- // Drift confined to profiles recorded by a consumed gate whose audits passed is accounted for.
- const accounted=baselineCheck('gate_drift');
- assert.equal(accounted.passed,true);assert.equal(accounted.gateChangedProfiles,2);assert.equal(accounted.gateChangedEntries,5);
- for(const [mode,error] of [['drift','Profiles changed since the baseline'],['unrecorded','Profiles changed since the baseline'],
-  ['failed_drift','Profiles changed since the baseline'],['not_invoked','Profiles changed since the baseline'],['lock_drift','Profiles changed since the baseline'],
-  ['active_drift','Profiles changed since the baseline'],['active_record','Unexpected gate profile record'],['outside_record','Unexpected gate profile record'],
-  ['lock_record','Unexpected gate profile record'],['tampered_gate','Gate audit evidence changed'],['count_mismatch','Gate audit evidence changed'],
-  ['not_idle','Profiles are not idle'],['unpublished','Baseline not published'],
-  ['tampered','Baseline fingerprint changed'],['reappeared','Historical PID present'],
-  ['lock_entry_only','Profiles changed since the baseline'],['lock_unrecorded','Worker locks/guards added or removed'],
-  ['lock_failed_gate','Worker locks/guards added or removed'],['lock_guard','Worker locks/guards added or removed'],
-  ['lock_pid_mismatch','Unaccounted worker lock'],['lock_bytes','Unaccounted worker lock'],['lock_owner_alive','Gate worker lock owner present'],
-  ['lock_owner_reappeared','Gate worker lock owner present'],['lock_symlink','Unsafe worker lock'],
-  ['historical_lock_removed','Worker locks/guards added or removed'],['direct_unaccounted','Worker locks/guards added or removed'],
-  ['direct_historical','Worker locks/guards added or removed']]){
-  assert.deepEqual(baselineCheck(mode),{passed:false,error},mode);
- }
+  // The pre-invocation check requires the published baseline to hold exactly.
+  const holds = baselineCheck('pass');
+  assert.equal(holds.passed, true);
+  assert.deepEqual(holds.checks, [
+    'processes',
+    'locks',
+    'singleton',
+    'processes',
+    'locks',
+    'singleton',
+  ]);
+  assert.equal(holds.gateProfiles, 2);
+  assert.equal(holds.gateChangedEntries, 0);
+  assert.equal(holds.gateLocks, 0);
+  // A lock left by the passing gate's crash scenarios, holding that profile's recorded PID with its owner gone, is accounted.
+  const gateLock = baselineCheck('gate_lock');
+  assert.equal(gateLock.passed, true);
+  assert.equal(gateLock.gateLocks, 1);
+  assert.equal(gateLock.gateChangedEntries, 1);
+  assert.equal(gateLock.gateChangedProfiles, 0);
+  // Drift confined to profiles recorded by a consumed gate whose audits passed is accounted for.
+  const accounted = baselineCheck('gate_drift');
+  assert.equal(accounted.passed, true);
+  assert.equal(accounted.gateChangedProfiles, 2);
+  assert.equal(accounted.gateChangedEntries, 5);
+  for (const [mode, error] of [
+    ['drift', 'Profiles changed since the baseline'],
+    ['unrecorded', 'Profiles changed since the baseline'],
+    ['failed_drift', 'Profiles changed since the baseline'],
+    ['not_invoked', 'Profiles changed since the baseline'],
+    ['lock_drift', 'Profiles changed since the baseline'],
+    ['active_drift', 'Profiles changed since the baseline'],
+    ['active_record', 'Unexpected gate profile record'],
+    ['outside_record', 'Unexpected gate profile record'],
+    ['lock_record', 'Unexpected gate profile record'],
+    ['tampered_gate', 'Gate audit evidence changed'],
+    ['count_mismatch', 'Gate audit evidence changed'],
+    ['not_idle', 'Profiles are not idle'],
+    ['unpublished', 'Baseline not published'],
+    ['tampered', 'Baseline fingerprint changed'],
+    ['reappeared', 'Historical PID present'],
+    ['lock_entry_only', 'Profiles changed since the baseline'],
+    ['lock_unrecorded', 'Worker locks/guards added or removed'],
+    ['lock_failed_gate', 'Worker locks/guards added or removed'],
+    ['lock_guard', 'Worker locks/guards added or removed'],
+    ['lock_pid_mismatch', 'Unaccounted worker lock'],
+    ['lock_bytes', 'Unaccounted worker lock'],
+    ['lock_owner_alive', 'Gate worker lock owner present'],
+    ['lock_owner_reappeared', 'Gate worker lock owner present'],
+    ['lock_symlink', 'Unsafe worker lock'],
+    ['historical_lock_removed', 'Worker locks/guards added or removed'],
+    ['direct_unaccounted', 'Worker locks/guards added or removed'],
+    ['direct_historical', 'Worker locks/guards added or removed'],
+  ]) {
+    assert.deepEqual(baselineCheck(mode), { passed: false, error }, mode);
+  }
 
- // The fixed scope covers every local database and the October 14 protected bases.
- const source=readFileSync(auditPath,'utf8');
- assert.match(source,/DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
- assert.match(source,/root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\)/);
- assert.match(source,/CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\)\]/);
- assert.doesNotMatch(source,/sqlite3\.connect\(/);
- // Only fixed operations run, never optimized.
- const invalid=spawnSync('python3',[auditPath,'--root','x'],{encoding:'utf8',cwd:sandbox});
- assert.notEqual(invalid.status,0);assert.match(invalid.stderr,/Only fixed capture\/before\/finish/);
- const optimized=spawnSync('python3',['-O',auditPath,'capture'],{encoding:'utf8',cwd:sandbox});
- assert.notEqual(optimized.status,0);assert.match(optimized.stderr,/Optimized gate audit execution is not accepted/);
- assert.deepEqual(gateListing(),gateBefore,'Real gate roots changed');
- console.log('PASS full gate audit: complete database capture, WAL copies, classified additions, historical-loss refusal and baseline pre-check with gate-recorded profiles and accounted gate worker locks; no real root written.');
-}finally{
- rmSync(sandbox,{recursive:true,force:true});
+  // The fixed scope covers every local database and the October 14 protected bases.
+  const source = readFileSync(auditPath, 'utf8');
+  assert.match(source, /DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
+  assert.match(
+    source,
+    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\)/,
+  );
+  assert.match(
+    source,
+    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\)\]/,
+  );
+  assert.doesNotMatch(source, /sqlite3\.connect\(/);
+  // Only fixed operations run, never optimized.
+  const invalid = spawnSync('python3', [auditPath, '--root', 'x'], {
+    encoding: 'utf8',
+    cwd: sandbox,
+  });
+  assert.notEqual(invalid.status, 0);
+  assert.match(invalid.stderr, /Only fixed capture\/before\/finish/);
+  const optimized = spawnSync('python3', ['-O', auditPath, 'capture'], {
+    encoding: 'utf8',
+    cwd: sandbox,
+  });
+  assert.notEqual(optimized.status, 0);
+  assert.match(optimized.stderr, /Optimized gate audit execution is not accepted/);
+  assert.deepEqual(gateListing(), gateBefore, 'Real gate roots changed');
+  console.log(
+    'PASS full gate audit: complete database capture, WAL copies, classified additions, historical-loss refusal and baseline pre-check with gate-recorded profiles and accounted gate worker locks; no real root written.',
+  );
+} finally {
+  rmSync(sandbox, { recursive: true, force: true });
 }

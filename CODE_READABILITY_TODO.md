@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S18** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S19** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **9 of 22 Completed; 9 Blocked (recorded handoffs/holds); 0 In Progress; 4 Pending**.
+- Cleanup sections: **9 of 22 Completed; 10 Blocked (recorded handoffs/holds); 0 In Progress; 3 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -103,7 +103,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S16 | Inventory, recipes, waste and POS workspace components | 14 | Blocked: ten JSX holds; safe files verified |
 | S17 | Purchasing, cart, spending and document workspace components | 17 | Blocked: receiving/JSX/source pins; safe files verified |
 | S18 | Owned styles, static site, standalone previews and assets | 32 | Blocked: visual/receiving holds; safe files verified |
-| S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Pending |
+| S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Blocked: formatter/receiving holds; safe files verified |
 | S20 | Operational CLIs, lifecycle diagnostics, shell and Python audits | 88 | Pending |
 | S21 | Documentation, architecture navigation and managed instructions | 218 + 1 upstream | Pending |
 | S22 | Final consistency, preservation review and handoff | whole project | Pending |
@@ -606,22 +606,32 @@ No actual visual/runtime instruction changed in safe files, and no browser/pixel
 
 ## S19 — Test harnesses, domain suites and fixtures
 
-Status: Pending. Depends on: S01–S18; sections use their existing tests before this cleanup stage.
+Status: Blocked for four formatter and three receiving holds; 146 safe files verified. Depends on: S01–S18; sections use their existing tests before this cleanup stage.
 
 **Files:** All `tests/*.mjs`, `tests/helpers/**`, and `tests/fixtures/**`.
 
-- [ ] S19.1 — Clean shared test adapters and fixture setup before their dependent suites, keeping suite order and generated-module isolation.
-- [ ] S19.2 — Organize suites by arrange/act/assert scenario blocks and use descriptive local names; preserve all assertions, data, fake providers and negative cases.
-- [ ] S19.3 — Retain deterministic barriers and clocks; never replace race tests with sleeps or helper-only assertions. Preserve independent audit and document readers.
-- [ ] S19.4 — Review format-sensitive source assertions without weakening what they prove. Do not delete tests, broaden tolerances or add platform skips to make cleanup pass.
-- [ ] S19.5 — Keep serialized lifecycle evidence fixtures unchanged, and keep the owner’s delivery suite Blocked until handoff.
+**Formatter holds:** Four modules retain baseline bytes because the pinned formatter’s independent debug-check fails internally on BigInt, including stable candidates. All compiler comparisons passed, but the required independent check was not relaxed. Three receiving suites remain absent/held; serialized fixtures stay unchanged.
+
+- [x] S19.1 — Clean shared test adapters and fixture setup before their dependent suites, keeping suite order and generated-module isolation.
+- [x] S19.2 — Organize suites by arrange/act/assert scenario blocks and use descriptive local names; preserve all assertions, data, fake providers and negative cases.
+- [x] S19.3 — Retain deterministic barriers and clocks; never replace race tests with sleeps or helper-only assertions. Preserve independent audit and document readers.
+- [!] S19.4 — Four BigInt modules are held for an independent formatter-checker fix; safe source assertions remain unchanged. Review format-sensitive source assertions without weakening what they prove. Do not delete tests, broaden tolerances or add platform skips to make cleanup pass.
+- [!] S19.5 — Three receiving suites remain absent/held pending integration; both current serialized fixtures are verified unchanged. Keep serialized lifecycle evidence fixtures unchanged, and keep the owner’s delivery suite Blocked until handoff.
 
 **Verification:** Run `pnpm test` in full, typecheck, build and scoped lint. Count actual executed/skipped suites, validate fixture hashes and ensure no assertion/authorization case was lost. Record platform limitations precisely.
 
-- [ ] S19.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S19.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S19.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S19.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** Ten shared helpers were read and cleaned before their dependent suites. In total 144 modules now use consistent formatting and 340 whitespace-only declaration/method boundaries. Existing scenario grouping and comments were retained; no test abstraction, case extraction or assertion rewrite was needed. Two serialized lifecycle fixtures are reviewed unchanged. The source runner still executes the same sorted isolated modules sequentially.
+
+A whole-suite inventory and full types/syntax/comments/literals/emitted-runtime comparison prove all 144 candidates equivalent to `6263e2d`. Per-file assertion inventories retain all 5,640 static assertion call sites across the original 148 modules. Imports, fixture values, raw SQL/templates, source pins, negative/authorization cases, barriers/clocks, generated-module isolation, process ownership, independent audit/document readers and platform guards are preserved. This is formatting and mechanical preservation evidence plus the actual suites, not a new deep security audit of every test.
+
+The first whole-format attempt refused 17 candidates before suite writes. Thirteen chained-call cases converged after an additional format pass, with compiler equivalence on each pass and independent stable-candidate debug-check success. Four BigInt modules still fail internally in that independent checker and remain byte-identical/Blocked: `inventory-order-incoming`, `inventory-order-receipts`, `po-cart-single-instance-maintenance`, `sales-ingestion-contract`. Neither formatter configuration nor preservation guards were relaxed. Three receiving suites remain absent and held.
+
+Full `pnpm test` passed all 139 suites before and after, with zero platform skips on this Mac. The guard suite, section format check, typecheck, 40-migration database check, build and diff check passed. Scoped ESLint exited 0 with 29 inherited warnings, matching the integration baseline exactly. Final checks ran against frozen source. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S19`; helper, convergence, refusal, assertion and equivalence receipts: `.sites-runtime/readability/S19/`.
+
+No live integration, real browser/maintenance/gate, historical runtime state or acceptance record was used or changed. Seven local commits group shared helpers, foundations/auth, stock, sales, purchasing/documents, cart APIs and lifecycle regressions. Rollback is those source/documentation commits only. Independent operational-script cleanup S20 is next; the four formatter and three receiving holds remain open.
 
 ## S20 — Operational CLIs, lifecycle diagnostics, shell and Python audits
 
@@ -705,6 +715,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S16 | Four safe inventory-layout/recipe/register/waste components formatted; two declaration boundaries; ten JSX candidates held unchanged | Seven focused baseline/final and all 139 suites; equivalence/format/typecheck/db/build/diff pass; scoped inherited lint one error/three warnings matched | Two local commits; ten JSX-child holds remain Blocked; independent S17 next |
 | 2026-10-26 / S17 | Eight safe purchasing/cart/catalog/download/client/editor modules formatted; 21 declaration/method boundaries | Seven focused baseline/final and all 139 suites; equivalence/format/typecheck/db/build/diff pass; scoped inherited lint one error/two warnings matched | Three local commits; eight JSX/source-pin and three receiving UI holds remain Blocked; independent S18 next |
 | 2026-10-26 / S18 | Five preview/config files formatted; declaration plus thirteen assets/docs reviewed unchanged; seven boundaries; font/license/static bytes retained | Five focused baseline/final and all 139 suites; scoped lint/format/typecheck/db/build/diff, in-memory standalone bundle, CSS parse/XML/assets/local links/font hashes pass | Two local commits; thirteen CSS/HTML visual and one receiving CSS hold remain Blocked; independent S19 next |
+| 2026-10-26 / S19 | 144 test modules formatted; 340 boundaries; two fixtures unchanged; all 5,640 static assertion sites preserved | Baseline/final 139 suites (Mac, zero skips); guard/format/type/db/build/diff pass; scoped lint 29 inherited warnings match baseline; full equivalence and fixture hashes pass | Seven local commits; four formatter and three receiving holds remain Blocked; S20 next |
 
 ## Final report requirements
 
