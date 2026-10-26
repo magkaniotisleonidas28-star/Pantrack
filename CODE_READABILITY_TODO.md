@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S11** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S12** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **8 of 22 Completed; 3 Blocked (recorded handoffs/holds); 0 In Progress; 11 Pending**.
+- Cleanup sections: **8 of 22 Completed; 4 Blocked (recorded handoffs/holds); 0 In Progress; 10 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -96,7 +96,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Completed |
 | S10 | Durable cart authorization, jobs and spending limits | 3 | Completed |
 | S11 | Browser-session services and worker implementation | 28 | Completed |
-| S12 | Supplier confirmation, incoming stock and receiving | 1 | Pending |
+| S12 | Supplier confirmation, incoming stock and receiving | 1 | Blocked: receiving service handoff; confirmation verified |
 | S13 | API routes and server integration boundaries | 36 | Pending |
 | S14 | Shared UI primitives and vendor boundaries | 62 | Pending |
 | S15 | Application entrypoints, identity pages and workspace shell | 15 | Pending |
@@ -409,23 +409,29 @@ This is local/macOS evidence only. No real Chrome, supplier/provider/paid model,
 
 ## S12 — Supplier confirmation, incoming stock and receiving
 
-Status: Pending. Depends on: S11; S06 inventory receipt ports.
+Status: Blocked only for receiving-service handoff; confirmation verified. Depends on: S11; S06 inventory receipt ports.
 
 **Files:** `d1-po-cart-confirmations.ts`, plus the committed receiving branch’s `d1-po-cart-deliveries.ts` after integration/handoff. Confirmation/delivery contracts, route and tests have separately identified owners.
 
-- [ ] S12.1 — Clarify manager-entered confirmation checks, immutable supplier references, expected versus received quantities, holds and account-cart release.
-- [ ] S12.2 — Explain how A-owned incoming/receipt statements compose into the same D1 batch; keep business effects auditable and idempotent.
-- [ ] S12.3 — Keep the receiving-branch delivery service and its consumers Blocked until their integration and owner handoff are reviewed. Re-inventory that committed work before cleanup.
-- [ ] S12.4 — Preserve partial-receipt quantities, stock updates, duplicate behavior, actor/permission rechecks and original operation identity. Do not complete or repair the receiving feature as cleanup.
+- [x] S12.1 — Clarify manager-entered confirmation checks, immutable supplier references, expected versus received quantities, holds and account-cart release.
+- [x] S12.2 — Explain how A-owned incoming/receipt statements compose into the same D1 batch; keep business effects auditable and idempotent.
+- [!] S12.3 — Receiving-branch delivery service and its consumers remain Blocked until integration/handoff. The absent source cannot be reviewed or cleaned here; re-inventory it after that handoff.
+- [x] S12.4 — Preserve partial-receipt quantities, stock updates, duplicate behavior, actor/permission rechecks and original operation identity. Do not complete or repair the receiving feature as cleanup.
 
 **Focused command:** `pnpm test po-cart-confirmations po-cart-confirmations-api inventory-order-incoming inventory-order-receipts`.
 
 **Verification:** Run confirmation/incoming/receipt tests, full tests, scoped lint, typecheck, db:check and build. Add `po-cart-deliveries` only after its owner handoff and inventory update; never borrow the owner’s dirty database.
 
-- [ ] S12.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S12.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S12.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S12.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** The present confirmation service is fully read and formatted; eight whitespace-only declaration/method boundaries separate actor/read/replay/record stages. Its existing class documentation explains within-cap atomic incoming, over-cap holds, commitment transfer, account release and retained spending. No new comment, extraction or abstraction was needed.
+
+The module matches pre-section `05c1993` syntax/types/exports/literals/comments/emitted runtime. Company/role/source/revision checks, unique supplier references, frozen quantity conversions, SQL/binding/effect/audit order, the single incoming/confirmation/release batch, permanent replay and uncertain-acknowledgment recovery are unchanged. A-owned incoming/receipt statements remain in their existing modules and were covered by the focused regressions.
+
+All four focused suites above passed before and after; full `pnpm test` passed all 139 suites. Scoped lint, format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S12`; logs: `.sites-runtime/readability/S12/`. Local/macOS fake-provider evidence only; no schema/API/UI behavior change required another apply/smoke.
+
+Commit: `style(readability): clarify supplier confirmation and incoming handoff`. **Remaining hold:** `d1-po-cart-deliveries.ts` is absent here and remains Blocked until receiving integration/handoff, together with its held contract/schema/API/UI/tests. S13 can independently review the existing routes against the verified present services; the separate delivery route and authorization-wrapper handoff remain held. Rollback: this source/docs commit only.
 
 ## S13 — API routes and server integration boundaries
 
@@ -638,6 +644,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S09 | Thirteen history/document/download/archive modules formatted; 35 boundaries; three font/license hashes preserved | Twelve focused baseline/final suites with independent readers and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; two inherited scoped lint warnings | Three local commits grouped by reads, rendering/downloads and archive; no S09 hold; S10 next |
 | 2026-10-26 / S10 | Three cart authorization/job/spending modules formatted; 71 declaration/method boundaries | Nine focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains inherited prefer-const error and unused warning | Two local commits grouped by authorization/spending and jobs; no S10 source hold; S11 next |
 | 2026-10-26 / S11 | 28 browser/worker/AI/preview modules formatted; 124 declaration/method boundaries; literal fixture markup/prompts retained | Eighteen focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; inherited scoped lint 29 errors/4 warnings matched | Four local commits grouped by services, worker ownership, AI/evidence and preview; no S11 hold; independent S12 confirmation next |
+| 2026-10-26 / S12 | Present confirmation service formatted; eight declaration/method boundaries; atomic A-owned incoming handoff preserved | Four focused baseline/final suites and full 139 suites pass; scoped lint/equivalence/format/typecheck/db/build/diff pass | Local section commit; absent delivery service remains explicitly Blocked; independent existing-route S13 review next |
 
 ## Final report requirements
 
