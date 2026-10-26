@@ -12,6 +12,8 @@ import {fixtureCredential} from './po-cart-worker/credentials.mjs';
 const actor='local_seedy',quote=v=>`'${String(v).replaceAll("'","''")}'`;// The practice sign-in identity, which owns the company it creates.
 const provision=await fixtureProvisioner(),browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH??chromium.executablePath()});
 const f=await seedLocalBrowserJob({enqueueJob:false});let worker;
+// Optional screenshots for visual review: DELIVERY_SCREENSHOTS=<directory>.
+const shot=async(page,name)=>{if(process.env.DELIVERY_SCREENSHOTS)await page.screenshot({path:`${process.env.DELIVERY_SCREENSHOTS}/${name}.png`,fullPage:true});};
 const signIn=async page=>page.goto(f.origin+'/signin-with-chatgpt?return_to='+encodeURIComponent('/?company='+f.companyId));
 async function openOrder(page){
   await signIn(page);await page.getByRole('button',{name:'Purchase-order drafts',exact:true}).click();
@@ -43,10 +45,10 @@ UPDATE memberships SET role='employee' WHERE company_id=${quote(f.companyId)} AN
   const staffText=await staff.innerText();assert.doesNotMatch(staffText,/\$|Ordered|Confirmed|Still expected/,'Staff see no prices or expected amounts');
   assert.deepEqual(await count.locator('thead th').allInnerTexts(),['Item','Packs received','Damaged']);
   await fill(count,{'Packs received of House coffee beans':'1','Packs received of Barista oat milk':'1','Packs received of 12 oz paper cups':'4','Damaged packs of 12 oz paper cups':'1'});
-  await count.getByRole('button',{name:'Save count'}).click();await staff.getByText('Count saved. A manager will review it.').waitFor();
+  await shot(page,'staff-count');await count.getByRole('button',{name:'Save count'}).click();await staff.getByText('Count saved. A manager will review it.').waitFor();
   await staff.getByText('The last count for this order is waiting for a manager.').waitFor();
   assert.equal((await api(`/api/po-cart-deliveries?companyId=${f.companyId}&view=manager&jobId=${job.id}`)).status,403,'Staff cannot read the comparison');
-  await page.setViewportSize({width:390,height:844});
+  await page.setViewportSize({width:390,height:844});await shot(page,'staff-390');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No narrow overflow for staff');
   await page.setViewportSize({width:1440,height:1000});
   // Manager: review the count, send it back with a reason, count again and approve with a shortfall and an extra pack.
@@ -60,7 +62,7 @@ DELETE FROM memberships WHERE company_id=${quote(f.companyId)} AND user_id='fict
   await fill(again,{'Packs received of House coffee beans':'1','Packs received of Barista oat milk':'1','Packs received of 12 oz paper cups':'4'});
   await again.getByRole('button',{name:'Save count'}).click();await review.waitFor();
   await review.getByLabel("The rest of Barista oat milk won't arrive").check();await review.getByLabel('Extra packs of 12 oz paper cups').fill('1');
-  await review.getByRole('button',{name:'Approve delivery'}).click();
+  await shot(page,'manager-review');await review.getByRole('button',{name:'Approve delivery'}).click();
   await panel.getByText('Everything on this order is received or marked as not arriving.').waitFor();
   const progress=await panel.locator('[data-supplier-deliveries] table').first().locator('tbody tr').allInnerTexts();
   assert.deepEqual(progress.map(r=>r.split('\t').slice(1)),[['1','1','0','0'],['2','1','1','0'],['3','3 + 1 extra','0','0']]);
@@ -69,7 +71,7 @@ DELETE FROM memberships WHERE company_id=${quote(f.companyId)} AND user_id='fict
   assert.equal((await api('/api/po-cart-deliveries',{action:'count',companyId:f.companyId,confirmationId:recorded.data.receipt.confirmationId,operationId:randomUUID(),
     deliveredAt:new Date().toISOString(),lines:[{lineId:view.authorizedLines[0].lineId,receivedPacks:'1',damagedPacks:'0'}],note:''})).status,409,'A received order takes no more counts');
   assert.deepEqual(await f.request('/api/inventory?companyId='+f.companyId),f.inventory,'Non-stock deliveries leave stock unchanged');
-  await page.setViewportSize({width:390,height:844});await panel.scrollIntoViewIfNeeded();
+  await shot(page,'manager-done');await page.setViewportSize({width:390,height:844});await panel.scrollIntoViewIfNeeded();await shot(page,'manager-390');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No narrow overflow for the manager');
   assert.deepEqual(errors,[]);await context.close();
 }finally{if(worker?.process.exitCode===null)worker.process.kill('SIGTERM');
