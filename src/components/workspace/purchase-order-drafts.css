@@ -48,6 +48,7 @@
 .po-history-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,.5fr) minmax(0,.8fr);gap:16px;align-items:end;padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid var(--border)}
 .po-history-filter-actions{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap}
 .po-history-date-help{grid-column:1/-1;min-width:0;overflow-wrap:anywhere}
+.po-history-product{grid-column:1/-1;display:grid;gap:8px;min-width:0;overflow-wrap:anywhere}
 @media(max-width:760px){.po-history-filters{grid-template-columns:minmax(0,1fr)}}
 .po-list-header,.po-list-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.55fr) minmax(140px,.5fr) auto;gap:20px;align-items:center;padding:16px 0;border-bottom:1px solid var(--border)}
 .po-list-header{font-size:.8rem;color:var(--muted-foreground);padding-top:0}

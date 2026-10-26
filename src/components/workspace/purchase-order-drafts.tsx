@@ -52,7 +52,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   const [dateTimeZone,setDateTimeZone]=useState<HistoryDateTimeZone>('America/New_York'),[filterError,setFilterError]=useState('');
   const [historyLoading,setHistoryLoading]=useState(true),[historyError,setHistoryError]=useState('');
   const historyListRequest=useRef(0),historyListAbort=useRef<AbortController|null>(null);
-  const historyVisible=enabled&&active&&!selected&&!editor,hasFilters=!!(filters.q||filters.supplier||filters.status||filters.from||filters.to);
+  const historyVisible=enabled&&active&&!selected&&!editor,hasFilters=!!(filters.q||filters.supplier||filters.status||filters.product||filters.from||filters.to);
   const dirty=!!editor&&JSON.stringify(editor)!==baseline||uncertain;
   useEffect(()=>{onDirtyChange(dirty);},[dirty,onDirtyChange]);
   useEffect(()=>{if(!dirty)return;const protect=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',protect);return()=>window.removeEventListener('beforeunload',protect);},[dirty]);
@@ -173,6 +173,8 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
         <label>Status<select value={filterDraft.status??''} disabled={blocked} onChange={e=>patchHistoryFilters({status:(e.target.value||undefined) as PurchaseOrderHistoryFilters['status']})}>
           <option value="">All statuses</option><option value="draft">Draft</option><option value="reviewed">Reviewed</option><option value="canceled">Canceled</option></select></label>
         <label>Supplier<Input name="history-supplier" maxLength={200} placeholder="Supplier name or ID" value={filterDraft.supplier} disabled={blocked} onChange={e=>patchHistoryFilters({supplier:e.target.value})}/></label>
+        <div className="po-history-product"><label>Product or item<Input name="history-product" maxLength={200} placeholder="Saved description, SKU or product ID" value={filterDraft.product??''} disabled={blocked} aria-describedby="po-history-product-help" onChange={e=>patchHistoryFilters({product:e.target.value||undefined})}/></label>
+          <small id="po-history-product-help">Find orders containing a matching item in the current saved revision. Exports keep every line of each matching order.</small></div>
         <label>From<Input name="history-from" type="date" min={HISTORY_DATE_MIN} max={HISTORY_DATE_MAX} value={filterDraft.from??''} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>patchHistoryDate('from',e.target.value)}/></label>
         <label>To<Input name="history-to" type="date" min={HISTORY_DATE_MIN} max={HISTORY_DATE_MAX} value={filterDraft.to??''} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>patchHistoryDate('to',e.target.value)}/></label>
         <label>Date time zone<select value={dateTimeZone} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>changeDateTimeZone(e.target.value as HistoryDateTimeZone)}>

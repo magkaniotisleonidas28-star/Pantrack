@@ -37,7 +37,7 @@ function captureCore(value:unknown){
   let records:PurchaseOrderHistoryRecord[];
   try{records=parsed.data.records.map(capturePurchaseOrderHistoryRecord);}catch{historyExportFail('source_invalid','A saved draft cannot be exported. Refresh the results and review its details.');}
   const core={...parsed.data,records};
-  const dates=historyDateBounds(core.filters);
+  const dates=historyDateBounds(core.filters),product=core.filters.product;
   // Match SQLite lower()/instr(): fold ASCII only and treat wildcard characters literally.
   const lower=(text:string)=>text.replace(/[A-Z]/g,char=>char.toLowerCase());
   const includes=(text:string,query:string)=>lower(text).includes(lower(query));
@@ -45,6 +45,7 @@ function captureCore(value:unknown){
     records.some(({draft,status,createdAt})=>draft.companyId!==core.companyId||
       dates.start&&Date.parse(createdAt)<Date.parse(dates.start)||dates.before&&Date.parse(createdAt)>=Date.parse(dates.before)||
       core.filters.status&&status!==core.filters.status||
+      product&&!draft.lines.some(line=>[line.productId??'',line.sku,line.description].some(text=>includes(text,product)))||
       core.filters.q&&!includes(draft.number,core.filters.q)&&!includes(draft.supplier.name,core.filters.q)||
       core.filters.supplier&&!includes(draft.supplier.id,core.filters.supplier)&&!includes(draft.supplier.name,core.filters.supplier))||
     new Set(records.map(record=>record.draft.id)).size!==records.length){

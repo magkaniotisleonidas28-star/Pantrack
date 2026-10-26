@@ -2,11 +2,12 @@ import {z} from 'zod';
 import {poFail,poId} from './purchase-order-contract';
 import {HISTORY_DATE_TIME_ZONES,validHistoryDate} from './purchase-order-history-dates';
 
-export const PURCHASE_ORDER_HISTORY_FILTER_KEYS=['q','supplier','status','from','to','timeZone'] as const;
+export const PURCHASE_ORDER_HISTORY_FILTER_KEYS=['q','supplier','status','product','from','to','timeZone'] as const;
 const date=z.string().refine(validHistoryDate,'Choose a real date between 1900-01-01 and 9998-12-31.');
 export const purchaseOrderHistoryFilters=z.object({
   q:z.string().trim().max(200).default(''),supplier:z.string().trim().max(200).default(''),
   status:z.enum(['draft','reviewed','canceled']).optional(),
+  product:z.string().trim().max(200).optional().transform(value=>value||undefined),
   from:date.optional(),to:date.optional(),timeZone:z.enum(HISTORY_DATE_TIME_ZONES).optional(),
 }).strict().superRefine((value,ctx)=>{
   if(!!(value.from||value.to)!==!!value.timeZone)ctx.addIssue({code:'custom',path:['timeZone'],message:'Choose a time zone when filtering by date.'});
@@ -22,7 +23,7 @@ export function purchaseOrderHistoryQuery(params:URLSearchParams){
   if(keys.length!==new Set(keys).size||keys.some(key=>!['companyId','offset',...PURCHASE_ORDER_HISTORY_FILTER_KEYS].includes(key))||
     !/^(0|[1-9]\d{0,6})$/.test(offset))poFail('invalid_request','Check the history search, status, supplier and page.');
   const parsed=purchaseOrderHistoryRequest.safeParse({companyId:params.get('companyId'),offset:Number(offset),filters:purchaseOrderHistoryFilterQuery(params)});
-  if(!parsed.success)poFail('invalid_request','Check the history search, status, supplier, dates, time zone and page.');
+  if(!parsed.success)poFail('invalid_request','Check the history search, status, supplier, product, dates, time zone and page.');
   return parsed.data;
 }
 
