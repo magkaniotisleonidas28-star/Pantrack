@@ -6163,11 +6163,15 @@
     {
       "path": "src/lib/a8-review-source.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "fb9447ce814c1bf8483472f818bfe50d186243bf0a884a27f2e26ef60f450ddb",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "8cfc65cab8b8d4ad3c4a283b8fedcfba86e200679c42028c99f66adef698f7de"
     },
     {
       "path": "src/lib/auth-availability.ts",
@@ -6349,29 +6353,41 @@
     {
       "path": "src/lib/d1-inventory-consumption.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "9de88ecc395b9c88206281302e1684ef897d61d9e59cacc78c1f9a57e4346863",
-      "results": []
+      "results": [
+        "S06 preparation: full source/callers and atomic replay/count/receipt/waste boundaries reviewed before formatting; no structural extraction justified by this cleanup. Final verification remains In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "4138546c8f083426358d57574c3ce5a1f7f4060069479be2fcaa7a83cdd76ecc"
     },
     {
       "path": "src/lib/d1-inventory-management.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "e9a68fb60d88dae073217d5fdf72c7be8def6f3b333855319f6589c37b8e9183",
-      "results": []
+      "results": [
+        "S06 preparation: full source/callers and atomic replay/count/receipt/waste boundaries reviewed before formatting; no structural extraction justified by this cleanup. Final verification remains In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "698650447dbcfee2c81de0016cc42cfa2439ca9931597799ab9e38735009a501"
     },
     {
       "path": "src/lib/d1-menu-waste.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2744917efbde6c2c2c6c9f4b464d84d93084cff6bccabdf9206b9076e4b0811d",
-      "results": []
+      "results": [
+        "S06 preparation: full source/callers and atomic replay/count/receipt/waste boundaries reviewed before formatting; no structural extraction justified by this cleanup. Final verification remains In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "40754534ba39b34d914b86c43b9e662aacba8919d8eb9fd0302778a168fc90e3"
     },
     {
       "path": "src/lib/d1-po-cart-authorizations.ts",
@@ -6493,65 +6509,93 @@
     {
       "path": "src/lib/d1-recipe-publisher.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "1ec53bc8e2b4009bf99593ad2f12f3243c7a856281a0a04bec3001b316d63d2a",
-      "results": []
+      "results": [
+        "S06 preparation: full source/callers and atomic replay/count/receipt/waste boundaries reviewed before formatting; no structural extraction justified by this cleanup. Final verification remains In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "df043a4abee1d3e292526d87feebef12f27701388a3dfaf13bf32d8f616e902f"
     },
     {
       "path": "src/lib/d1-replenishment-clover-source.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b811043a7695b6ecb429b2a325115e967c9aa98cebd1790a84dc524639028d0c",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "6b38169fb74b61affdef76d0001ea3b980e1efd61d7f276df826aab0f31a67f7"
     },
     {
       "path": "src/lib/d1-replenishment-lifecycle.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2c3776f3cfea7df38d662cf1eb9633634399095211b949157c614819bd56d33e",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "523b98c733e49de21f1eb41b8b4b07bb05527372a27da01b28404a8ee46cac88"
     },
     {
       "path": "src/lib/d1-replenishment-proposal-origins.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8f9300ce2e5c2cbd788fc08cc5267adcd2659d713dca6a0c6b6141974f1557ca",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "73de498271fae829f1bcb1a7a9e08c503764fe9161cd513de70b62fa3f9b7c72"
     },
     {
       "path": "src/lib/d1-replenishment-review.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4af24be2d732574956fc4db04609dd32fcd32e5334fe9b8b432276e95baaead6",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "b7c94e858952972d5da35a3fa92e1c42d9319534e323db3035de0ee9464533ac"
     },
     {
       "path": "src/lib/d1-replenishment-sales-readiness.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "972f9e9c09d4b89159f333f219ce9e35161b1bf50da85e63afaec7332423c709",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "d74d9da043d1c5e3823b008899a88acf1bb15bd256d6e75f54f961d272cdc20e"
     },
     {
       "path": "src/lib/d1-replenishment-settings.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "198027a097b9ab3be5b9b88f1815c00beaf5939ac8c2d1f5213259d0b07ee276",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "028384e4ae710c480c7e863c041c7b155012ed81ed7ce6004c07b13562dc4e6f"
     },
     {
       "path": "src/lib/d1-sales-corrections.ts",
@@ -6583,11 +6627,15 @@
     {
       "path": "src/lib/d1-stock-pack.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "06b21bcc0bdf33637ba8e0bae8aa22f1bc9c6980095d1b2b036ecfffa88391c0",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "3c613bf49d31baab37a2910fd944b37a7925cc2505f13db7144ee1f4181d88ef"
     },
     {
       "path": "src/lib/d1-supplier-simulation.ts",
@@ -6601,11 +6649,15 @@
     {
       "path": "src/lib/d1-waste.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "9f44d92e4ef20a6aac3e0b03aae417224c130df4d0817f30d2b9ca87bea83513",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "8fca4f992283e1abb0a6d7de656ea7658923fb492de7c66df79e7c7bc96f8270"
     },
     {
       "path": "src/lib/draft-document-pdf.ts",
@@ -6628,11 +6680,15 @@
     {
       "path": "src/lib/exact-inventory-gate.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f6f4f17e6cca19a2670714588163db7da78bdfe94b872b368703b15c3d9373e8",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "4f94905eb0e5368f9902e2aadc5f06c962dc1c760766e15c7d21710fd53d479f"
     },
     {
       "path": "src/lib/fake-supplier-connector.ts",
@@ -6667,11 +6723,15 @@
     {
       "path": "src/lib/inventory-consumption-fake.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "c517454c3faf3bc4c24e5fe4bf2d0a6975655c7bd0d598aa6864ce8cc1b64ad6",
-      "results": []
+      "results": [
+        "S06 preparation: full source/callers and atomic replay/count/receipt/waste boundaries reviewed before formatting; no structural extraction justified by this cleanup. Final verification remains In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "d361c206104e84dfda51717d31a6043db1f5c4009591bea70fbbfa40b5c1a906"
     },
     {
       "path": "src/lib/inventory-management-contract.ts",
@@ -6688,11 +6748,15 @@
     {
       "path": "src/lib/inventory-planning-units.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8989aaa154667e9858ea0943759fd1ef30f9009c1a4ee35264300f83880f180e",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "466724c8cb2ffb3897359ab5bc185a474dd69bbe6467f1911bf70c46835ef93f"
     },
     {
       "path": "src/lib/inventory-quantities.ts",
@@ -6709,20 +6773,28 @@
     {
       "path": "src/lib/inventory.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7d5bfbd0876b4e255859c95f729986a3ea583fe63d28aef639f8acbc58856a2a",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "cb8730f76d6b276f6e98d37edc8edb7278f5a4dd221baa1e03de5b55be6ee120"
     },
     {
       "path": "src/lib/legacy-m3-review.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "1e2c5a6132f25d69e10051b61cfdc8c9b70a3cf02c0a39571a1b29c87dec4a10",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "1500a008881f6d1f8d1113c2b8c7b7d68d0f14aaddb49dc728957042169bd324"
     },
     {
       "path": "src/lib/memberships.ts",
@@ -6751,20 +6823,28 @@
     {
       "path": "src/lib/menu-waste-route.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "963477cc9e044f0d99372185c9ad25ef17ae883a37163ade8197f94f5e7cb200",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "5c18af078011a529a7af896e4be4f42c2db676031ffd58a7244cee50b1ba06a3"
     },
     {
       "path": "src/lib/modifier-editor.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b68ad5fa32ae481c035fa9cb1d0775eb9972f0749017c1bddc935210d78496b8",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "85ae76d398734a442a6b7587b802f6649102682774cf998188df0b8276ab115b"
     },
     {
       "path": "src/lib/pantry.ts",
@@ -7117,11 +7197,15 @@
     {
       "path": "src/lib/recipe-choices.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "adb71eb73be6dabb8e8ab07152fe0c15dfe3446cbba21ac8749ea1b9ac237ab2",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "b64d411a1537538ae787457e4ae1c1d66c0f0f3f2a28b7df9f89bf2ec36900c5"
     },
     {
       "path": "src/lib/register-csv.ts",
@@ -7144,29 +7228,41 @@
     {
       "path": "src/lib/replenishment-lifecycle.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ca3f7f93317d1bf00a7f9b0cde1603ec9346df900da781c039616cea5f042470",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "bf74305b4cfe0496bf13ab20336fb2b795fdb6edf43157ab8722b5073bb88908"
     },
     {
       "path": "src/lib/replenishment-proposal.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "1d03f3ec4e967abb8bcf1391caaccf0e7dd950f181ec92adbbc78ac7175acc9e",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "ab1f769226f9ddf08b357266cc7a4463d1b8ff4a5e8a7c2bacd1bb240ec1e2f6"
     },
     {
       "path": "src/lib/replenishment-review-group.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "6e9e1e936f4f0af3105b3d87ecafc8f4b26fd8a8a89f8146c1c4fca0c96f3023",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "323f94a7ff89cc060cd9d429a8547a0d870ab762d81e843ba2438bd5195bc911"
     },
     {
       "path": "src/lib/sales-ingestion.ts",
@@ -7255,11 +7351,15 @@
     {
       "path": "src/lib/waste-client.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "35f15e80a2a7982b4adf97d32ec54d0999ca4b8ee0b0519cfaa58ff4dbdd9f76",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "29ec02431fda257bf0dda79bad5c3178f00e81fdf437fab15119bc92fa77a77d"
     },
     {
       "path": "src/lib/waste-contract.ts",
@@ -7276,11 +7376,15 @@
     {
       "path": "src/lib/waste-route.ts",
       "section": "S06",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a0b0d3b4098218b4d7e2824ed70dfd920ac6f1b4e5b916c266254eb017ec2cfe",
-      "results": []
+      "results": [
+        "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
+        "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
+      ],
+      "cleanupSha256": "9125a89d41867ce7be2224a8410b33e19092d94681bf30a1e40451bac8c90463"
     },
     {
       "path": "tests/a4-data-foundations.mjs",
@@ -8772,7 +8876,7 @@
         {
           "command": "pnpm lint",
           "exit": 1,
-          "seconds": 8.0,
+          "seconds": 8,
           "log": ".sites-runtime/readability/S01/integration/0-lint.log",
           "logSha256": "13d5ed6261a7f03651c9c13b62d9819a51979e4dda70cc729d7213496b1c8148"
         },
@@ -8835,7 +8939,7 @@
         {
           "command": "git diff --check",
           "exit": 0,
-          "seconds": 0.0,
+          "seconds": 0,
           "log": ".sites-runtime/readability/S01/integration/9-diff.log",
           "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
@@ -8892,7 +8996,7 @@
         {
           "command": "git diff --check",
           "exit": 0,
-          "seconds": 0.0,
+          "seconds": 0,
           "log": ".sites-runtime/readability/S02/final/5-diff.log",
           "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
@@ -8966,7 +9070,7 @@
         {
           "command": "git diff --check",
           "exit": 0,
-          "seconds": 0.0,
+          "seconds": 0,
           "log": ".sites-runtime/readability/S03/final/7-diff.log",
           "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
@@ -9042,7 +9146,7 @@
         {
           "command": "git diff --check",
           "exit": 0,
-          "seconds": 0.0,
+          "seconds": 0,
           "log": ".sites-runtime/readability/S04/final/6-diff.log",
           "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
@@ -9081,7 +9185,7 @@
         {
           "command": "node node_modules/eslint/bin/eslint.js src/lib/auth-availability.ts src/lib/auth-session-fence.ts src/lib/auth.ts src/lib/chatgpt-auth.ts src/lib/company-access.ts src/lib/memberships.ts src/lib/password-policy.ts src/lib/reauthentication.ts",
           "exit": 0,
-          "seconds": 1.0,
+          "seconds": 1,
           "log": ".sites-runtime/readability/S05/final/2-node_modules-eslint-bin-eslint.js.log",
           "logSha256": "8db17ecc3727a3d2b4996e9eb1d9d40c15f10390e9e8f3d8c73223d4bea539cc"
         },
@@ -9109,14 +9213,14 @@
         {
           "command": "pnpm build",
           "exit": 0,
-          "seconds": 6.0,
+          "seconds": 6,
           "log": ".sites-runtime/readability/S05/final/6-build.log",
           "logSha256": "52c81a9e6a7716d4cf0d355106142568fe612a420ac1cdabc2243c56bfc007a4"
         },
         {
           "command": "git diff --check",
           "exit": 0,
-          "seconds": 0.0,
+          "seconds": 0,
           "log": ".sites-runtime/readability/S05/final/7-diff.log",
           "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
         }
@@ -9124,6 +9228,84 @@
       "sourceDigest": "3a211fb3851e4fd560ee6425d59ff3af11d44a570ff257cc6a829712c8834460",
       "review": "Eight modules equivalent to pre-section source, except one reviewed D1-revocation rationale comment; 32 whitespace-only declaration boundaries separated. Auth wrapper retains baseline bytes. All BUG-01 recovery regressions pass; per-request verification, D1 checks before/after verification, recovery fences, encryption/cookies, tenant/role and audit ordering unchanged. Scoped lint exits 0 with one inherited unused destructuring warning.",
       "unblocker": "Receiving owner integration/handoff before shared route wrapper formatting; S06 inventory services are independent of that unchanged wrapper addition."
+    },
+    "S06": {
+      "outcome": "Completed",
+      "safeFilesCompleted": 26,
+      "heldFiles": [],
+      "preSectionCommit": "230e3e9",
+      "codeCommits": [
+        "8ccc6d7",
+        "5c1e8c0",
+        "style(readability): organize replenishment review lifecycle"
+      ],
+      "baseline": {
+        "command": "pnpm test inventory-management-contract inventory-consumption-d1 inventory-count-receipts inventory-order-incoming inventory-order-receipts stock-pack-units recipe-choices waste-recording menu-waste replenishment-lifecycle-d1 replenishment-proposal a8-sales-readiness-d1",
+        "exit": 0,
+        "suites": 12,
+        "log": ".sites-runtime/readability/S06/baseline.log"
+      },
+      "final": [
+        {
+          "command": "pnpm test inventory-management-contract inventory-consumption-d1 inventory-count-receipts inventory-order-incoming inventory-order-receipts stock-pack-units recipe-choices waste-recording menu-waste replenishment-lifecycle-d1 replenishment-proposal a8-sales-readiness-d1",
+          "exit": 0,
+          "seconds": 3.0,
+          "log": ".sites-runtime/readability/S06/final/0-test.log",
+          "logSha256": "0c762b97a974a78d48458e93ebfbb2106bf715142d0fe63da654ba26c78920b7"
+        },
+        {
+          "command": "pnpm format:check --section S06",
+          "exit": 0,
+          "seconds": 1.7,
+          "log": ".sites-runtime/readability/S06/final/1-format-check.log",
+          "logSha256": "64103fae9a700f6d02a74836101fe6052d653e09f31116b9f90811e231e09bd6"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/lib/a8-review-source.ts src/lib/d1-inventory-consumption.ts src/lib/d1-inventory-management.ts src/lib/d1-menu-waste.ts src/lib/d1-recipe-publisher.ts src/lib/d1-replenishment-clover-source.ts src/lib/d1-replenishment-lifecycle.ts src/lib/d1-replenishment-proposal-origins.ts src/lib/d1-replenishment-review.ts src/lib/d1-replenishment-sales-readiness.ts src/lib/d1-replenishment-settings.ts src/lib/d1-stock-pack.ts src/lib/d1-waste.ts src/lib/exact-inventory-gate.ts src/lib/inventory-consumption-fake.ts src/lib/inventory-planning-units.ts src/lib/inventory.ts src/lib/legacy-m3-review.ts src/lib/menu-waste-route.ts src/lib/modifier-editor.ts src/lib/recipe-choices.ts src/lib/replenishment-lifecycle.ts src/lib/replenishment-proposal.ts src/lib/replenishment-review-group.ts src/lib/waste-client.ts src/lib/waste-route.ts",
+          "exit": 0,
+          "seconds": 1.3,
+          "log": ".sites-runtime/readability/S06/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e41fe54b2866c28105f89e95ca42bbf16f7b4be6315364d4961fb86e266eb53e"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 4.0,
+          "log": ".sites-runtime/readability/S06/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.9,
+          "log": ".sites-runtime/readability/S06/final/4-test.log",
+          "logSha256": "454051247c7ad6640690390eb2d2c3dc145cc7695e4c66c5b76db8a82c40bbfd"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S06/final/5-db-check.log",
+          "logSha256": "a4f131d7461619622a0de1d78bed225ed1a555a8641e6777c25a39595d02328c"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.3,
+          "log": ".sites-runtime/readability/S06/final/6-build.log",
+          "logSha256": "22f4f5598359bfeabd217f7183e78c459a1ba1613c0a38e490dffaee32da3871"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S06/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "a6343f8599b596543e2db8ce862b7da084c2dd84e3dc859f5aad1392f0342128",
+      "review": "All 26 modules equivalent to pre-section source after excluding exactly two new comments explaining changes()-dependent batch order. Seventy-seven whitespace-only declaration/method boundaries separated. Full source and callers reviewed before edits; existing helpers retained, no extraction of transaction/closure bodies. All SQL/templates, binding/effect order, replay identities, quantity/legacy projections, cutoffs, readiness and disabled supplier effects unchanged. Scoped lint exits 0 with the one inherited unused changes helper warning. All 139 suites pass.",
+      "compatibility": "Existing A-owned incoming/receipt ports retain behavior and frozen units; receiving-counts branch does not modify these source files. No new delivery contract/schema was imported; prior holds remain."
     }
   }
 }

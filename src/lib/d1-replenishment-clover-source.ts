@@ -1,24 +1,33 @@
-import type {CloverSalesReadiness} from './d1-replenishment-sales-readiness';
-import {unresolvedCloverSalesSql} from './clover-sales-outcomes';
+import type { CloverSalesReadiness } from './d1-replenishment-sales-readiness';
+import { unresolvedCloverSalesSql } from './clover-sales-outcomes';
 
-export type CloverReviewPolicy = Readonly<{syncEnabled: boolean; maxLagMs: number}>;
+export type CloverReviewPolicy = Readonly<{ syncEnabled: boolean; maxLagMs: number }>;
 
 /** The database predicate used at origin insert and at every durable lifecycle action. */
 export function cloverSourceGuard(
   sales: CloverSalesReadiness,
   policy: CloverReviewPolicy | undefined,
   now: Date,
-): Readonly<{sql: string; args: readonly (string | number)[]}> {
-  if (policy === undefined) return {sql: '0=1', args: []};
-  if (typeof policy.syncEnabled !== 'boolean' || !Number.isSafeInteger(policy.maxLagMs) || policy.maxLagMs < 1 ||
-      !Number.isFinite(now.getTime())) throw new Error('Clover review policy or clock is invalid.');
-  if (!policy.syncEnabled) return {sql: '0=1', args: []};
-  if (sales.status !== 'current' || sales.merchantId === null ||
-      sales.checkpointAt === null || sales.lastSuccessAt === null) {
-    return {sql: '0=1', args: []};
+): Readonly<{ sql: string; args: readonly (string | number)[] }> {
+  if (policy === undefined) return { sql: '0=1', args: [] };
+  if (
+    typeof policy.syncEnabled !== 'boolean' ||
+    !Number.isSafeInteger(policy.maxLagMs) ||
+    policy.maxLagMs < 1 ||
+    !Number.isFinite(now.getTime())
+  )
+    throw new Error('Clover review policy or clock is invalid.');
+  if (!policy.syncEnabled) return { sql: '0=1', args: [] };
+  if (
+    sales.status !== 'current' ||
+    sales.merchantId === null ||
+    sales.checkpointAt === null ||
+    sales.lastSuccessAt === null
+  ) {
+    return { sql: '0=1', args: [] };
   }
   const checkpoint = Date.parse(sales.checkpointAt);
-  if (!Number.isSafeInteger(checkpoint)) return {sql: '0=1', args: []};
+  if (!Number.isSafeInteger(checkpoint)) return { sql: '0=1', args: [] };
   const current = now.getTime();
   const oldest = current - policy.maxLagMs;
   return {
@@ -33,7 +42,15 @@ export function cloverSourceGuard(
         AND s.last_success BETWEEN ? AND ?
         AND NOT ${unresolvedCloverSalesSql('s.company_id')}
     )`,
-    args: [sales.companyId, sales.merchantId, checkpoint, sales.lastSuccessAt, oldest, current,
-      new Date(oldest).toISOString(), now.toISOString()],
+    args: [
+      sales.companyId,
+      sales.merchantId,
+      checkpoint,
+      sales.lastSuccessAt,
+      oldest,
+      current,
+      new Date(oldest).toISOString(),
+      now.toISOString(),
+    ],
   };
 }

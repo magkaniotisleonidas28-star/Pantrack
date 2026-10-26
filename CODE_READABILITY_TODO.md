@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S05 present identity modules are verified; S06 is next**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S06 domain services are Completed; S07 is next**.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **2 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 17 Pending**.
+- Cleanup sections: **3 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 16 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -90,7 +90,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S03 | Shared data models, exact quantities and contracts | 24 + 1 upstream | Blocked: receiving addition; present files verified |
 | S04 | D1 access and immutable database history | 84 | Blocked: schema/journal/receiving; safe files verified |
 | S05 | Authentication, tenant authorization and memberships | 9 | Blocked: shared wrapper handoff; present files verified |
-| S06 | Inventory, recipes, waste and replenishment services | 26 | Pending |
+| S06 | Inventory, recipes, waste and replenishment services | 26 | Completed |
 | S07 | Sales ingestion, register bridge and Clover | 16 | Pending |
 | S08 | Supplier registry, draft foundations and gated purchasing | 9 | Pending |
 | S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Pending |
@@ -251,23 +251,29 @@ Commit: `style(readability): expand identity and membership flows`. Remaining: s
 
 ## S06 — Inventory, recipes, waste and replenishment services
 
-Status: Pending. Depends on: S05.
+Status: Completed. Depends on: S05.
 
 **Files:** Inventory/recipe/waste modules, `d1-inventory-*`, `d1-stock-pack.ts`, `d1-recipe-publisher.ts`, `d1-waste.ts`, `d1-menu-waste.ts`, `d1-replenishment-*`, `replenishment-*`, preview/readiness helpers and related fake ports listed in the inventory.
 
-- [ ] S06.1 — Format mixed type/data/transaction code first; group statements by existing phases and explain the invariant each phase protects.
-- [ ] S06.2 — Review large inventory methods for small, pure helper extractions only after understanding their full callers and atomicity; leave risky extractions Blocked rather than changing transaction boundaries.
-- [ ] S06.3 — Clarify count/receipt replay, canonical quantities, custom-unit history, chronology, source freshness, waste allocation, recipe choices and proposal state transitions.
-- [ ] S06.4 — Preserve exact/legacy projection compatibility, SQL/batch/binding order, idempotency fingerprints, no-write losers, readiness holds and supplier-quantity retention. Coordinate A-owned receipt ports with active receiving work.
+- [x] S06.1 — Format mixed type/data/transaction code first; group statements by existing phases and explain the invariant each phase protects.
+- [x] S06.2 — Review large inventory methods for small, pure helper extractions only after understanding their full callers and atomicity; leave risky extractions Blocked rather than changing transaction boundaries.
+- [x] S06.3 — Clarify count/receipt replay, canonical quantities, custom-unit history, chronology, source freshness, waste allocation, recipe choices and proposal state transitions.
+- [x] S06.4 — Preserve exact/legacy projection compatibility, SQL/batch/binding order, idempotency fingerprints, no-write losers, readiness holds and supplier-quantity retention. Coordinate A-owned receipt ports with active receiving work.
 
 **Focused command:** `pnpm test inventory-management-contract inventory-consumption-d1 inventory-count-receipts inventory-order-incoming inventory-order-receipts stock-pack-units recipe-choices waste-recording menu-waste replenishment-lifecycle-d1 replenishment-proposal a8-sales-readiness-d1`.
 
 **Verification:** Run these focused services plus the full suite, scoped lint, typecheck, db:check and build. Use migrated in-memory SQLite; preserve actual transaction/replay/concurrency tests.
 
-- [ ] S06.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S06.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S06.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S06.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All 26 present modules formatted and reviewed; 77 whitespace-only declaration/method boundaries separated. Compressed inventory setup/count/movement/receipt, recipe publication, waste classification/retry, exact/legacy projections and replenishment settings/origin/lifecycle code now exposes its existing phases. Two rationale comments explain the ordered, atomic `changes()`-dependent batches. Existing helpers are adequate for this formatting pass; splitting `configureInternal`, `consumeAttempt` or receipt builders would complicate transaction/closure review, so their structure is deliberately retained. No such extraction is claimed complete.
+
+All 26 modules passed independent syntax/types/literals/comments/emitted-runtime comparison against pre-section `230e3e9`, after excluding exactly those two reviewed comments. SQL and template contents, prepared bindings, statement/effect order, canonical arithmetic, fingerprints/replay, no-write losers, count cutoffs, frozen receipt units, readiness holds and unresolved supplier quantities are unchanged. The active receiving branch changes different files; its absent contract/schema remains held, and existing A-owned receipt ports passed their real migrated fake-D1 tests.
+
+The exact twelve focused suites listed above passed before and after. Full `pnpm test` passed all 139 suites. Format check, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. Scoped ESLint exited 0 retaining one inherited unused `changes` helper warning. Commands/exits/durations/log hashes/source digest: inventory `sectionReviews.S06`; logs: `.sites-runtime/readability/S06/`. Source-structure and chunk-review records are preparation only. Local/macOS evidence with in-memory migrated SQLite/fake D1; no UI/schema/HTTP behavior, integration, purchase or real lifecycle action changed.
+
+Commits: inventory/receipt services `8ccc6d7`; waste/retry flows `5c1e8c0`; replenishment/tracker commit `style(readability): organize replenishment review lifecycle`. No S06 hold remains; earlier receiving holds remain open. Rollback is those three source/docs commits only. Next: S07 sales/register/Clover services.
 
 ## S07 — Sales ingestion, register bridge and Clover
 
@@ -594,6 +600,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S03 | 25 present models/contracts formatted; 163 declaration boundaries; type-parenthesis guard refinement reproduced and tested | 11 baseline/12 final focused suites; all 139 suites; scoped lint, guard/format, typecheck/db/build/diff pass; 299 ordered exports unchanged | Local section commit; absent receiving contract explicitly Blocked; S04 independent D1/history review next |
 | 2026-10-26 / S04 | Two D1 helpers formatted; 40 SQL/40 snapshots reviewed unchanged, including 226 trigger definitions | Four planned baseline/final suites and scoped lint/format/typecheck/db/build/diff pass; wrong initial suite selection retained separately | Local section commit; receiving schema/journal/new migration holds explicit; independent S05 next |
 | 2026-10-26 / S05 | Eight identity modules formatted; 32 declaration boundaries; D1 revocation rationale added | Both focused suites/all BUG-01 regressions and full 139 suites pass; format/typecheck/db/build/diff pass; scoped lint retains one inherited warning | Local section commit; authorization wrapper handoff remains Blocked; independent S06 next |
+| 2026-10-26 / S06 | 26 domain modules formatted; 77 declaration/method boundaries; two ordered-batch rationale comments | Twelve focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains one inherited warning | Three local commits grouped by inventory, waste and replenishment; no S06 hold; S07 next |
 
 ## Final report requirements
 
