@@ -564,9 +564,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   actual native files, combined criteria and access/change/cancellation guards
   passed locally after integrating supplier confirmation, with 123 executed suites
   plus twelve Windows skips and the full pipeline. No product-filter schema change.
-  Next define/test the immutable private issued-
-  document contract, coordinating the migration queue before storage integration.
-  Issued artifacts remain separate, as do cart execution and receiving;
+  The [private immutable archive contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md)
+  now proves company/source/template/hash identity, exact historical bytes,
+  permanent replay, access/source races and cross-process unknown-write recovery
+  using local SQLite/create-only files. It adds no application schema or wiring.
+  Next implement the D1 metadata journal after refreshing the shared migration
+  queue, then private R2 and app save/read integration as separate outcomes.
+  Application-issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable

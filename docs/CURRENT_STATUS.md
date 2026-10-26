@@ -11,6 +11,27 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 document archive contract — 2026-10-26
+
+The [private immutable document contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md)
+now saves and verifies exact PDF/Excel copies through injected storage ports.
+Company/actor/source identity, template/hash/size, permanent replay, current
+access, source-change holds and retention are defined and tested. File-backed
+SQLite and create-only files prove the lifecycle, including recovery in a new
+process after a successful write loses its response. Historical copies survive
+PO edits/cancellation; corrupt or missing files are held without overwriting.
+
+This is a local contract slice. No app archive button, production D1 journal,
+R2 adapter, route, schema or migration was added. Receiving PR 18 merged upstream
+and was integrated without conflicts; its migration applies only to the isolated
+task database. The root and hosted databases remain untouched. All six combined
+local checks passed: 126 executed suites plus twelve Windows skips, typecheck,
+all 40 migration checks, build, isolated migration apply and HTTP smoke.
+Independent PDF/Excel readers passed. Storage integration remains separate.
+Next bounded document item: the D1 metadata journal adapter, after checking the
+shared receiving/migration queue. Private R2 and app wiring follow separately.
+C4/C5/M8 remain open; hosted release stays paused.
+
 ## Latest local C4 product history filters — 2026-10-26
 
 The [saved-product filter](C4_HISTORY_PRODUCT_FILTERS_LOCAL_EVIDENCE.md) now
@@ -31,9 +52,10 @@ every application table.
 No schema, migration, dependency or business data change was introduced by this
 filter. Supplier-confirmation PR 17 merged upstream during final sync and was
 integrated cleanly, with its migration checked only in the isolated test database.
-The root and hosted databases were untouched. Next bounded document item: the
-immutable private issued-document storage contract, checking the shared migration
-queue before persistence integration. C4/C5/M8 remain open; hosted release stays paused.
+The root and hosted databases were untouched. The subsequent
+[immutable private document contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md)
+now passes locally; persistence integration remains separate and requires a
+fresh migration-queue check. C4/C5/M8 remain open; hosted release stays paused.
 
 ## Latest local C4 history date filters — 2026-10-26
 
