@@ -163,7 +163,12 @@ code runs:
 - the jobs check's Wrangler fixture command exits 1.
 
 This is a pre-existing check or environment issue and is left for separate
-follow-up. Served checks were run in the clone so that real `.sites-runtime`
+follow-up.
+
+_Update (2026-10-25):_ the anonymous 503 was a real `main` regression, now
+[fixed](C4_SERVED_CHECK_REPAIR_20261025.md). The jobs check's Wrangler failure was a
+clone artifact: that database was already at `0035`, and `main`'s positional insert no
+longer matched it. Both scripts now pass. Served checks were run in the clone so that real `.sites-runtime`
 profiles, locks and evidence stay unchanged for the observation baseline.
 
 ## Limits, rollback and next
