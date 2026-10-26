@@ -1079,3 +1079,24 @@ export const documentArchiveObservations=sqliteTable('document_archive_observati
  foreignKey({columns:[t.companyId,t.documentId,t.token],foreignColumns:[documentArchiveLeases.companyId,documentArchiveLeases.documentId,documentArchiveLeases.token]}),
  check('document_archive_observation_json',sql`json_valid(${t.payloadJson})`),
 ]);
+
+// Weekly PO draft schedules: immutable versions, one supplier-list group per schedule. The latest version is current.
+export const poDraftSchedules=sqliteTable('po_draft_schedules',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),version:integer('version').notNull(),status:text('status').notNull(),
+ supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),locationId:text('location_id').notNull(),
+ weekday:integer('weekday').notNull(),localTime:text('local_time').notNull(),marginPercent:integer('margin_percent').notNull(),
+ responsibleUserId:text('responsible_user_id').notNull(),reason:text('reason').notNull(),actor:text('actor').notNull(),createdAt:text('created_at').notNull(),
+ operationId:text('operation_id').notNull(),fingerprint:text('fingerprint').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id,t.version]}),uniqueIndex('po_draft_schedule_operation').on(t.companyId,t.operationId),
+ index('po_draft_schedule_group').on(t.companyId,t.supplierId,t.accountId,t.locationId)]);
+// One row per schedule and local week, claimed once; terminal results never change.
+export const poDraftOccurrences=sqliteTable('po_draft_occurrences',{
+ companyId:text('company_id').notNull(),scheduleId:text('schedule_id').notNull(),weekKey:text('week_key').notNull(),scheduleVersion:integer('schedule_version').notNull(),
+ dueAt:text('due_at').notNull(),timeZone:text('time_zone').notNull(),state:text('state').notNull(),reason:text('reason'),attempts:integer('attempts').notNull(),
+ holder:text('holder').notNull(),leaseUntil:text('lease_until'),nextAttemptAt:text('next_attempt_at'),draftActor:text('draft_actor'),draftInputJson:text('draft_input_json'),
+ orderId:text('order_id'),resultJson:text('result_json'),createdAt:text('created_at').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.scheduleId,t.weekKey]}),index('po_draft_occurrence_order').on(t.companyId,t.orderId)]);
+// One weekly check per company at a time.
+export const poDraftTickLeases=sqliteTable('po_draft_tick_leases',{
+ companyId:text('company_id').notNull().primaryKey(),holder:text('holder').notNull(),leaseUntil:text('lease_until').notNull(),
+});
