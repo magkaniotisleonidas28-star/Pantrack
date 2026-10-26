@@ -44,6 +44,10 @@ UPDATE memberships SET role='employee' WHERE company_id=${quote(f.companyId)} AN
   const count=staff.locator('[data-delivery-count]');await count.waitFor();
   const staffText=await staff.innerText();assert.doesNotMatch(staffText,/\$|Ordered|Confirmed|Still expected/,'Staff see no prices or expected amounts');
   assert.deepEqual(await count.locator('thead th').allInnerTexts(),['Item','Packs received','Damaged']);
+  // Staff mostly count on a phone: the form itself fits a narrow screen.
+  await page.setViewportSize({width:390,height:844});await shot(page,'staff-form-390');
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No narrow overflow for the count form');
+  await page.setViewportSize({width:1440,height:1000});
   await fill(count,{'Packs received of House coffee beans':'1','Packs received of Barista oat milk':'1','Packs received of 12 oz paper cups':'4','Damaged packs of 12 oz paper cups':'1'});
   await shot(page,'staff-count');await count.getByRole('button',{name:'Save count'}).click();await staff.getByText('Count saved. A manager will review it.').waitFor();
   await staff.getByText('The last count for this order is waiting for a manager.').waitFor();
