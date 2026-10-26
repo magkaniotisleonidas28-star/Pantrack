@@ -552,7 +552,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   history labels, second-read change/access guards and actual PDF/Excel downloads
   passed locally after integration of both owner-limit PRs. No new schema;
   116 executed suites plus twelve Windows skips and the full local pipeline passed.
-  Creation-date range filters are the next bounded C4 history slice.
+  The [creation-date range filters](C4_HISTORY_DATE_FILTERS_LOCAL_EVIDENCE.md)
+  now apply inclusive New York/UTC days to the same list and complete exports,
+  using existing timestamps and calendar logic with no schema change. Both DST
+  transitions, precise boundaries, later edits, paging, cancellation, actual
+  files/provenance and tenant/role guards passed. The full local pipeline passed
+  with 119 executed suites plus twelve Windows skips. Product filtering is next.
   Issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget

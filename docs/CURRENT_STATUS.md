@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-25
+Updated: 2026-10-26
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,27 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Latest local C4 history date filters — 2026-10-26
+
+The [creation-date range slice](C4_HISTORY_DATE_FILTERS_LOCAL_EVIDENCE.md) now
+shares inclusive From/To days between the manager history list and complete
+PDF/Excel exports. New York is the default, with UTC selectable. DST, open ranges,
+original creation dates after edits and precise boundaries are verified; files
+retain their criteria and time-zone provenance. Invalid ranges keep applied
+results, and changing dates or zone cancels pending exports.
+
+The seven merged commits through `2d7e49f` were synced first. The open supplier-
+confirmation PR has no overlapping application files and remains untouched.
+All six local checks passed: 119 executed suites plus twelve Windows skips,
+typecheck/build, all 38 migration checks, fresh isolated apply and HTTP smoke.
+Nine real-app downloads, independent readers, desktop/mobile/keyboard behavior,
+in-range changes, out-of-range changes, revocation and zero export writes passed.
+
+No migration or company time-zone/budget setting changed in this feature. The
+original root and hosted databases were untouched. Next bounded C4 outcome:
+product filters shared by history and exports. C4/C5/M8 remain open; the hosted
+release stays paused.
 
 ## Latest local C4 filtered history exports — 2026-10-25
 
@@ -30,8 +51,8 @@ verified the actual downloads. Export reads preserved every application table.
 
 This feature adds no migration. Incoming owner-limit migrations `0035`/`0036`
 were checked only in the isolated test database; the root and hosted databases
-were untouched. Next bounded C4 task: creation-date range filters shared by the
-history list and complete exports. Issued artifacts, product filters and receiving
+were untouched. The subsequent [creation-date filters](C4_HISTORY_DATE_FILTERS_LOCAL_EVIDENCE.md)
+now apply to the history list and complete exports. Issued artifacts, product filters and receiving
 remain separate. C4/C5/M8 remain open; the hosted release stays paused.
 
 ## Latest local C4 history filters — 2026-10-25
