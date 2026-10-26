@@ -140,6 +140,7 @@ The main suite covers:
 | `pnpm build` | Passed |
 | `pnpm db:migrate:local` | Applied `0035` through Wrangler |
 | `pnpm test:local` | Passed |
+| All six commands again, after merging `origin/main` (`47922df`, the saved-draft export and history work, with no migration) | Passed, **122 suites** |
 | Existing cart suites (authorization, API, persistence, jobs, sources, reconciliation and their migrations) | Passed |
 | `pnpm cart:worker:check:http` against `pnpm dev:cart-worker`, in an isolated clean clone | Passed, with ports freed |
 | `pnpm cart:manager:check:launcher`, in the same clone; it uses the edited browser fixture | Passed |
