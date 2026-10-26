@@ -260,6 +260,13 @@
       "when": 1792977617292,
       "tag": "0036_owner_spending_limits_d1_patterns",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1792986525395,
+      "tag": "0037_inventory_order_incoming",
+      "breakpoints": true
     }
   ]
 }

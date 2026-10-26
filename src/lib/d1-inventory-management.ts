@@ -18,6 +18,8 @@ import type {
   InventoryManagementView,
   InventoryMovementInput,
   ManagedInventoryRecord,
+  OrderIncomingInput,
+  OrderIncomingRow,
   ManagedUnitInput,
   ModifierActivationInput,
   ModifierDraftInput,
@@ -352,6 +354,64 @@ export class D1InventoryManagementService implements InventoryManagementService 
     return {row,unit,effectiveAt,at:this.now(),legacy:await this.legacy(input.companyId,input.productId)};
   }
 
+  /** Exact stock-unit minors that confirmed supplier orders still owe for a product. */
+  async orderIncomingOwed(companyId:string,productId:string):Promise<bigint>{
+    const rows=await this.db.prepare('SELECT quantity_minor,received_minor FROM inventory_order_incoming WHERE company_id=? AND product_id=?')
+      .bind(companyId,productId).all<{quantity_minor:string;received_minor:string}>();
+    return rows.results.reduce((sum,r)=>sum+BigInt(r.quantity_minor)-BigInt(r.received_minor),ZERO);
+  }
+  async orderIncoming(companyId:string,confirmationId:string):Promise<OrderIncomingRow[]>{
+    const rows=await this.db.prepare(`SELECT line_id,product_id,config_id,dimension,quantity_minor,received_minor,event_id,actor,created_at
+      FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=? ORDER BY line_id`).bind(companyId,confirmationId)
+      .all<{line_id:string;product_id:string;config_id:string;dimension:UnitDimension;quantity_minor:string;received_minor:string;event_id:string;actor:string;created_at:string}>();
+    return rows.results.map(r=>({lineId:r.line_id,productId:r.product_id,configId:r.config_id,dimension:r.dimension,quantityMinor:r.quantity_minor,
+      receivedMinor:r.received_minor,eventId:r.event_id,actor:r.actor,createdAt:r.created_at}));
+  }
+  /**
+   * A's order-linked incoming port. Returns statements for the caller's own batch. They add each
+   * confirmed line to incoming exactly once and never replace manual or other-order incoming.
+   * Every precondition is re-checked inside the batch, and any failure aborts all of it.
+   */
+  async orderIncomingStatements(input:OrderIncomingInput):Promise<D1PreparedStatement[]>{
+    if(!validId(input.companyId)||!validId(input.confirmationId)||!validId(input.actor)||!input.lines.length||input.lines.length>100)
+      throw new InventoryManagementError('invalid_input','A confirmation, actor and 1–100 lines are required.');
+    if(new Set(input.lines.map(l=>l.lineId)).size!==input.lines.length||input.lines.some(l=>!validId(l.lineId)||!validId(l.productId)||!validId(l.configId)||!/^[1-9][0-9]{0,17}$/.test(l.quantityMinor)))
+      throw new InventoryManagementError('invalid_input','Each line needs a unique identity and a positive exact quantity.');
+    const guard=(sql:string,args:(string|number)[])=>this.db.prepare(`INSERT INTO inventory_port_guards(reason) SELECT 'stale' WHERE NOT EXISTS (${sql})`).bind(...args);
+    // A confirmation is applied once, as a whole.
+    const unapplied='SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=?)';
+    if(!await this.db.prepare(unapplied).bind(input.companyId,input.confirmationId).first())
+      throw new InventoryManagementError('operation_conflict','This supplier confirmation already added incoming stock.');
+    const at=this.now(),statements:D1PreparedStatement[]=[guard(unapplied,[input.companyId,input.confirmationId])];
+    for(const productId of [...new Set(input.lines.map(l=>l.productId))]){
+      const lines=input.lines.filter(l=>l.productId===productId);
+      await this.product(input.companyId,productId);
+      const row=await this.balance(input.companyId,productId);
+      if(!row)throw new InventoryManagementError('inventory_not_configured','Classify this product and record an opening count first.');
+      // Frozen quantities are exact stock-unit minors, so only the unit dimension must still match.
+      if(lines.some(l=>l.dimension!==row.dimension))throw new InventoryManagementError('unit_incompatible','The confirmed quantity has a different unit dimension than current stock.');
+      if(row.latest_count_effective_at&&Date.parse(at)<=Date.parse(row.latest_count_effective_at))throw new InventoryManagementError('before_count_cutoff','Stock movements must occur after the latest physical count.');
+      const added=lines.reduce((sum,l)=>sum+BigInt(l.quantityMinor),ZERO),next=readCanonical(exact(row.dimension,row.incoming_minor))+added;
+      const legacy=await this.legacy(input.companyId,productId),stockUnit=await this.unit(input.companyId,productId,row.stock_unit_id,row.stock_unit_version);
+      const legacyRecord=this.legacyRecord(legacy,productId,at);legacyRecord.incoming=legacyNumber(exact(row.dimension,String(next)),stockUnit);legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
+      const eventId=`order-incoming:${input.confirmationId}:${productId}`;
+      statements.push(
+        guard('SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=? AND config_id=? AND dimension=? AND incoming_minor=?',
+          [input.companyId,productId,row.version,row.config_id,row.dimension,row.incoming_minor]),
+        legacy?guard('SELECT 1 FROM inventory WHERE company_id=? AND product_id=? AND version=?',[input.companyId,productId,legacy.version])
+          :guard('SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory WHERE company_id=? AND product_id=?)',[input.companyId,productId]),
+        ...lines.map(l=>this.db.prepare(`INSERT INTO inventory_order_incoming(company_id,confirmation_id,line_id,product_id,config_id,dimension,quantity_minor,received_minor,event_id,actor,created_at)
+          VALUES (?,?,?,?,?,?,?,'0',?,?,?)`).bind(input.companyId,input.confirmationId,l.lineId,productId,l.configId,l.dimension,l.quantityMinor,eventId,input.actor,at)),
+        this.db.prepare(`INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
+          VALUES (?,?,?,?,'order_incoming',?,?,NULL,NULL,?,?,?,?,?,?,NULL,NULL)`).bind(input.companyId,eventId,productId,row.config_id,row.dimension,String(added),row.version,row.version+1,at,at,input.actor,'Confirmed supplier order'),
+        this.db.prepare('UPDATE inventory_balances_exact SET incoming_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=?')
+          .bind(String(next),row.version+1,at,input.companyId,productId,row.version),
+        legacy?this.db.prepare('UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=?').bind(JSON.stringify(legacyRecord),legacyRecord.version,input.companyId,productId,legacy.version)
+          :this.db.prepare('INSERT INTO inventory(company_id,product_id,data,version) VALUES (?,?,?,?)').bind(input.companyId,productId,JSON.stringify(legacyRecord),legacyRecord.version));
+    }
+    return statements;
+  }
+
   async recordMovement(input: InventoryMovementInput,prefix:D1PreparedStatement[]=[],canonical=false) {
     await this.product(input.companyId,input.productId);
     if(!validId(input.operationId)||!validId(input.actor)||!Number.isSafeInteger(input.expectedVersion)||input.expectedVersion<0)throw new InventoryManagementError('invalid_input','Operation identity, actor, and expected version are required.');
@@ -380,9 +440,13 @@ export class D1InventoryManagementService implements InventoryManagementService 
     const onHand=readCanonical(exact(row.dimension,row.on_hand_minor)),incoming=readCanonical(exact(row.dimension,row.incoming_minor)),used=readCanonical(exact(row.dimension,row.estimated_used_minor));
     if(row.latest_count_effective_at&&Date.parse(effectiveAt)<=Date.parse(row.latest_count_effective_at))throw new InventoryManagementError('before_count_cutoff','Stock movements must occur after the latest physical count.');
     let nextOnHand=onHand,nextIncoming=incoming,nextUsed=used,delta=ZERO;
-    if(input.action==='receive'){nextOnHand+=readCanonical(amount);delta=readCanonical(amount);if(input.fromIncoming)nextIncoming=nextIncoming>readCanonical(amount)?nextIncoming-readCanonical(amount):ZERO;}
+    // Confirmed supplier orders keep their incoming until their own receiving; manual edits stay above it.
+    const owed=input.action==='receive'||input.action==='incoming'?await this.orderIncomingOwed(input.companyId,input.productId):ZERO;
+    if(input.action==='receive'){nextOnHand+=readCanonical(amount);delta=readCanonical(amount);if(input.fromIncoming){const reduced=nextIncoming>readCanonical(amount)?nextIncoming-readCanonical(amount):ZERO;nextIncoming=reduced>owed?reduced:owed<nextIncoming?owed:nextIncoming;}}
     if(input.action==='use'||input.action==='waste'){if(readCanonical(amount)>nextOnHand)throw new InventoryManagementError('invalid_quantity','Quantity exceeds recorded stock. Record a fresh count first.');nextOnHand-=readCanonical(amount);nextUsed+=readCanonical(amount);delta=-readCanonical(amount);}
-    if(input.action==='incoming'){nextIncoming=readCanonical(amount);delta=nextIncoming-incoming;}
+    if(input.action==='incoming'){nextIncoming=readCanonical(amount);delta=nextIncoming-incoming;
+      if(nextIncoming<owed){const unit=await this.unit(input.companyId,input.productId,row.stock_unit_id,row.stock_unit_version);
+        throw new InventoryManagementError('invalid_quantity',`Expected incoming cannot be less than ${legacyNumber(exact(row.dimension,String(owed)),unit)} ${unit.label} still due from confirmed supplier orders.`);}}
     const stockUnit=await this.unit(input.companyId,input.productId,row.stock_unit_id,row.stock_unit_version);
     const legacyRecord=this.legacyRecord(legacy,input.productId,at);legacyRecord.onHand=legacyNumber(exact(row.dimension,String(nextOnHand)),stockUnit);legacyRecord.incoming=legacyNumber(exact(row.dimension,String(nextIncoming)),stockUnit);legacyRecord.estimatedUsed=legacyNumber(exact(row.dimension,String(nextUsed)),stockUnit);legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
     await this.db.batch([...prefix,

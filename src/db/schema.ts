@@ -208,6 +208,28 @@ export const inventoryEventsExact=sqliteTable('inventory_events_exact',{
  foreignKey({columns:[t.companyId,t.consumptionKey],foreignColumns:[inventoryConsumptionApplications.companyId,inventoryConsumptionApplications.idempotencyKey]}),
 ]);
 
+// A's order-linked incoming port: confirmed supplier-order quantities in exact stock units.
+// Written only by the port inside its caller's batch; received grows through later receiving.
+export const inventoryOrderIncoming=sqliteTable('inventory_order_incoming',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ confirmationId:text('confirmation_id').notNull(),
+ lineId:text('line_id').notNull(),
+ productId:text('product_id').notNull(),
+ configId:text('config_id').notNull(),
+ dimension:text('dimension').notNull(),
+ quantityMinor:text('quantity_minor').notNull(),
+ receivedMinor:text('received_minor').notNull(),
+ eventId:text('event_id').notNull(),
+ actor:text('actor').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.confirmationId,t.lineId]}),
+ index('inventory_order_incoming_product').on(t.companyId,t.productId),
+ foreignKey({columns:[t.companyId,t.productId,t.configId],foreignColumns:[inventoryConfigVersions.companyId,inventoryConfigVersions.productId,inventoryConfigVersions.id]}),
+]);
+// Any insert aborts the batch: guarded port statements insert here only when a precondition fails.
+export const inventoryPortGuards=sqliteTable('inventory_port_guards',{reason:text('reason').notNull()});
+
 export const wasteShortcuts=sqliteTable('waste_shortcuts',{
  companyId:text('company_id').notNull(),
  productId:text('product_id').notNull(),

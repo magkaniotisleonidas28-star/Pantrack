@@ -56,9 +56,10 @@ structure. Next, add date-range filters to the same history and exports.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
-records of its completion checks. Some tests passed, but the complete AI safety
-run is unfinished: its latest offline run timed out while adding the second
-item. C4/M8 therefore remain open.
+records of its completion checks. On October 25 the complete offline gate, including
+the AI safety run, [passed all 21 checks](C4_FULL_OFFLINE_GATE_RUN_20261025.md) with
+fake suppliers and mocked AI. The older second-item timeout's cause is still not
+explained, and real AI, supplier and café tests remain. C4/M8 therefore remain open.
 
 At the last inspection, the online development app was behind GitHub. The six
 bug fixes are merged, and the CI portability repair passed Windows/Linux checks
@@ -88,7 +89,7 @@ account. Neither means approved for real customers or production.
 | M5 | Connect and test Clover. | Accepted for the tested development sandbox scope; excluded cases and real café use remain unverified. |
 | M6 | Connect a second register provider, Toast. | On hold awaiting Toast approval/testing access. |
 | M7 | Explain what needs restocking and let managers review it. | Built locally; A8 online acceptance remains open. |
-| M8 | Prepare exact supplier carts, let a manager check out, and record deliveries. | Partly built locally; the AI safety gate is blocked by a second-item timeout. Supplier/full workflow acceptance remain open. |
+| M8 | Prepare exact supplier carts, let a manager check out, and record deliveries. | Partly built locally; the full offline gate (with mocked AI) passed on October 25. Supplier/full workflow acceptance remain open. |
 | M9 | Reliable schedules, reminders and background work. | Planned/prototype only; new hosting and scheduling are not provisioned. |
 | M10 | Spending limits and financial safeguards. | Partial local safeguards; full acceptance remains open. |
 | M11 | Prove the workflow in a real café. | Not started; requires two supervised count-to-delivery cycles. |

@@ -559,6 +559,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable
   manager drafts, supplier profiles/mappings, preparation authorization, PDF/XLSX,
   verified cart/handoff and receiving as separate reviewable outcomes.
+  Supplier confirmation follows a [two-part plan](C4_SUPPLIER_CONFIRMATION_PLAN_20261025.md).
+  [Part 1](C4_ORDER_INCOMING_PORT_LOCAL_EVIDENCE.md) builds A's order-linked incoming
+  port at the owner's request (exact-once, all-or-nothing, with a manual and database
+  floor; migration `0037`, local only). The confirmation record (Part 2) and receiving
+  remain open.
   C4 is not complete and purchasing stays disabled.
   The owner-selected [cart preparation preview](C4_CART_PREVIEW_LOCAL_EVIDENCE.md)
   now proves reviewed-draft-to-fictional-cart mechanics locally, including 16
