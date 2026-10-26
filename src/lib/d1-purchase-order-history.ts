@@ -1,26 +1,43 @@
-import {z} from 'zod';
-import {poFail} from './purchase-order-contract';
-import {purchaseOrderHistoryRequest} from './purchase-order-history-contract';
-import {frozenCopy} from './supplier-simulation-contract';
-import {purchaseOrderHistoryWhere} from './purchase-order-history-sql';
+import { z } from 'zod';
+import { poFail } from './purchase-order-contract';
+import { purchaseOrderHistoryRequest } from './purchase-order-history-contract';
+import { frozenCopy } from './supplier-simulation-contract';
+import { purchaseOrderHistoryWhere } from './purchase-order-history-sql';
 
-const summary=z.object({id:z.string(),number:z.string(),supplier_id:z.string(),supplier_name:z.string(),
-  status:z.enum(['draft','reviewed','canceled']),revision:z.number().int().positive(),created_at:z.string()});
-type Summary=z.infer<typeof summary>;
+const summary = z.object({
+  id: z.string(),
+  number: z.string(),
+  supplier_id: z.string(),
+  supplier_name: z.string(),
+  status: z.enum(['draft', 'reviewed', 'canceled']),
+  revision: z.number().int().positive(),
+  created_at: z.string(),
+});
+
+type Summary = z.infer<typeof summary>;
 
 /** One read snapshot binds company membership to the filtered page, including empty pages. */
-export class D1PurchaseOrderHistory{
-  constructor(private readonly db:D1Database,private readonly options:{identity:()=>Promise<string|null>}){}
-  async list(value:unknown){
-    const parsed=purchaseOrderHistoryRequest.safeParse(value);
-    if(!parsed.success)poFail('invalid_request','Check the history search, status, supplier and page.');
-    const {companyId,offset,filters}=parsed.data,actor=await this.options.identity();
-    if(!actor)poFail('forbidden','Manager or owner membership is required.');
-    const where=purchaseOrderHistoryWhere(filters),args:(string|number)[]=[companyId,actor,companyId,...where.args,offset];
+export class D1PurchaseOrderHistory {
+  constructor(
+    private readonly db: D1Database,
+    private readonly options: { identity: () => Promise<string | null> },
+  ) {}
+
+  async list(value: unknown) {
+    const parsed = purchaseOrderHistoryRequest.safeParse(value);
+    if (!parsed.success)
+      poFail('invalid_request', 'Check the history search, status, supplier and page.');
+    const { companyId, offset, filters } = parsed.data,
+      actor = await this.options.identity();
+    if (!actor) poFail('forbidden', 'Manager or owner membership is required.');
+    const where = purchaseOrderHistoryWhere(filters),
+      args: (string | number)[] = [companyId, actor, companyId, ...where.args, offset];
     // Resolve product matches before paging; leave ordinary header filters inlined.
-    const result=await this.db.prepare(`WITH allowed AS (
+    const result = await this.db
+      .prepare(
+        `WITH allowed AS (
       SELECT user_id FROM memberships WHERE company_id=? AND user_id=? AND role IN ('owner','manager')
-    ), matched AS ${filters.product?'MATERIALIZED':'NOT MATERIALIZED'} (
+    ), matched AS ${filters.product ? 'MATERIALIZED' : 'NOT MATERIALIZED'} (
       SELECT h.id,h.number,h.supplier_id,json_extract(r.snapshot_json,'$.supplier.name') AS supplier_name,
         h.status,h.revision,h.created_at
       FROM purchase_order_drafts h JOIN purchase_order_draft_revisions r
@@ -28,11 +45,16 @@ export class D1PurchaseOrderHistory{
       CROSS JOIN allowed WHERE h.company_id=? ${where.sql}
     ), page AS (
       SELECT * FROM matched ORDER BY created_at DESC,id DESC LIMIT 21 OFFSET ?
-    ) SELECT page.* FROM allowed LEFT JOIN page ON 1=1 ORDER BY page.created_at DESC,page.id DESC`)
-      .bind(...args).all<{[K in keyof Summary]:Summary[K]|null}>();
-    if(result.results.length===0)poFail('forbidden','Manager or owner membership is required.');
-    const rows=result.results.filter(row=>row.id!==null),summaries=z.array(summary).max(21).safeParse(rows);
-    if(!summaries.success)poFail('storage_failure','Saved purchase-order history could not be loaded.');
-    return frozenCopy({orders:summaries.data.slice(0,20),hasMore:summaries.data.length>20});
+    ) SELECT page.* FROM allowed LEFT JOIN page ON 1=1 ORDER BY page.created_at DESC,page.id DESC`,
+      )
+      .bind(...args)
+      .all<{ [K in keyof Summary]: Summary[K] | null }>();
+    if (result.results.length === 0)
+      poFail('forbidden', 'Manager or owner membership is required.');
+    const rows = result.results.filter((row) => row.id !== null),
+      summaries = z.array(summary).max(21).safeParse(rows);
+    if (!summaries.success)
+      poFail('storage_failure', 'Saved purchase-order history could not be loaded.');
+    return frozenCopy({ orders: summaries.data.slice(0, 20), hasMore: summaries.data.length > 20 });
   }
 }
