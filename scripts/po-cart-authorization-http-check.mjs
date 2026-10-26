@@ -30,7 +30,7 @@ const quote=value=>`'${String(value).replaceAll("'","''")}'`;
 const fixturePath=`.sites-runtime/cart-http-${companyId}.sql`;
 try{
   writeFileSync(fixturePath,`INSERT INTO po_cart_connections VALUES(${quote(companyId)},${quote(connection.id)},1,${quote(JSON.stringify(connection))});\n`+
-    `INSERT INTO po_cart_budget_policies VALUES(${quote(companyId)},1,50000,100000);\n`,{mode:0o600});
+    `INSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstanding_minor) VALUES(${quote(companyId)},1,50000,100000);\n`,{mode:0o600});
   const configured=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','execute','DB','--local',
     '--config','.sites-runtime/cart-review-config/wrangler.jsonc','--persist-to','.sites-runtime/cart-review-state','--file',fixturePath],{encoding:'utf8'});
   if(configured.error)throw configured.error;assert.equal(configured.status,0,configured.stderr);

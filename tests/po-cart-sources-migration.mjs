@@ -110,7 +110,7 @@ try{
   await assert.rejects(f.service().authorize(connectionInput),errorCode('conflict'));assert.equal(snapshot(),beforeConnection);
   connectionVersion(f.sql,{});
   const budgetPo=await f.reviewed(),budgetInput=command(budgetPo),beforeBudget=snapshot();
-  f.db.beforeBatch=()=>f.sql.exec("INSERT INTO po_cart_budget_policies VALUES('a',2,50000,100000)");
+  f.db.beforeBatch=()=>f.sql.exec("INSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstanding_minor) VALUES('a',2,50000,100000)");
   await assert.rejects(f.service().authorize(budgetInput),errorCode('conflict'));assert.equal(snapshot(),beforeBudget);
 
   // PO cancellation after start revokes permission without inventing supplier cancellation.

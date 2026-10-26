@@ -99,4 +99,4 @@ export async function sessionFromHeaders(headers:Headers):Promise<(AuthUser & {a
     throw new SessionUnavailableError();
   }
 }
-export function recentlyVerified(user:AuthUser){return !user.recovery && !!user.reauthenticatedAt && user.reauthenticatedAt>Date.now()-5*60*1000;}
+export {recentlyVerified} from '@/lib/reauthentication';

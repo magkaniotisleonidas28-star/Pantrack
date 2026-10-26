@@ -71,14 +71,20 @@ and stays unchanged.
 
 ### Schema (one new additive migration; the number is assigned at merge time)
 
-1. **`company_time_zones`** holds `company_id`, `version`, `time_zone`, `actor`
-   and `created_at`.
+1. **`company_time_zones`** holds `company_id`, `version`, `time_zone`, `actor`,
+   `created_at`, plus `operation_id` and `fingerprint` for replay.
    - It is append-only: versions are sequential, and an update or delete aborts.
    - The server validates the IANA name with `Intl`. The database checks its
      shape and length.
 2. **`po_cart_budget_policies` gains columns** through `ALTER TABLE … ADD COLUMN`:
    - nullable `per_day_minor` and `per_month_minor`;
-   - `time_zone_version`, `actor`, `created_at` and `reason`.
+   - `actor` and `created_at`;
+   - `operation_id` and `fingerprint` for replay.
+
+   _As built:_ a change's reason is recorded by `security_audit`, written by a
+   database trigger, so there is no separate `reason` column. The time-zone
+   version is recorded on each authorization's window rather than on the policy.
+   A time-zone change therefore does not need limits to be re-saved.
 3. **Two kinds of row:**
    - Existing rows and fixture rows have no actor. They keep today's meaning:
      fictional test policy, with no day or month limit.
@@ -88,7 +94,7 @@ and stays unchanged.
      - per order ≤ per day;
      - per day ≤ per month, when a month limit is set;
      - per order ≤ in-progress total;
-     - the time-zone version is the latest one.
+     - a café time zone has been set.
 4. **Recreated insert guard** for the two row kinds. This follows the Wrangler
    splitter rule for `CASE`/`END` whitespace and is verified through local
    migration apply.

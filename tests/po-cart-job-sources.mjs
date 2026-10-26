@@ -27,7 +27,7 @@ for(const atCommit of [false,true])for(const change of ['membership','config','p
       extra={lines:[await f.stock('source')]};
       mutate={membership:()=>f.sql.exec("DELETE FROM memberships WHERE company_id='a' AND user_id='manager'"),
         config:()=>f.sql.exec("UPDATE inventory_config_versions SET status='replaced',replaced_at='2026-10-01T12:00:00.000Z' WHERE product_id='source'"),
-        policy:()=>f.sql.exec("INSERT INTO po_cart_budget_policies VALUES('a',2,50000,100000)"),
+        policy:()=>f.sql.exec("INSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstanding_minor) VALUES('a',2,50000,100000)"),
         connection:()=>connectionVersion(f.sql,{paused:true})}[change];
     }
     let po;
