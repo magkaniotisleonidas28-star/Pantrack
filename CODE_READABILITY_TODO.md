@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S14** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S15** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **9 of 22 Completed; 5 Blocked (recorded handoffs/holds); 0 In Progress; 8 Pending**.
+- Cleanup sections: **9 of 22 Completed; 6 Blocked (recorded handoffs/holds); 0 In Progress; 7 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -99,7 +99,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S12 | Supplier confirmation, incoming stock and receiving | 1 | Blocked: receiving service handoff; confirmation verified |
 | S13 | API routes and server integration boundaries | 36 | Blocked: delivery-route handoff; existing routes verified |
 | S14 | Shared UI primitives and vendor boundaries | 62 | Completed |
-| S15 | Application entrypoints, identity pages and workspace shell | 15 | Pending |
+| S15 | Application entrypoints, identity pages and workspace shell | 15 | Blocked: receiving/JSX/source pins; safe files verified |
 | S16 | Inventory, recipes, waste and POS workspace components | 14 | Pending |
 | S17 | Purchasing, cart, spending and document workspace components | 17 | Pending |
 | S18 | Owned styles, static site, standalone previews and assets | 32 | Pending |
@@ -486,23 +486,33 @@ Commit: `docs(readability): record protected shared UI review`. No S14 hold rema
 
 ## S15 — Application entrypoints, identity pages and workspace shell
 
-Status: Pending. Depends on: S14; S05/S13 contracts.
+Status: Blocked for receiving shell, JSX children and source-wiring holds; 12 files verified. Depends on: S14; S05/S13 contracts.
 
 **Files:** `src/app/` non-API TS/TSX files, auth/callback/signout/invite pages, workspace/company/employee shells, members panel, navigation/theme and shared task forms assigned in the inventory.
 
-- [ ] S15.1 — Expand page JSX and dense state declarations while keeping server/client boundaries and directive prologues intact.
-- [ ] S15.2 — Make navigation guards, company changes, dirty-form handling, theme persistence and async shell loading easy to follow.
-- [ ] S15.3 — Preserve component/export/prop names, DOM structure and text, accessibility attributes, event order, local-storage keys, hooks and effect dependency arrays.
-- [ ] S15.4 — Extract owned presentational helpers only when it demonstrably preserves state ownership and lifecycle; do not restructure routes or change UI behavior to satisfy lint.
+**New S15 hold:** `members-panel.tsx` stays byte-identical because formatting splits existing JSX text into additional React children. The guard refused before writes; a later manually verified JSX-preserving cleanup is needed. Twelve other present candidates remain safe; employee shell remains separately held for receiving. `workspace.tsx` was restored unchanged after `spending-limits-screen` refused three exact source spellings. No test or verifier was changed.
 
-**Focused command:** `pnpm test m2-security local-auth stock-entry`.
+- [!] S15.1 — Safe page/portal JSX and state declarations expanded with directives preserved. Members-panel JSX and workspace source-pin cleanup remain Blocked; employee shell remains receiving-owned.
+- [!] S15.2 — Company changes/dirty prompts, theme and navigation definitions verified. The source-pinned main shell remains unchanged and Blocked for later compatible cleanup.
+- [x] S15.3 — Preserve component/export/prop names, DOM structure and text, accessibility attributes, event order, local-storage keys, hooks and effect dependency arrays.
+- [x] S15.4 — Extract owned presentational helpers only when it demonstrably preserves state ownership and lifecycle; do not restructure routes or change UI behavior to satisfy lint.
+
+**Focused command:** `pnpm test m2-security local-auth stock-entry spending-limits-screen`.
 
 **Verification:** Run relevant UI/auth regression suites and full tests where shell behavior is touched, scoped lint, typecheck/build and isolated HTTP smoke. Preserve JSX text nodes; any potentially visible change requires a local visual comparison or stays Blocked.
 
-- [ ] S15.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S15.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S15.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S15.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All present source read before edits. Eleven safe files formatted and five whitespace-only declaration boundaries retained; the small authentication compatibility re-export was reviewed unchanged. Page/auth JSX, company selection/dirty prompts, theme/navigation/task forms and portal requests/forms are easier to scan. State ownership and hook lifecycles remain in their original components; no presentational extraction or new abstraction was introduced.
+
+The twelve safe modules match pre-section `4886133` complete types/syntax/comments/literals/emitted runtime and JSX children. Directives, metadata, DOM/text/classes/ARIA, handler/prop/key order, effect dependencies, storage keys, invitation fragments/redirects and company state remain unchanged. All three held sources retain baseline bytes.
+
+**Explicit holds:** `members-panel.tsx` was refused before writes because formatting splits existing text such as `Role ` into extra adjacent React string children. `workspace.tsx` was restored after the full suite refused three exact source spellings in unchanged `tests/spending-limits-screen.mjs`; a local formatter-annotation candidate did not preserve all three and was discarded. No test/verifier was weakened, no annotation remains in source, and both files require later manually verified preservation work. `employee-workspace.tsx` remains separately held for receiving integration/handoff.
+
+The initial formatter refusal and the incomplete full run (focused/format/typecheck passed, inherited lint failed, full suite stopped at the screen source pin) are retained under `.sites-runtime/readability/S15/`. Three focused suites passed before edits; the final focused command adds `spending-limits-screen` and passes all four. After restoring the held shell, full `pnpm test` passed all 139 suites. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build, worktree-only `local:setup`/`db:migrate:local`/loopback `test:local` and diff check passed against frozen source. **Scoped lint exited 1 with 6 errors/3 warnings**, matching the integrated baseline by file/rule/message for the safe selection. No suppression, hook-dependency or navigation change. Exact final commands/results/log hashes/source digest: inventory `sectionReviews.S15`.
+
+No visible instruction/runtime changed in the safe sources, so no browser/pixel walkthrough ran. All evidence is local/macOS with fake providers or isolated loopback state. Commits group pages/forms and company portal/preferences. Rollback: those two source/docs commits only. S16 can independently review stock/recipe/waste/POS components against unchanged shell props; it does not depend on resolving the three held files.
 
 ## S16 — Inventory, recipes, waste and POS workspace components
 
@@ -661,6 +671,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S12 | Present confirmation service formatted; eight declaration/method boundaries; atomic A-owned incoming handoff preserved | Four focused baseline/final suites and full 139 suites pass; scoped lint/equivalence/format/typecheck/db/build/diff pass | Local section commit; absent delivery service remains explicitly Blocked; independent existing-route S13 review next |
 | 2026-10-26 / S13 | 36 existing routes formatted; 71 declaration boundaries; policy/response/dispatch contracts retained | 23 focused baseline/final and all 139 suites; scoped lint/format/typecheck/db/build/local setup/apply/HTTP/diff pass; initial formatter refusal and stable equivalent recovery retained | Three local commits grouped by identity/integrations, stock/sales/waste and purchasing/cart; delivery API remains Blocked; independent S14 next |
 | 2026-10-26 / S14 | 62 vendor files reviewed unchanged; 348 exports and import/hook/consumer inventory; nine directly used primitive modules | All baseline hashes preserved; guard suite, scoped lint under unchanged vendor exceptions, typecheck/build/diff pass | Documentation-only local review commit; no vendor rewrite or S14 hold; S15 next |
+| 2026-10-26 / S15 | Eleven safe page/auth/portal/form/theme/navigation files formatted; one re-export unchanged; five declaration boundaries | Three baseline/four final focused and all 139 suites; equivalence/format/typecheck/db/build/local setup/apply/HTTP/diff pass; scoped inherited lint 6 errors/3 warnings; incomplete source-pin run retained | Two local commits; receiving employee shell, members-panel JSX and workspace source pins remain Blocked; independent S16 next |
 
 ## Final report requirements
 

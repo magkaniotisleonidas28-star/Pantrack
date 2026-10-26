@@ -5299,47 +5299,67 @@
     {
       "path": "src/app/auth/auth-form.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7f0d440954bc2b628876f0d7f3bef5cff713aed7b1d867633bfc090d7bbc51a9",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "c3bb365903f2f57bf3324e25714b216287ddb7dc41aa020819280746217332c0"
     },
     {
       "path": "src/app/auth/callback/page.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "95fd12d170c569dfeb786f91dc0a2f474086146beaeefcfdef20e8c6038137cd",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "75a9cb84b1fbaaa992cb990ec67180de44ac97bddd4adff3189ad28da0a6967c"
     },
     {
       "path": "src/app/auth/page.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f3073643446ce0fdf5bb643a0369dfce964ddf90bcb42a22eb787a645b6f870d",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "6444fb7659417bbdc1b688731f5902e2ae4ca2271df5c8081027ff63f2dbe250"
     },
     {
       "path": "src/app/auth/signout/page.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f4093f24ec63501b02b51ea417e31985307ce24a8762bcf14f6cf4afaafb4291",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "3d6492be114e84d3385cc2471a19e059aa83c87932bacdf4c9f90f15e06cbf5f"
     },
     {
       "path": "src/app/chatgpt-auth.ts",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "03753d2a7b828a457192844a7a3bbdba8dc6aa7b1bff688e80c688c6b5a310c8",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "03753d2a7b828a457192844a7a3bbdba8dc6aa7b1bff688e80c688c6b5a310c8"
     },
     {
       "path": "src/app/globals.css",
@@ -5353,29 +5373,41 @@
     {
       "path": "src/app/invite/page.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "88487e0cbacec067503d10c190fa96b61f3889955c81f3a0c7c0ab0001c0e4bc",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "9e0ccc89afd127b910a1bd092ecaa095c00d86cf02d5dff22c904a91099fe16e"
     },
     {
       "path": "src/app/layout.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "42ea2235a1cf09962f92aa2eeb4f7c5040791866514159d7dc0b1f7a1acac279",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "3cd1e2b4d5017ba7982521dc89a60d538a564fb5f6ff916859e042e22a0b6d07"
     },
     {
       "path": "src/app/page.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a028de0782190a243fc67a5f539ad5105ed9b57d7159202462c3c8f5affd560d",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "9557141eaa88398799064fa6772734f80097dd020ab3152634ac3a2aae582e69"
     },
     {
       "path": "src/components/ui/accordion.tsx",
@@ -7497,11 +7529,15 @@
     {
       "path": "src/components/workspace/company-portal.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "92c4925e1b0fd658ad783d58d197042228714cf04466701dec169147e1a8fa9b",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "6a21d78ef846c2ef4e2da879fdc4167d079b5995038c24aabf9ac29487649f87"
     },
     {
       "path": "src/components/workspace/deliveries.css",
@@ -7596,11 +7632,14 @@
     {
       "path": "src/components/workspace/members-panel.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "6817b8809da506c17548c09ba403106dc074b0a2e6c6933ef742444bac28aa74",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 formatter refusal: JSX text such as Role-space becomes two adjacent React string children. Strict emitted-runtime comparison refuses this candidate before writes. Retain baseline bytes; a later manually verified JSX-preserving cleanup is required. Do not normalize away or weaken the guard."
+      ]
     },
     {
       "path": "src/components/workspace/menu-waste-recorder.tsx",
@@ -7821,11 +7860,15 @@
     {
       "path": "src/components/workspace/task-form.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "1996ef78f0b2225ea011e49e5839bc8b0eb4fe34dd1422375c6e6ebd719348c8",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "423214e20da92aa1ebdf941a810a49ee23dc0758bd3a8a834f529f6c65f1f39f"
     },
     {
       "path": "src/components/workspace/vendor-automation.tsx",
@@ -7848,11 +7891,15 @@
     {
       "path": "src/components/workspace/workspace-navigation.ts",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8ca45bf6d1d672f850d4a978213936b31de5b6790c5511fda7f1037226854ad5",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "305b894666b74d61fcc2d1fffc85dae2ac4d93fcc96605a11fadf1c00b3d9969"
     },
     {
       "path": "src/components/workspace/workspace-surfaces.css",
@@ -7866,20 +7913,27 @@
     {
       "path": "src/components/workspace/workspace-theme.ts",
       "section": "S15",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ebb19ec0a2277e43094edd7e7b7580048f365cb25b13ab955bed1afffce8fd36",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
+      ],
+      "cleanupSha256": "3826ee637cd810acde74eeeda5a8555b184d5fa43548ca4f1ee5456c6836a9c3"
     },
     {
       "path": "src/components/workspace/workspace.tsx",
       "section": "S15",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f4a485f164690bb2a02789dc9aaa92f877bfad3e732a490288a2c089a6e4fd4b",
-      "results": []
+      "results": [
+        "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
+        "S15 source-text hold: unchanged tests/spending-limits-screen.mjs pins three compact expressions in this shell. The full suite refused reformatted spelling despite runtime equivalence; annotations did not preserve all pinned JSX. All shell edits were restored to baseline bytes. Keep the original test and defer manual source-pin-compatible cleanup."
+      ]
     },
     {
       "path": "src/db/index.ts",
@@ -12063,7 +12117,196 @@
           "path": ".sites-runtime/readability/S14/vendor-review.json",
           "sha256": "39da4955e6a5c4357e00806c9809f8a547539beee4a4392abeb7a5071168b7c5"
         }
+      ],
+      "commits": [
+        "4886133"
       ]
+    },
+    "S15": {
+      "outcome": "Blocked for receiving shell, JSX children and source-wiring holds; 12 files verified",
+      "safeFilesCompleted": 12,
+      "heldFiles": [
+        "src/components/workspace/employee-workspace.tsx",
+        "src/components/workspace/members-panel.tsx",
+        "src/components/workspace/workspace.tsx"
+      ],
+      "preSectionCommit": "4886133",
+      "codeCommits": [
+        "style(readability): expand authentication pages and task forms",
+        "style(readability): clarify company portal and workspace preferences"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm test m2-security local-auth stock-entry",
+          "exit": 0,
+          "suites": 3,
+          "log": ".sites-runtime/readability/S15/baseline.log",
+          "logSha256": "0fe3de802e3cb36df5d8697361c39b4bb9fbf3f5bba30ca8915370a440f57265"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm test m2-security local-auth stock-entry spending-limits-screen",
+          "exit": 0,
+          "seconds": 0.8,
+          "log": ".sites-runtime/readability/S15/final/0-test.log",
+          "logSha256": "44098ad386ded726c8c47bb8cf33179499d595b91de2f49bf313db687a01d651"
+        },
+        {
+          "command": "pnpm format:check --section S15",
+          "exit": 0,
+          "seconds": 0.7,
+          "log": ".sites-runtime/readability/S15/final/1-format-check.log",
+          "logSha256": "f499c8487cea9890b85f63a0125717745228a8face11077a4e87ad7a04a89bed"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/app/auth/auth-form.tsx src/app/auth/callback/page.tsx src/app/auth/page.tsx src/app/auth/signout/page.tsx src/app/chatgpt-auth.ts src/app/invite/page.tsx src/app/layout.tsx src/app/page.tsx src/components/workspace/company-portal.tsx src/components/workspace/task-form.tsx src/components/workspace/workspace-navigation.ts src/components/workspace/workspace-theme.ts",
+          "exit": 1,
+          "seconds": 1.2,
+          "log": ".sites-runtime/readability/S15/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "45b4b8af4e2d0aa3e6eebf122f0c48e09779c09609121b0d299f360c54ef04a2"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 2.0,
+          "log": ".sites-runtime/readability/S15/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.0,
+          "log": ".sites-runtime/readability/S15/final/4-test.log",
+          "logSha256": "b6af91f36985a926be4123c1e7e0d96af241e212d861279797ceb544c6329216"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S15/final/5-db-check.log",
+          "logSha256": "7f9134e8aa5641fa3109600c3fd1c5738ccab2a02f57bd006a3d45a8197005b7"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.2,
+          "log": ".sites-runtime/readability/S15/final/6-build.log",
+          "logSha256": "2f6331a7ea8287f5c02c8105395a7116db4ceb5a718365b46bf9a8017acb4a21"
+        },
+        {
+          "command": "pnpm local:setup",
+          "exit": 0,
+          "seconds": 0.2,
+          "log": ".sites-runtime/readability/S15/final/7-local-setup.log",
+          "logSha256": "12310241a36c6913163cf8e42aeae88fb74f8ae3b7a1a14bf7d49d208433acda"
+        },
+        {
+          "command": "pnpm db:migrate:local",
+          "exit": 0,
+          "seconds": 0.8,
+          "log": ".sites-runtime/readability/S15/final/8-db-migrate-local.log",
+          "logSha256": "b8c342c16ecde72207b1ad2a289f887502b035db05ebcb1d2cc844d9ea651fdf"
+        },
+        {
+          "command": "pnpm test:local",
+          "exit": 0,
+          "seconds": 3.8,
+          "log": ".sites-runtime/readability/S15/final/9-test-local.log",
+          "logSha256": "47dc3f36955b62e916f94bf001fa6fa44b4eefc66ba4268deae09133b6bdc978"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S15/final/10-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "c5bff2fbb1d2a906ab92b1e0148119faca906fb6d42096ec1216248996d83972",
+      "review": "Twelve safe modules verified against pre-section source, including directives/metadata, exact JSX children/DOM/text/attributes/classes, state/hook/effect/event order, company/dirty/replay identities, fragments/redirects and theme/storage. Eleven formatted, five retained whitespace-only declaration boundaries; compatibility re-export unchanged. No component extraction or lifecycle/navigation change. Members-panel candidate changes adjacent React text children and stays byte-identical. The full suite refused three exact source pins in workspace.tsx; an annotation candidate did not preserve all three, was discarded, and the shell was restored byte-identically. Employee shell remains receiving-owned and unchanged. All tests/guards retain their original implementation.",
+      "limitations": [
+        "members-panel.tsx stays Blocked after strict emitted JSX-child refusal; later manually verified JSX-preserving cleanup needed. Guard unchanged.",
+        "workspace.tsx stays Blocked because spending-limits-screen.mjs pins three compact owner-menu/mount/dirty expressions. Later cleanup must preserve these pins or separately improve that test contract with equivalent evidence; no test change is authorized by this result. All attempted shell annotations/formatting were discarded.",
+        "EmployeeWorkspace remains Blocked for receiving integration/handoff.",
+        "Scoped lint exits 1 with the same 6 errors/3 warnings in the safe selection. Global inherited lint, including held sources, remains separate. No suppression or behavioral lint repair.",
+        "Safe UI/runtime instructions are identical, so no browser/pixel walkthrough ran. Local/macOS fake-provider tests and worktree-local loopback smoke only."
+      ],
+      "priorAttempts": [
+        {
+          "outcome": "Incomplete: full suite refused exact existing workspace wiring source; no later checks ran",
+          "results": [
+            {
+              "command": "pnpm test m2-security local-auth stock-entry",
+              "exit": 0,
+              "seconds": 0.8,
+              "log": ".sites-runtime/readability/S15/initial-source-wiring-refusal/0-test.log",
+              "logSha256": "3a70245f8a4d5e4e39c466900e0ce655fbe75e4715c94c18b7d341c05c77fe7c"
+            },
+            {
+              "command": "pnpm format:check --section S15",
+              "exit": 0,
+              "seconds": 0.9,
+              "log": ".sites-runtime/readability/S15/initial-source-wiring-refusal/1-format-check.log",
+              "logSha256": "6b0296a8656c60b2af0cc9ff87a081684a5dd5e2c8f98caef6ef17dfa44b112d"
+            },
+            {
+              "command": "node node_modules/eslint/bin/eslint.js src/app/auth/auth-form.tsx src/app/auth/callback/page.tsx src/app/auth/page.tsx src/app/auth/signout/page.tsx src/app/chatgpt-auth.ts src/app/invite/page.tsx src/app/layout.tsx src/app/page.tsx src/components/workspace/company-portal.tsx src/components/workspace/task-form.tsx src/components/workspace/workspace-navigation.ts src/components/workspace/workspace-theme.ts src/components/workspace/workspace.tsx",
+              "exit": 1,
+              "seconds": 1.5,
+              "log": ".sites-runtime/readability/S15/initial-source-wiring-refusal/2-node_modules-eslint-bin-eslint.js.log",
+              "logSha256": "cf6a483cca6c902d16e6a44125ddd8e8a8ba6374ee24673e690b42dababd6d09"
+            },
+            {
+              "command": "pnpm typecheck",
+              "exit": 0,
+              "seconds": 2.5,
+              "log": ".sites-runtime/readability/S15/initial-source-wiring-refusal/3-typecheck.log",
+              "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+            },
+            {
+              "command": "pnpm test",
+              "exit": 1,
+              "seconds": 141.8,
+              "log": ".sites-runtime/readability/S15/initial-source-wiring-refusal/4-test.log",
+              "logSha256": "6fbe24af0a6215939691ecba7310e71799f8cc83de47183753bf27582a4293ee"
+            }
+          ]
+        }
+      ],
+      "refusalReceipts": [
+        {
+          "path": ".sites-runtime/readability/S15/format-write.log",
+          "sha256": "3e151cc3a352801be7b399e507afa2d27678e88a3a6163c281b962d7a19fde07"
+        },
+        {
+          "path": ".sites-runtime/readability/S15/candidate-review.json",
+          "sha256": "322577a636f923739bbeead8db2347953b3d67489b3f398be98af7d1f9944fe2"
+        },
+        {
+          "path": ".sites-runtime/readability/S15/equivalence-before-source-pin-refusal.log",
+          "sha256": "fe11a9a65c2b5a0e232ed76d7ef9a924a9092c7bc68f61972b2300ebf6e07fdf"
+        },
+        {
+          "path": ".sites-runtime/readability/S15/preserved-wiring.json",
+          "sha256": "82a32e1a2ae37865a9feb057dd636d5800b161d53c03a24830efd8208d5e028d"
+        },
+        {
+          "path": ".sites-runtime/readability/S15/discarded-annotated-workspace.tsx",
+          "sha256": "c629efe5749aeccf052158961c57f9a5c8857fda3b74f56b47a46690adfee620"
+        },
+        {
+          "path": ".sites-runtime/readability/S15/equivalence.log",
+          "sha256": "3f9897d63dbd25f71a6edda2318a9ab13edb86d0f46f5e7ddc81ee2445debf82"
+        }
+      ],
+      "discardedAnnotationAttempt": {
+        "command": "pnpm test spending-limits-screen m2-security local-auth stock-entry",
+        "exit": 1,
+        "reason": "Mounted for owners only source regex still refused after formatter; entire workspace source restored to baseline afterward",
+        "committed": false,
+        "finalTestChanged": false
+      }
     }
   }
 }
