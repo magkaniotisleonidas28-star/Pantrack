@@ -1037,3 +1037,11 @@ export const poCartDeliveries=sqliteTable('po_cart_deliveries',{
  foreignKey({columns:[t.companyId,t.confirmationId],foreignColumns:[poCartConfirmations.companyId,poCartConfirmations.id]})]);
 // Any insert aborts the batch: an approval inserts here only when its delivery is no longer pending.
 export const poCartDeliveryGuards=sqliteTable('po_cart_delivery_guards',{reason:text('reason').notNull()});
+// One closure per confirmed order: everything received, or the rest marked as not arriving. It settles the spending hold.
+export const poCartOrderClosures=sqliteTable('po_cart_order_closures',{
+ companyId:text('company_id').notNull(),confirmationId:text('confirmation_id').notNull(),jobId:text('job_id').notNull(),authorizationId:text('authorization_id').notNull(),
+ kind:text('kind').notNull(),releaseJson:text('release_json').notNull(),stockReceipt:integer('stock_receipt').notNull(),note:text('note').notNull(),
+ closedBy:text('closed_by').notNull(),closedAt:text('closed_at').notNull(),operationId:text('operation_id').notNull(),fingerprint:text('fingerprint').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.confirmationId]}),
+ uniqueIndex('po_cart_order_closure_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.confirmationId],foreignColumns:[poCartConfirmations.companyId,poCartConfirmations.id]})]);

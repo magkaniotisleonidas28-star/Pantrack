@@ -17,6 +17,10 @@ export const approveDeliverySchema=z.object({
 export const recountDeliverySchema=z.object({
   action:z.literal('recount'),companyId:id,deliveryId:id,operationId:z.string().uuid(),note:z.string().trim().min(1,'Say what should be recounted.').max(1000),
 }).strict();
+// Closing marks whatever is still expected as not arriving; the reason is required only then.
+export const closeOrderSchema=z.object({
+  action:z.literal('close'),companyId:id,confirmationId:id,operationId:z.string().uuid(),note:z.string().trim().max(1000),
+}).strict();
 export const staffDeliveriesQuerySchema=z.object({companyId:id,view:z.literal('staff')}).strict();
 export const managerDeliveriesQuerySchema=z.object({companyId:id,view:z.literal('manager'),jobId:id}).strict();
 export type CountDelivery=z.infer<typeof countDeliverySchema>;
@@ -25,6 +29,8 @@ export type DeliveryState='counted'|'approved'|'recount';
 export type CountedLine=Readonly<{lineId:string;receivedPacks:string;damagedPacks:string}>;
 export type DecidedLine=Readonly<{lineId:string;kind:ReceivableKind;acceptPacks:string;excessPacks:string;releasePacks:string}>;
 export type DeliveryReceipt=Readonly<{operationId:string;deliveryId:string;state:DeliveryState;at:string}>;
+export type ClosureKind='complete'|'closed_short';
+export type ClosureReceipt=Readonly<{operationId:string;confirmationId:string;kind:ClosureKind;at:string}>;
 export class PoCartDeliveryError extends Error {
   constructor(public readonly code:'invalid_request'|'forbidden'|'missing'|'conflict'|'storage_failure',message:string){
     super(message);this.name='PoCartDeliveryError';

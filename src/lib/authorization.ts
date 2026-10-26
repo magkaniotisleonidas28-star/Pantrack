@@ -11,8 +11,8 @@ export function permitted(role:string,permission:Permission){
 type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts'|'purchasing'|'deliveries';
 export function routePermission(family:Family,method:string,action?:string):Permission{
   if(family==='purchasing')return 'operate';
-  // Staff count deliveries; only owners and managers approve or send a count back.
-  if(family==='deliveries')return ['approve','recount'].includes(action||'')?'operate':'countDeliveries';
+  // Staff count deliveries; only owners and managers approve, send a count back or close the order.
+  if(family==='deliveries')return ['approve','recount','close'].includes(action||'')?'operate':'countDeliveries';
   if(family==='waste')return 'recordWaste';
   if(family==='waste-shortcuts')return 'operate';
   if(family==='members'||family==='companies')return 'members';

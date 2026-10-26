@@ -43,7 +43,7 @@ await denied(403,()=>get({...staff,companyId:'b'}));await denied(403,()=>post({.
 s.env.PANTRACK_CART_PREVIEW='disabled';await denied(404,()=>get(staff));await denied(404,()=>post(count));s.env.PANTRACK_CART_PREVIEW='enabled';
 for(const host of ['https://pantrack.example.invalid','http://localhost:5181'])await denied(404,()=>post(count,{},host));
 for(const headers of [{origin:'https://evil.example'},{'content-type':'text/plain'},{'sec-fetch-site':'cross-site'}])await denied(403,()=>post(count,headers));
-for(const extra of [{action:'close'},{actor:'manager'},{state:'approved'},{operationId:'x'},{lines:[]},{lines:[{lineId:beans.lineId,receivedPacks:'-1',damagedPacks:'0'}]}])
+for(const extra of [{action:'settle'},{actor:'manager'},{state:'approved'},{operationId:'x'},{lines:[]},{lines:[{lineId:beans.lineId,receivedPacks:'-1',damagedPacks:'0'}]}])
   await denied(400,()=>post({...count,...extra}));
 const list=await get(staff);assert.equal(list.status,200);assert.match(list.headers.get('cache-control'),/no-store/);
 const body=await list.json();assert.doesNotMatch(JSON.stringify(body),/Minor|packs|Packs|price/,'Staff responses carry no amounts or prices');
@@ -63,4 +63,11 @@ const view=await (await get(manager)).json();assert.equal(view.deliveries[0].sta
 const approved=await post(decision);assert.equal(approved.status,200);assert.equal((await approved.json()).receipt.state,'approved');
 await denied(409,()=>post({...decision,operationId:randomUUID()}));
 const after=await (await get(manager)).json();assert.equal(after.complete,true);assert.equal(after.deliveries[0].stockAdded,true);
-console.log('PASS: delivery HTTP identity/company/role (staff count only), default-off loopback, actual CSRF/origin, strict intent, no amounts for staff, concurrent replay and private responses.');
+// The approval that resolved everything closed the order. Staff cannot close; a second close is refused.
+assert.deepEqual([after.closure.kind,after.hold],['complete','settled']);
+const closing={action:'close',companyId:'a',confirmationId,operationId:randomUUID(),note:''};
+for(const user of [null,'employee','b-manager']){s.user=user;await denied(user?403:401,()=>post(closing));}
+s.user='employee';assert.equal((await (await post(closing)).json()).error,'You do not have permission for this company action.');
+s.user='manager';for(const extra of [{note:5},{reason:'x'},{operationId:'x'}])await denied(400,()=>post({...closing,...extra}));
+await denied(409,()=>post(closing));
+console.log('PASS: delivery HTTP identity/company/role (staff count only; owners and managers decide and close), default-off loopback, actual CSRF/origin, strict intent, no amounts for staff, concurrent replay and private responses.');

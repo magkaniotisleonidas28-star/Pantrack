@@ -23,7 +23,7 @@ export type CartAuthorizationReceipt=Readonly<{
 }>;
 export type CartAuthorizationStatus=Readonly<{
   authorization:CartAuthorization|null;valid:boolean;reason:string|null;
-  reservation:Readonly<{totalMinor:number;state:'reserved'|'released'}>|null;
+  reservation:Readonly<{totalMinor:number;state:'reserved'|'released'|'settled'}>|null;
   commitments:readonly Readonly<{productId:string;proposalId:string|null;quantity:{dimension:string;minor:string};active:boolean}>[];
   events:readonly Readonly<{revision:number;kind:string;actor:string;reason:string;at:string}>[];
 }>;
