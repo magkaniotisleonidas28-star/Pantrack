@@ -48,6 +48,8 @@ and nothing contacts a supplier or makes a payment.
 
 ## Part 1 — receipt posting (stock side, workstream A's area)
 
+Built and verified locally: [Part 1 evidence](C4_ORDER_RECEIPT_PORT_LOCAL_EVIDENCE.md).
+
 **What it does:** a safe way to move approved items from incoming into stock, in one
 step, together with the manager's approval.
 
@@ -77,6 +79,8 @@ step, together with the manager's approval.
   confirmation — check the invoice".
 
 ## Part 2 — delivery count and manager approval (workstream C)
+
+Built and verified locally: [Part 2 evidence](C4_DELIVERY_RECEIVING_LOCAL_EVIDENCE.md).
 
 - **Schema** (one additive migration): `po_cart_deliveries`.
   - **One row per counted delivery:** who counted it and when it arrived, then the
