@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S02 shared helpers are Completed; S03 is next**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S03 present files are verified; its receiving-contract hold remains Blocked**.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **2 of 22 Completed; 20 Pending**.
+- Cleanup sections: **2 of 22 Completed; 1 Blocked (S03 receiving handoff; 25 safe files verified); 19 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -87,7 +87,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S00 | Architecture survey, preservation checkpoint and complete plan | 2 new planning artifacts | Completed |
 | S01 | Project configuration, tooling and baseline checks | 38 + 7 cleanup additions | Completed |
 | S02 | Shared primitives, bounded requests and public errors | 3 | Completed |
-| S03 | Shared data models, exact quantities and contracts | 24 + 1 upstream | Pending |
+| S03 | Shared data models, exact quantities and contracts | 24 + 1 upstream | Blocked: receiving addition; present files verified |
 | S04 | D1 access and immutable database history | 84 | Pending |
 | S05 | Authentication, tenant authorization and memberships | 9 | Pending |
 | S06 | Inventory, recipes, waste and replenishment services | 26 | Pending |
@@ -177,23 +177,29 @@ Status: Completed. Depends on: S01.
 
 ## S03 — Shared data models, exact quantities and contracts
 
-Status: Pending. Depends on: S02.
+Status: Blocked only for the receiving-contract handoff; 25 present files verified. Depends on: S02.
 
 **Files:** `src/lib/pantry.ts`, `automation-types.ts`, `inventory-quantities.ts`, `stock-pack-quantities.ts`, and every `src/lib/*-contract.ts` assigned in the inventory.
 
-- [ ] S03.1 — Group related types, discriminated unions, schemas, constants and pure helpers within their existing modules.
-- [ ] S03.2 — Expand compressed validators and quantity arithmetic; explain canonical units, rational factors, minor currency units, scope and version identities.
-- [ ] S03.3 — Preserve exported names, field and enum values, schema evaluation/default order, object serialization order, rounding/bounds, money representation and validation messages.
-- [ ] S03.4 — Keep the active `po-cart-delivery-contract.ts` addition Blocked until its owner handoff; do not create a competing contract or change an existing wire schema.
+- [x] S03.1 — Group related types, discriminated unions, schemas, constants and pure helpers within their existing modules.
+- [x] S03.2 — Expand compressed validators and quantity arithmetic; explain canonical units, rational factors, minor currency units, scope and version identities.
+- [x] S03.3 — Preserve exported names, field and enum values, schema evaluation/default order, object serialization order, rounding/bounds, money representation and validation messages.
+- [!] S03.4 — Keep the active `po-cart-delivery-contract.ts` addition Blocked until its owner handoff; do not create a competing contract or change an existing wire schema. The file is absent here; unblock only after the owner branch is integrated and its actual source is reviewed.
 
 **Focused command:** `pnpm test inventory-quantities stock-pack-units inventory-consumption-contract sales-ingestion-contract supplier-simulation-contract po-cart-authorization po-cart-jobs po-cart-browser-sessions po-cart-confirmations purchase-order-drafts purchasing-suppliers`.
 
 **Verification:** Run the listed contract families, full `pnpm test`, scoped lint, typecheck and build. Compare exports, schema/serialization fixtures and exact numeric boundaries.
 
-- [ ] S03.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S03.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S03.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S03.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** 25 present modules formatted and reviewed; 163 whitespace-only declaration boundaries separate types/functions. Exact-quantity rational arithmetic, package display rounding, strict Zod schemas, frozen document projections, spending windows, cart preflight/confirmation and public errors are expanded for scanning. All 299 ordered exports and complete syntax/types/literals/comments/emitted runtime match pre-section HEAD. Existing explanations for canonical units, conversion rounding, cents, version/scope identities and security gates are retained. Long validation/projection functions remain intact to preserve short-circuit/check order; no new abstraction or wire-schema change was made.
+
+The format tool initially refused the TypeScript spelling `typeof ids[number]` → `(typeof ids)[number]` before any write. A new fixture reproduced that false refusal (exit 1), then one `ParenthesizedType` normalization passed it (exit 0); a union/array grouping-change test still refuses. This narrow S01 tooling handoff changed only the guard and its suite; no existing application assertion was weakened.
+
+Baseline 11 focused suites passed; final focused command adds `code-readability` (12 suites) and passes. Full `pnpm test` passed all 139 suites; scoped lint for all present modules and the changed tooling passed; format check, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. Command/exits/durations/log hashes/source digest: inventory `sectionReviews.S03`; logs: `.sites-runtime/readability/S03/`. Local/macOS fake-provider evidence only; no HTTP/UI/schema change or live run. Full-project lint remains inherited debt.
+
+Commit: `style(readability): expand shared data and validation contracts`. Remaining: absent `po-cart-delivery-contract.ts` stays Blocked until receiving integration/handoff. S04 can independently review raw D1 binding access and unchanged migration history without using that contract; its own schema/journal holds remain explicit. Rollback: revert this section source/docs/tooling refinement only.
 
 ## S04 — D1 access and immutable database history
 
@@ -579,6 +585,8 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S01 | Tooling/config/adapters: 24 existing edits, 14 unchanged, 7 cleanup additions; pinned dev formatter and guarded per-section command | Full pipeline passes except unchanged inherited lint (71 errors/80 warnings); 138 suites; focused/syntax/hash/link checks pass | Local section commit; main advanced independently to 59d3d90, integration checkpoint next; receiving implementation held |
 
 | 2026-10-26 / S02 | Three shared helper modules; consistent spacing/wrapping and two stream/UTF-8 comments | 3 focused suites before/after; guard/format, scoped lint, typecheck/build/diff all pass | Local section commit; next S03; no S02 hold |
+
+| 2026-10-26 / S03 | 25 present models/contracts formatted; 163 declaration boundaries; type-parenthesis guard refinement reproduced and tested | 11 baseline/12 final focused suites; all 139 suites; scoped lint, guard/format, typecheck/db/build/diff pass; 299 ordered exports unchanged | Local section commit; absent receiving contract explicitly Blocked; S04 independent D1/history review next |
 
 ## Final report requirements
 

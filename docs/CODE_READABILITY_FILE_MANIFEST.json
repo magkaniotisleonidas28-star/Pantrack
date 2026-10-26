@@ -4310,9 +4310,10 @@
       "baselineSha256": null,
       "cleanupAdded": true,
       "results": [
-        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately.",
+        "S03 dependency refinement: normalize semantically redundant TypeScript ParenthesizedType nodes. Regression fixture failed before fix, passed after; meaningful union/array grouping still refuses; tooling scoped lint and full 139 suites pass."
       ],
-      "cleanupSha256": "2316d83d70e403fdb6c10c162dfe3083af73a9ffd3f371acbfcbfc936f1b77c3"
+      "cleanupSha256": "dbd0776247b4151b38f8c0afab895fe27e12987abeebd39b53b43057269d6834"
     },
     {
       "path": "scripts/reset-local-db.mjs",
@@ -5961,11 +5962,14 @@
     {
       "path": "src/lib/automation-types.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "d8c4f258715197042cce51d4214abdcc8ee1468840ec32541362b96fa2dcac2e",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "d2a30610601b5b791144ed09c222662b27b9d54ab6151b37ca220da763bf67d5"
     },
     {
       "path": "src/lib/bounded-body.ts",
@@ -5991,11 +5995,14 @@
     {
       "path": "src/lib/cart-preview-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2d34f3bcd7cde20a3307d43c216f4c00f2d46417225b82fd60941df28f200bff",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "798e1b8c1aa4ff63af5cd8cae6662c69a55fa4fe9df07cb011524284df310292"
     },
     {
       "path": "src/lib/chatgpt-auth.ts",
@@ -6387,11 +6394,14 @@
     {
       "path": "src/lib/inventory-consumption-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4a56c51fb93862222b2822413e943c9850a993252c0d9676b3ae6238822d17d0",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "f5771f44e974ef566a60802fbcd1ed62e7850d05a1c487c2261f7a9a09b4bee3"
     },
     {
       "path": "src/lib/inventory-consumption-fake.ts",
@@ -6405,11 +6415,14 @@
     {
       "path": "src/lib/inventory-management-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "0b40e5dd282ace92f78695d683fc6cd709917b7f080a3c8b9d306c63512f9b83",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "d27c0bee5f4fd7997ca84567038075b1fe68addae3eb01af8b296603389a04bf"
     },
     {
       "path": "src/lib/inventory-planning-units.ts",
@@ -6423,11 +6436,14 @@
     {
       "path": "src/lib/inventory-quantities.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "dd0c8736b3c19275fe87353e048849f3a8dfea71385549ae6d156c69f300b3b8",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "a0c0a4836031efd5e6ed55b9823dc8ee5cb7934b7873bbdb0ab24e416410eb4b"
     },
     {
       "path": "src/lib/inventory.ts",
@@ -6459,11 +6475,14 @@
     {
       "path": "src/lib/menu-waste-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "6f7eae79d5b790f5603b5e2bec786c2e87331530157e2683a06251812524051f",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "fac1a575141045fdbefc084fd6f8c9f3e6c5b8b90329e7adb39f069eef2a51af"
     },
     {
       "path": "src/lib/menu-waste-route.ts",
@@ -6486,11 +6505,14 @@
     {
       "path": "src/lib/pantry.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "d63b3e29ccd28a1602fa5fae694054f92f204800bfac88ca554dc432f00e61b7",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "1133d6ff964faa274358803cfba0e1edfa9df64e63b4928100eb76a487ea10cd"
     },
     {
       "path": "src/lib/password-policy.ts",
@@ -6504,38 +6526,50 @@
     {
       "path": "src/lib/po-cart-authorization-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "44a155cdda5a801551d7e25c48b931c565cd43bf54ac4628252c55e06d95cbce",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "17757d3933ed5d4700ddcac5242c07c390c39c49315dbe7ef4bbf116e827e3ef"
     },
     {
       "path": "src/lib/po-cart-browser-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "091af7865c289b56bda8177cd75e8b4857ce18fef0a8ea1afd1d9bc22490dc3e",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "fe9c3d512ce009974a237403e89955c67989279bd65ddcce450f1efb1e60c83a"
     },
     {
       "path": "src/lib/po-cart-browser-session-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "33ec721bb522d0d9022a5d87258eff1b74fb57e81f16311e432527098e8f7863",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "b53dd46652ec680875714069a881ed04e4cada553783c6c51324faed0ba47895"
     },
     {
       "path": "src/lib/po-cart-confirmation-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4466b30115eb7b5ded0963144e06c092c0456f2da1a42baaefb2971089ed4481",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "8f993eddc2b30bfeba8b7881ccb34654cb7a23d3e43be034ad25d0d766c58c8a"
     },
     {
       "path": "src/lib/po-cart-delivery-contract.ts",
@@ -6549,47 +6583,62 @@
     {
       "path": "src/lib/po-cart-job-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "e655fac0e269130f848707083520f511834627d99a02f516999d9def9946ee72",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "81f02b44169a50491d207d4d59d6e15dba0d1cf1e5e90d3555934be95359e627"
     },
     {
       "path": "src/lib/po-cart-manager-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "16702084af0b9656968e9f8bf5c4da7a062ef8015434607aff9fe1875ce2fdad",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "4377f925490244ea125b53d678dbfa35b0ea6024312dcd308db122321428aa83"
     },
     {
       "path": "src/lib/po-cart-preparation-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "d0307f343d89e53191b5da9c440be0fa2b8fa441cf70762e67c29c6a2482db9a",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "6fd579961afc4470e846fb7af53c9cc1eaa48310bbe302887ccaf5fc1f4aff9a"
     },
     {
       "path": "src/lib/po-cart-reconciliation-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f92d6c0ac104bf002adc057bd7c02976cc093add65ba1b4da8c9571055d61ea7",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "16cbd13ed825df3bd59500ea5eb41ee8547bf837ea49542b1c86b7016e0c2e53"
     },
     {
       "path": "src/lib/po-cart-spending-limits-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "120fa3b1436df325fb7e741a7b265b48e84f3a6a4b6524185fab192ce52e0efa",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "6fa3d8aeeb131c2bed411cc59384aaf0fa4f26793a7d227092da7274aa1fcc9e"
     },
     {
       "path": "src/lib/po-cart-worker-transport.ts",
@@ -6621,16 +6670,19 @@
     {
       "path": "src/lib/purchase-order-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "d2dd2ab0e3af80b58ac83cf99d6ec5d66eb3eb8ac92cc880c359142c0d3843f5",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "37d81792612e3e89a2340892aee8d5c6d02e7ef5f8127b2a1371795db51d77b9"
     },
     {
       "path": "src/lib/purchase-order-document-archive-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": false,
       "baselineSha256": null,
@@ -6638,8 +6690,10 @@
       "reviewBaselineCommit": "59d3d90",
       "reviewBaselineSha256": "4309ef5e421bfee808cfa339576ec338643c74e263aa2a6bd9e7585a46395391",
       "results": [
-        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section."
-      ]
+        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section.",
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "7b8b1ebcbb955de7c56338a6ce232b7fc8c90baf79d613803bff90c119bc6fb8"
     },
     {
       "path": "src/lib/purchase-order-document-archive-sources.ts",
@@ -6691,20 +6745,26 @@
     {
       "path": "src/lib/purchase-order-export-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a7c48121c5c1f1e6c092322cc3ed233f0a18d53f3bc87295730eda430e908dcb",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "ace62b9c635cb42f87a9816b853c84799f9c6c4c4151cb8072ac6a59cb2d0cae"
     },
     {
       "path": "src/lib/purchase-order-history-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ffdd9c3d36b7fcef275f88e9bbf788588beb3409ab1499f9d917a9ff27b6f3f8",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "5b81a21e0dfcbafd8fdea7d49e1439ac924ad225958350988d889d45cc16df3a"
     },
     {
       "path": "src/lib/purchase-order-history-dates.ts",
@@ -6736,11 +6796,14 @@
     {
       "path": "src/lib/purchase-order-history-export-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "31d1969ad81c0817be543fae704f8b0ee21f4b93a0caa4a837c36935fa00c63f",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "8ffba8e512c117167f8f5d81fa8aa6c0ffd9f6ec2befd85471929e690c06d834"
     },
     {
       "path": "src/lib/purchase-order-history-sql.ts",
@@ -6763,11 +6826,14 @@
     {
       "path": "src/lib/purchasing-supplier-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "98cc74125ba1e1c632097611aca50067aef949aba25c07d827314311a91fdbb5",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "c8548c0fc668e6b31c986a48c0f70fe8b233156c472963438ee7716684f095db"
     },
     {
       "path": "src/lib/reauthentication.ts",
@@ -6844,11 +6910,14 @@
     {
       "path": "src/lib/stock-pack-quantities.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "91cbdf28348fb980e3de5fe246439986002d1f08720eaeeab2a4c0b26753aae3",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "0f503f617b238ee49fd346edb1c8a762047aedeefd88da2a90cfcfee04c590cc"
     },
     {
       "path": "src/lib/stripe-payments.ts",
@@ -6871,11 +6940,14 @@
     {
       "path": "src/lib/supplier-simulation-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2ed7dd768c966e0544e9bc04f95e0586dda617cad20a9cf1e2dae315c77e0c65",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "40afe5d0e1750f824d3499bf0214551914d15eebaa2db3f7bd81327ec9d5cf52"
     },
     {
       "path": "src/lib/user-facing-error.ts",
@@ -6922,11 +6994,14 @@
     {
       "path": "src/lib/waste-contract.ts",
       "section": "S03",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "84db498e1f6dd3d4d72438584b313153eaaf8271a532f4284a8a49ccde58c84c",
-      "results": []
+      "results": [
+        "S03 expanded compressed types/schema/validation/arithmetic and separated declarations; syntax/types/literals/comments/runtime and ordered exports unchanged. Focused/full tests, scoped lint, typecheck/build/db check pass. See sectionReviews.S03."
+      ],
+      "cleanupSha256": "f2a5f3b9dff782e63df7069ac1252da123f3b0240a1508c8b9419e3063a474b8"
     },
     {
       "path": "src/lib/waste-route.ts",
@@ -7090,9 +7165,10 @@
       "baselineSha256": null,
       "cleanupAdded": true,
       "results": [
-        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately.",
+        "S03 dependency refinement: normalize semantically redundant TypeScript ParenthesizedType nodes. Regression fixture failed before fix, passed after; meaningful union/array grouping still refuses; tooling scoped lint and full 139 suites pass."
       ],
-      "cleanupSha256": "859124c61e9ec33c1f402055c5570ed5bc119700d37cb8deb118a4fb24990c79"
+      "cleanupSha256": "5b0a1e0d82a74cd8a2f2160c7f55cb35b1fdd18159832956845f5f0c46365941"
     },
     {
       "path": "tests/d1-pattern-limits.mjs",
@@ -8554,6 +8630,80 @@
       "sourceDigest": "ba93f24a5f6e210875298a655aba0285c28041ea4ed4480958bd2d8bc863b770",
       "review": "All three modules equivalent to pre-section source after excluding exactly two new explanatory stream/UTF-8 comments. No API/error/byte/stream/authorization change. Full lint inherited separately; scoped lint clean.",
       "rollback": "Revert this section source/documentation commit only."
+    },
+    "S03": {
+      "outcome": "Blocked",
+      "safeFilesCompleted": 25,
+      "heldFiles": [
+        "src/lib/po-cart-delivery-contract.ts"
+      ],
+      "baseline": {
+        "command": "pnpm test inventory-quantities stock-pack-units inventory-consumption-contract sales-ingestion-contract supplier-simulation-contract po-cart-authorization po-cart-jobs po-cart-browser-sessions po-cart-confirmations purchase-order-drafts purchasing-suppliers",
+        "exit": 0,
+        "suites": 11,
+        "log": ".sites-runtime/readability/S03/baseline.log"
+      },
+      "final": [
+        {
+          "command": "pnpm test code-readability inventory-quantities stock-pack-units inventory-consumption-contract sales-ingestion-contract supplier-simulation-contract po-cart-authorization po-cart-jobs po-cart-browser-sessions po-cart-confirmations purchase-order-drafts purchasing-suppliers",
+          "exit": 0,
+          "seconds": 4.4,
+          "log": ".sites-runtime/readability/S03/final/0-test.log",
+          "logSha256": "8763ba817b31a38055fb927c0277595a6bcb6ab84de0df5e7902e15641479bf7"
+        },
+        {
+          "command": "pnpm format:check --section S03",
+          "exit": 0,
+          "seconds": 1.3,
+          "log": ".sites-runtime/readability/S03/final/1-format-check.log",
+          "logSha256": "0b23e4fcc64d01b3fcd0b78af7fda32260c98c61ea9b7c1bfbc32e06dd373ba2"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/lib/automation-types.ts src/lib/cart-preview-contract.ts src/lib/inventory-consumption-contract.ts src/lib/inventory-management-contract.ts src/lib/inventory-quantities.ts src/lib/menu-waste-contract.ts src/lib/pantry.ts src/lib/po-cart-authorization-contract.ts src/lib/po-cart-browser-contract.ts src/lib/po-cart-browser-session-contract.ts src/lib/po-cart-confirmation-contract.ts src/lib/po-cart-job-contract.ts src/lib/po-cart-manager-contract.ts src/lib/po-cart-preparation-contract.ts src/lib/po-cart-reconciliation-contract.ts src/lib/po-cart-spending-limits-contract.ts src/lib/purchase-order-contract.ts src/lib/purchase-order-document-archive-contract.ts src/lib/purchase-order-export-contract.ts src/lib/purchase-order-history-contract.ts src/lib/purchase-order-history-export-contract.ts src/lib/purchasing-supplier-contract.ts src/lib/stock-pack-quantities.ts src/lib/supplier-simulation-contract.ts src/lib/waste-contract.ts",
+          "exit": 0,
+          "seconds": 1.1,
+          "log": ".sites-runtime/readability/S03/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 4.2,
+          "log": ".sites-runtime/readability/S03/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.1,
+          "log": ".sites-runtime/readability/S03/final/4-test.log",
+          "logSha256": "6c85efb1b1371ee375e15ca3e5c20372e437d4b41c84c1b2c404180f96cb66fb"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S03/final/5-db-check.log",
+          "logSha256": "168a5514d4c2043e21fcaa11560eb02c669844ed7d19f3773bb2fd9731a89f86"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.3,
+          "log": ".sites-runtime/readability/S03/final/6-build.log",
+          "logSha256": "eea2cf30bfb9557ca6613a2aca082fbd385731ad801ee31707bf7b5927a35cbe"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S03/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "10a3511f93fefdcc2bc4b432df008b98a9052a53374997b4ae72f5711d5b9fed",
+      "review": "All 25 present modules equivalent to pre-section HEAD, including 299 ordered exports and complete types/schema structures; 163 whitespace-only declaration boundaries separated. No exported names, calculations, SQL, defaults, messages, field order or authorization changed. Type-query parentheses normalized in formatter after a failing regression then passing meaningful grouping tests; all 139 suites pass.",
+      "unblocker": "Integrate the receiving-counts owner branch and inspect the absent delivery contract; no competing implementation. S04 raw/index and immutable-history reviews are independent of that missing contract."
     }
   }
 }

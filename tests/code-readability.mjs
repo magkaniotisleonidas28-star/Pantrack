@@ -9,6 +9,7 @@ const fixtures = [
   ['fixture.d.ts', 'declare namespace Cloudflare{interface Env{DB:D1Database;}}'],
   ['fixture.ts', "import {value} from './state'; const total=(value + 1);"],
   ['fixture.ts', 'const sql=`SELECT x\n  FROM stock WHERE id=?`;'],
+  ['fixture.ts', "const ids=['a'] as const;type Id=typeof ids[number];"],
   ['fixture.ts', 'interface State{readonly id:string;value?:number};const state:State={id:"a"};'],
   ['fixture.tsx', 'const x=<div>Hello <b>world</b>!</div>;'],
   ['fixture.tsx', 'const x=<button aria-label="Save" disabled={busy}>Save</button>;'],
@@ -30,6 +31,7 @@ for (const [filename, source] of fixtures) {
 const refusals = [
   ['const value=1;', 'const value=2;'],
   ['const value=1;', 'let value=1;'],
+  ['type Values=(A|B)[];', 'type Values=A|B[];'],
   ['const value:string="a";', 'const value:number="a";'],
   ['import type {State} from "./state";', 'import {State} from "./state";'],
   ['import "./one";import "./two";', 'import "./two";import "./one";'],

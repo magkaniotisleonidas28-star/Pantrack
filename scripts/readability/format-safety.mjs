@@ -12,6 +12,7 @@ function parse(source, filename) {
 function syntaxSignature(tree, runtime = false) {
   function visit(node) {
     if (ts.isParenthesizedExpression(node)) return visit(node.expression);
+    if (ts.isParenthesizedTypeNode(node)) return visit(node.type);
     if (ts.isEmptyStatement(node) || node.kind === ts.SyntaxKind.SemicolonClassElement) return null;
 
     // JSX layout can become explicit whitespace expressions. The emitted-runtime

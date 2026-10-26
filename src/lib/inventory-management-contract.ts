@@ -1,9 +1,16 @@
-import type {CuratedUnitId,UnitDefinition} from './inventory-quantities';
-import type {ExactQuantity, UnitDimension} from './inventory-consumption-contract';
+import type { CuratedUnitId, UnitDefinition } from './inventory-quantities';
+import type { ExactQuantity, UnitDimension } from './inventory-consumption-contract';
 
 export type ManagedUnitInput =
-  | {kind: 'curated'; id: CuratedUnitId}
-  | {kind: 'custom'; id: string; label: string; dimension: UnitDimension; numerator: string; denominator: string};
+  | { kind: 'curated'; id: CuratedUnitId }
+  | {
+      kind: 'custom';
+      id: string;
+      label: string;
+      dimension: UnitDimension;
+      numerator: string;
+      denominator: string;
+    };
 
 export type ConfigureInventoryInput = {
   companyId: string;
@@ -20,11 +27,20 @@ export type ConfigureInventoryInput = {
   effectiveAt: string;
 };
 
-export type PackageQuantityInput = {packages:string;remainder:string;remainderUnitId:string};
+export type PackageQuantityInput = { packages: string; remainder: string; remainderUnitId: string };
+
 export type PackageStockInput = {
-  companyId:string;productId:string;operationId:string;actor:string;configId:string;
-  expectedVersion:number;action:'receive'|'incoming'|'count';quantity:PackageQuantityInput;
-  effectiveAt:string;note:string;fromIncoming?:boolean;
+  companyId: string;
+  productId: string;
+  operationId: string;
+  actor: string;
+  configId: string;
+  expectedVersion: number;
+  action: 'receive' | 'incoming' | 'count';
+  quantity: PackageQuantityInput;
+  effectiveAt: string;
+  note: string;
+  fromIncoming?: boolean;
 };
 
 export type WasteReason = 'end_of_day' | 'spilled' | 'spoiled' | 'preparation_error' | 'other';
@@ -45,17 +61,59 @@ export type InventoryMovementInput = {
 };
 
 /** A → C order-linked incoming port. Quantities are exact stock-unit minors frozen at authorization. */
-export type OrderIncomingLine = {lineId:string; productId:string; configId:string; dimension:UnitDimension; quantityMinor:string};
-export type OrderIncomingInput = {companyId:string; confirmationId:string; actor:string; lines:readonly OrderIncomingLine[]};
-export type OrderIncomingRow = OrderIncomingLine & {receivedMinor:string; releasedMinor:string; eventId:string; actor:string; createdAt:string};
+export type OrderIncomingLine = {
+  lineId: string;
+  productId: string;
+  configId: string;
+  dimension: UnitDimension;
+  quantityMinor: string;
+};
+
+export type OrderIncomingInput = {
+  companyId: string;
+  confirmationId: string;
+  actor: string;
+  lines: readonly OrderIncomingLine[];
+};
+
+export type OrderIncomingRow = OrderIncomingLine & {
+  receivedMinor: string;
+  releasedMinor: string;
+  eventId: string;
+  actor: string;
+  createdAt: string;
+};
 /**
  * A → C receipt posting for one approved delivery. Per order line: accepted moves from incoming into
  * stock, released will never arrive (leaves incoming only), and excess is stock beyond what the order
  * owed (on-hand only, allowed when the line is completed). All amounts are exact stock-unit minors.
  */
-export type OrderReceiptLine = {lineId:string; acceptedMinor:string; releasedMinor:string; excessMinor:string};
-export type OrderReceiptInput = {companyId:string; confirmationId:string; receiptId:string; actor:string; deliveredAt:string; lines:readonly OrderReceiptLine[]};
-export type OrderReceiptRow = OrderReceiptLine & {receiptId:string; productId:string; stockAdded:boolean; deliveredAt:string; eventId:string; actor:string; createdAt:string};
+export type OrderReceiptLine = {
+  lineId: string;
+  acceptedMinor: string;
+  releasedMinor: string;
+  excessMinor: string;
+};
+
+export type OrderReceiptInput = {
+  companyId: string;
+  confirmationId: string;
+  receiptId: string;
+  actor: string;
+  deliveredAt: string;
+  lines: readonly OrderReceiptLine[];
+};
+
+export type OrderReceiptRow = OrderReceiptLine & {
+  receiptId: string;
+  productId: string;
+  stockAdded: boolean;
+  deliveredAt: string;
+  eventId: string;
+  actor: string;
+  createdAt: string;
+};
+
 export type InventoryCountInput = {
   companyId: string;
   productId: string;
@@ -74,12 +132,25 @@ export type RecipeAmountInput = {
   unitId: string;
 };
 
-export type RecipeChoiceGroup = {id:string; name:string; modifierIds:string[]};
+export type RecipeChoiceGroup = { id: string; name: string; modifierIds: string[] };
+
 export type RecipePublishInput = {
-  companyId:string; operationId:string; actor:string; recipeId:string; versionId:string;
-  name:string; expectedActiveVersionId:string|null; expectedModifiers:Record<string,string>;
-  ingredients:RecipeAmountInput[]; choices:RecipeChoiceGroup[];
-  modifiers:Array<{modifierId:string; versionId:string; name:string; deltas:Array<RecipeAmountInput & {signed:boolean}>}>;
+  companyId: string;
+  operationId: string;
+  actor: string;
+  recipeId: string;
+  versionId: string;
+  name: string;
+  expectedActiveVersionId: string | null;
+  expectedModifiers: Record<string, string>;
+  ingredients: RecipeAmountInput[];
+  choices: RecipeChoiceGroup[];
+  modifiers: Array<{
+    modifierId: string;
+    versionId: string;
+    name: string;
+    deltas: Array<RecipeAmountInput & { signed: boolean }>;
+  }>;
 };
 
 export type RecipeDraftInput = {
@@ -98,7 +169,7 @@ export type ModifierDraftInput = {
   draftId: string;
   actor: string;
   name: string;
-  deltas: Array<RecipeAmountInput & {signed: boolean}>;
+  deltas: Array<RecipeAmountInput & { signed: boolean }>;
 };
 
 export type ActivationInput = {
@@ -122,7 +193,12 @@ export type ManagedInventoryRecord = {
   stockUnitId: string;
   stockUnitLabel: string;
   measurementUnit?: UnitDefinition;
-  purchase?: {label:string;quantity:ExactQuantity;enteredAmount:string|null;enteredUnitId:string|null};
+  purchase?: {
+    label: string;
+    quantity: ExactQuantity;
+    enteredAmount: string | null;
+    enteredUnitId: string | null;
+  };
   onHand: ExactQuantity;
   incoming: ExactQuantity;
   estimatedUsed: ExactQuantity;
@@ -151,8 +227,8 @@ export type RecipeVersionView = {
   name: string;
   activeFrom: string | null;
   activeTo: string | null;
-  ingredients: Array<RecipeAmountInput & {quantity: ExactQuantity}>;
-  choices?:RecipeChoiceGroup[];
+  ingredients: Array<RecipeAmountInput & { quantity: ExactQuantity }>;
+  choices?: RecipeChoiceGroup[];
 };
 
 export type ModifierVersionView = {
@@ -164,19 +240,23 @@ export type ModifierVersionView = {
   name: string;
   activeFrom: string | null;
   activeTo: string | null;
-  deltas: Array<RecipeAmountInput & {quantity: ExactQuantity}>;
+  deltas: Array<RecipeAmountInput & { quantity: ExactQuantity }>;
 };
 
 export type LegacyM3Review = {
-  products: Array<{productId: string; changedSinceBackfill: boolean; needsOpeningCount: boolean}>;
-  recipes: Array<{recipeId: string; changedSinceBackfill: boolean; needsReviewedVersion: boolean}>;
+  products: Array<{ productId: string; changedSinceBackfill: boolean; needsOpeningCount: boolean }>;
+  recipes: Array<{
+    recipeId: string;
+    changedSinceBackfill: boolean;
+    needsReviewedVersion: boolean;
+  }>;
 };
 
 export type InventoryManagementView = {
   records: ManagedInventoryRecord[];
   reconciliations: InventoryReconciliationView[];
   legacyRecipeIds: string[];
-  legacyRecipes?: Array<{recipeId:string;versionId:string;name:string}>;
+  legacyRecipes?: Array<{ recipeId: string; versionId: string; name: string }>;
   recipes: RecipeVersionView[];
   modifiers: ModifierVersionView[];
   legacyReview: LegacyM3Review;
@@ -191,6 +271,6 @@ export interface InventoryManagementService {
   archiveRecipe(input: ArchiveInput): Promise<RecipeVersionView>;
   saveModifierDraft(input: ModifierDraftInput): Promise<ModifierVersionView>;
   activateModifier(input: ModifierActivationInput): Promise<ModifierVersionView>;
-  archiveModifier(input: ArchiveInput & {modifierId: string}): Promise<ModifierVersionView>;
+  archiveModifier(input: ArchiveInput & { modifierId: string }): Promise<ModifierVersionView>;
   read(companyId: string): Promise<InventoryManagementView>;
 }
