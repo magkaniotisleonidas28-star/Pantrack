@@ -119,6 +119,8 @@ for(const sql of ["UPDATE po_cart_budget_policies SET per_day_minor=1 WHERE comp
   `INSERT INTO company_time_zones VALUES('a',2,'Asia/Tokyo','manager','${at}','${randomUUID()}','x')`,
   `INSERT INTO company_time_zones VALUES('a',2,'Asia/Tokyo; x','owner','${at}','${randomUUID()}','x')`,
   `INSERT INTO company_time_zones VALUES('a',3,'Asia/Tokyo','owner','${at}','${randomUUID()}','x')`,
+  `INSERT INTO company_time_zones VALUES('a',2,'Asia/Tokyo','owner','2026-10-01 12:00:00','${randomUUID()}','x')`,
+  `INSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstanding_minor,per_day_minor,actor,created_at,operation_id,fingerprint) VALUES('a',5,100,1000,500,'owner','2026-10-01T12:00:00Z','${randomUUID()}','x')`,
 ])assert.throws(()=>f.sql.exec(sql),/immutable|Invalid/,sql);
 
 // Enforcement: per order 200.00, day 300.00, month 500.00, in progress 1000.00 (version 4).
@@ -162,6 +164,7 @@ await forced(w=>({...w,timeZoneVersion:7}));await forced(w=>({...w,timeZone:'Asi
 await forced(w=>({...w,dayStart:w.dayEnd}));await forced(w=>({...w,dayEnd:new Date(Date.parse(w.dayStart)+30*3600_000).toISOString()}));
 await forced(w=>({...w,monthStart:w.dayEnd}));await forced(w=>({...w,dayStart:'2026-11-01'}));
 await forced(()=>undefined);
+await forced(w=>({...w,dayStart:w.dayStart.replace('Z','+00:00'),monthStart:w.monthStart.replace('Z','+00:00')}));
 assert.ok(await bypass(w=>w).authorize(command(await f.reviewed({capMinor:'1000'}))),'Control: a correct window commits');
 time('2026-11-02T12:00:00.000Z');await authorize(20_000);await forced(w=>w,10_000);
 assert.ok(await bypass(w=>w).authorize(command(await f.reviewed({capMinor:'1000'}))),'Control: within the day and month');

@@ -5,6 +5,15 @@ Date: 2026-10-25. Scope: Part 1 of the
 Status: local, fictional implementation verified. **No checkbox advances; C4/M8
 and C7/M10 remain open.**
 
+> **Correction (2026-10-25, Part 2):** this Part 1 evidence ran on `node:sqlite`, which
+> allows LIKE/GLOB patterns of up to 50,000 bytes. Cloudflare D1 allows only 50. The ISO-time
+> GLOBs in `0035` therefore made every owner-set time zone, policy and owner-window
+> reservation fail on D1. Fixture-policy paths never evaluated them. Migration `0036`
+> recreates the three guards with an exact canonical `strftime` check, and a new suite
+> fails any active pattern over the limit. See the
+> [Part 2 record](C7_OWNER_SPENDING_LIMITS_SCREEN_LOCAL_EVIDENCE.md#d1-pattern-limit-repair).
+> The results below are unchanged, but they did not prove D1 compatibility.
+
 ## In plain terms
 
 The café owner can now set four spending limits for Pantrack's test-only cart

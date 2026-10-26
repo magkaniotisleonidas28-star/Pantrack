@@ -184,6 +184,12 @@ and stays unchanged.
 - **No overlap:** before starting, check that this does not overlap the
   concurrent signed-in manager integration.
 
+_As built (Part 2):_ the panel and its checks follow this plan; see the
+[Part 2 record](C7_OWNER_SPENDING_LIMITS_SCREEN_LOCAL_EVIDENCE.md). Practice sign-in
+has no password, so the local preview shows the password prompt but cannot complete
+a loosening. Building Part 2 also found and repaired a D1 pattern-limit defect in
+Part 1, through migration `0036`.
+
 ## Coordination and limits
 
 - **Migration queue:** only one schema-bearing change may be in the merge queue at

@@ -894,6 +894,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   atomic local-day and local-month reservation guard enforces them (migration
   `0035`, local only). Payment responsibility and setup, final-price
   reconciliation and pilot evidence remain open, so no checkbox advances.
+  [Part 2](C7_OWNER_SPENDING_LIMITS_SCREEN_LOCAL_EVIDENCE.md) adds the owner screen.
+  It also repairs `0035` for D1's 50-byte LIKE/GLOB limit through migration `0036`,
+  with a suite that fails any over-limit pattern.
 - [ ] **C8 — Coordinate M11 and execute C's slice.** Prepare the runbook and
   evidence report; supervise verified cart preparation, manager checkout,
   supplier confirmation, delivery reconciliation,
