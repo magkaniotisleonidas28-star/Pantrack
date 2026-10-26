@@ -95,7 +95,7 @@ limit".
 | `pnpm cart:spending-limits:check` against `pnpm dev:cart-browser-worker`, in an isolated clean clone (real `.sites-runtime` unchanged) | **Passed 4 times on the final screen, with ports freed.** It covered:<ul><li>at 390 px and 1440 px: values, grouped amounts, current use and the external-checkout note, with no horizontal scroll;</li><li>a client ordering error saves nothing;</li><li>tightening saves without a password, and history shows the new owner version;</li><li>loosening and a time-zone change each open the focused, in-view password prompt;</li><li>an unconfirmable password leaves limits and time zone unchanged, and clears the field;</li><li>keyboard order through the limit fields;</li><li>with a second fictional owner keeping the company owned, a manager and an employee see no menu entry and get 403 from the API;</li><li>no page errors.</li></ul> |
 | Visual review | Desktop, narrow and prompt screenshots. The review fixed a doubled section divider, ungrouped dollar amounts, and a prompt that could appear out of view. |
 | `pnpm typecheck` | Passed |
-| `pnpm test` | Passed, 124 suites on the branch; see the final row for after the merge |
+| `pnpm test` | Passed, **124 suites**; `main` had no new commits to merge |
 | `pnpm db:check` | Passed, 37 ordered migrations |
 | `pnpm build` | Passed |
 | `pnpm db:migrate:local` | Applied `0036` through Wrangler |
