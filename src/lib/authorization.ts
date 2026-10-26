@@ -4,13 +4,15 @@ import {audit,csrf} from '@/lib/auth';
 import {SessionUnavailableError,sessionUnavailableResponse} from '@/lib/auth-availability';
 import {z} from 'zod';
 export type Role='owner'|'manager'|'employee';
-export type Permission='read'|'operate'|'integrations'|'members'|'finance'|'pause'|'recordWaste';
+export type Permission='read'|'operate'|'integrations'|'members'|'finance'|'pause'|'recordWaste'|'countDeliveries';
 export function permitted(role:string,permission:Permission){
-  return role==='owner'||role==='manager'&&['read','operate','pause','recordWaste'].includes(permission)||role==='employee'&&['read','recordWaste'].includes(permission);
+  return role==='owner'||role==='manager'&&['read','operate','pause','recordWaste','countDeliveries'].includes(permission)||role==='employee'&&['read','recordWaste','countDeliveries'].includes(permission);
 }
-type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts'|'purchasing';
+type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts'|'purchasing'|'deliveries';
 export function routePermission(family:Family,method:string,action?:string):Permission{
   if(family==='purchasing')return 'operate';
+  // Staff count deliveries; only owners and managers approve or send a count back.
+  if(family==='deliveries')return ['approve','recount'].includes(action||'')?'operate':'countDeliveries';
   if(family==='waste')return 'recordWaste';
   if(family==='waste-shortcuts')return 'operate';
   if(family==='members'||family==='companies')return 'members';

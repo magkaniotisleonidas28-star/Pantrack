@@ -587,8 +587,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   approval. [Part 1](C4_ORDER_RECEIPT_PORT_LOCAL_EVIDENCE.md) builds A's receipt
   posting port at the owner's request. It accepts, releases or adds excess per line
   exactly once and all-or-nothing, and skips stock that a later count already
-  included (migration `0039`, local only). The count and approval screens and order
-  closure remain open.
+  included (migration `0039`, local only). [Part 2](C4_DELIVERY_RECEIVING_LOCAL_EVIDENCE.md)
+  adds blind staff delivery counts and owner/manager approval or recount. Approval
+  posts accepted stock once through that port (migration `0040`, local only). Order
+  closure remains open.
   C4 is not complete and purchasing stays disabled.
   The owner-selected [cart preparation preview](C4_CART_PREVIEW_LOCAL_EVIDENCE.md)
   now proves reviewed-draft-to-fictional-cart mechanics locally, including 16

@@ -1021,3 +1021,19 @@ export const poCartConfirmations=sqliteTable('po_cart_confirmations',{
  uniqueIndex('po_cart_confirmation_operation').on(t.companyId,t.operationId),
  foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]}),
  foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]})]);
+// Delivery counts for confirmed orders. Staff or managers count blind; an owner or manager then
+// approves (posting A's receipt port in the same batch) or asks for a recount. Immutable after.
+export const poCartDeliveries=sqliteTable('po_cart_deliveries',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),confirmationId:text('confirmation_id').notNull(),jobId:text('job_id').notNull(),
+ deliveredAt:text('delivered_at').notNull(),countJson:text('count_json').notNull(),countNote:text('count_note').notNull(),
+ countedBy:text('counted_by').notNull(),countedAt:text('counted_at').notNull(),
+ countOperationId:text('count_operation_id').notNull(),countFingerprint:text('count_fingerprint').notNull(),
+ state:text('state').notNull(),decisionJson:text('decision_json'),decisionNote:text('decision_note'),stockReceipt:integer('stock_receipt'),
+ decidedBy:text('decided_by'),decidedAt:text('decided_at'),decisionOperationId:text('decision_operation_id'),decisionFingerprint:text('decision_fingerprint'),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),
+ uniqueIndex('po_cart_delivery_count_operation').on(t.companyId,t.countOperationId),
+ uniqueIndex('po_cart_delivery_decision_operation').on(t.companyId,t.decisionOperationId),
+ uniqueIndex('po_cart_delivery_one_pending').on(t.companyId,t.confirmationId).where(sql`${t.state}='counted'`),
+ foreignKey({columns:[t.companyId,t.confirmationId],foreignColumns:[poCartConfirmations.companyId,poCartConfirmations.id]})]);
+// Any insert aborts the batch: an approval inserts here only when its delivery is no longer pending.
+export const poCartDeliveryGuards=sqliteTable('po_cart_delivery_guards',{reason:text('reason').notNull()});

@@ -52,7 +52,8 @@
     "cart:reconciliation:check": "node scripts/po-cart-reconciliation-check.mjs",
     "cart:manager:check:launcher": "node scripts/po-cart-manager-launcher-check.mjs",
     "cart:spending-limits:check": "node scripts/po-cart-spending-limits-ui-check.mjs",
-    "cart:confirmation:check": "node scripts/po-cart-confirmation-ui-check.mjs"
+    "cart:confirmation:check": "node scripts/po-cart-confirmation-ui-check.mjs",
+    "cart:delivery:check": "node scripts/po-cart-delivery-ui-check.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
