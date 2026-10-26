@@ -68,6 +68,8 @@ try{
     assert.deepEqual(errors,[]);await context.close();
   }
   // Managers and employees see no spending-limit screen, and the API refuses them.
+  // A second fictional owner keeps the company owned while the practice user is demoted.
+  execute(`INSERT INTO memberships(user_id,company_id,role) VALUES('fictional-second-owner',${quote(companyId)},'owner');`);
   for(const role of ['manager','employee']){
     execute(`UPDATE memberships SET role=${quote(role)} WHERE company_id=${quote(companyId)} AND user_id=${quote(actor)};`);
     const context=await confineManagerContext(await browser.newContext({viewport:{width:1440,height:1000}})),page=await context.newPage();
@@ -76,6 +78,7 @@ try{
     assert.equal(await page.getByRole('button',{name:'Spending limits',exact:true}).count(),0,`${role} sees no spending limits`);
     assert.equal((await api('/api/po-cart-spending-limits?companyId='+companyId)).status,403);await context.close();
   }
-  execute(`UPDATE memberships SET role='owner' WHERE company_id=${quote(companyId)} AND user_id=${quote(actor)};`);
+  execute(`UPDATE memberships SET role='owner' WHERE company_id=${quote(companyId)} AND user_id=${quote(actor)};
+DELETE FROM memberships WHERE company_id=${quote(companyId)} AND user_id='fictional-second-owner';`);
   console.log('PASS: owner spending-limits screen at desktop and narrow widths shows limits, use and history, tightens without a password, asks for it before loosening or a time-zone change and saves nothing unconfirmed; managers and employees see no screen.');
 }finally{await browser.close();}
