@@ -3,3 +3,4 @@
 [data-spending-limits] dd{margin:2px 0 0;font-size:1.1rem;font-weight:600}
 [data-spending-limits] summary{cursor:pointer;font-weight:600}
 @media (max-width:640px){[data-spending-limits] .po-fields{grid-template-columns:minmax(0,1fr)}}
+[data-spending-limits] fieldset{border:0;padding:0;margin:0;min-width:0}

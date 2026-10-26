@@ -19,7 +19,8 @@ async function limitsRequest<T>(companyId:string,body?:Record<string,unknown>):P
 }
 type Form={perOrder:string;perDay:string;perMonth:string;outstanding:string};
 const dollars=(minor:number|null)=>minor===null?'':purchasingDollars(String(minor));
-const shown=(minor:number|null)=>minor===null?'No limit':'$'+dollars(minor);
+const usd=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});
+const money=(minor:number)=>usd.format(minor/100),shown=(minor:number|null)=>minor===null?'No limit':money(minor);
 const formOf=(limits:SpendingLimits|null):Form=>limits?.ownerSet?{perOrder:dollars(limits.perOrderMinor),perDay:dollars(limits.perDayMinor),
   perMonth:dollars(limits.perMonthMinor),outstanding:dollars(limits.outstandingMinor)}:{perOrder:'',perDay:'',perMonth:'',outstanding:''};
 function cents(value:string,label:string){
@@ -90,14 +91,14 @@ export default function SpendingLimitsPanel({companyId,active,onEnabledChange,on
     {error&&<div role="alert" className="error">{error}</div>}{notice&&<p role="status" className="notice">{notice}</p>}
     {confirming&&<form className="po-section" onSubmit={confirm} aria-label="Confirm your password"><fieldset disabled={busy}><legend>Confirm your password</legend>
       <p>{confirming} Tightening a limit never asks for this.</p>
-      <label>Current password<Input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
+      <label>Current password<Input type="password" autoComplete="current-password" autoFocus required value={password} onChange={e=>setPassword(e.target.value)}/></label>
       <div className="inventory-actions"><Button type="submit">Confirm and save</Button><Button type="button" variant="outline" onClick={cancelPending}>Cancel</Button></div></fieldset></form>}
     {uncertain&&<div className="inventory-actions"><Button disabled={busy} onClick={()=>pending.current&&void send(pending.current)}>Retry the same save</Button><Button disabled={busy} variant="outline" onClick={cancelPending}>Discard</Button></div>}
     <section className="po-section" aria-label="Current use"><h2>Current use</h2>
       {!tz?<p>Set the café time zone first. Days and months follow the café's local clock.</p>:!owned?<p>No owner limits are set yet, so Pantrack uses its fictional test policy.</p>:usage&&<dl className="po-fields">
-        <div><dt>Today</dt><dd>${dollars(usage.dayMinor)} of {shown(owned.perDayMinor)}</dd><small>{local(usage.window.dayStart)} – {local(usage.window.dayEnd)}</small></div>
-        <div><dt>This month</dt><dd>${dollars(usage.monthMinor)} of {shown(owned.perMonthMinor)}</dd><small>{local(usage.window.monthStart)} – {local(usage.window.monthEnd)}</small></div>
-        <div><dt>In progress</dt><dd>${dollars(usage.outstandingMinor)} of {shown(owned.outstandingMinor)}</dd><small>Carts reserved and not yet settled.</small></div>
+        <div><dt>Today</dt><dd>{money(usage.dayMinor)} of {shown(owned.perDayMinor)}</dd><small>{local(usage.window.dayStart)} – {local(usage.window.dayEnd)}</small></div>
+        <div><dt>This month</dt><dd>{money(usage.monthMinor)} of {shown(owned.perMonthMinor)}</dd><small>{local(usage.window.monthStart)} – {local(usage.window.monthEnd)}</small></div>
+        <div><dt>In progress</dt><dd>{money(usage.outstandingMinor)} of {shown(owned.outstandingMinor)}</dd><small>Carts reserved and not yet settled.</small></div>
         <div><dt>Per order</dt><dd>{shown(owned.perOrderMinor)}</dd><small>The most any single order can be.</small></div></dl>}
     </section>
     <form className="po-section" onSubmit={saveZone}><fieldset disabled={blocked}><legend>Café time zone</legend>

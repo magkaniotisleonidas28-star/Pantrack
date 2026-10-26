@@ -37,6 +37,7 @@ try{
     assert.equal(await panel.getByLabel('Per order').inputValue(),'200.00');assert.equal(await panel.getByLabel('Per day').inputValue(),'300.00');
     assert.equal(await panel.getByLabel('Per month (optional)').inputValue(),'500.00');assert.equal(await panel.getByLabel('In progress').inputValue(),'1000.00');
     assert.ok(await panel.getByText('$0.00 of $300.00').isVisible(),'Today\'s use against the daily limit');
+    assert.ok(await panel.getByText('$0.00 of $1,000.00').isVisible(),'Amounts are grouped');
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),`No horizontal scroll at ${viewport.width}px`);
     if(viewport.width<700){assert.deepEqual(errors,[]);await context.close();continue;}
     const version=(await current()).limits.version;
@@ -51,6 +52,8 @@ try{
     // Loosening asks for the password; without a confirmation nothing is saved.
     await panel.getByLabel('Per day').fill('400.00');await panel.getByRole('button',{name:'Save limits'}).click();
     const prompt=panel.getByRole('form',{name:'Confirm your password'});await prompt.waitFor();
+    assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('autocomplete')),'current-password','The prompt takes focus');
+    assert.ok(await prompt.getByLabel('Current password').isVisible()&&await prompt.evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.top<innerHeight;}),'The prompt is in view');
     assert.ok(await prompt.getByText('Confirm your password to raise, remove or first set spending limits.',{exact:false}).isVisible());
     assert.equal(await panel.getByRole('button',{name:'Save limits'}).isDisabled(),true,'Other changes wait for the confirmation');
     await prompt.getByLabel('Current password').fill('not-a-real-password');await prompt.getByRole('button',{name:'Confirm and save'}).click();
