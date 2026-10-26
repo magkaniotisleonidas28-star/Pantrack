@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: architecture survey and sequential plan; **application cleanup has not started**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration precedes S02.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **0 of 22 Completed; 22 Pending**. No cleanup section is In Progress.
+- Cleanup sections: **1 of 22 Completed; 21 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -43,7 +43,7 @@ The order below follows shared foundations → persistence/security → domain s
 3. Format first, then consider descriptive local names and small pure helpers. Do not extract just to meet an arbitrary line limit or reorganize the flat library into a new architecture. A risky extraction stays Pending/Blocked with a reason.
 4. Syntax/literal equivalence must include directives, JSX text nodes, template/string contents, import evaluation order, property/array order, meaningful magic comments and SQL literals. Whitespace-only textual diffs alone do not prove JavaScript, CSS, HTML, shell or Python equivalence.
 5. Existing readable files establish conventions. S01 selects the precise formatter policy from installed tooling; no dependency upgrade or new runtime dependency is assumed. Preserve exception types and logging redaction. Do not normalize provider errors into a new behavior.
-6. Used migrations and metadata, vendored UI/CSS/fonts/licenses, generated lockfiles, fixture evidence and historical reports are reviewed unchanged. Keep their baseline bytes; an exception requires a separately justified task, not silent formatting.
+6. Used migrations and metadata, vendored UI/CSS/fonts/licenses, fixture evidence and historical reports are reviewed unchanged. Keep their baseline bytes. Generated lockfiles are not formatted. S01 permits only the exact development-only Prettier 3.9.10 additions to the importer/package/snapshot; every existing resolution is retained. No other dependency upgrade or generated-file rewrite is included.
 7. Exclude `.git/`, `node_modules/`, `.sites-runtime/`, `.wrangler/`, `.vinext/`, `.next/`, `dist/`, caches, generated browser profiles, ignored local databases and secrets from cleanup. Do not scan or edit private runtime evidence. Do not read/print `.env`/credential contents. The tracked `.env.example` is a configuration template, not authority to copy live settings.
 8. No deployment, hosted HTTP smoke, remote database operation, live provider/supplier/model call, purchase, sync enablement, power change, historical process/lock cleanup, gate run, allowance or consumed-attempt resume is included. Local migration/HTTP checks use this worktree’s new fictional state only.
 9. Source formatting can change source hashes. Never rewrite historical proof hashes or weaken refusal tests to call a source-only cleanup collected acceptance. Hold byte-sensitive operational edits when a compatible offline proof cannot establish safety.
@@ -51,7 +51,7 @@ The order below follows shared foundations → persistence/security → domain s
 
 ## Active-work holds
 
-The owner checkout advanced independently from `bb8f339` to `46f98d7` and became clean during planning. The receiving feature is now committed on `workstream-c/c4-receiving-counts`, while observed main remains `bb8f339`. All 22 changed feature paths are Blocked for cleanup until integration and owner handoff. These feature changes have not been copied into this worktree; existing paths retain the committed main baseline.
+The owner checkout advanced independently from `bb8f339` to `46f98d7` and became clean during planning. The receiving feature is now committed on `workstream-c/c4-receiving-counts`, while observed main remains `bb8f339`. Twenty-one changed feature paths remain Blocked for cleanup until integration and owner handoff. The shared package manifest has a scoped S01 exception for disjoint development tooling entries, described below. These feature changes have not been copied into this worktree; existing paths retain the committed main baseline.
 
 | File | Cleanup owner | Hold |
 | --- | --- | --- |
@@ -62,7 +62,7 @@ The owner checkout advanced independently from `bb8f339` to `46f98d7` and became
 | `drizzle/0040_po_cart_deliveries.sql` | S04 | Receiving branch `46f98d7`; integration/handoff required |
 | `drizzle/meta/0040_snapshot.json` | S04 | Receiving branch `46f98d7`; integration/handoff required |
 | `drizzle/meta/_journal.json` | S04 | Receiving branch `46f98d7`; integration/handoff required |
-| `package.json` | S01 | Receiving branch `46f98d7`; integration/handoff required |
+| `package.json` | S01 | Receiving adds only `cart:delivery:check`; S01 edits disjoint formatter scripts/dev dependency, preserving all existing entries. Receiving script is not imported here. |
 | `scripts/po-cart-delivery-ui-check.mjs` | S20 | Receiving branch `46f98d7`; integration/handoff required |
 | `src/app/api/po-cart-deliveries/route.ts` | S13 | Receiving branch `46f98d7`; integration/handoff required |
 | `src/components/workspace/deliveries.css` | S18 | Receiving branch `46f98d7`; integration/handoff required |
@@ -85,7 +85,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | Order | Section | Baseline files | Status |
 | --- | --- | ---: | --- |
 | S00 | Architecture survey, preservation checkpoint and complete plan | 2 new planning artifacts | Completed |
-| S01 | Project configuration, tooling and baseline checks | 38 | Pending |
+| S01 | Project configuration, tooling and baseline checks | 38 + 7 cleanup additions | Completed |
 | S02 | Shared primitives, bounded requests and public errors | 3 | Pending |
 | S03 | Shared data models, exact quantities and contracts | 24 | Pending |
 | S04 | D1 access and immutable database history | 84 | Pending |
@@ -134,23 +134,27 @@ Each section’s review record must contain: files modified/reviewed unchanged; 
 
 ## S01 — Project configuration, tooling and baseline checks
 
-Status: Pending. Depends on: none.
+Status: Completed. Depends on: none.
 
 **Files:** `package.json`, `tsconfig.json`, `eslint.config.mjs`, root build/Wrangler/PostCSS/Drizzle configs, `.github/workflows/`, `build/`, and the development/install/test-runner scripts assigned in the inventory.
 
-- [ ] S01.1 — Revalidate current main, owner handoffs and inventory before cleanup; then record lint/typecheck/test/build/database baseline and installed formatter availability. Separate inherited failures from regressions.
-- [ ] S01.2 — Choose and document one formatting convention using existing tooling where possible. Default to two-space indentation, explicit statement boundaries and readable wrapping; retain semantic comments, directives, literal values and import evaluation order.
-- [ ] S01.3 — Expand compressed local adapter/configuration branches and explain runtime-profile/preview conditions. Preserve environment defaults, binds, versions, commands, flags, ignore patterns and vendored plugin provenance.
-- [ ] S01.4 — Identify source-text assertions, source fingerprints, generated files and side-effect imports that constrain later formatting. Record concrete holds; do not relax checks merely to make formatting pass.
+- [x] S01.1 — Revalidate current main, owner handoffs and inventory before cleanup; then record lint/typecheck/test/build/database baseline and installed formatter availability. Separate inherited failures from regressions.
+- [x] S01.2 — Choose and document one formatting convention using existing tooling where possible. Default to two-space indentation, explicit statement boundaries and readable wrapping; retain semantic comments, directives, literal values and import evaluation order.
+- [x] S01.3 — Expand compressed local adapter/configuration branches and explain runtime-profile/preview conditions. Preserve environment defaults, binds, versions, commands, flags, ignore patterns and vendored plugin provenance.
+- [x] S01.4 — Identify source-text assertions, source fingerprints, generated files and side-effect imports that constrain later formatting. Record concrete holds; do not relax checks merely to make formatting pass.
 
 **Focused command:** `pnpm test local-auth local-d1-database ci-tool-pins ci-migrations`.
 
-**Verification:** Run the complete baseline pipeline, including `pnpm lint`; use only this worktree’s fresh local state. Record every result and any inherited lint failure. No install/upgrade or lockfile rewrite is assumed.
+**Verification:** Run the complete baseline pipeline, including `pnpm lint`; use only this worktree’s fresh local state. Record every result and any inherited lint failure. S01 adds exact Prettier 3.9.10 as a development-only formatter because no formatter was available. Its pin predates the seven-day release-age policy. Only its importer/package/snapshot entries may be added to the lockfile; existing resolutions and build policy remain unchanged.
 
-- [ ] S01.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S01.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S01.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S01.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** 24 existing files changed (22 guarded source-format edits plus the package/lock tooling additions); 14 baseline files reviewed unchanged; 7 cleanup tooling/guide/receipt files added. Compressed install/build/local-fixture adapters now have readable wrapping and consistent quotes/spacing. Exact Prettier 3.9.10 and a section-scoped refusal-first formatter compare syntax/types/literals/comments and emitted JSX/JavaScript, with independent Prettier round-trip checks. Runtime dependency/configuration values, command behavior, import order, SQL and templates remain equivalent. No source rule or test was relaxed.
+
+[Machine-readable verification receipt](docs/readability/S01-verification.json) records actual commands, exits, durations and log hashes. Baseline and final typecheck, focused tests, full tests (137 then 138 suites), `db:check` (40 migrations), build, local setup, isolated migration apply and local HTTP smoke passed. `git diff --check`, new-tool scoped lint, four shell syntax checks, YAML parser checks, link checks and the independent baseline comparison passed. Both full lint runs failed with the same 71 errors/80 warnings; this is recorded inherited debt, not a passing lint claim. No visual workflow was changed. Evidence is local/macOS only.
+
+Byte-sensitive handoffs: `tests/po-cart-launcher-check-lifecycle.mjs` inspects launcher/preview source; `tests/po-cart-full-gate-audit.mjs` rewrites Python auditor source in injected scenarios; the lifecycle validation suite binds `sourceSnapshot()`. S11/S19/S20 must preserve these assertions and historical evidence; unsafe formatting stays Blocked. Baseline evidence/logs are under `.sites-runtime/readability/S01/{baseline,final}/` in this worktree. Section commit: `style(readability): establish guarded formatting and clean project tooling`. Next: integrate the newly observed upstream archive contract in a separate checkpoint, then S02. Receiving code remains held. Rollback is source/tooling/documentation revert only; never touch historical runtime state.
 
 ## S02 — Shared primitives, bounded requests and public errors
 
@@ -572,6 +576,12 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | --- | --- | --- | --- |
 | 2026-10-26 / S00 | Architecture survey; 882-file ownership/hash inventory plus 13 reserved receiving additions; 22 ordered cleanup sections | Planning-only coverage, hash, suite-reference, JSON, link and whitespace checks pass; 0 application edits; concurrent receiving-test change recorded | Documentation-only planning checkpoint; all 22 changed receiving paths held for integration/handoff; next: S01 baseline/tooling |
 
+| 2026-10-26 / S01 | Tooling/config/adapters: 24 existing edits, 14 unchanged, 7 cleanup additions; pinned dev formatter and guarded per-section command | Full pipeline passes except unchanged inherited lint (71 errors/80 warnings); 138 suites; focused/syntax/hash/link checks pass | Local section commit; main advanced independently to 59d3d90, integration checkpoint next; receiving implementation held |
+
 ## Final report requirements
 
 The final cleanup report must distinguish completed formatting/organization work, reviewed-unchanged protected files and unresolved holds. Include architecture navigation, per-section commits, test/lint/type/build/migration/HTTP results, actual platform coverage and rollback. A local mocked pass is local evidence only. Do not claim a production, provider or C4 acceptance gate was closed.
+
+### S01 start — 2026-10-26
+
+Main and the planning baseline remain `bb8f339`. The receiving branch is committed and clean at `46f98d7`; its only package change adds `cart:delivery:check`. S01 will preserve that handoff and every runtime version/configuration. Formatter availability: no Prettier/Black/Ruff binary or installed Prettier package found. Evaluating one exact, development-only Prettier pin rather than an ad hoc source rewriter. Baseline checks run before formatting; inherited lint findings will remain separate from regressions.

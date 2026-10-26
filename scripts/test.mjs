@@ -3,12 +3,16 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 process.chdir(fileURLToPath(new URL('../', import.meta.url)));
-const requested = process.argv.slice(2).map(name => name.replace(/^tests[\\/]/, '').replace(/\.mjs$/, ''));
-const files = readdirSync('tests').filter(name => name.endsWith('.mjs')).sort();
+const requested = process.argv
+  .slice(2)
+  .map((name) => name.replace(/^tests[\\/]/, '').replace(/\.mjs$/, ''));
+const files = readdirSync('tests')
+  .filter((name) => name.endsWith('.mjs'))
+  .sort();
 for (const name of requested) {
   if (!files.includes(`${name}.mjs`)) throw new Error(`Unknown test: ${name}`);
 }
-const selected = files.filter(name => !requested.length || requested.includes(name.slice(0, -4)));
+const selected = files.filter((name) => !requested.length || requested.includes(name.slice(0, -4)));
 if (!selected.length) throw new Error('No tests selected.');
 // Existing integration harnesses share generated module names. Isolate processes
 // and run sequentially so parallel writers cannot invalidate the evidence.

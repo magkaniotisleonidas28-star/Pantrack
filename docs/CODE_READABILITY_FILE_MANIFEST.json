@@ -145,11 +145,14 @@
     {
       "path": ".env.example",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7fb93d86a6cf89e5bc2cbf50c2147674fc3fa97b19fcaf3205ee2dc155855dd0",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "7fb93d86a6cf89e5bc2cbf50c2147674fc3fa97b19fcaf3205ee2dc155855dd0"
     },
     {
       "path": ".github/agents/openspec.agent.md",
@@ -280,56 +283,100 @@
     {
       "path": ".github/workflows/ci.yml",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a1d66f507ce93d6411ce866300276f21c1e5532c580938b2e72471d6b55ac5f7",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "a1d66f507ce93d6411ce866300276f21c1e5532c580938b2e72471d6b55ac5f7"
     },
     {
       "path": ".github/workflows/copilot-setup-steps.yml",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4815afdcc7cf9c631e379bb9147e7b6fbc5cd89b48997720e733b645b2112259",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "4815afdcc7cf9c631e379bb9147e7b6fbc5cd89b48997720e733b645b2112259"
     },
     {
       "path": ".gitignore",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3968a0a32289f0eb3a9a4790204e9b8b10ba23e70fd358a341c49504bf06bc57",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "3968a0a32289f0eb3a9a4790204e9b8b10ba23e70fd358a341c49504bf06bc57"
     },
     {
       "path": ".node-version",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "08062faf0d7a2d22f5d7933c50e975dd1527034275597be7c1b3b9fd2b9d079a",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "08062faf0d7a2d22f5d7933c50e975dd1527034275597be7c1b3b9fd2b9d079a"
     },
     {
       "path": ".npmrc",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a3909ac0447c469fda12c57374993be70f47ce73e49fd3124678c7c047f2214d",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "a3909ac0447c469fda12c57374993be70f47ce73e49fd3124678c7c047f2214d"
     },
     {
       "path": ".openai/hosting.json",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5ed40a2d55c7182e91427d225aa6b69de500fb7d7b25678e991bae3e93d07974",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "f8558bec08cb776061d66fbf3e2bda28b296997b0f412517262f4a5ee986146e"
+    },
+    {
+      "path": ".prettierignore",
+      "section": "S01",
+      "status": "Completed",
+      "policy": "cleanup-tooling",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "cleanupAdded": true,
+      "results": [
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "445b423c511a9b705615de09aaa5d747253a66b36380e4e070bf8f1861a0faf4"
+    },
+    {
+      "path": ".prettierrc.json",
+      "section": "S01",
+      "status": "Completed",
+      "policy": "cleanup-tooling",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "cleanupAdded": true,
+      "results": [
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "302d66d815c0f31edfdabb50d0d91bc451a470bfb158c7c2d761386f3cfce79a"
     },
     {
       "path": "AGENTS.md",
@@ -361,47 +408,62 @@
     {
       "path": "build/cart-preview-plugin.ts",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8171ef13f603479ce613c005d255d3436dd803b2d30b4c0d2892399700417df4",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "df023429e41b10f8b70b9f8d4522212b4fb6549038475afa7d9168df12f27b6c"
     },
     {
       "path": "build/sites-vite-plugin.LICENSE",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "7de1e115d165f176e68f962acdb809b5ab8d8ae78d3981e0701392b2ac50c713",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "7de1e115d165f176e68f962acdb809b5ab8d8ae78d3981e0701392b2ac50c713"
     },
     {
       "path": "build/sites-vite-plugin.ts",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3588a64e27c27ac44148f1bdc8d8dec9e72d5499f0a05b7a32e96abe9ca645b8",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "b537c5f17a754458cc263cf2a0f221ef32c3accecbb714a2fa2213777938de60"
     },
     {
       "path": "cloudflare-env.d.ts",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "01ad8d446e2df67a5008f320058466145ed66bcab2032fd4d404aa6334ee33de",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "01ad8d446e2df67a5008f320058466145ed66bcab2032fd4d404aa6334ee33de"
     },
     {
       "path": "components.json",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "760ae5d48e48d27e58be79561f1cb1d16b988a2988c801f09846eb53b8f567ad",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "760ae5d48e48d27e58be79561f1cb1d16b988a2988c801f09846eb53b8f567ad"
     },
     {
       "path": "docs/A2_A4_B4_INTEGRATION_REVIEW.md",
@@ -1169,6 +1231,19 @@
       "results": []
     },
     {
+      "path": "docs/CODE_READABILITY_GUIDE.md",
+      "section": "S01",
+      "status": "Completed",
+      "policy": "cleanup-tooling",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "cleanupAdded": true,
+      "results": [
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "73bedec6377ac85436573396bcb1e045c51b29c6cd2494363f7c2ab10f23a70e"
+    },
+    {
       "path": "docs/CORRECTNESS_SECURITY_FIX_CHECKLIST.md",
       "section": "S21",
       "status": "Pending",
@@ -1646,13 +1721,30 @@
       "results": []
     },
     {
+      "path": "docs/readability/S01-verification.json",
+      "section": "S01",
+      "status": "Completed",
+      "policy": "generated-review-only",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "cleanupAdded": true,
+      "results": [
+        "S01 generated verification receipt; references actual local logs and frozen source digest.",
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "ac7e4b34bde1566e43d2bef523bc29f2b5746d94e241bc50299930f81805f9b3"
+    },
+    {
       "path": "drizzle.config.ts",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "be6c177b80e20deeea06751dc85bdc0518c3d8ebc20e2e9a1903fb03463d7cb5",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "8728777700be3b806476e38f19a2a28dda78c05f28b8208f6729ed76055a07c0"
     },
     {
       "path": "drizzle/0000_amused_ben_grimm.sql",
@@ -2404,20 +2496,26 @@
     {
       "path": "eslint.config.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "0723da75289cfc9941c027fdd9b23c2f812125d7e2f279d6bb6f778fd1cb7cb6",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "5bd574c86353570466405938157978a2bd3e298aee492397ee5d0cd5535cdf81"
     },
     {
       "path": "next.config.ts",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "614bce25b089c3f19b1e17a6346c74b858034040154c6621e7d35303004767cc",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "f50f765e38dae889550f1c9422c03402f07707f94c86b5f0db5bcb868f9af309"
     },
     {
       "path": "openspec/changes/ai-cart-preparation-preview/.openspec.yaml",
@@ -2854,38 +2952,52 @@
     {
       "path": "package.json",
       "section": "S01",
-      "status": "Blocked",
-      "policy": "receiving-handoff-required",
+      "status": "Completed",
+      "policy": "cleanup-tooling",
       "baselineTracked": true,
       "baselineSha256": "4723475b34488bf293f69e06ecda6383444eddfbd6b9f4fca507fa0c9070783d",
-      "results": []
+      "results": [
+        "S01 coordination: receiving branch changes only cart:delivery:check. Existing scripts/runtime dependencies are preserved; cleanup adds exact dev-only formatter and format commands in disjoint entries. No receiving implementation is imported.",
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "bf079a0bc79163bc93c17c3d7d69e9209491f3cc1ddf16adcf826cc579e2d05f"
     },
     {
       "path": "pnpm-lock.yaml",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "generated-review-only",
       "baselineTracked": true,
       "baselineSha256": "3fcbaf4fa6ff0f5efdfe55565dbab161b52ee667b8861f7db2fa01a6c3cbb799",
-      "results": []
+      "results": [
+        "S01 explicit tooling exception: only exact Prettier 3.9.10 importer/package/snapshot entries added; all existing lock resolutions are retained. Do not format this generated file.",
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "1a096ca728355cf6a469767b996829339a454b6c6e1364f08f7dc6ac2862e297"
     },
     {
       "path": "pnpm-workspace.yaml",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a054fd9884436f417b7d804c19615ad6048999e94438cd3f7e74fdef2d300c8f",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "a054fd9884436f417b7d804c19615ad6048999e94438cd3f7e74fdef2d300c8f"
     },
     {
       "path": "postcss.config.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "9ca55411b62b2c9cc5631a3e6c631d80c8b8171c7b9ea1e19f83400f4100e910"
     },
     {
       "path": "previews/c4-order-draft/assets.d.ts",
@@ -3079,11 +3191,14 @@
     {
       "path": "scripts/build-verified.sh",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2ae5329ac860076070c9217a43106a15cb5ecf907a0f7baeb9ef903f76b53c68",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "2ae5329ac860076070c9217a43106a15cb5ecf907a0f7baeb9ef903f76b53c68"
     },
     {
       "path": "scripts/cart-browser-check.mjs",
@@ -3223,74 +3338,98 @@
     {
       "path": "scripts/check-migrations.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b830f76c3e3d97d71f9c5b14ab35f1423c2d1fb792b70db9baf92474a6cd262c",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "4876a72275debd2d83b186b2a27ddd73c723639aa98af2bcdaae34b9f3ebeef8"
     },
     {
       "path": "scripts/execution-profile.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2e71116f4d2b70cff8bb70436f8dd5c709ec7ff62893424530f404e0193d3630",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "b24cbb754b582965702a65fef393f42190c66d86b50f21104de8a90d29b82a7d"
     },
     {
       "path": "scripts/install-ci.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "63f2c4589b740184b68a0c9214fe92439b6f7d1fbfbec9ef552fd745b0a9c6cc",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "a588f3df6b4170f015d0b881de2d479c917d7ac139c173ca12720c44cf0fb62c"
     },
     {
       "path": "scripts/install-ci.sh",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5161648b51012c7351a4a975c6ed05a67cc1f1d9dbabc4381708d1005d8c4edb",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "5161648b51012c7351a4a975c6ed05a67cc1f1d9dbabc4381708d1005d8c4edb"
     },
     {
       "path": "scripts/install-pnpm.sh",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "db980d931c7d1fb6d64dfede2fc698227d9bbd3bbb94f50a8966d9eb980bf10c",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "db980d931c7d1fb6d64dfede2fc698227d9bbd3bbb94f50a8966d9eb980bf10c"
     },
     {
       "path": "scripts/local-d1-database.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2e2bbd25473c2f75fbc47f14bf0ea103dbe952e0c647b70e317ff8a73db37815",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "966c4c6ae2ddac2152fb36b791ed28fc3db339e129fb8ed914217c92d93e46d4"
     },
     {
       "path": "scripts/local-setup.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "c6e222f4bf925b1854f86539d4adf2938ae8e7462efa263e0e10229efce218d7",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "ce3b310ca52deda64d5e2a7e81d94effd4ff73e4c8963a605130537db5922a8f"
     },
     {
       "path": "scripts/local-smoke.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4671763a42c27d91cfeb3e2aeb3e7cab64c574ccfacb0e3cad666b0421503ee3",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "7202a9a0fd81a8edd1d4ade6bdb93f31c375537c4df15f3f8182e2732ba01a17"
     },
     {
       "path": "scripts/order-draft-preview.mjs",
@@ -3304,11 +3443,14 @@
     {
       "path": "scripts/pnpm-install.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "380309d06af721775377f805e90bbba27118e91bf67cd6c87ca59b9ef56453e8",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "79701014a6a69a595d205e46e4ab97677723101a5d7c2021466c9a7a970d7ffa"
     },
     {
       "path": "scripts/po-cart-ai-evaluate.mjs",
@@ -4121,49 +4263,90 @@
       "results": []
     },
     {
+      "path": "scripts/readability-format.mjs",
+      "section": "S01",
+      "status": "Completed",
+      "policy": "cleanup-tooling",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "cleanupAdded": true,
+      "results": [
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "f3bede77deba73631a79f2a8a3dff6d774dbaaf07c9aaececa475d7ae203b7d7"
+    },
+    {
+      "path": "scripts/readability/format-safety.mjs",
+      "section": "S01",
+      "status": "Completed",
+      "policy": "cleanup-tooling",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "cleanupAdded": true,
+      "results": [
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "2316d83d70e403fdb6c10c162dfe3083af73a9ffd3f371acbfcbfc936f1b77c3"
+    },
+    {
       "path": "scripts/reset-local-db.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3cca40d4819bccfe4be66b5e012aeb7c91307a36ccf5c2c472462040ec733be3",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "f592f7d3d1194e2c5b698d36b3288a2151e28703395bee452783b9058424a63a"
     },
     {
       "path": "scripts/run-framework.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "caef980c0765516f5683eda66e61df3011129bfa0b053809f2a87fc72550a273",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "7853578ed7f97ffa029d41e909b88eed515201c4bc5097528e53e37503c16902"
     },
     {
       "path": "scripts/sites-env.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5de99d6806b01f0ee0b941af3684d75dcf1afbbcff22cb95bfa2e584c5dafa88",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "74ab6ba840ac4e386ef5dace0aa67d748b5497f0384b640bbc686faa94ad4f0c"
     },
     {
       "path": "scripts/sites-env.sh",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "df86ebfc27d2f00860036658e933ac0ddd7b5f6879aa5d51218f0863c7e1fb60",
-      "results": []
+      "results": [
+        "Reviewed unchanged; baseline bytes preserved; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "df86ebfc27d2f00860036658e933ac0ddd7b5f6879aa5d51218f0863c7e1fb60"
     },
     {
       "path": "scripts/test.mjs",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4dc4035fb5fb6a8632605f0dbc753dddf294ad205964c69946c295b35e85e7f5",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "5d341c286e7085ae9dc73793c7d0a4db7f5b7320be3b0aca10b63932d65ded31"
     },
     {
       "path": "scripts/usability-preview.mjs",
@@ -6821,6 +7004,19 @@
       "results": []
     },
     {
+      "path": "tests/code-readability.mjs",
+      "section": "S01",
+      "status": "Completed",
+      "policy": "cleanup-tooling",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "cleanupAdded": true,
+      "results": [
+        "Added cleanup tooling/documentation; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "859124c61e9ec33c1f402055c5570ed5bc119700d37cb8deb118a4fb24990c79"
+    },
+    {
       "path": "tests/d1-pattern-limits.mjs",
       "section": "S19",
       "status": "Pending",
@@ -8038,11 +8234,14 @@
     {
       "path": "tsconfig.json",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "bdd6833583b02394cc4e105ed43e6473b50c1f1a80350ea48cf896d18703beda",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "453e28fe66cf0165a2f18458b4a5f5a5f2079b436582639eef1afeec1cf092f6"
     },
     {
       "path": "vendor/shadcn-tailwind-4.13.0.LICENSE.md",
@@ -8065,29 +8264,38 @@
     {
       "path": "vite.config.ts",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "14c99af7911dbff59f717de99a58e72423db57fb6c92ad468291554041d26b32",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "7b42334ea9aa3999ed4d116c94016b04d72ec69780ef0a2a89d3dbe042eae661"
     },
     {
       "path": "wrangler.jsonc",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "77262c7a5af2476afe63bb1c605374ed39a2fb6c844ec67c8ed668fa88235b2a",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "add7c63e3c15cb132d1bf3247f04cf161e64b48dbfb544c8127e1362adad6955"
     },
     {
       "path": "wrangler.local.jsonc",
       "section": "S01",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7ad666b6e32064d1d21e2656b7af84092d186492e18bf3c9e49e2b237aa636fd",
-      "results": []
+      "results": [
+        "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
+      ],
+      "cleanupSha256": "e7eec7a52746af7710bd84e8aacf7ae35d5e13037f0c8f840403f72d4c5dbf7c"
     }
   ]
 }

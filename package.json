@@ -52,7 +52,9 @@
     "cart:reconciliation:check": "node scripts/po-cart-reconciliation-check.mjs",
     "cart:manager:check:launcher": "node scripts/po-cart-manager-launcher-check.mjs",
     "cart:spending-limits:check": "node scripts/po-cart-spending-limits-ui-check.mjs",
-    "cart:confirmation:check": "node scripts/po-cart-confirmation-ui-check.mjs"
+    "cart:confirmation:check": "node scripts/po-cart-confirmation-ui-check.mjs",
+    "format:check": "node scripts/readability-format.mjs",
+    "format:write": "node scripts/readability-format.mjs --write"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -101,6 +103,7 @@
     "pdf-lib": "1.17.1",
     "pdfjs-dist": "5.4.296",
     "playwright-core": "1.61.1",
+    "prettier": "3.9.10",
     "react-server-dom-webpack": "19.2.6",
     "saxes": "5.0.1",
     "tailwindcss": "4.2.1",

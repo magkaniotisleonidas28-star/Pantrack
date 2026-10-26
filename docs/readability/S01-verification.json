@@ -1,0 +1,170 @@
+{
+  "section": "S01",
+  "date": "2026-10-26",
+  "branch": "workstream-c/code-readability-plan-20261026",
+  "baselineCommit": "bb8f339a71b8b25984bdebb1822cc0d46022c882",
+  "planningCommit": "476231b42c2deb5fef7417efaf9140afc8506ac3",
+  "sourceDigest": "8a751b1638b274d8c310f0daf8fa284bd56a64a97c383b90f2ecbf0f600a1b32",
+  "checks": {
+    "baseline": [
+      {
+        "command": "pnpm lint",
+        "exit": 1,
+        "seconds": 8.6,
+        "log": ".sites-runtime/readability/S01/baseline/0-lint.log",
+        "logSha256": "266f82e620ceea258d178128429f724610e2afe7849bf12e955eca8811980a7d"
+      },
+      {
+        "command": "pnpm typecheck",
+        "exit": 0,
+        "seconds": 5.1,
+        "log": ".sites-runtime/readability/S01/baseline/1-typecheck.log",
+        "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+      },
+      {
+        "command": "pnpm test local-auth local-d1-database ci-tool-pins ci-migrations",
+        "exit": 0,
+        "seconds": 2.3,
+        "log": ".sites-runtime/readability/S01/baseline/2-test.log",
+        "logSha256": "5e9b131ba1a54c9802b9cd5f92ba03542a6b0fcce2ebfcb2ebccb2cec5f1ec5c"
+      },
+      {
+        "command": "pnpm test",
+        "exit": 0,
+        "seconds": 150.4,
+        "log": ".sites-runtime/readability/S01/baseline/3-test.log",
+        "logSha256": "8ba970f0d7cd9644c427f8b2fe47061c8ce7a176d8fc594d8e85c9065ba800d6"
+      },
+      {
+        "command": "pnpm db:check",
+        "exit": 0,
+        "seconds": 0.6,
+        "log": ".sites-runtime/readability/S01/baseline/4-db-check.log",
+        "logSha256": "5e3dd0b514b4b40bd9ec0e727ccb4998ce7902f8f88f4b1c351c6e92e375dab5"
+      },
+      {
+        "command": "pnpm build",
+        "exit": 0,
+        "seconds": 7.6,
+        "log": ".sites-runtime/readability/S01/baseline/5-build.log",
+        "logSha256": "bbbc8d16dcda4f7c33ae43258bb53c32bd2615d1cef54cc671e9022ce8e02de3"
+      },
+      {
+        "command": "pnpm local:setup",
+        "exit": 0,
+        "seconds": 0.2,
+        "log": ".sites-runtime/readability/S01/baseline/6-local-setup.log",
+        "logSha256": "12310241a36c6913163cf8e42aeae88fb74f8ae3b7a1a14bf7d49d208433acda"
+      },
+      {
+        "command": "pnpm db:migrate:local",
+        "exit": 0,
+        "seconds": 5.7,
+        "log": ".sites-runtime/readability/S01/baseline/7-db-migrate-local.log",
+        "logSha256": "23309542cf45223ff7a87d186ef379f3699487cc38fc2912de9709e968b8d2c7"
+      },
+      {
+        "command": "pnpm test:local",
+        "exit": 0,
+        "seconds": 3.9,
+        "log": ".sites-runtime/readability/S01/baseline/8-test-local.log",
+        "logSha256": "47dc3f36955b62e916f94bf001fa6fa44b4eefc66ba4268deae09133b6bdc978"
+      },
+      {
+        "command": "git diff --check",
+        "exit": 0,
+        "seconds": 0.1,
+        "log": ".sites-runtime/readability/S01/baseline/9-diff.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "final": [
+      {
+        "command": "pnpm lint",
+        "exit": 1,
+        "seconds": 8.2,
+        "log": ".sites-runtime/readability/S01/final/0-lint.log",
+        "logSha256": "266f82e620ceea258d178128429f724610e2afe7849bf12e955eca8811980a7d"
+      },
+      {
+        "command": "pnpm typecheck",
+        "exit": 0,
+        "seconds": 5.0,
+        "log": ".sites-runtime/readability/S01/final/1-typecheck.log",
+        "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+      },
+      {
+        "command": "pnpm test code-readability local-auth local-d1-database ci-tool-pins ci-migrations",
+        "exit": 0,
+        "seconds": 2.5,
+        "log": ".sites-runtime/readability/S01/final/2-test.log",
+        "logSha256": "63159a916d9a58af7f2bb7b3409a8f4024138970290cb9bb936c3ca75e9d460b"
+      },
+      {
+        "command": "pnpm test",
+        "exit": 0,
+        "seconds": 148.9,
+        "log": ".sites-runtime/readability/S01/final/3-test.log",
+        "logSha256": "43f4ca4e870db78fef732ceeb47fdc7297a2136abd29cdcf129d2c255544daee"
+      },
+      {
+        "command": "pnpm db:check",
+        "exit": 0,
+        "seconds": 0.6,
+        "log": ".sites-runtime/readability/S01/final/4-db-check.log",
+        "logSha256": "a49374a9e6bce01dc36b41c4660b877105f211c6ba09f3dd029093d4d7a21791"
+      },
+      {
+        "command": "pnpm build",
+        "exit": 0,
+        "seconds": 6.3,
+        "log": ".sites-runtime/readability/S01/final/5-build.log",
+        "logSha256": "6d1277f1dc555c29a833e0682741d00b507f668e3acf817f2e00a1787e674ca8"
+      },
+      {
+        "command": "pnpm local:setup",
+        "exit": 0,
+        "seconds": 0.2,
+        "log": ".sites-runtime/readability/S01/final/6-local-setup.log",
+        "logSha256": "12310241a36c6913163cf8e42aeae88fb74f8ae3b7a1a14bf7d49d208433acda"
+      },
+      {
+        "command": "pnpm db:migrate:local",
+        "exit": 0,
+        "seconds": 0.8,
+        "log": ".sites-runtime/readability/S01/final/7-db-migrate-local.log",
+        "logSha256": "9ed7b4bf5b2ea02f8827dfab32fdb84c47153e97d42f98d57ec2c17d707d4d3c"
+      },
+      {
+        "command": "pnpm test:local",
+        "exit": 0,
+        "seconds": 3.8,
+        "log": ".sites-runtime/readability/S01/final/8-test-local.log",
+        "logSha256": "47dc3f36955b62e916f94bf001fa6fa44b4eefc66ba4268deae09133b6bdc978"
+      },
+      {
+        "command": "git diff --check",
+        "exit": 0,
+        "seconds": 0.0,
+        "log": ".sites-runtime/readability/S01/final/9-diff.log",
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "additionalChecks": [
+    "S01 formatter: 29 eligible source files equivalent and formatted; final check exit 0",
+    "5 focused suites passed; full suite increased from 137 to 138 with the new guard suite",
+    "All 151 inherited lint diagnostics matched in order after removing positions: 71 errors, 80 warnings; no rules suppressed",
+    "New tooling scoped ESLint exit 0",
+    "Bash syntax check of all four S01 shell scripts exit 0; YAML independent Prettier debug-check exit 0",
+    "22 existing source edits equivalent to planning commit; 858 baseline files byte-identical; package and lock diff limited to formatter tooling",
+    "All cleanup tracker/guide relative links resolve; source frozen during all final commands"
+  ],
+  "limitations": [
+    "macOS local evidence only; Ubuntu/Windows CI not executed here",
+    "Lint remains failing with inherited diagnostics; behavioral/hook fixes remain outside readability scope",
+    "Receiving implementation is not integrated; its only package addition is disjoint from formatter tooling",
+    "origin/main advanced to 59d3d90 during verification; integration will be a separate checkpoint before S02",
+    "No collected browser/provider/pilot/production acceptance or milestone-gate closure"
+  ]
+}
