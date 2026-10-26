@@ -53,7 +53,7 @@ try{
     await panel.getByLabel('Per day').fill('400.00');await panel.getByRole('button',{name:'Save limits'}).click();
     const prompt=panel.getByRole('form',{name:'Confirm your password'});await prompt.waitFor();
     assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('autocomplete')),'current-password','The prompt takes focus');
-    assert.ok(await prompt.getByLabel('Current password').isVisible()&&await prompt.evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.top<innerHeight;}),'The prompt is in view');
+    assert.ok(await prompt.getByLabel('Current password').isVisible()&&await prompt.evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight+1;}),'The prompt is in view');
     assert.ok(await prompt.getByText('Confirm your password to raise, remove or first set spending limits.',{exact:false}).isVisible());
     assert.equal(await panel.getByRole('button',{name:'Save limits'}).isDisabled(),true,'Other changes wait for the confirmation');
     await prompt.getByLabel('Current password').fill('not-a-real-password');await prompt.getByRole('button',{name:'Confirm and save'}).click();
