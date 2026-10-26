@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S15** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S16** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **9 of 22 Completed; 6 Blocked (recorded handoffs/holds); 0 In Progress; 7 Pending**.
+- Cleanup sections: **9 of 22 Completed; 7 Blocked (recorded handoffs/holds); 0 In Progress; 6 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -100,7 +100,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S13 | API routes and server integration boundaries | 36 | Blocked: delivery-route handoff; existing routes verified |
 | S14 | Shared UI primitives and vendor boundaries | 62 | Completed |
 | S15 | Application entrypoints, identity pages and workspace shell | 15 | Blocked: receiving/JSX/source pins; safe files verified |
-| S16 | Inventory, recipes, waste and POS workspace components | 14 | Pending |
+| S16 | Inventory, recipes, waste and POS workspace components | 14 | Blocked: ten JSX holds; safe files verified |
 | S17 | Purchasing, cart, spending and document workspace components | 17 | Pending |
 | S18 | Owned styles, static site, standalone previews and assets | 32 | Pending |
 | S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Pending |
@@ -516,23 +516,33 @@ No visible instruction/runtime changed in the safe sources, so no browser/pixel 
 
 ## S16 — Inventory, recipes, waste and POS workspace components
 
-Status: Pending. Depends on: S15; S06/S07.
+Status: Blocked for ten JSX-child-preservation holds; four safe files verified. Depends on: S15; S06/S07.
 
 **Files:** Stock/inventory layouts and panels, recipe builder/list/modifiers, waste recorders, sales exceptions, register setup/provider/status and Clover components assigned in the inventory.
 
-- [ ] S16.1 — First expand the heavily compressed inventory, exact inventory, register, Clover and sales exception components into readable blocks.
-- [ ] S16.2 — Separate local request adapters, pure display transforms and event handlers visually; replace cryptic local names only within proven scopes.
-- [ ] S16.3 — Review long forms for safe local presentational extraction without changing keys, refs, controlled inputs or dirty/unsaved state.
-- [ ] S16.4 — Document stale-response and retry guards and preserve current markup, labels, CSS classes, loading/error states, company isolation and exact quantity input behavior.
+**Preflight holds:** Ten modules remain byte-identical because the unchanged guard refuses formatting that changes React text-child boundaries. Four safe candidates are `inventory-layout.tsx`, `recipe-builder.tsx`, `register-provider.tsx` and `waste-recorder.tsx`. Exact per-file refusals are recorded in the inventory and `.sites-runtime/readability/S16/candidate-review.json`.
+
+- [!] S16.1 — Safe inventory layout, recipe builder, register provider and waste recorder expanded. Ten other JSX-changing candidates remain Blocked unchanged.
+- [x] S16.2 — Separate local request adapters, pure display transforms and event handlers visually; replace cryptic local names only within proven scopes.
+- [!] S16.3 — Safe forms reviewed without extraction, key/ref/input/state change. Deep cleanup of the ten held components remains Blocked by strict JSX-child preservation.
+- [x] S16.4 — Document stale-response and retry guards and preserve current markup, labels, CSS classes, loading/error states, company isolation and exact quantity input behavior.
 
 **Focused command:** `pnpm test stock-entry stock-pack-units inventory-sales waste-recording menu-waste clover-connection pos-register-status`.
 
 **Verification:** Run listed contracts/UI regressions, scoped lint, typecheck/build and full tests for state/helper changes. Compare JSX text/structure and preserve existing desktop/mobile/keyboard behavior. Do not auto-fix hooks.
 
-- [ ] S16.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S16.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S16.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S16.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** Four safe modules read fully and formatted: `inventory-layout.tsx`, `recipe-builder.tsx`, `register-provider.tsx` and `waste-recorder.tsx`. Two whitespace-only declaration boundaries separated. Recipe model/review/request/save and register/waste load/intent/pending/recovery stages are easier to scan. Existing comments explain preference recovery, pending-save scope and server timing. No new comment, helper extraction or abstraction was introduced.
+
+All four match pre-section `8bf4d7d` complete types/syntax/comments/literals/emitted runtime and JSX children. DOM/text/classes/ARIA/props/keys, hooks/effect dependencies/event order, exact quantity strings, atomic recipe versions/request UUIDs, frozen retry bodies, offline/unknown outcomes, browser storage keys, server-relative waste time and once-only register credentials are unchanged.
+
+**Ten explicit holds:** Clover connection, exact inventory, legacy inventory, menu-waste recorder, POS status, recipe list/modifiers, sales exceptions, register setup and stock-entry candidates change React text-child boundaries under the formatter. The unchanged guard refused them during preflight, before source writes. Each retains its baseline byte hash and remains Blocked for later manually verified JSX-preserving cleanup. No cleanup or deep manual implementation audit is claimed for those held sources. Exact candidates/refusals and final equivalence receipts: `.sites-runtime/readability/S16/`.
+
+All seven focused suites above passed before and after; full `pnpm test` passed all 139 suites. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. **Scoped lint exited 1 with one error/three warnings**, matching the integrated baseline by file/rule/message for the safe selection; no suppression, hook-dependency or state-behavior change. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S16`. No visible instruction/runtime changed in safe files, so no browser/pixel walkthrough ran; this is local/macOS fake-provider evidence only.
+
+Commits group recipe/layout and register/waste flows. Rollback: those two source/docs commits only. S17 can independently review purchasing/cart/document components against unchanged inventory/POS interfaces; all ten holds remain explicit.
 
 ## S17 — Purchasing, cart, spending and document workspace components
 
@@ -672,6 +682,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S13 | 36 existing routes formatted; 71 declaration boundaries; policy/response/dispatch contracts retained | 23 focused baseline/final and all 139 suites; scoped lint/format/typecheck/db/build/local setup/apply/HTTP/diff pass; initial formatter refusal and stable equivalent recovery retained | Three local commits grouped by identity/integrations, stock/sales/waste and purchasing/cart; delivery API remains Blocked; independent S14 next |
 | 2026-10-26 / S14 | 62 vendor files reviewed unchanged; 348 exports and import/hook/consumer inventory; nine directly used primitive modules | All baseline hashes preserved; guard suite, scoped lint under unchanged vendor exceptions, typecheck/build/diff pass | Documentation-only local review commit; no vendor rewrite or S14 hold; S15 next |
 | 2026-10-26 / S15 | Eleven safe page/auth/portal/form/theme/navigation files formatted; one re-export unchanged; five declaration boundaries | Three baseline/four final focused and all 139 suites; equivalence/format/typecheck/db/build/local setup/apply/HTTP/diff pass; scoped inherited lint 6 errors/3 warnings; incomplete source-pin run retained | Two local commits; receiving employee shell, members-panel JSX and workspace source pins remain Blocked; independent S16 next |
+| 2026-10-26 / S16 | Four safe inventory-layout/recipe/register/waste components formatted; two declaration boundaries; ten JSX candidates held unchanged | Seven focused baseline/final and all 139 suites; equivalence/format/typecheck/db/build/diff pass; scoped inherited lint one error/three warnings matched | Two local commits; ten JSX-child holds remain Blocked; independent S17 next |
 
 ## Final report requirements
 

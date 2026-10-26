@@ -7520,11 +7520,13 @@
     {
       "path": "src/components/workspace/clover-connection.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "faae3dfac21ab41c2ed0005a149aa6268da2f41823bca02873d1220ee15715a7",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/company-portal.tsx",
@@ -7587,11 +7589,13 @@
     {
       "path": "src/components/workspace/exact-inventory-panel.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "70f01b5e73cfc0fa8fc12d10397be89ff53e8b9aa7942356ce7de5ee63644f67",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/inventory-layout.css",
@@ -7605,20 +7609,26 @@
     {
       "path": "src/components/workspace/inventory-layout.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "9460516986e30e0999a4853b7986015396231f787a9a483f65ebc45765378a83",
-      "results": []
+      "results": [
+        "S16 safe source fully read before edits: inventory layout, recipe create/review/save, register provider/token and durable waste recovery. Preserve props/markup/hooks/state order, pending operation/storage scopes, decimal quantities, credentials and error behavior; full types/runtime/JSX comparison required.",
+        "S16 safe component source fully read and formatted: inventory layout, recipe builder, register provider and waste recorder, with two declaration boundaries. All four match 8bf4d7d complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited error/three warnings. Ten refused JSX candidates remain byte-identical and Blocked; see sectionReviews.S16."
+      ],
+      "cleanupSha256": "61260549387caec97b8139256d8c02e41b60d59bfedacb9b37670021dd8e4aeb"
     },
     {
       "path": "src/components/workspace/inventory-panel.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4e6a6f61a3ef50802f02443e408dbf02183f1b8a383b7055de156342a580b855",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/manager-operations.tsx",
@@ -7644,11 +7654,13 @@
     {
       "path": "src/components/workspace/menu-waste-recorder.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f6b76fcee8c44d7dfed43b509924c9198f0dbd3daa492bd8f712f277e0795cc7",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/payment-methods.tsx",
@@ -7662,11 +7674,13 @@
     {
       "path": "src/components/workspace/pos-connection-status.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "c824addcef00af4706cd9fddf75a563567cdddbe2d338912af1f00f6a8e9cd87",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/product-catalog.tsx",
@@ -7743,56 +7757,72 @@
     {
       "path": "src/components/workspace/recipe-builder.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b3afffacf8bfe39a5fee7e22149b0e420eed5d62e6d8514e8a8a6930e749ba4e",
-      "results": []
+      "results": [
+        "S16 safe source fully read before edits: inventory layout, recipe create/review/save, register provider/token and durable waste recovery. Preserve props/markup/hooks/state order, pending operation/storage scopes, decimal quantities, credentials and error behavior; full types/runtime/JSX comparison required.",
+        "S16 safe component source fully read and formatted: inventory layout, recipe builder, register provider and waste recorder, with two declaration boundaries. All four match 8bf4d7d complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited error/three warnings. Ten refused JSX candidates remain byte-identical and Blocked; see sectionReviews.S16."
+      ],
+      "cleanupSha256": "1ec50a485e8e7554f19926cdd3d557132da981345ccf2001344dd418cb3c9d57"
     },
     {
       "path": "src/components/workspace/recipe-list.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a0393d0e69233ee199a7c8caddfa5e1480d28f401e922dd386ce2fdf3014eed9",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/recipe-modifiers.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "088a25b66ba51e6b43163086d5b9c1b6ca2abd2056fd80999f7f8ea8fda159fa",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/register-provider.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "afffca534ae27a5ce177b274cc3df61b2a433950d113eaf99a614259f4b9e4cb",
-      "results": []
+      "results": [
+        "S16 safe source fully read before edits: inventory layout, recipe create/review/save, register provider/token and durable waste recovery. Preserve props/markup/hooks/state order, pending operation/storage scopes, decimal quantities, credentials and error behavior; full types/runtime/JSX comparison required.",
+        "S16 safe component source fully read and formatted: inventory layout, recipe builder, register provider and waste recorder, with two declaration boundaries. All four match 8bf4d7d complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited error/three warnings. Ten refused JSX candidates remain byte-identical and Blocked; see sectionReviews.S16."
+      ],
+      "cleanupSha256": "0085bdd36e6c6e9e95d2e46ec9ce917b4ab031bf7f8ccfd9086d4d4e6174f178"
     },
     {
       "path": "src/components/workspace/sales-exceptions.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a957b3984cdf09060833837f4493f9c87923c39511313438007dbd340545d0cc",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/setup-register.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b28f19da6aa97bacab82f85ffcc541fc425dab6689d0f70dc47d4f89f719fab0",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/spending-limits.css",
@@ -7815,11 +7845,13 @@
     {
       "path": "src/components/workspace/stock-entry.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "c35ae2b44b77a88cdd0ea71b08480a3a29a329de17f5f403e200cab64f40ae86",
-      "results": []
+      "results": [
+        "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
+      ]
     },
     {
       "path": "src/components/workspace/supplier-confirmation.css",
@@ -7882,11 +7914,15 @@
     {
       "path": "src/components/workspace/waste-recorder.tsx",
       "section": "S16",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "849c8c5e567a5af808308c648b8d33f5e1695a5bdc3439e57bc580c9082992f2",
-      "results": []
+      "results": [
+        "S16 safe source fully read before edits: inventory layout, recipe create/review/save, register provider/token and durable waste recovery. Preserve props/markup/hooks/state order, pending operation/storage scopes, decimal quantities, credentials and error behavior; full types/runtime/JSX comparison required.",
+        "S16 safe component source fully read and formatted: inventory layout, recipe builder, register provider and waste recorder, with two declaration boundaries. All four match 8bf4d7d complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited error/three warnings. Ten refused JSX candidates remain byte-identical and Blocked; see sectionReviews.S16."
+      ],
+      "cleanupSha256": "09ad476ebc3aa654891b45ffbc27d971d523856c2c22edc4ca69d696e5daabd2"
     },
     {
       "path": "src/components/workspace/workspace-navigation.ts",
@@ -12306,7 +12342,116 @@
         "reason": "Mounted for owners only source regex still refused after formatter; entire workspace source restored to baseline afterward",
         "committed": false,
         "finalTestChanged": false
-      }
+      },
+      "commits": [
+        "72091a3",
+        "8bf4d7d"
+      ]
+    },
+    "S16": {
+      "outcome": "Blocked for ten JSX-child-preservation holds; four safe files verified",
+      "safeFilesCompleted": 4,
+      "heldFiles": [
+        "src/components/workspace/clover-connection.tsx",
+        "src/components/workspace/exact-inventory-panel.tsx",
+        "src/components/workspace/inventory-panel.tsx",
+        "src/components/workspace/menu-waste-recorder.tsx",
+        "src/components/workspace/pos-connection-status.tsx",
+        "src/components/workspace/recipe-list.tsx",
+        "src/components/workspace/recipe-modifiers.tsx",
+        "src/components/workspace/sales-exceptions.tsx",
+        "src/components/workspace/setup-register.tsx",
+        "src/components/workspace/stock-entry.tsx"
+      ],
+      "preSectionCommit": "8bf4d7d",
+      "codeCommits": [
+        "style(readability): expand recipe editing and inventory layout",
+        "style(readability): clarify register and waste form lifecycles"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm test stock-entry stock-pack-units inventory-sales waste-recording menu-waste clover-connection pos-register-status",
+          "exit": 0,
+          "suites": 7,
+          "log": ".sites-runtime/readability/S16/baseline.log",
+          "logSha256": "466b805b0b1559a558cdc36bafab513b9f2b2295b36805fa1ae52398ca4ed7b2"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm test stock-entry stock-pack-units inventory-sales waste-recording menu-waste clover-connection pos-register-status",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S16/final/0-test.log",
+          "logSha256": "769b704c028d61b50ca008593627d19b0dae3687ad80631a210ea03874ab86ba"
+        },
+        {
+          "command": "pnpm format:check --section S16",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S16/final/1-format-check.log",
+          "logSha256": "bf894d5a651240763dd93ccf7eca51a5e15df90e33590a50b8400970d3b3db1d"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/components/workspace/inventory-layout.tsx src/components/workspace/recipe-builder.tsx src/components/workspace/register-provider.tsx src/components/workspace/waste-recorder.tsx",
+          "exit": 1,
+          "seconds": 1.4,
+          "log": ".sites-runtime/readability/S16/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "6b810c5902314dc4981fa3789aff3a1e9fe5f20520fc7f04546d337db27b5d1d"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 2.5,
+          "log": ".sites-runtime/readability/S16/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.7,
+          "log": ".sites-runtime/readability/S16/final/4-test.log",
+          "logSha256": "50023ef760a87f2160724eda74c33bc44c483fcd86d256e8e3345e35aac5ce5d"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S16/final/5-db-check.log",
+          "logSha256": "3e684139074ba698d96417469e6bd7ffe0a78f59c76bbe0bfdfd220d5290bea9"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 5.8,
+          "log": ".sites-runtime/readability/S16/final/6-build.log",
+          "logSha256": "8d28adcc66b5930abc7db232fa9504ed885d85837e5bcea79bb365c81b13ab67"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S16/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "d788494107b7877ec61c741ddfb1da150335acaad457a254cff07eb1107efbe2",
+      "review": "Four safe components read fully, formatted and independently equivalent to pre-section source. Props, DOM/text/classes/ARIA/keys, hook/state/effect/event order, atomic recipe request IDs/versions, exact quantity strings, frozen pending saves and storage scope, server-relative waste timestamps, offline/unknown outcome behavior and once-only register tokens unchanged. Two whitespace-only declaration boundaries separated; no extraction, new comments or abstraction. Ten other candidates refused emitted JSX-child changes before writes and retain baseline bytes; no visual or guard relaxation.",
+      "limitations": [
+        "Ten UI modules remain Blocked because formatting changes React text-child boundaries: see heldFiles and candidate-review.json. No cleanup or full manual implementation audit of those held modules is claimed; existing source is retained.",
+        "Scoped lint exits 1 with one inherited error/three warnings in the safe selection, matched by file/rule/message. No hook/dependency/state repair or rule suppression.",
+        "No actual visual/runtime instruction changed in safe files, so no browser/pixel walkthrough ran. Local/macOS fake-provider/domain evidence only; no hosted/provider/purchasing acceptance."
+      ],
+      "receipts": [
+        {
+          "path": ".sites-runtime/readability/S16/candidate-review.json",
+          "sha256": "1e8cb6db763bbff9c705f904799825f6d66abcd45786a668efc6b74c5ede17a8"
+        },
+        {
+          "path": ".sites-runtime/readability/S16/equivalence.log",
+          "sha256": "46a42621e82dc6066562833621490a9e5fcadcba83718376e7e51dbb5b259141"
+        }
+      ]
     }
   }
 }
