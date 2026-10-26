@@ -197,6 +197,15 @@ for(const fault of [503,429,'timeout','malformed']){
  providerFault=undefined;
 }
 assert.deepEqual(sql.prepare('SELECT * FROM auth_sessions ORDER BY hash').all(),savedSessions,'Outages preserve sessions for recovery');
+// A request without any session cookie is anonymous, even when origin configuration is unusable;
+// a present session that cannot be verified still fails closed.
+for(const origin of ['http://127.0.0.1:5181',undefined]){
+ if(origin)globalThis.m2env.APP_ORIGIN=origin;else delete globalThis.m2env.APP_ORIGIN;
+ for(const family of ['companies','members','waste'])assert.equal((await call(family,'GET',null)).status,401,'Anonymous is not an outage: '+family+' '+origin);
+ assert.equal((await call('companies','GET',null,cookies.owner)).status,503,'An unverifiable present session is unavailable: '+origin);
+}
+globalThis.m2env.APP_ORIGIN='https://test';
+assert.equal((await call('companies','GET',null)).status,401);assert.equal((await call('companies','GET',null,cookies.owner)).status,200);
 for(const query of ['SELECT s.* FROM auth_sessions','SELECT s.hash FROM auth_sessions']){
  failingSessionQuery=query;
  const response=await call('companies','GET',null,cookies.owner);failingSessionQuery=undefined;
