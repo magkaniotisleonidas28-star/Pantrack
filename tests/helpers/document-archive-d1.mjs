@@ -1,17 +1,17 @@
 import {build} from 'esbuild';
 import {readFileSync} from 'node:fs';
-import {unstable_splitSqlQuery} from 'wrangler';
+import assert from 'node:assert/strict';
 import {archiveFixture,openArchiveContext} from './document-archive.mjs';
 await build({stdin:{contents:['d1-document-archive-journal','d1-document-archive-source-guard','purchase-order-document-archive',
   'purchase-order-document-archive-contract','purchase-order-document-archive-sources','d1-purchase-order-history-exports',
 ].map(name=>`export * from './src/lib/${name}.ts';`).join('\n'),resolveDir:process.cwd()},bundle:true,packages:'external',platform:'node',format:'esm',outfile:'.sites-runtime/document-archive-d1-core.mjs'});
 export const core=await import('../../.sites-runtime/document-archive-d1-core.mjs');
-export function installJournalFixture(sql){
-  if(sql.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='document_archive_intents'").get())return;
-  for(const statement of unstable_splitSqlQuery(readFileSync('tests/fixtures/document-archive-journal.sql','utf8')))sql.exec(statement);
+export function requireJournalMigration(sql){
+  assert.equal(sql.prepare("SELECT count(*) n FROM sqlite_master WHERE type='table' AND name IN ('document_archive_intents','document_archive_leases','document_archive_observations')").get().n,3,
+    'The application migration must supply the complete archive schema.');
 }
 export function attachArchiveD1(c){
-  installJournalFixture(c.sql);const hooks={},metrics={batches:0,maximumBindings:0};
+  requireJournalMigration(c.sql);const hooks={},metrics={batches:0,maximumBindings:0};
   c.sql.exec('CREATE TABLE IF NOT EXISTS document_archive_test_clock(at TEXT NOT NULL)');
   c.sql.exec('DELETE FROM document_archive_test_clock');c.sql.prepare('INSERT INTO document_archive_test_clock VALUES(?)').run(c.state.at);
   const db={prepare:query=>c.db.prepare(query),batch:async statements=>{

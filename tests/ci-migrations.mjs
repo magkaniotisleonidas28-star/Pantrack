@@ -51,4 +51,16 @@ fixture((directory) => {
   assert.throws(() => checkMigrations({ projectRoot: directory }), /Applied columns, defaults, or primary key differ/);
 });
 
-console.log("PASS: migration checks reject a missing journal, unjournaled SQL, missing generated migrations, and SQL/snapshot mismatch without changing source migrations.");
+for (const alteration of ['missing-check','changed-check']) fixture((directory) => {
+  const journal = JSON.parse(readFileSync(join(directory, 'drizzle', 'meta', '_journal.json'), 'utf8'));
+  const entry = journal.entries.find(e => e.tag.endsWith('_document_archive_journal'));
+  const path = join(directory, 'drizzle', `${entry.tag}.sql`), original = readFileSync(path, 'utf8');
+  const needle = "IN ('reserved','prepared','held','ready')";
+  assert.equal(original.split(needle).length-1, 1);
+  const changed = alteration === 'missing-check' ? original.split('\n').filter(line => !line.includes('CONSTRAINT "document_archive_state"')).join('\n') :
+    original.replace(needle, "IN ('reserved','prepared','held','ready','unexpected')");
+  writeFileSync(path, changed);
+  assert.throws(() => checkMigrations({ projectRoot: directory }), /Applied CHECK constraints differ for document_archive_intents/);
+});
+
+console.log("PASS: migration checks reject a missing journal, unjournaled SQL, missing generated migrations, SQL/snapshot mismatch and missing/changed CHECK constraints without changing source migrations.");

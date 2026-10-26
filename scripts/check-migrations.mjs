@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { fileURLToPath } from "node:url";
+import { assertSqliteCheckConstraints } from "./sqlite-check-constraints.mjs";
 
 const toolRoot = fileURLToPath(new URL("../", import.meta.url));
 const initialSnapshotId = "00000000-0000-0000-0000-000000000000";
@@ -109,9 +110,8 @@ function assertAppliedSchema(database, snapshot) {
     const actualUnique = actualIndexes.filter((index) => index.origin === "u").map((index) => database.prepare(`PRAGMA index_info(${quote(index.name)})`).all().map((column) => column.name));
     assert.deepEqual(sorted(actualUnique), sorted(expectedUnique.map((constraint) => constraint.columns)), `Unique constraints differ for ${table.name}.`);
 
-    // SQLite does not expose CHECK expressions through a pragma. Fail closed if
-    // a new schema needs validation this baseline checker cannot yet provide.
-    assert.equal(Object.keys(table.checkConstraints ?? {}).length, 0, `Add CHECK-constraint validation before introducing checks on ${table.name}.`);
+    const ddl = database.prepare("SELECT sql FROM sqlite_schema WHERE type='table' AND name=?").get(table.name)?.sql;
+    assertSqliteCheckConstraints(ddl, table.checkConstraints, table.name);
   }
   assert.deepEqual(database.prepare("PRAGMA foreign_key_check").all(), [], "Applied migrations contain foreign-key violations.");
   assert.equal(database.prepare("PRAGMA integrity_check").get().integrity_check, "ok", "Applied migrations fail SQLite integrity validation.");

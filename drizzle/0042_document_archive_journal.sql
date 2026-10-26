@@ -1,32 +1,60 @@
--- Draft fixture while receiving owns the migration queue. Not an application migration.
-CREATE TABLE document_archive_intents (
- company_id TEXT NOT NULL REFERENCES companies(id),id TEXT NOT NULL,operation_id TEXT NOT NULL,actor_id TEXT NOT NULL,
- fingerprint TEXT NOT NULL,request_json TEXT NOT NULL CHECK(json_valid(request_json)),template TEXT NOT NULL,requested_at TEXT NOT NULL,
- state TEXT NOT NULL CHECK(state IN ('reserved','prepared','held','ready')),token TEXT NOT NULL,lease_until TEXT,
- manifest_json TEXT CHECK(manifest_json IS NULL OR json_valid(manifest_json)),artifact_json TEXT CHECK(artifact_json IS NULL OR json_valid(artifact_json)),
- reason TEXT,write_id TEXT NOT NULL,updated_at TEXT NOT NULL,
- PRIMARY KEY(company_id,id),UNIQUE(company_id,operation_id),
- CHECK(length(fingerprint)=64 AND fingerprint NOT GLOB '*[^0-9a-f]*'),
- CHECK(json_extract(request_json,'$.companyId') IS company_id AND json_extract(request_json,'$.operationId') IS operation_id),
- CHECK(requested_at<=updated_at AND length(requested_at)=24 AND julianday(requested_at) IS NOT NULL),
- CHECK(length(updated_at)=24 AND julianday(updated_at) IS NOT NULL),
- CHECK((state='ready')=(artifact_json IS NOT NULL)),CHECK((state IN ('held','ready'))=(lease_until IS NULL)),
- CHECK(state!='prepared' OR manifest_json IS NOT NULL),CHECK(state!='reserved' OR manifest_json IS NULL),
- CHECK(lease_until IS NULL OR lease_until>updated_at)
+CREATE TABLE `document_archive_intents` (
+	`company_id` text NOT NULL,
+	`id` text NOT NULL,
+	`operation_id` text NOT NULL,
+	`actor_id` text NOT NULL,
+	`fingerprint` text NOT NULL,
+	`request_json` text NOT NULL,
+	`template` text NOT NULL,
+	`requested_at` text NOT NULL,
+	`state` text NOT NULL,
+	`token` text NOT NULL,
+	`lease_until` text,
+	`manifest_json` text,
+	`artifact_json` text,
+	`reason` text,
+	`write_id` text NOT NULL,
+	`updated_at` text NOT NULL,
+	PRIMARY KEY(`company_id`, `id`),
+	FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "document_archive_request_json" CHECK(json_valid("document_archive_intents"."request_json")),
+	CONSTRAINT "document_archive_state" CHECK("document_archive_intents"."state" IN ('reserved','prepared','held','ready')),
+	CONSTRAINT "document_archive_manifest_json" CHECK("document_archive_intents"."manifest_json" IS NULL OR json_valid("document_archive_intents"."manifest_json")),
+	CONSTRAINT "document_archive_artifact_json" CHECK("document_archive_intents"."artifact_json" IS NULL OR json_valid("document_archive_intents"."artifact_json")),
+	CONSTRAINT "document_archive_fingerprint" CHECK(length("document_archive_intents"."fingerprint")=64 AND "document_archive_intents"."fingerprint" NOT GLOB '*[^0-9a-f]*'),
+	CONSTRAINT "document_archive_request_binding" CHECK(json_extract("document_archive_intents"."request_json",'$.companyId') IS "document_archive_intents"."company_id" AND json_extract("document_archive_intents"."request_json",'$.operationId') IS "document_archive_intents"."operation_id"),
+	CONSTRAINT "document_archive_requested_at" CHECK("document_archive_intents"."requested_at"<="document_archive_intents"."updated_at" AND length("document_archive_intents"."requested_at")=24 AND julianday("document_archive_intents"."requested_at") IS NOT NULL),
+	CONSTRAINT "document_archive_updated_at" CHECK(length("document_archive_intents"."updated_at")=24 AND julianday("document_archive_intents"."updated_at") IS NOT NULL),
+	CONSTRAINT "document_archive_issued_state" CHECK(("document_archive_intents"."state"='ready')=("document_archive_intents"."artifact_json" IS NOT NULL)),
+	CONSTRAINT "document_archive_lease_state" CHECK(("document_archive_intents"."state" IN ('held','ready'))=("document_archive_intents"."lease_until" IS NULL)),
+	CONSTRAINT "document_archive_prepared_state" CHECK("document_archive_intents"."state"!='prepared' OR "document_archive_intents"."manifest_json" IS NOT NULL),
+	CONSTRAINT "document_archive_reserved_state" CHECK("document_archive_intents"."state"!='reserved' OR "document_archive_intents"."manifest_json" IS NULL),
+	CONSTRAINT "document_archive_lease_time" CHECK("document_archive_intents"."lease_until" IS NULL OR "document_archive_intents"."lease_until">"document_archive_intents"."updated_at")
 );
 --> statement-breakpoint
-CREATE TABLE document_archive_leases (
- company_id TEXT NOT NULL,document_id TEXT NOT NULL,token TEXT NOT NULL,expires_at TEXT NOT NULL,
- PRIMARY KEY(company_id,document_id,token),UNIQUE(token),
- FOREIGN KEY(company_id,document_id) REFERENCES document_archive_intents(company_id,id)
+CREATE UNIQUE INDEX `document_archive_operation` ON `document_archive_intents` (`company_id`,`operation_id`);--> statement-breakpoint
+CREATE TABLE `document_archive_leases` (
+	`company_id` text NOT NULL,
+	`document_id` text NOT NULL,
+	`token` text NOT NULL,
+	`expires_at` text NOT NULL,
+	PRIMARY KEY(`company_id`, `document_id`, `token`),
+	FOREIGN KEY (`company_id`,`document_id`) REFERENCES `document_archive_intents`(`company_id`,`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE document_archive_observations (
- company_id TEXT NOT NULL,document_id TEXT NOT NULL,id TEXT NOT NULL,actor_id TEXT NOT NULL,token TEXT,
- payload_json TEXT NOT NULL CHECK(json_valid(payload_json)),at TEXT NOT NULL,
- PRIMARY KEY(company_id,document_id,id),
- FOREIGN KEY(company_id,document_id) REFERENCES document_archive_intents(company_id,id),
- FOREIGN KEY(company_id,document_id,token) REFERENCES document_archive_leases(company_id,document_id,token)
+CREATE UNIQUE INDEX `document_archive_lease_token` ON `document_archive_leases` (`token`);--> statement-breakpoint
+CREATE TABLE `document_archive_observations` (
+	`company_id` text NOT NULL,
+	`document_id` text NOT NULL,
+	`id` text NOT NULL,
+	`actor_id` text NOT NULL,
+	`token` text,
+	`payload_json` text NOT NULL,
+	`at` text NOT NULL,
+	PRIMARY KEY(`company_id`, `document_id`, `id`),
+	FOREIGN KEY (`company_id`,`document_id`) REFERENCES `document_archive_intents`(`company_id`,`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`company_id`,`document_id`,`token`) REFERENCES `document_archive_leases`(`company_id`,`document_id`,`token`) ON UPDATE no action ON DELETE no action,
+	CONSTRAINT "document_archive_observation_json" CHECK(json_valid("document_archive_observations"."payload_json"))
 );
 --> statement-breakpoint
 CREATE TRIGGER document_archive_insert_guard BEFORE INSERT ON document_archive_intents

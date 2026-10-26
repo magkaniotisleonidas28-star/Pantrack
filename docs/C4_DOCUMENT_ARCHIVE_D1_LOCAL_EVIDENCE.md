@@ -1,33 +1,36 @@
-# C4 D1 document archive journal — prepared local implementation
+# C4 D1 document archive journal — local migration and lifecycle evidence
 
 Recorded: 2026-10-26. One C4 outcome: replace the archive's conformance journal
-with a D1 metadata adapter. **Implementation and local tests are prepared;
-final application migration/integration is pending the shared schema queue.**
+with a D1 metadata adapter and its additive application migration.
+The migration and lifecycle tests now use the application schema directly.
 C4/C5/M8 remain open. No hosted acceptance or release is claimed.
 
-## Scope and queue dependency
+## Scope and migration ownership
 
-The clean baseline is `59d3d90`. Work is isolated in
+Preparation started from `59d3d90` and was pushed as `5cd9f17` in
+[PR 20](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/20).
+Completion rebased that existing implementation onto current `main` at `6020d0b`.
+Work is isolated in
 `work/c4-document-archive-d1-20261026` on its matching short-lived workstream branch.
 It builds on the [archive contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md)
 and reuses the existing saved-draft/history producers and native PDF/Excel engines.
 
 [Receiving PR 19](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/19)
-still owns the migration queue. Its application files are separate, while its
-schema, generated metadata and shared status documents require coordinated merges.
-The queue-handoff question remains pending. No other contributor's branch was
-modified or merged, and unpublished work cannot be detected.
+merged upstream as `4960603`, and
+[order-closure PR 21](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/21)
+then merged as `6020d0b`. Both were integrated by rebasing without application
+conflicts. No other open schema PR remained when archive generation began.
+The other contributor's branch/PR was not modified or merged by this task.
+Unpublished work on another computer cannot be detected.
 
-The repository's [agent instructions](../AGENTS.md) say:
-“Only one schema-bearing change may use the migration merge queue at a time.”
-The [concurrent-work playbook](AI_DEVELOPMENT.md#6-concurrent-ai-work) also requires
-generating the final migration only after rebasing on current `main`, without
-reserving numbers or hand-merging snapshots. Accordingly, `src/db/schema.ts`,
-`drizzle/`, migration numbers and shared progress documents remain untouched.
+Following the [migration queue rules](AI_DEVELOPMENT.md#6-concurrent-ai-work),
+Drizzle generated `0042_document_archive_journal` from the freshly rebased schema,
+after receiving's `0040`/`0041`. No migration number was reserved, no snapshot was
+hand-merged, and no previously used migration was rewritten. The former draft
+SQL fixture was removed. All archive tests now require the application migration.
 
-The draft schema is a [test fixture](../tests/fixtures/document-archive-journal.sql),
-not an application migration. It is applied only to newly created fictional
-SQLite/D1 fixtures. The root and hosted databases are untouched. No route, UI,
+Migrations are applied only to isolated fictional SQLite/D1 databases.
+The root and hosted databases are untouched. No route, UI,
 R2 binding, deployment, supplier, model or purchasing action was added or invoked.
 
 ## Implementation
@@ -36,11 +39,14 @@ R2 binding, deployment, supplier, model or purchasing action was added or invoke
 | --- | --- |
 | [D1 journal](../src/lib/d1-document-archive-journal.ts) | Durable company-scoped reservation/replay, fenced leases, preparation, observations, publication, holds and authorized historical reads. |
 | [Source guard](../src/lib/d1-document-archive-source-guard.ts) | Existing producer validation plus complete source/membership checks inside the actual mutating SQL. |
-| [Schema fixture](../tests/fixtures/document-archive-journal.sql) | Three draft tables and eleven triggers for immutable metadata, retained leases and append-only observations. |
+| [Application schema](../src/db/schema.ts) | Three archive tables, company/composite foreign keys, operation/token uniqueness and JSON/state/time checks. |
+| [Migration 0042](../drizzle/0042_document_archive_journal.sql) | Additive schema plus eleven triggers for immutable metadata, retained leases and append-only observations. |
+| [Snapshot](../drizzle/meta/0042_snapshot.json) and [journal](../drizzle/meta/_journal.json) | Generated schema ancestry after `0041`; all prior table definitions remain identical. |
 | [D1 lifecycle](../tests/document-archive-d1.mjs) | File-backed SQLite and actual filesystem lifecycle, commit-time races, durable refusal inputs, lost acknowledgments and process restart. |
 | [Local D1 runtime](../tests/document-archive-d1-runtime.mjs) | Actual workerd D1 binding, native database clock, atomic mutations, tenant/role guards, immutable metadata and runtime restart. Object storage is an injected local map. |
 | [Compatibility](../tests/document-archive-d1-schema.mjs) | Wrangler splitting, fresh/populated schema apply, unchanged legacy rows, foreign keys and existing export compatibility. |
 | [Test dependencies](../tests/helpers/document-archive-d1.mjs) | Isolated fictional fixtures and explicit hooks for actual resource races. |
+| [CHECK validator](../scripts/sqlite-check-constraints.mjs), [migration checker](../scripts/check-migrations.mjs) and [tests](../tests/ci-check-constraints.mjs) | Verify applied named CHECK expressions against Drizzle while preserving quoted values and nested SQL; missing/changed checks also fail the complete migration checker. |
 
 The journal implements the existing server-only port; it is not connected to an
 HTTP endpoint or the application. The caller must supply the authenticated server
@@ -100,47 +106,47 @@ schema compatibility and actual local workerd D1 tests passed. They prove:
   the same file-backed database/files with zero render or put calls.
 - Native local D1 persistence after stopping and recreating the workerd runtime.
 
-All six local checks passed in this worktree:
+The first complete run stopped at the migration checker's deliberate guard against
+schema-declared CHECK constraints, which earlier schemas did not declare.
+Validation was added before continuing: it reads applied DDL, tokenizes quotes,
+comments and nested parentheses, and compares complete declared check sets without
+collapsing string contents. Regression tests reject missing, changed and extra
+constraints; complete checker tests mutate only disposable copies of migrations.
+The archive migration itself was not rewritten after being applied.
+
+The preparation run passed all six checks before migration integration: 141 suite
+invocations, 129 executed successfully and twelve Windows skips, with 40 then-
+current migrations. The completion run on the receiving/closure/archive source
+is being recorded below before final handoff:
 
 | Command | Result |
 | --- | --- |
-| `pnpm typecheck` | Passed. |
-| `pnpm test` | 141 suite invocations: 129 executed successfully, twelve expected Windows skips. |
-| `pnpm db:check` | All 40 existing application migrations match Drizzle and apply fresh. The archive fixture is deliberately outside that application journal. |
-| `pnpm build` | Application Worker/client build passed. |
-| `pnpm db:migrate:local` | All 40 existing migrations applied to the task's fresh isolated database. No archive migration was generated or applied there. |
-| `pnpm test:local` | Home/auth/company/catalog/tenant/sign-out HTTP smoke passed. |
-| Final focused archive run | All four archive contract/journal/runtime/schema suites passed after the full pipeline, including the additional audit/missing-object/observation-reference refusals. |
+| Final full pipeline | In progress; final results will replace this row before handoff. |
+| Focused archive migration run | All four archive contract/journal/runtime/schema suites passed using application migration `0042`, including actual local workerd D1. |
+| Receiving integration baseline | Journal/runtime/order-closure tests passed after rebasing onto receiving and closure. |
 
 The final source/test/schema/documentation review covered authorization, immutable
 identity, atomic source/clock guards, private failures, unknown writes, retained
-audit, scope and pending completion claims. Documentation whitespace and all
-eleven relative file links passed. Private logs and fixtures remain in ignored
-`.sites-runtime/c4-document-archive-d1-20261026/` at the root and the worktree's
+audit and scope. Final documentation whitespace/link results are recorded with
+the completion checks. Private logs remain in the root
+`.sites-runtime/c4-document-archive-d1-20261026/` (preparation) and
+`.sites-runtime/c4-document-archive-d1-final-20261026/` (completion), plus the worktree's
 `.sites-runtime/` directories. No hosted, provider sandbox, pilot or production
 acceptance is claimed. The local app build/smoke are regression checks, not an
 app archive walkthrough.
 
-## Remaining integration, rollback and handoff
+## Limits, rollback and next handoff
 
-The adapter code is prepared; **the planned D1 adapter step is not fully complete
-until its final migration is generated, verified and integrated.** After PR 19
-merges or the owner explicitly hands over the migration queue:
+The D1 journal and application migration are this bounded outcome. The journal
+remains unwired to the app, and there are no storage credentials or external
+acceptance dependencies for these local checks. The next bounded document item
+is private create-only R2 storage with bounded/hash-checked retrieval against this
+existing journal; authorized app save/read controls follow separately.
+Keep draft labels and current access checks, retain issued identities and audit,
+and add no deletion, TTL, blind repair or rerendering of issued copies.
 
-1. Refresh/rebase on current `main` and preserve receiving's changes.
-2. Add the three archive tables to Drizzle's shared schema; generate the final
-   additive migration, snapshot and journal without choosing a number in advance.
-3. Carry over the fixture's constraints/triggers, replace fixture-only schema
-   setup with that migration, and review every generated schema artifact.
-4. Repeat migration compatibility, Wrangler splitting/local apply and the full
-   pipeline on the combined source before main integration.
-
-Do not deploy or apply this to root/hosted data as part of that local handoff.
-Private create-only R2 storage and authorized app save/read controls remain later
-separate outcomes. Preserve all issued identities and audits; do not add deletion,
-TTL, blind repair or rerendering to the storage adapter.
-
-Rollback before migration integration is removal/revert of this prepared adapter
-and fixture; no application database repair is needed. Future migration rollback
-should disable callers while retaining the additive archive/audit tables, then
-forward-repair any defect. Never delete or rewrite issued records to roll back.
+No production migration or hosted release is authorized by this evidence.
+Rollback disables/reverts journal callers while retaining the additive archive
+tables and observations, then forward-repairs any defect. Other workstreams'
+receiving/closure migrations must remain intact. Never delete or rewrite issued
+records or a used migration to roll back. C4/C5/M8 remain unchecked.

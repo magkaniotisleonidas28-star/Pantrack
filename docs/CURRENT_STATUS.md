@@ -11,6 +11,25 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 D1 archive journal — 2026-10-26
+
+The [D1 archive journal](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md) now has its
+additive application migration, `0042`, after the receiving/counting and order-
+closure migrations. It records permanent operation identity, immutable artifact
+metadata, fenced attempts and retained observations. Actual SQL rechecks current
+company access, the complete source and database-time lease expiry when saving.
+Lost acknowledgments recover from durable identity; historical copies retain
+their original bytes after PO edits or cancellation.
+
+The prepared adapter was reused from PR 20. Receiving PRs 19/21 merged upstream
+first and were rebased in without application conflicts. The temporary archive
+schema fixture is removed; tests now use the application migration directly.
+Focused fresh/populated compatibility, lifecycle and actual local D1 runtime
+checks pass. Final combined checks are recorded in the linked evidence.
+The root and hosted databases remain untouched, and the journal has no app
+route/UI or R2 binding yet. Next document slice: private create-only R2 storage,
+then authorized app save/read integration. C4/C5/M8 stay open and release paused.
+
 ## Latest local C4 document archive contract — 2026-10-26
 
 The [private immutable document contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md)
@@ -28,8 +47,8 @@ task database. The root and hosted databases remain untouched. All six combined
 local checks passed: 126 executed suites plus twelve Windows skips, typecheck,
 all 40 migration checks, build, isolated migration apply and HTTP smoke.
 Independent PDF/Excel readers passed. Storage integration remains separate.
-Next bounded document item: the D1 metadata journal adapter, after checking the
-shared receiving/migration queue. Private R2 and app wiring follow separately.
+The subsequent [D1 journal](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md) now adds
+its application migration after receiving. Private R2 and app wiring follow separately.
 C4/C5/M8 remain open; hosted release stays paused.
 
 ## Latest local C4 product history filters — 2026-10-26

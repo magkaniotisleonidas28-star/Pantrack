@@ -64,8 +64,11 @@ The [private, permanent document-copy contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOC
 is now built and tested locally. It keeps an exact saved copy, checks who can read
 it, detects damaged files and handles an interrupted save without creating a
 duplicate. Tests include recovery in a new process. It is not connected to the
-app yet. Next, add the database record-keeping adapter after checking the other
-contributor's receiving/database work; private file storage and app controls follow.
+app yet. The [database record-keeping adapter](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md)
+now has its real application migration after the other contributor's receiving
+work merged. It safely records saved-copy identity, permissions, retries and
+history, and its migration/lifecycle checks pass locally. Next is private file
+storage; app save/read controls follow after that.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private

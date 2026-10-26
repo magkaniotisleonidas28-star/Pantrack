@@ -30,9 +30,7 @@ const service=()=>new core.PurchaseOrderDocumentArchive({identity,clock,journal:
 const failure=(promise,code)=>assert.rejects(promise,e=>e instanceof core.DocumentArchiveError&&e.code===code);
 try{
   for(const e of entries)await db.batch(unstable_splitSqlQuery(readFileSync(`drizzle/${e.tag}.sql`,'utf8')).map(sql=>db.prepare(sql)));
-  if(!await db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='document_archive_intents'").first()){
-    await db.batch(unstable_splitSqlQuery(readFileSync('tests/fixtures/document-archive-journal.sql','utf8')).map(sql=>db.prepare(sql)));
-  }
+  assert.equal((await db.prepare("SELECT count(*) n FROM sqlite_master WHERE type='table' AND name IN ('document_archive_intents','document_archive_leases','document_archive_observations')").first()).n,3);
   await db.batch([db.prepare("INSERT INTO companies VALUES('a','Fictional runtime a','2026-10-01'),('b','Fictional runtime b','2026-10-01')"),
     db.prepare("INSERT INTO memberships VALUES('manager','a','manager'),('owner','a','owner'),('employee','a','employee'),('b-manager','b','manager')")]);
   await db.prepare('CREATE TABLE document_archive_test_clock(at TEXT NOT NULL)').run();await db.prepare('INSERT INTO document_archive_test_clock VALUES(?)').bind(at).run();

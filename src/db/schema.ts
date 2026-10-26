@@ -1,5 +1,5 @@
 import {sql} from 'drizzle-orm';
-import {text,integer,sqliteTable,primaryKey,foreignKey,index,uniqueIndex} from 'drizzle-orm/sqlite-core';
+import {text,integer,sqliteTable,primaryKey,foreignKey,index,uniqueIndex,check} from 'drizzle-orm/sqlite-core';
 export const products=sqliteTable('products',{owner:text('owner').notNull(),id:text('id').notNull(),data:text('data').notNull()},t=>[primaryKey({columns:[t.owner,t.id]})]);
 export const orders=sqliteTable('orders',{owner:text('owner').notNull(),id:text('id').notNull(),data:text('data').notNull(),created:text('created').notNull()},t=>[primaryKey({columns:[t.owner,t.id]})]);
 export const companies=sqliteTable('companies',{id:text('id').primaryKey(),name:text('name').notNull(),created:text('created').notNull()});
@@ -1045,3 +1045,37 @@ export const poCartOrderClosures=sqliteTable('po_cart_order_closures',{
 },t=>[primaryKey({columns:[t.companyId,t.confirmationId]}),
  uniqueIndex('po_cart_order_closure_operation').on(t.companyId,t.operationId),
  foreignKey({columns:[t.companyId,t.confirmationId],foreignColumns:[poCartConfirmations.companyId,poCartConfirmations.id]})]);
+
+// Private document identities and durable recovery metadata. File bytes live in the object port.
+export const documentArchiveIntents=sqliteTable('document_archive_intents',{
+ companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),operationId:text('operation_id').notNull(),actorId:text('actor_id').notNull(),
+ fingerprint:text('fingerprint').notNull(),requestJson:text('request_json').notNull(),template:text('template').notNull(),requestedAt:text('requested_at').notNull(),
+ state:text('state').notNull(),token:text('token').notNull(),leaseUntil:text('lease_until'),manifestJson:text('manifest_json'),artifactJson:text('artifact_json'),
+ reason:text('reason'),writeId:text('write_id').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),uniqueIndex('document_archive_operation').on(t.companyId,t.operationId),
+ check('document_archive_request_json',sql`json_valid(${t.requestJson})`),
+ check('document_archive_state',sql`${t.state} IN ('reserved','prepared','held','ready')`),
+ check('document_archive_manifest_json',sql`${t.manifestJson} IS NULL OR json_valid(${t.manifestJson})`),
+ check('document_archive_artifact_json',sql`${t.artifactJson} IS NULL OR json_valid(${t.artifactJson})`),
+ check('document_archive_fingerprint',sql`length(${t.fingerprint})=64 AND ${t.fingerprint} NOT GLOB '*[^0-9a-f]*'`),
+ check('document_archive_request_binding',sql`json_extract(${t.requestJson},'$.companyId') IS ${t.companyId} AND json_extract(${t.requestJson},'$.operationId') IS ${t.operationId}`),
+ check('document_archive_requested_at',sql`${t.requestedAt}<=${t.updatedAt} AND length(${t.requestedAt})=24 AND julianday(${t.requestedAt}) IS NOT NULL`),
+ check('document_archive_updated_at',sql`length(${t.updatedAt})=24 AND julianday(${t.updatedAt}) IS NOT NULL`),
+ check('document_archive_issued_state',sql`(${t.state}='ready')=(${t.artifactJson} IS NOT NULL)`),
+ check('document_archive_lease_state',sql`(${t.state} IN ('held','ready'))=(${t.leaseUntil} IS NULL)`),
+ check('document_archive_prepared_state',sql`${t.state}!='prepared' OR ${t.manifestJson} IS NOT NULL`),
+ check('document_archive_reserved_state',sql`${t.state}!='reserved' OR ${t.manifestJson} IS NULL`),
+ check('document_archive_lease_time',sql`${t.leaseUntil} IS NULL OR ${t.leaseUntil}>${t.updatedAt}`),
+]);
+export const documentArchiveLeases=sqliteTable('document_archive_leases',{
+ companyId:text('company_id').notNull(),documentId:text('document_id').notNull(),token:text('token').notNull(),expiresAt:text('expires_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.documentId,t.token]}),uniqueIndex('document_archive_lease_token').on(t.token),
+ foreignKey({columns:[t.companyId,t.documentId],foreignColumns:[documentArchiveIntents.companyId,documentArchiveIntents.id]})]);
+export const documentArchiveObservations=sqliteTable('document_archive_observations',{
+ companyId:text('company_id').notNull(),documentId:text('document_id').notNull(),id:text('id').notNull(),actorId:text('actor_id').notNull(),token:text('token'),
+ payloadJson:text('payload_json').notNull(),at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.documentId,t.id]}),
+ foreignKey({columns:[t.companyId,t.documentId],foreignColumns:[documentArchiveIntents.companyId,documentArchiveIntents.id]}),
+ foreignKey({columns:[t.companyId,t.documentId,t.token],foreignColumns:[documentArchiveLeases.companyId,documentArchiveLeases.documentId,documentArchiveLeases.token]}),
+ check('document_archive_observation_json',sql`json_valid(${t.payloadJson})`),
+]);

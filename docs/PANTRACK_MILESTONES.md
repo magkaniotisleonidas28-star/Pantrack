@@ -568,8 +568,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   now proves company/source/template/hash identity, exact historical bytes,
   permanent replay, access/source races and cross-process unknown-write recovery
   using local SQLite/create-only files. It adds no application schema or wiring.
-  Next implement the D1 metadata journal after refreshing the shared migration
-  queue, then private R2 and app save/read integration as separate outcomes.
+  The [D1 metadata journal](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md) now adds
+  durable replay/audit/lease state and application migration `0042`, generated
+  after receiving's schema queue cleared. Actual SQL guards current access,
+  complete source membership and database-time expiry; local lifecycle, runtime
+  restart and fresh/populated compatibility tests pass using the migration.
+  Next implement private create-only R2 storage, then app save/read integration.
   Application-issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
