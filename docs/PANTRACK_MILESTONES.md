@@ -887,6 +887,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   enforce a cap at a manager's external checkout. Use existing supplier terms for
   the first pilot; new payment setup requires a separate outcome. Automatic
   eligibility and AI checkout remain disabled and separate M14 work.
+  **Local groundwork (2026-10-25):** the owner chose to build the limit
+  controls early against fakes. [Part 1](C7_OWNER_SPENDING_LIMITS_LOCAL_EVIDENCE.md)
+  adds owner-only, audited per-order, per-day, optional per-month and in-progress
+  limits with a café time zone. Loosening needs password confirmation, and an
+  atomic local-day and local-month reservation guard enforces them (migration
+  `0035`, local only). Payment responsibility and setup, final-price
+  reconciliation and pilot evidence remain open, so no checkbox advances.
 - [ ] **C8 — Coordinate M11 and execute C's slice.** Prepare the runbook and
   evidence report; supervise verified cart preparation, manager checkout,
   supplier confirmation, delivery reconciliation,

@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {preparationRequestSchema, type PreparationPreflight} from './po-cart-preparation-contract';
 import type {PurchaseOrderSnapshot} from './purchase-order-contract';
+import type {SpendingWindow} from './po-cart-spending-limits-contract';
 
 const id=z.string().trim().min(1).max(200);
 export const authorizeCartSchema=preparationRequestSchema.extend({action:z.literal('authorize')}).strict();
@@ -10,8 +11,9 @@ export const cancelCartAuthorizationSchema=z.object({action:z.literal('cancel'),
   reason:z.string().trim().min(1).max(1000)}).strict();
 export const startCartPreparationSchema=cancelCartAuthorizationSchema.omit({reason:true}).extend({action:z.literal('start')}).strict();
 export type CartAuthorizationCommand=z.infer<typeof cancelCartAuthorizationSchema>|z.infer<typeof startCartPreparationSchema>;
-export type CartBudgetPolicy=Readonly<{version:number;perOrderMinor:number;outstandingMinor:number}>;
-export type CartAuthorizationPayload=Readonly<{preflight:PreparationPreflight;snapshot:PurchaseOrderSnapshot;policy:CartBudgetPolicy}>;
+// Fictional test policies keep the original shape; owner-set policies add day/month limits.
+export type CartBudgetPolicy=Readonly<{version:number;perOrderMinor:number;outstandingMinor:number;perDayMinor?:number;perMonthMinor?:number|null}>;
+export type CartAuthorizationPayload=Readonly<{preflight:PreparationPreflight;snapshot:PurchaseOrderSnapshot;policy:CartBudgetPolicy;window?:SpendingWindow}>;
 export type CartAuthorization=Readonly<{
   companyId:string;id:string;orderId:string;generation:number;revision:number;status:'authorized'|'invalidated'|'canceled';
   createdAt:string;startedAt:string|null;releasedAt:string|null;inputs:CartAuthorizationPayload;
@@ -27,7 +29,7 @@ export type CartAuthorizationStatus=Readonly<{
 }>;
 export type CartAuthorizationResult=Readonly<{receipt:CartAuthorizationReceipt;current:CartAuthorizationStatus}>;
 export class PoCartAuthorizationError extends Error {
-  constructor(public readonly code:'invalid_request'|'forbidden'|'missing'|'source_changed'|'conflict'|'policy_missing'|'storage_failure',message:string) {
+  constructor(public readonly code:'invalid_request'|'forbidden'|'missing'|'source_changed'|'conflict'|'policy_missing'|'limit_exceeded'|'storage_failure',message:string) {
     super(message);this.name='PoCartAuthorizationError';
   }
 }

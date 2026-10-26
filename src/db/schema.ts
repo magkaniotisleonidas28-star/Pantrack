@@ -807,10 +807,19 @@ export const poCartConnections=sqliteTable('po_cart_connections',{
  companyId:text('company_id').notNull().references(()=>companies.id),id:text('id').notNull(),
  version:integer('version').notNull(),dataJson:text('data_json').notNull(),
 },t=>[primaryKey({columns:[t.companyId,t.id,t.version]})]);
+// Owner-set café time zone for daily/monthly windows. Append versions only.
+export const companyTimeZones=sqliteTable('company_time_zones',{
+ companyId:text('company_id').notNull().references(()=>companies.id),version:integer('version').notNull(),
+ timeZone:text('time_zone').notNull(),actor:text('actor').notNull(),createdAt:text('created_at').notNull(),
+ operationId:text('operation_id').notNull(),fingerprint:text('fingerprint').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.version]}),uniqueIndex('company_time_zone_operation').on(t.companyId,t.operationId)]);
+// Rows without an actor are fictional test policies; owner-set rows add day/month limits.
 export const poCartBudgetPolicies=sqliteTable('po_cart_budget_policies',{
  companyId:text('company_id').notNull().references(()=>companies.id),version:integer('version').notNull(),
  perOrderMinor:integer('per_order_minor').notNull(),outstandingMinor:integer('outstanding_minor').notNull(),
-},t=>[primaryKey({columns:[t.companyId,t.version]})]);
+ perDayMinor:integer('per_day_minor'),perMonthMinor:integer('per_month_minor'),actor:text('actor'),createdAt:text('created_at'),
+ operationId:text('operation_id'),fingerprint:text('fingerprint'),
+},t=>[primaryKey({columns:[t.companyId,t.version]}),uniqueIndex('po_cart_policy_operation').on(t.companyId,t.operationId)]);
 export const poCartAuthorizations=sqliteTable('po_cart_authorizations',{
  companyId:text('company_id').notNull(),id:text('id').notNull(),orderId:text('order_id').notNull(),
  generation:integer('generation').notNull(),

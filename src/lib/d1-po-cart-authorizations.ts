@@ -10,6 +10,7 @@ import {authorizeCartSchema,cartAuthorizationQuerySchema,cancelCartAuthorization
   cartAuthorizationFail as fail,PoCartAuthorizationError,type CartAuthorization,type CartAuthorizationPayload,
   type CartAuthorizationStatus,type CartAuthorizationReceipt,type CartAuthorizationResult,type CartAuthorizationCommand,
   type CartBudgetPolicy} from './po-cart-authorization-contract';
+import {dollars,spendingWindow,usageSql,type SpendingWindow} from './po-cart-spending-limits-contract';
 
 export type CartAuthorizationGuard={sql:string;args:(string|number|null)[]};
 type Guard=CartAuthorizationGuard;
@@ -56,9 +57,34 @@ export class D1PoCartAuthorizations {
     return connection;
   }
   private async policy(companyId:string):Promise<CartBudgetPolicy> {
-    const policy=await this.db.prepare(`SELECT version,per_order_minor AS perOrderMinor,outstanding_minor AS outstandingMinor
-      FROM po_cart_budget_policies WHERE company_id=? ORDER BY version DESC LIMIT 1`).bind(companyId).first<CartBudgetPolicy>();
-    if(!policy)fail('policy_missing','An explicit fictional cart budget policy is required.');return policy;
+    // SELECT * keeps pre-owner-limit schemas readable as fictional test policies.
+    const row=await this.db.prepare('SELECT * FROM po_cart_budget_policies WHERE company_id=? ORDER BY version DESC LIMIT 1').bind(companyId)
+      .first<{version:number;per_order_minor:number;outstanding_minor:number;per_day_minor?:number|null;per_month_minor?:number|null;actor?:string|null}>();
+    if(!row)fail('policy_missing','An explicit fictional cart budget policy is required.');
+    const base={version:row.version,perOrderMinor:row.per_order_minor,outstandingMinor:row.outstanding_minor};
+    return row.actor==null?base:{...base,perDayMinor:row.per_day_minor!,perMonthMinor:row.per_month_minor??null};
+  }
+  /** Owner limits give a clear refusal first; the reservation guard remains authoritative under concurrency. */
+  private async ownerLimits(companyId:string,actor:string,policy:CartBudgetPolicy,capMinor:number,at:string):Promise<SpendingWindow> {
+    const zone=await this.db.prepare('SELECT version,time_zone FROM company_time_zones WHERE company_id=? ORDER BY version DESC LIMIT 1')
+      .bind(companyId).first<{version:number;time_zone:string}>();
+    if(!zone)fail('policy_missing','The owner must set the café time zone before preparing carts.');
+    const window=spendingWindow(at,zone.time_zone,zone.version),day=usageSql('day'),month=usageSql('month');
+    const [d,m,o,role]=await this.db.batch([
+      this.db.prepare(day.sql).bind(companyId,...day.keys.map(k=>window[k])),
+      this.db.prepare(month.sql).bind(companyId,...month.keys.map(k=>window[k])),
+      this.db.prepare(`SELECT COALESCE(SUM(total_minor),0) AS used FROM po_cart_reservations WHERE company_id=? AND state='reserved'`).bind(companyId),
+      this.db.prepare('SELECT role FROM memberships WHERE company_id=? AND user_id=?').bind(companyId,actor)]);
+    const used=(r:D1Result)=>Number((r.results[0] as {used:number}).used),owner=(role.results[0] as {role?:string}|undefined)?.role==='owner';
+    // Managers learn which owner limit applies; only owners see the amounts.
+    const check=(limit:number|null|undefined,usedMinor:number,label:string)=>{
+      if(limit===null||limit===undefined||capMinor<=limit-usedMinor)return;
+      fail('limit_exceeded',owner?`This order's ${dollars(capMinor)} cap is over the ${label} limit: ${dollars(Math.max(0,limit-usedMinor))} of ${dollars(limit)} remains.`
+        :`This order is over the owner's ${label} spending limit. Ask the owner to review it.`);
+    };
+    check(policy.perOrderMinor,0,'per-order');check(policy.outstandingMinor,used(o),'in-progress');
+    check(policy.perDayMinor,used(d),'daily');check(policy.perMonthMinor,used(m),'monthly');
+    return window;
   }
   private async inputGuards(inputs:CartAuthorizationPayload,actor:string):Promise<Guard[]> {
     const {preflight:p,snapshot:s,policy}=inputs,companyId=p.request.companyId;
@@ -173,11 +199,13 @@ export class D1PoCartAuthorizations {
     const prior=await this.receipt(input.companyId,input.operationId,fingerprint);if(prior)return this.result(input.companyId,prior,actor);
     const {action:_action,...request}=input;
     const order=await this.drafts(actor).get(input.companyId,input.orderId),connection=await this.connection(input.companyId),policy=await this.policy(input.companyId);
-    const preflight=preparationPreflight(request,actor,order,connection);
+    const preflight=preparationPreflight(request,actor,order,connection),at=this.now();
+    const window=policy.perDayMinor===undefined?undefined:await this.ownerLimits(input.companyId,actor,policy,Number(preflight.capMinor),at);
     if(BigInt(preflight.capMinor)>BigInt(policy.perOrderMinor))fail('conflict','Proposed cap exceeds the fictional per-order policy.');
-    const payload:CartAuthorizationPayload={preflight,snapshot:order.snapshot,policy},guards=await this.inputGuards(payload,actor);
+    const payload:CartAuthorizationPayload=window?{preflight,snapshot:order.snapshot,policy,window}:{preflight,snapshot:order.snapshot,policy};
+    const guards=await this.inputGuards(payload,actor);
     await this.assertGuards(guards);
-    const at=this.now(),id=crypto.randomUUID();
+    const id=crypto.randomUUID();
     const receipt:CartAuthorizationReceipt={operationId:input.operationId,authorizationId:id,revision:1,action:'authorize',actor,at};
     return this.commit(input.companyId,input.operationId,actor,fingerprint,receipt,guards,[
       this.db.prepare(`INSERT INTO po_cart_authorizations(company_id,id,order_id,generation,revision,status,connection_id,connection_version,policy_version,payload_json,created_at)

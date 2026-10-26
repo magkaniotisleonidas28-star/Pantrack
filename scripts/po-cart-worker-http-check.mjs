@@ -19,7 +19,7 @@ await request('/api/companies',{action:'create',id:companyId,name:'Fictional wor
 const initial=await request('/api/inventory?companyId='+companyId);
 const supplier={id:'cart-demo-supplier',name:'Fictional cart',email:'orders@example.invalid',accountId:'DEMO-CART',locationId:'DEMO-CAFE',deliveryAddress:'123 Example Street'};
 const connection={companyId,id:'worker-http-connection',version:1,supplierId:supplier.id,accountId:supplier.accountId,locationId:supplier.locationId,mode:'fictional',status:'active',paused:false};
-await execute(`INSERT INTO po_cart_connections VALUES(${quote(companyId)},${quote(connection.id)},1,${quote(JSON.stringify(connection))});\nINSERT INTO po_cart_budget_policies VALUES(${quote(companyId)},1,50000,100000);`);
+await execute(`INSERT INTO po_cart_connections VALUES(${quote(companyId)},${quote(connection.id)},1,${quote(JSON.stringify(connection))});\nINSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstanding_minor) VALUES(${quote(companyId)},1,50000,100000);`);
 const {order}=await request('/api/purchase-orders',{action:'create',companyId,operationId:randomUUID(),source:'manual',supplier,capMinor:'15000',notes:'PRIVATE WORKER FIXTURE NOTE',
   lines:[{kind:'non_stock',sku:'DEMO-COFFEE',description:'Practice coffee',unitLabel:'case',packs:'2',estimatedUnitMinor:'100'}]});
 const reviewed=await request('/api/purchase-orders',{action:'review',companyId,orderId:order.snapshot.id,expectedRevision:order.revision,operationId:randomUUID(),acknowledgeWarnings:true});

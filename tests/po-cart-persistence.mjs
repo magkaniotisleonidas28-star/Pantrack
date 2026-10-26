@@ -109,7 +109,7 @@ try{
   assert.equal(f.sql.prepare("SELECT state FROM po_cart_reservations WHERE authorization_id=?").get(changed.current.authorization.id).state,'reserved');
   await canceled(changed);connectionVersion(f.sql,{});
   const policyResult=await f.service().authorize(command(await f.reviewed()));
-  f.sql.exec("INSERT INTO po_cart_budget_policies VALUES('a',2,50000,100000)");
+  f.sql.exec("INSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstanding_minor) VALUES('a',2,50000,100000)");
   assert.equal((await f.service().get({companyId:'a',orderId:policyResult.current.authorization.orderId})).valid,false);
   await canceled(policyResult);
 
