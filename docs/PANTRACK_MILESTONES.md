@@ -542,8 +542,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   downloads and independent readers passed. The [signed-in controls](C4_SAVED_DRAFT_DOWNLOADS_LOCAL_EVIDENCE.md)
   now pass in the real local manager app: both authorization reads, selection
   cancellation, retry/reload, exact files, local font and mobile/keyboard checks.
-  Current saved-draft downloads are complete locally. History filtering/bulk
-  exports and issued artifacts remain separate, as do cart execution and receiving;
+  Current saved-draft downloads are complete locally. The [history filter slice](C4_PO_HISTORY_FILTERS_LOCAL_EVIDENCE.md)
+  now adds company-bound saved PO/supplier/status searches before pagination,
+  with request cancellation and tested empty/error/retry/mobile states. The full
+  local pipeline and signed-in browser passed. Filtering changes no schema or business rows.
+  Filtered bulk exports and issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable

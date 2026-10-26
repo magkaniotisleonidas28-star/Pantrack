@@ -42,8 +42,12 @@ and independent file readers passed, including manual items, missing prices and
 long quantities. The [manager download buttons](C4_SAVED_DRAFT_DOWNLOADS_LOCAL_EVIDENCE.md)
 are now connected and tested locally. They use the current saved revision,
 stop if access or the draft changes, and let the manager cancel, retry or reload.
-PDF/Excel downloading from a saved draft is complete on this computer. Next,
-add search and filters to the existing saved purchase-order history. The online
+PDF/Excel downloading from a saved draft is complete on this computer.
+The [saved-order search and filters](C4_PO_HISTORY_FILTERS_LOCAL_EVIDENCE.md)
+are now built and tested locally too. Managers can search PO numbers/suppliers,
+filter draft/reviewed/canceled status, and page through matching results. No new
+database structure was needed. Next, prepare safe exports of a complete filtered
+history across pages. The online
 release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private

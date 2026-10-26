@@ -11,6 +11,27 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 history filters — 2026-10-25
+
+The [saved-PO history filters](C4_PO_HISTORY_FILTERS_LOCAL_EVIDENCE.md) add
+search, status and supplier criteria to the existing manager list. They apply
+before pagination and bind current company membership to each read, including
+empty pages. Apply/Clear reset paging, and delayed responses cannot overwrite a
+newer search or another company. Existing detail/review/download behavior passed.
+
+All six local checks passed: 106 executed suites plus twelve Windows skips,
+typecheck, build, all 35 migration checks, fresh local apply and HTTP smoke.
+The signed-in browser walkthrough covered 33 POs, pagination, literal characters,
+retry, no matches, real permission refusal, and desktop/mobile/keyboard behavior.
+Every application table stayed unchanged by the read/detail/export sequence.
+No new schema or migration was needed.
+
+Before this slice, the four completed export/integration commits were pushed
+to GitHub at `336c447`; [Windows and Ubuntu CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/40249939780)
+both passed. No open PR or overlapping shared history-file work was found.
+Next bounded C4 document task: a server-authorized export snapshot of the full
+filtered history across pages. C4/C5/M8 remain open; the hosted release is paused.
+
 ## Latest local C4 manager downloads — 2026-10-25
 
 The [signed-in download controls](C4_SAVED_DRAFT_DOWNLOADS_LOCAL_EVIDENCE.md)
@@ -27,9 +48,8 @@ combined without conflicts. All six local checks passed on that combined source:
 checks, fresh local apply and HTTP smoke. Local production-bundle assets and
 anonymous export refusal passed too. The prior G5 result retains its own scope.
 
-Current saved-draft downloads are complete locally. Next bounded C4 document
-task: company-scoped history search/status/supplier filters, extending the
-existing paginated list. C4/C5/M8 remain open and the online release stays
+Current saved-draft downloads are complete locally. Their history search/status/
+supplier follow-up is now recorded above. C4/C5/M8 remain open and the online release stays
 deferred; no provider/purchasing gate or schema changed.
 
 ## Latest local C4 saved-draft documents — 2026-10-25
