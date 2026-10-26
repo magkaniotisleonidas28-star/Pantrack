@@ -68,6 +68,9 @@ later forecasting project can build its targets from it.
 
 ### Part 1 — suggestions per supplier (no database change)
 
+Built and verified locally: [Part 1 evidence](C4_SUPPLIER_SUGGESTIONS_LOCAL_EVIDENCE.md).
+
+
 - For one supplier, account and delivery location in the supplier list, recalculate
   each mapped stock item's suggestion **now**:
   - use workstream A's existing target calculation, with the same rules for stale
