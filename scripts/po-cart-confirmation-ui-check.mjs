@@ -37,6 +37,7 @@ try{
       assert.equal(saved.confirmation.supplierReference,reference);assert.equal(saved.incoming.length,0,'Practice catalog lines are non-stock');
       assert.ok(await panel.getByText(over?"waits for the owner's review; no stock was added":'Confirmed items were added to incoming stock once',{exact:false}).isVisible());
       assert.equal(await panel.getByRole('button',{name:'Cancel preparation',exact:true}).count(),0,'A confirmed purchase cannot be cancelled here');
+      for(const stale of ['Inspect practice cart','An attempted addition prevents automatic resume','until verified abandonment'])assert.equal(await panel.getByText(stale,{exact:false}).count(),0,'No stale preparation guidance after confirmation: '+stale);
       // A second save for this order is refused; the record cannot be replaced.
       const job=(await current()).job,again=await context.request.post(f.origin+'/api/po-cart-confirmations',{headers:{origin:f.origin,'content-type':'application/json'},
         data:{action:'record',companyId:f.companyId,jobId:job.id,expectedJobRevision:job.revision,operationId:randomUUID(),supplierReference:reference+'-2',expectedDelivery:'2026-11-02',

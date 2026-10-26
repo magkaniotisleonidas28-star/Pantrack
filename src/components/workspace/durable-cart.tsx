@@ -79,9 +79,9 @@ export default function DurableCart({companyId,order,initial}:{companyId:string;
         {['requested','opening','open'].includes(human.state)&&<Button variant="outline" disabled={blocked} onClick={()=>browserAction('closeBrowser')}>Close practice browser</Button>}</div>}
       {human&&!human.active&&<p role="status">{human.state==='closed'?'Practice browser closed.':human.state==='expired'?'Practice browser access expired. Expiry does not allow preparation to resume.':'Practice browser could not close with a verified cart. Review is required.'}</p>}
       <div className="po-actions">{j.eligibility.signIn&&<Button variant="outline" disabled={blocked} onClick={()=>requestBrowser('sign_in')}>Open practice sign-in</Button>}
-        {j.eligibility.inspect&&<Button variant="outline" disabled={blocked} onClick={()=>requestBrowser('inspect')}>Inspect practice cart</Button>}
+        {j.eligibility.inspect&&!confirmation&&<Button variant="outline" disabled={blocked} onClick={()=>requestBrowser('inspect')}>Inspect practice cart</Button>}
         {j.eligibility.resume&&<Button disabled={blocked} onClick={()=>browserAction('resume')}>Resume preparation</Button>}</div>
-      {!!j.attempted&&<p className="po-muted">An attempted addition prevents automatic resume. Inspect and close the practice browser to check whether this preparation can be resolved.</p>}
+      {!!j.attempted&&!confirmation&&<p className="po-muted">An attempted addition prevents automatic resume. Inspect and close the practice browser to check whether this preparation can be resolved.</p>}
       {j.reconciliation?.decision&&<p role="status">{j.reconciliation.decision.action==='acceptVerifiedCart'?'A manager accepted the independently verified complete cart.':'The abandoned preparation was closed. Its spending reservation and incoming quantities were released.'}</p>}
       {j.state!=='ready'&&j.reconciliation?.evidence&&j.reconciliation.decision?.sessionId!==j.reconciliation.evidence.sessionId&&<div className="cart-reconciliation" role="group" aria-labelledby="cart-resolution-title">
         <h3 id="cart-resolution-title">Resolve this preparation</h3>
@@ -98,7 +98,7 @@ export default function DurableCart({companyId,order,initial}:{companyId:string;
       </div>}
     </div>}
     {j?.state==='ready'&&<SupplierConfirmation companyId={companyId} jobId={j.id} canRecord={ready} onState={setConfirmation}/>}
-    {!!j?.attempted&&a?.reservation?.state==='reserved'&&<p className="cart-exposure">An addition was attempted. Cancellation cannot undo cart changes; spending and incoming commitments remain held until verified abandonment or a later order-resolution step.</p>}
+    {!!j?.attempted&&a?.reservation?.state==='reserved'&&!confirmation&&<p className="cart-exposure">An addition was attempted. Cancellation cannot undo cart changes; spending and incoming commitments remain held until verified abandonment or a later order-resolution step.</p>}
     <div className="po-actions">{a&&a.status!=='canceled'&&j?.state!=='canceled'&&!confirmation&&<Button variant="outline" disabled={blocked} onClick={cancel}>{j?'Cancel preparation':'Cancel authorization'}</Button>}
       <Button variant="ghost" disabled={busy} onClick={()=>void refresh()}>Refresh preparation status</Button></div>
     {pending&&<div className="cart-pending" role="status"><p>A saved {pending.body.action==='enqueue'?'Prepare':pending.body.action} request needs confirmation. Retry sends the same request identity.</p><Button variant="outline" disabled={busy||!storageReady} onClick={()=>void submit(pending)}>Retry saved request</Button></div>}

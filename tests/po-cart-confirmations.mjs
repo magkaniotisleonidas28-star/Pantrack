@@ -87,6 +87,14 @@ async function refused(code,fn){const before=state();await assert.rejects(fn,err
   const saved=await confirmations().record(record(j,{charges:[{kind:'tax',description:'',amountMinor:'900'}]}));
   assert.equal(saved.receipt.state,'needs_owner_review');assert.equal(incoming('rice'),before);assert.equal(activeCommitments(a.id),1);
   assert.equal((await confirmations().get({companyId:'a',jobId:j.id})).incoming.length,0);
+  assert.equal(f.sql.prepare("SELECT job_id FROM po_cart_owners WHERE company_id='a'").get().job_id,null,'Checkout is proven even over the cap');
+}
+// Without a confirmed record, product holds and account ownership cannot be released directly.
+{
+  const {a,j}=await ready(['tea']);
+  assert.throws(()=>f.sql.prepare("UPDATE po_cart_commitments SET active=0 WHERE company_id='a' AND authorization_id=?").run(a.id),/Unsafe cart commitment release/);
+  assert.throws(()=>f.sql.prepare("UPDATE po_cart_owners SET job_id=NULL,fence=fence+1 WHERE company_id='a' AND job_id=?").run(j.id),/Unsafe account cart ownership change/);
+  await confirmations().record(record(j));
 }
 // Inventory that cannot take the order (a later count) saves nothing; a lost acknowledgment replays.
 {
@@ -102,6 +110,7 @@ async function refused(code,fn){const before=state();await assert.rejects(fn,err
 // A job that is not ready cannot be confirmed.
 {
   tick();const a=await f.authorized({lines:[await f.stock('oats'),nonStock]});const j=(await f.jobs().enqueue(enqueue(a))).current.job;
+  tick();// Past the stock count cutoff, so only the ready rule can refuse.
   await refused('conflict',()=>confirmations().record(record(j)));
   await assert.rejects(confirmations().get({companyId:'b',jobId:j.id}),errorCode('forbidden'));
 }
