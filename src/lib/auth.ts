@@ -78,6 +78,8 @@ export async function createSession(result:unknown,fence:AuthenticationFence,rec
   return {token,seconds,user};
 }
 export async function sessionFromHeaders(headers:Headers):Promise<(AuthUser & {accessToken:string})|null>{
+  // No session cookie means anonymous: there is nothing to verify, so this is never an outage.
+  if(!cookieValue(headers,'__Host-pantrack')&&!cookieValue(headers,'pantrack_local'))return null;
   try {
     const raw=cookieValue(headers,appOrigin().startsWith('https:')?'__Host-pantrack':'pantrack_local');
     if(!/^[a-f0-9]{64}$/.test(raw))return null;
