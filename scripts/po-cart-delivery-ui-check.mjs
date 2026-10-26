@@ -65,7 +65,7 @@ DELETE FROM memberships WHERE company_id=${quote(f.companyId)} AND user_id='fict
   const progress=await panel.locator('[data-supplier-deliveries] table').first().locator('tbody tr').allInnerTexts();
   assert.deepEqual(progress.map(r=>r.split('\t').slice(1)),[['1','1','0','0'],['2','1','1','0'],['3','3 + 1 extra','0','0']]);
   const history=await panel.locator('.delivery-history li').allInnerTexts();
-  assert.equal(history.length,3);assert.match(history[0],/Sent back for recount.*Recount the cups/);assert.match(history[2],/Approved.*decided by/);
+  assert.equal(history.length,2);assert.match(history[0],/Sent back for recount.*Recount the cups/);assert.match(history[1],/Approved.*counted by local_seedy.*decided by local_seedy/);
   assert.equal((await api('/api/po-cart-deliveries',{action:'count',companyId:f.companyId,confirmationId:recorded.data.receipt.confirmationId,operationId:randomUUID(),
     deliveredAt:new Date().toISOString(),lines:[{lineId:view.authorizedLines[0].lineId,receivedPacks:'1',damagedPacks:'0'}],note:''})).status,409,'A received order takes no more counts');
   assert.deepEqual(await f.request('/api/inventory?companyId='+f.companyId),f.inventory,'Non-stock deliveries leave stock unchanged');
