@@ -34,7 +34,7 @@ export async function seedLocalBrowserJob({layout='rows',scenario='normal',enque
  onContext({companyId});
  await request('/api/companies',{action:'create',id:companyId,name:enqueueJob?'Fictional browser worker acceptance':'Durable cart practice café'});const inventory=await request('/api/inventory?companyId='+companyId);
  const connection={companyId,id:'browser-worker-local',version:1,supplierId:supplier.id,accountId:supplier.accountId,locationId:supplier.locationId,mode:'fictional',status:'active',paused:false};
- await execute(`INSERT INTO po_cart_connections VALUES(${quote(companyId)},${quote(connection.id)},1,${quote(JSON.stringify(connection))});\nINSERT INTO po_cart_budget_policies VALUES(${quote(companyId)},1,50000,100000);`);
+ await execute(`INSERT INTO po_cart_connections VALUES(${quote(companyId)},${quote(connection.id)},1,${quote(JSON.stringify(connection))});\nINSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstanding_minor) VALUES(${quote(companyId)},1,50000,100000);`);
  const output=resolve(root,'fixture-module.mjs');await build({stdin:{contents:"export * from './scripts/po-cart-worker/fixture-store.ts';export * from './scripts/cart-preview/fixture.ts';",resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',packages:'external',outfile:output,logLevel:'silent'});
  const {BrowserFixtureStore,catalog}=await import(pathToFileURL(output).href);
  let {order}=await request('/api/purchase-orders',{action:'create',companyId,operationId:randomUUID(),source:'manual',supplier,capMinor:'25000',notes:'Private fictional browser acceptance',lines:catalog.map((l,i)=>({kind:'non_stock',sku:l.sku,description:l.description,unitLabel:l.unitLabel,packs:String(i+1),estimatedUnitMinor:l.unitMinor}))});

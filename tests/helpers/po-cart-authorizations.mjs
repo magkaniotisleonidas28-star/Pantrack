@@ -12,7 +12,7 @@ export const connection={companyId:'a',id:'demo-connection',version:1,supplierId
 export function configure(sql,companyId='a'){
   sql.prepare('INSERT INTO po_cart_connections VALUES(?,?,?,?)').run(companyId,connection.id,1,JSON.stringify({...connection,companyId}));
   // Explicit test policy. Never a runtime default or real spending approval.
-  sql.prepare('INSERT INTO po_cart_budget_policies VALUES(?,?,?,?)').run(companyId,1,50000,100000);
+  sql.prepare('INSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstanding_minor) VALUES(?,?,?,?)').run(companyId,1,50000,100000);
 }
 export function connectionVersion(sql,patch){
   const version=sql.prepare("SELECT MAX(version)+1 AS v FROM po_cart_connections WHERE company_id='a' AND id=?").get(connection.id).v;

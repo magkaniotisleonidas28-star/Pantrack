@@ -246,6 +246,20 @@
       "when": 1791694384045,
       "tag": "0034_sales_inventory_outcome_fence",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1792975497229,
+      "tag": "0035_owner_spending_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1792977617292,
+      "tag": "0036_owner_spending_limits_d1_patterns",
+      "breakpoints": true
     }
   ]
 }
