@@ -1,0 +1,11 @@
+.delivery-count,.supplier-deliveries,.staff-deliveries{margin:24px 0;max-width:80ch}
+:is(.delivery-count,.supplier-deliveries,.staff-deliveries) :is(h2,h3,h4){font-weight:600;margin:16px 0 8px}
+:is(.delivery-count,.supplier-deliveries,.staff-deliveries) p{margin:12px 0;line-height:1.6}
+:is(.delivery-count,.delivery-review) fieldset{border:0;padding:0;margin:0;min-width:0}
+:is(.delivery-count,.delivery-review) label{display:grid;gap:6px;font-size:.875rem;margin:12px 0}
+.delivery-arrived{max-width:16rem}
+.delivery-order{border-top:1px solid var(--border,#d4d4d4);padding-top:8px}
+:is(.delivery-count,.supplier-deliveries) .cart-preview-table input:not([type=checkbox]){min-width:4.5rem}
+.supplier-deliveries [data-changed]{font-weight:600}
+.delivery-history{padding-left:1.25rem;line-height:1.6}
+@media (max-width:640px){:is(.delivery-count,.supplier-deliveries) .cart-preview-table{display:block;overflow-x:auto}}

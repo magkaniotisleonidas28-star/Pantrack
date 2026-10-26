@@ -6,6 +6,7 @@ import type {BrowserConfig} from '@/lib/po-cart-browser-contract';
 import type {ManagerCartView} from '@/lib/po-cart-manager-contract';
 import {intentKey,readIntent,managerStatus,sendCartIntent,ManagerCartError,type PendingCartIntent} from './durable-cart-client';
 import SupplierConfirmation from './supplier-confirmation';
+import SupplierDeliveries from './supplier-deliveries';
 import type {ConfirmationState} from '@/lib/po-cart-confirmation-contract';
 import './cart-preview.css';
 
@@ -98,6 +99,7 @@ export default function DurableCart({companyId,order,initial}:{companyId:string;
       </div>}
     </div>}
     {j?.state==='ready'&&<SupplierConfirmation companyId={companyId} jobId={j.id} canRecord={ready} onState={setConfirmation}/>}
+    {j&&confirmation==='confirmed'&&<SupplierDeliveries companyId={companyId} jobId={j.id}/>}
     {!!j?.attempted&&a?.reservation?.state==='reserved'&&!confirmation&&<p className="cart-exposure">An addition was attempted. Cancellation cannot undo cart changes; spending and incoming commitments remain held until verified abandonment or a later order-resolution step.</p>}
     <div className="po-actions">{a&&a.status!=='canceled'&&j?.state!=='canceled'&&!confirmation&&<Button variant="outline" disabled={blocked} onClick={cancel}>{j?'Cancel preparation':'Cancel authorization'}</Button>}
       <Button variant="ghost" disabled={busy} onClick={()=>void refresh()}>Refresh preparation status</Button></div>
