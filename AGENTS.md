@@ -58,8 +58,12 @@ this file concise; detailed workflow and prompt templates live in
 ## Verification
 
 Use the smallest focused check during iteration, then run the checks required by
-the task's risk and the milestone definition of done. The normal complete local
-pipeline is:
+the task's risk and the milestone definition of done.
+
+Before frozen-source checks, stage intended source additions/removals so Git's
+inventory matches disk. Keep source and that inventory unchanged until checks end.
+
+The normal complete local pipeline is:
 
 ```sh
 pnpm typecheck

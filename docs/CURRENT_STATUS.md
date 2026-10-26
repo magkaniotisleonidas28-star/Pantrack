@@ -24,8 +24,10 @@ their original bytes after PO edits or cancellation.
 The prepared adapter was reused from PR 20. Receiving PRs 19/21 merged upstream
 first and were rebased in without application conflicts. The temporary archive
 schema fixture is removed; tests now use the application migration directly.
-Focused fresh/populated compatibility, lifecycle and actual local D1 runtime
-checks pass. Final combined checks are recorded in the linked evidence.
+Fresh/populated compatibility, lifecycle and actual local D1 runtime checks pass.
+All six combined local checks passed: 135 executed suites plus twelve Windows
+skips, all 43 migration/schema checks, build, isolated apply and HTTP smoke.
+The migration checker now validates schema-declared CHECK constraints too.
 The root and hosted databases remain untouched, and the journal has no app
 route/UI or R2 binding yet. Next document slice: private create-only R2 storage,
 then authorized app save/read integration. C4/C5/M8 stay open and release paused.

@@ -116,19 +116,29 @@ The archive migration itself was not rewritten after being applied.
 
 The preparation run passed all six checks before migration integration: 141 suite
 invocations, 129 executed successfully and twelve Windows skips, with 40 then-
-current migrations. The completion run on the receiving/closure/archive source
-is being recorded below before final handoff:
+current migrations. The final frozen-source completion run on the combined
+receiving/closure/archive source passed all six checks:
 
 | Command | Result |
 | --- | --- |
-| Final full pipeline | In progress; final results will replace this row before handoff. |
+| `pnpm typecheck` | Passed. |
+| `pnpm test` | 147 suite invocations: 135 executed successfully and twelve expected Windows skips. |
+| `pnpm db:check` | All 43 ordered migrations match Drizzle and apply to fresh SQLite, including declared CHECK validation. |
+| `pnpm build` | Application Worker/client build passed. |
+| `pnpm db:migrate:local` | Pending receiving/counting, closure and archive migrations applied only to the task's isolated database; all 43 are now applied there. |
+| `pnpm test:local` | Home/auth/company/catalog/tenant/sign-out HTTP smoke passed. |
 | Focused archive migration run | All four archive contract/journal/runtime/schema suites passed using application migration `0042`, including actual local workerd D1. |
 | Receiving integration baseline | Journal/runtime/order-closure tests passed after rebasing onto receiving and closure. |
 
 The final source/test/schema/documentation review covered authorization, immutable
 identity, atomic source/clock guards, private failures, unknown writes, retained
-audit and scope. Final documentation whitespace/link results are recorded with
-the completion checks. Private logs remain in the root
+audit and scope. `git diff --check` and all relative file links in the five changed
+Markdown files pass. The snapshot comparison proves that the three archive tables
+are the only additions and every prior table definition is unchanged. An earlier
+verification-order error left a removed fixture in Git's inventory; intended
+source changes were then staged/committed before the successful frozen run. The
+durable workflow rule in [AGENTS.md](../AGENTS.md) prevents that recurrence.
+Private logs remain in the root
 `.sites-runtime/c4-document-archive-d1-20261026/` (preparation) and
 `.sites-runtime/c4-document-archive-d1-final-20261026/` (completion), plus the worktree's
 `.sites-runtime/` directories. No hosted, provider sandbox, pilot or production
