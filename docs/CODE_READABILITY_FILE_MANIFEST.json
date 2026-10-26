@@ -3268,92 +3268,128 @@
     {
       "path": "previews/c4-order-draft/assets.d.ts",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "072c2de37805f228b94d0b3dc9e3a24b7173c3666aad3c66b6ea9e155f22b9f9",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "072c2de37805f228b94d0b3dc9e3a24b7173c3666aad3c66b6ea9e155f22b9f9"
     },
     {
       "path": "previews/c4-order-draft/assets/NotoSans-Regular.ttf",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5"
     },
     {
       "path": "previews/c4-order-draft/assets/OFL.txt",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "0dab92d0544f7b233403f14b84a663bdbfa746982eda629e7f4f9ffe1b036feb"
     },
     {
       "path": "previews/c4-order-draft/assets/README.md",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a2963639d8fb8ede844f8b4255e17da860e9ae629e39ecf220e501ee365853e4",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "a2963639d8fb8ede844f8b4255e17da860e9ae629e39ecf220e501ee365853e4"
     },
     {
       "path": "previews/c4-order-draft/fixtures.ts",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "530c0925aea19a649ebce919a693bf5c10e36965e8bca273200b68b8fb77288c",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "a275a1a563117ef00433660b32109751f3c6abde07fe7b5c61cd922b1960a5f1"
     },
     {
       "path": "previews/c4-order-draft/index.html",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "dd6703228c56616cfaf69fabb6e20bb2e610b42957cb87fa9c4029441a21a0d3",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "previews/c4-order-draft/main.ts",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f0b1b97965c17e9d509c0696361c7d54ebd64e2b599857a92e599bdb81d83724",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "33c352e627353d3f46794a0ee7f2f30445f9fef50ba2764dff4523671d27c61a"
     },
     {
       "path": "previews/c4-order-draft/pdf.ts",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3d6a5fe2aa70900a057c8b536deab70fb000bf3215910484769fa53cfb030889",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "901d3d6f69bb9bfb43c6ffd295996320fccf48491ddadc1715d329c383c8175a"
     },
     {
       "path": "previews/c4-order-draft/styles.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a88f16429b263e24e4ba82eed4ac2c4d3d899c837ae201e66a4c1808c6f4f75b",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "previews/c4-order-draft/xlsx.ts",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b0cab4e069adcf49a63494cadedbeaf07bc738d6ab13457ae9de017eadcaa2ea",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "5ee00df6f7b0b396695b79f8b0a8298a628603590787bc60cd0695084e0aec93"
     },
     {
       "path": "public/clover-setup-guide.md",
@@ -3367,20 +3403,28 @@
     {
       "path": "public/favicon.svg",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7cae943117f99cf02d96ac24a2f8ccbe63bd8852d434a667c86de9d46200e464",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "7cae943117f99cf02d96ac24a2f8ccbe63bd8852d434a667c86de9d46200e464"
     },
     {
       "path": "public/fonts/NotoSans-Regular.ttf",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5"
     },
     {
       "path": "public/fonts/OFL-NotoSans.txt",
@@ -3403,11 +3447,15 @@
     {
       "path": "public/register-sales-template.csv",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "0aaa663943a8e8ac9b986b03c2c21c53639ed17d80fc603c0f0a469ea44f47db",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "0aaa663943a8e8ac9b986b03c2c21c53639ed17d80fc603c0f0a469ea44f47db"
     },
     {
       "path": "public/vendor-connector-guide.md",
@@ -4741,83 +4789,113 @@
     {
       "path": "sites/coming-soon/README.md",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "1109b339361890b0e7292767042c7dc6ba8818f22335cac7b6c3f4af0604dbdf",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "1109b339361890b0e7292767042c7dc6ba8818f22335cac7b6c3f4af0604dbdf"
     },
     {
       "path": "sites/coming-soon/public/404.html",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7c5b783624130f32fb2bb9de5697dd6b585051b61775aeb0c53e07d137d7965d",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "sites/coming-soon/public/_headers",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "0ce3e43214d87890aaaa5e0475db7a120ada9b6acd34e27fb660304c5a02bab2",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "0ce3e43214d87890aaaa5e0475db7a120ada9b6acd34e27fb660304c5a02bab2"
     },
     {
       "path": "sites/coming-soon/public/favicon.svg",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7cae943117f99cf02d96ac24a2f8ccbe63bd8852d434a667c86de9d46200e464",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "7cae943117f99cf02d96ac24a2f8ccbe63bd8852d434a667c86de9d46200e464"
     },
     {
       "path": "sites/coming-soon/public/index.html",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5d3b0770f927c87f6def9404b9d5786477867018b1416193de9eb3504e229c0e",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "sites/coming-soon/public/robots.txt",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "89d303d96e407a7b1bd57553448fbcd853bf98e30fbfce760c28c4522b5a54e2",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "89d303d96e407a7b1bd57553448fbcd853bf98e30fbfce760c28c4522b5a54e2"
     },
     {
       "path": "sites/coming-soon/public/sitemap.xml",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7f1067e522f67bfad34858b2753b0bb25ab2deb5936399a9b75e7d474855a5d9",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "7f1067e522f67bfad34858b2753b0bb25ab2deb5936399a9b75e7d474855a5d9"
     },
     {
       "path": "sites/coming-soon/public/styles.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b38cbf6be0e57e92596ca4ec758bc37a6ebac600014b3ad49e33a43006074e15",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "sites/coming-soon/wrangler.jsonc",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8a3d5250581977c3509cecff54919b42efa01e7b24db1207403762dc8b6f1abb",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "71745c4b2b950faf7a14bf981f126d0323670f650e02902a594229c6d9272850"
     },
     {
       "path": "src/app/api/auth/route.ts",
@@ -5364,11 +5442,13 @@
     {
       "path": "src/app/globals.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f37c666b04e4a59cc5884625efffa84356a1e2106b29a5be832bd9758b95e166",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "src/app/invite/page.tsx",
@@ -7506,11 +7586,13 @@
     {
       "path": "src/components/workspace/cart-preview.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "d9e244088eca73e1c7fd983549ca6d5088691126b2182860d123f074d969f2c0",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "src/components/workspace/cart-preview.tsx",
@@ -7612,11 +7694,13 @@
     {
       "path": "src/components/workspace/inventory-layout.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3d3cb77ac1843f933dc9d184947b1bb5eef5b8ab6fdd356d0f900608c67f8cf3",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "src/components/workspace/inventory-layout.tsx",
@@ -7729,11 +7813,13 @@
     {
       "path": "src/components/workspace/purchase-order-drafts.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2cf9252debc9a88bb7632b082ae574e8626a02300bb50aee1ed52518ab1c25eb",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "src/components/workspace/purchase-order-drafts.tsx",
@@ -7869,11 +7955,13 @@
     {
       "path": "src/components/workspace/spending-limits.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5d848a142b1be5e17f8a06b84fdeeff931de8a57029fb42ced4417f20f031302",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "src/components/workspace/spending-limits.tsx",
@@ -7900,11 +7988,13 @@
     {
       "path": "src/components/workspace/supplier-confirmation.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "d5ce75ec4cab2e64d23e88e251922bb7bb4134b639f22877c40ae975959c2017",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "src/components/workspace/supplier-confirmation.tsx",
@@ -7929,11 +8019,13 @@
     {
       "path": "src/components/workspace/task-form.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "766ad5a42b56c2b6f46d0b2203473f72f1cff91b4a7b7f6e7c1b5703cf0a2de8",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "src/components/workspace/task-form.tsx",
@@ -7988,11 +8080,13 @@
     {
       "path": "src/components/workspace/workspace-surfaces.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f539140a4a989d53ef00d0b463a5f9e91820a3dcf518a0ae7b717e8330d4df4b",
-      "results": []
+      "results": [
+        "S18 CSS/HTML syntax reviewed and baseline bytes retained. Formatting would change source; required desktop/mobile visual comparison is outside current no-browser scope. Keep selector/cascade/text/copy exact until separately verified; no style/HTML cleanup claimed."
+      ]
     },
     {
       "path": "src/components/workspace/workspace-theme.ts",
@@ -10899,20 +10993,28 @@
     {
       "path": "vendor/shadcn-tailwind-4.13.0.LICENSE.md",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
     },
     {
       "path": "vendor/shadcn-tailwind-4.13.0.css",
       "section": "S18",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a",
-      "results": []
+      "results": [
+        "S18 preparation: preview TypeScript/config fully read before formatting; asset/licensing/provenance and static/header/robots/sitemap local references reviewed unchanged. All original font/license/vendor/icon bytes, document projections, DOM strings, cancellation and serving settings must remain intact.",
+        "S18 safe preview/config source reviewed: five formatted, declaration module unchanged, seven declaration boundaries. All six equivalent to fe15164; thirteen other safe assets/license/static documents reviewed unchanged. Five focused baseline/final suites and all 139 suites, scoped lint/format/typecheck/db/build/diff pass; standalone in-memory preview bundle, CSS syntax, XML/SVG/static/README links and documented font hashes pass. Thirteen CSS/HTML visual holds plus receiving CSS remain Blocked; see sectionReviews.S18."
+      ],
+      "cleanupSha256": "bc7d83425702955b4cb67cb14ede9d603f9d912376d57a2d81d661094d2a782a"
     },
     {
       "path": "vite.config.ts",
@@ -12610,6 +12712,128 @@
         {
           "path": ".sites-runtime/readability/S17/equivalence.log",
           "sha256": "156f3ada2750e5171448678c5b546061e0dc294d5506a0e063e4ae3019098fc1"
+        }
+      ],
+      "commits": [
+        "04121a1",
+        "1ef1e27",
+        "fe15164"
+      ]
+    },
+    "S18": {
+      "outcome": "Blocked for visual comparison and receiving CSS; 19 safe files verified",
+      "safeFilesCompleted": 19,
+      "heldFiles": [
+        "previews/c4-order-draft/index.html",
+        "previews/c4-order-draft/styles.css",
+        "sites/coming-soon/public/404.html",
+        "sites/coming-soon/public/index.html",
+        "sites/coming-soon/public/styles.css",
+        "src/app/globals.css",
+        "src/components/workspace/cart-preview.css",
+        "src/components/workspace/deliveries.css",
+        "src/components/workspace/inventory-layout.css",
+        "src/components/workspace/purchase-order-drafts.css",
+        "src/components/workspace/spending-limits.css",
+        "src/components/workspace/supplier-confirmation.css",
+        "src/components/workspace/task-form.css",
+        "src/components/workspace/workspace-surfaces.css"
+      ],
+      "preSectionCommit": "fe15164",
+      "codeCommits": [
+        "style(readability): expand fictional draft preview and export adapters",
+        "style(readability): normalize static configuration and record asset review"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm test supplier-order-draft-pdf supplier-order-draft-xlsx purchase-order-documents purchase-order-history-documents stock-entry",
+          "exit": 0,
+          "suites": 5,
+          "log": ".sites-runtime/readability/S18/baseline.log",
+          "logSha256": "cbd4744fe7edf431eeb89f6dc11c4e9eb07315514b153b407da99d0c10142a68"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm test supplier-order-draft-pdf supplier-order-draft-xlsx purchase-order-documents purchase-order-history-documents stock-entry",
+          "exit": 0,
+          "seconds": 22.9,
+          "log": ".sites-runtime/readability/S18/final/0-test.log",
+          "logSha256": "62b8bb1f03cd18f76dcf05dea366565f3083339fa3ae9eb8c511fac537cebbc7"
+        },
+        {
+          "command": "pnpm format:check --section S18",
+          "exit": 0,
+          "seconds": 0.7,
+          "log": ".sites-runtime/readability/S18/final/1-format-check.log",
+          "logSha256": "6c299733c40eb9272e9c605aa1588fb37378d4774295063c0e6642eb67602f5f"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js previews/c4-order-draft/assets.d.ts previews/c4-order-draft/fixtures.ts previews/c4-order-draft/main.ts previews/c4-order-draft/pdf.ts previews/c4-order-draft/xlsx.ts",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S18/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 1.8,
+          "log": ".sites-runtime/readability/S18/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 150.9,
+          "log": ".sites-runtime/readability/S18/final/4-test.log",
+          "logSha256": "bf7a81600f03baaa4266d2093de36e32945de6e80089e9f46e36cc87c020f18c"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S18/final/5-db-check.log",
+          "logSha256": "e51f0a54d7661d3d046420d8a5a21cb6817a2a5e3ca93ae7c14cc7ee8c732d17"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 5.9,
+          "log": ".sites-runtime/readability/S18/final/6-build.log",
+          "logSha256": "b40efb90b94488c62dbf48e354af385626f454bf79a0c7d3d446ea7e3ce1fd70"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S18/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "b880a5f9eb506a58b6977789a54cd548cfd11310f5e1c1eaa5f6e7126f1214bf",
+      "review": "Full preview/config source read; fixture generation, DOM construction/review, generation-bound async exports and PDF/Excel projection formatted with seven declaration boundaries. Exact metadata/text/styles/classes, event/cancel/download order, file MIME/names/URL lifetime, exact quantities/warnings/snapshot comparisons and static serving configuration values/order unchanged. Independent same-launcher in-memory bundle builds three browser outputs without executing preview/server. All 32 original present files retain equivalent source or baseline bytes; both Noto copies match documented SHA, all licenses/icons/vendor/sample/header/robots/sitemap bytes preserved. PostCSS parses all eleven CSS sources (including vendor), HTML parser/static links and XML/SVG/README paths validated. Ten owned CSS and three HTML cleanup candidates held pending authorized visual comparison; receiving CSS absent.",
+      "limitations": [
+        "Ten owned CSS/three HTML formatting candidates remain Blocked: desktop/mobile visual comparison is outside the current no-real-browser scope. No CSS/HTML change or visual-equivalence acceptance claimed.",
+        "Receiving deliveries.css remains absent and Blocked for integration/handoff.",
+        "Local/macOS fake-provider/native-document evidence only. No static deployment, DNS/TLS check, application server/preview browser or historical runtime/evidence operation."
+      ],
+      "receipts": [
+        {
+          "path": ".sites-runtime/readability/S18/style-static-review.json",
+          "sha256": "d0299b842f905130c5d738549f7090707aad63569162a70e327c5c86a50ab712"
+        },
+        {
+          "path": ".sites-runtime/readability/S18/assets-links-review.json",
+          "sha256": "7f9f2866d0af404685229080f5bb27426aab63f0e12174f112b9b285ea222516"
+        },
+        {
+          "path": ".sites-runtime/readability/S18/preview-build.json",
+          "sha256": "d9ae6b60a23668909662567de5aae508042c16ea0caf2609b76d76c8a949f8f4"
+        },
+        {
+          "path": ".sites-runtime/readability/S18/equivalence.log",
+          "sha256": "6a20dd14516d3f4c0d800d572593bc1f7c0b2295c75f4a86ebb0166ec398b78f"
         }
       ]
     }

@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S17** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S18** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **9 of 22 Completed; 8 Blocked (recorded handoffs/holds); 0 In Progress; 5 Pending**.
+- Cleanup sections: **9 of 22 Completed; 9 Blocked (recorded handoffs/holds); 0 In Progress; 4 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -102,7 +102,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S15 | Application entrypoints, identity pages and workspace shell | 15 | Blocked: receiving/JSX/source pins; safe files verified |
 | S16 | Inventory, recipes, waste and POS workspace components | 14 | Blocked: ten JSX holds; safe files verified |
 | S17 | Purchasing, cart, spending and document workspace components | 17 | Blocked: receiving/JSX/source pins; safe files verified |
-| S18 | Owned styles, static site, standalone previews and assets | 32 | Pending |
+| S18 | Owned styles, static site, standalone previews and assets | 32 | Blocked: visual/receiving holds; safe files verified |
 | S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Pending |
 | S20 | Operational CLIs, lifecycle diagnostics, shell and Python audits | 88 | Pending |
 | S21 | Documentation, architecture navigation and managed instructions | 218 + 1 upstream | Pending |
@@ -576,23 +576,33 @@ Commits group editor/transports, download lifetimes and preview/catalog/operatio
 
 ## S18 — Owned styles, static site, standalone previews and assets
 
-Status: Pending. Depends on: S15–S17.
+Status: Blocked for visual comparison and receiving CSS; 19 safe files verified. Depends on: S15–S17.
 
 **Files:** `src/app/globals.css`, workspace CSS, `sites/coming-soon/`, `previews/c4-order-draft/`, public assets, fonts and `vendor/`.
 
-- [ ] S18.1 — Review compressed owned CSS in logical blocks; preserve selector text/order, specificity, declaration order, media queries, cascade and all values.
-- [ ] S18.2 — Review static HTML/SVG and preview entrypoints without changing copy, DOM/text whitespace, document output or serving/deployment settings.
-- [ ] S18.3 — Preserve vendored styles, font files, icons, sample CSV, licensing and generated assets byte-for-byte; record their reviewed-unchanged disposition.
-- [ ] S18.4 — Use an existing suitable parser only if CSS/HTML/embedded JS equivalence can be established. Do not prettify sensitive text/inline whitespace blindly or consolidate selectors as a readability shortcut.
+**Visual holds:** Ten owned CSS and three HTML files parse and retain baseline hashes. Their formatting is held because this task has no authorized real-browser desktop/mobile comparison. Preview TypeScript/config and review-only assets continue independently; receiving CSS stays absent/held.
+
+- [!] S18.1 — CSS syntax/ordered structure inventoried with baseline bytes intact. Formatting of ten owned CSS files remains Blocked pending visual comparison.
+- [!] S18.2 — Preview/config cleanup and static links/SVG/XML/assets review verified. Three HTML formatting candidates remain Blocked pending visual comparison; their bytes and copy/DOM remain intact.
+- [x] S18.3 — Preserve vendored styles, font files, icons, sample CSV, licensing and generated assets byte-for-byte; record their reviewed-unchanged disposition.
+- [!] S18.4 — Existing PostCSS and HTML/XML parsers validate syntax/references; no unsupported CSS/HTML equivalence claim. Retain all visual holds and absent receiving CSS unchanged.
 
 **Focused command:** `pnpm test supplier-order-draft-pdf supplier-order-draft-xlsx purchase-order-documents purchase-order-history-documents stock-entry`.
 
 **Verification:** Run document/style consumer tests, scoped lint where supported, typecheck/build and parser/asset comparisons. Any owned CSS/HTML change needs local desktop/mobile visual verification; if that cannot be safely obtained, retain the source and record the hold. No Sites or Cloudflare deployment.
 
-- [ ] S18.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S18.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S18.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S18.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** Six preview/config modules fully read: fixture construction, DOM review/copy/download, PDF/Excel adapters, font declaration and static Wrangler configuration. Five formatted and seven whitespace-only declaration boundaries separated; the declaration file was already readable. Thirteen other safe assets/licensing/static instruction files reviewed unchanged. No source extraction, new dependency or serving/deployment behavior was introduced.
+
+All six modules match pre-section `fe15164` types/syntax/comments/literals/emitted runtime or complete JSONC property order/values. DOM text/classes, event and generation guards, async cancellation, snapshot comparisons, exact quantities/warnings, metadata/layout projections, filenames/MIME/URL cleanup and static configuration values are unchanged. The other 26 present styles/static/assets/license files retain baseline bytes; both Noto copies match the documented SHA. Font/license/vendor/icon/sample/header/robots/sitemap provenance is retained.
+
+PostCSS parsed all eleven CSS sources without rewriting them; ordered structure/at-rules/comments are retained in the review receipt. XML/SVG, all local static asset/anchor references and both README relative links pass. **Thirteen visual holds:** ten owned CSS files and three HTML files would change under formatting and remain Blocked pending separately authorized desktop/mobile visual comparison. No visual rewrite, CSS/HTML cleanup or deep hand audit is claimed. Receiving `deliveries.css` remains absent and held. These sources are not silently skipped.
+
+All five focused suites above passed before and after; full `pnpm test` passed all 139 suites with independent native PDF/Excel readers. Scoped lint (no diagnostics), format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. A separate in-memory standalone preview bundle, using exactly the existing launcher build options, passed with three browser outputs; its server was not executed. Exact commands/results/log hashes/source digest and additional asset/style/link/bundle receipts: inventory `sectionReviews.S18`; logs: `.sites-runtime/readability/S18/`.
+
+No actual visual/runtime instruction changed in safe files, and no browser/pixel walkthrough, static deployment, DNS/TLS operation or external service ran. Evidence is local/macOS only. Commits group the preview/export adapters and static config/review. Rollback: those two source/docs commits only. S19 can independently clean up test code against these unchanged style/static/asset contracts; visual and receiving holds remain open.
 
 ## S19 — Test harnesses, domain suites and fixtures
 
@@ -694,6 +704,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S15 | Eleven safe page/auth/portal/form/theme/navigation files formatted; one re-export unchanged; five declaration boundaries | Three baseline/four final focused and all 139 suites; equivalence/format/typecheck/db/build/local setup/apply/HTTP/diff pass; scoped inherited lint 6 errors/3 warnings; incomplete source-pin run retained | Two local commits; receiving employee shell, members-panel JSX and workspace source pins remain Blocked; independent S16 next |
 | 2026-10-26 / S16 | Four safe inventory-layout/recipe/register/waste components formatted; two declaration boundaries; ten JSX candidates held unchanged | Seven focused baseline/final and all 139 suites; equivalence/format/typecheck/db/build/diff pass; scoped inherited lint one error/three warnings matched | Two local commits; ten JSX-child holds remain Blocked; independent S17 next |
 | 2026-10-26 / S17 | Eight safe purchasing/cart/catalog/download/client/editor modules formatted; 21 declaration/method boundaries | Seven focused baseline/final and all 139 suites; equivalence/format/typecheck/db/build/diff pass; scoped inherited lint one error/two warnings matched | Three local commits; eight JSX/source-pin and three receiving UI holds remain Blocked; independent S18 next |
+| 2026-10-26 / S18 | Five preview/config files formatted; declaration plus thirteen assets/docs reviewed unchanged; seven boundaries; font/license/static bytes retained | Five focused baseline/final and all 139 suites; scoped lint/format/typecheck/db/build/diff, in-memory standalone bundle, CSS parse/XML/assets/local links/font hashes pass | Two local commits; thirteen CSS/HTML visual and one receiving CSS hold remain Blocked; independent S19 next |
 
 ## Final report requirements
 
