@@ -86,12 +86,13 @@ const pendingId=async jobId=>(await managerView(jobId)).deliveries.find(d=>d.sta
   assert.deepEqual(after.lines.map(l=>[l.acceptedPacks,l.releasedPacks,l.owedPacks]),[['1','0',String(BigInt(beans.packs)-1n)],[milk.packs,'0','0'],['1','0','0'],['0','1','0']]);
   assert.equal(after.complete,false);
   const d=after.deliveries[0];assert.deepEqual([d.state,d.countedBy,d.decidedBy,d.stockAdded,d.decisionNote],['approved','employee','manager',true,'Beans short; substitute not coming']);
-  for(const sql of ["UPDATE po_cart_deliveries SET count_note='x'","UPDATE po_cart_deliveries SET state='recount'","DELETE FROM po_cart_deliveries"])assert.throws(()=>f.sql.exec(sql),/delivery decision|permanent/,sql);
+  for(const sql of ["UPDATE po_cart_deliveries SET count_note='x'","UPDATE po_cart_deliveries SET state='recount'","UPDATE po_cart_deliveries SET decision_note='Changed later'","DELETE FROM po_cart_deliveries"])assert.throws(()=>f.sql.exec(sql),/delivery decision|permanent/,sql);
   // The rest arrives with one extra pack; the manager counts it alone and approves it (both recorded).
   f.setUser('employee');assert.deepEqual((await deliveries().staff({companyId:'a',view:'staff'})).orders.find(o=>o.confirmationId===confirmationId).lines.map(l=>l.lineId),[beans.lineId]);
   f.setUser('manager');tick();const second=await deliveries().count(count(confirmationId,[[beans.lineId,String(BigInt(beans.packs))]]));
   const mid=balance('beans');
   await refused('invalid_request',()=>deliveries().approve(approve(second.receipt.deliveryId,[[beans.lineId,'1','1',true]])));
+  await refused('invalid_request',()=>deliveries().approve(approve(second.receipt.deliveryId,[[beans.lineId,'2']])),'Good packs beyond what is expected are extra, not accepted');
   await deliveries().approve(approve(second.receipt.deliveryId,[[beans.lineId,'1','1']]));
   assert.deepEqual(balance('beans'),{on_hand_minor:String(BigInt(mid.on_hand_minor)+2n*per(beans)),incoming_minor:String(BigInt(mid.incoming_minor)-per(beans))},'Excess adds stock only');
   const final=await managerView(j.id);assert.equal(final.complete,true);assert.equal(final.deliveries[1].countedBy,final.deliveries[1].decidedBy,'Self-approval is allowed and recorded');
@@ -135,9 +136,17 @@ const pendingId=async jobId=>(await managerView(jobId)).deliveries.find(d=>d.sta
   const input=approve(saved.receipt.deliveryId,[[sugar.lineId,'1'],[supplies.lineId,'1']]);
   f.db.batch=async statements=>{if(statements.some(st=>st.query.includes('UPDATE po_cart_deliveries'))){f.db.batch=batch;f.db.loseAcknowledgment=true;}return batch(statements);};
   const replayed=await deliveries().approve(input);assert.equal(f.db.batch,batch,'The lost acknowledgment was injected on the save');assert.equal(replayed.receipt.state,'approved');
+  // A recount that lands while an approval is being saved: the approval saves nothing, not even stock.
+  tick();f.setUser('employee');const raced=await deliveries().count(count(confirmationId,[[sugar.lineId,'1']]));f.setUser('manager');const kept2=records(),stock2=balance('sugar');
+  f.db.batch=async statements=>{f.db.batch=batch;f.sql.prepare(`UPDATE po_cart_deliveries SET state='recount',decision_note='Recount',decided_by='owner',decided_at=?,decision_operation_id='race',decision_fingerprint='race'
+    WHERE company_id='a' AND id=?`).run(new Date(clock).toISOString(),raced.receipt.deliveryId);return batch(statements);};
+  await assert.rejects(deliveries().approve(approve(raced.receipt.deliveryId,[[sugar.lineId,'1']])),errorCode('conflict'));
+  assert.equal(f.db.batch,batch);assert.deepEqual(balance('sugar'),stock2,'No stock for a count that was sent back');
+  assert.equal(f.sql.prepare('SELECT count(*) n FROM inventory_order_receipts WHERE receipt_id=?').get(raced.receipt.deliveryId).n,0);
+  assert.notEqual(records(),kept2);
   // A revoked manager can no longer decide or read.
   f.sql.exec("INSERT INTO memberships(user_id,company_id,role) VALUES('temp-manager','a','manager')");f.setUser('temp-manager');
-  const second=await deliveries().count(count(confirmationId,[[sugar.lineId,'1']]));
+  tick();const second=await deliveries().count(count(confirmationId,[[sugar.lineId,'1']]));
   f.sql.exec("DELETE FROM memberships WHERE company_id='a' AND user_id='temp-manager'");
   await refused('forbidden',()=>deliveries().approve(approve(second.receipt.deliveryId,[[sugar.lineId,'1']])));
   await refused('forbidden',()=>deliveries().staff({companyId:'a',view:'staff'}));
@@ -152,5 +161,8 @@ const pendingId=async jobId=>(await managerView(jobId)).deliveries.find(d=>d.sta
   assert.throws(()=>f.sql.exec(`UPDATE po_cart_deliveries SET state='approved',decision_json='[]',decision_note='',stock_receipt=0,decided_by='employee',decided_at='${at}',decision_operation_id='d',decision_fingerprint='f' WHERE id='raw-employee-counted'`),/delivery decision/);
   assert.throws(()=>f.sql.exec(`UPDATE po_cart_deliveries SET state='approved',decision_json='[]',decision_note='',stock_receipt=1,decided_by='manager',decided_at='${at}',decision_operation_id='d',decision_fingerprint='f' WHERE id='raw-employee-counted'`),/delivery decision/,'Stock receipts must exist');
   assert.throws(()=>f.sql.exec("INSERT INTO po_cart_delivery_guards(reason) VALUES('x')"),/delivery changed/);
+  for(const note of ["' '","NULL"])assert.throws(()=>f.sql.exec(`UPDATE po_cart_deliveries SET state='recount',decision_note=${note},decided_by='manager',decided_at='${at}',decision_operation_id='r',decision_fingerprint='f' WHERE id='raw-employee-counted'`),/delivery decision/,'A recount needs a reason');
+  assert.throws(()=>f.sql.exec(`UPDATE po_cart_deliveries SET state='recount',decision_note='x',decided_by='manager',decided_at='${at}',decision_operation_id='r',decision_fingerprint='f',count_note='changed' WHERE id='raw-employee-counted'`),/delivery decision/,'The count never changes');
+  f.sql.exec(`UPDATE po_cart_deliveries SET state='recount',decision_note='Count again',decided_by='manager',decided_at='${at}',decision_operation_id='r',decision_fingerprint='f' WHERE id='raw-employee-counted'`);
 }
 console.log('PASS: delivery receiving lets staff count blind without amounts or prices, lets only owners and managers approve or ask for a recount, posts accepted, released and excess stock once through A\'s port, keeps damaged packs and counted stock out, replays exactly and saves nothing on stale stock.');

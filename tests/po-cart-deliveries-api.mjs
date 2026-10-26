@@ -53,7 +53,9 @@ const receipt=(await r1.json()).receipt;assert.deepEqual((await r2.json()).recei
 // Staff cannot approve or ask for a recount; a manager approves once.
 const decision={action:'approve',companyId:'a',deliveryId:receipt.deliveryId,operationId:randomUUID(),
   lines:[{lineId:beans.lineId,acceptPacks:'2',excessPacks:'0',releaseRest:false},{lineId:supplies.lineId,acceptPacks:'1',excessPacks:'0',releaseRest:false}],note:''};
-await denied(403,()=>post(decision));await denied(403,()=>post({action:'recount',companyId:'a',deliveryId:receipt.deliveryId,operationId:randomUUID(),note:'Again'}));
+await denied(403,()=>post(decision));
+// The company route itself refuses staff decisions, before the service's own membership check.
+assert.equal((await (await post(decision)).json()).error,'You do not have permission for this company action.');await denied(403,()=>post({action:'recount',companyId:'a',deliveryId:receipt.deliveryId,operationId:randomUUID(),note:'Again'}));
 s.user='manager';
 for(const extra of [{lines:[{lineId:beans.lineId,acceptPacks:'3',excessPacks:'0',releaseRest:false},decision.lines[1]]},{lines:[{...decision.lines[0],releaseRest:'yes'},decision.lines[1]]}])
   await denied(400,()=>post({...decision,...extra}));
