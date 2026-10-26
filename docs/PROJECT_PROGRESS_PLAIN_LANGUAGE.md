@@ -45,10 +45,15 @@ stop if access or the draft changes, and let the manager cancel, retry or reload
 PDF/Excel downloading from a saved draft is complete on this computer.
 The [saved-order search and filters](C4_PO_HISTORY_FILTERS_LOCAL_EVIDENCE.md)
 are now built and tested locally too. Managers can search PO numbers/suppliers,
-filter draft/reviewed/canceled status, and page through matching results. No new
-database structure was needed. Next, prepare safe exports of a complete filtered
-history across pages. The online
-release remains paused, and C4/M8 still have other open work.
+filter draft/reviewed/canceled status, and page through matching results.
+The [complete history downloads](C4_FILTERED_HISTORY_EXPORTS_LOCAL_EVIDENCE.md)
+now export every matching page to PDF or Excel, up to 100 drafts and 1,000 lines.
+They stop if access or matching records change, and refuse oversized results
+without a partial file. Canceled drafts remain labeled as history. Actual app
+downloads and independent file readers passed after combining the other
+contributor's spending-limit work. This export feature needed no new database
+structure. Next, add date-range filters to the same history and exports.
+The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
 records of its completion checks. Some tests passed, but the complete AI safety
