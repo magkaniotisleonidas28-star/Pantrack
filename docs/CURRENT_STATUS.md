@@ -11,6 +11,29 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 product history filters — 2026-10-26
+
+The [saved-product filter](C4_HISTORY_PRODUCT_FILTERS_LOCAL_EVIDENCE.md) now
+matches saved line descriptions, supplier SKUs or product IDs across the manager
+history list and complete PDF/Excel exports. It combines with dates, suppliers
+and statuses and retains every line of each matching order. Current saved
+revisions drive matching; live catalog renames do not alter saved history.
+
+The implementation reuses the existing contracts, serializers and download
+lifecycle. A deterministic regression and the actual Worker verify paging
+without overlap for tied timestamps and multiple matching lines. All six local
+checks passed: 120 executed suites plus twelve Windows skips, typecheck/build,
+all 38 migration checks, fresh isolated apply and HTTP smoke. Nine real browser
+downloads, independent file readers, input/navigation cancellation, role/change
+guards and desktop/mobile/keyboard checks passed. Read/export paths preserved
+every application table.
+
+No schema, migration, dependency or business data change was introduced. The
+root and hosted databases were untouched. Supplier-confirmation PR 17 remains
+separate with no application-file overlap. Next bounded document item: the
+immutable private issued-document storage contract, checking the shared migration
+queue before persistence integration. C4/C5/M8 remain open; hosted release stays paused.
+
 ## Latest local C4 history date filters — 2026-10-26
 
 The [creation-date range slice](C4_HISTORY_DATE_FILTERS_LOCAL_EVIDENCE.md) now
@@ -28,8 +51,9 @@ Nine real-app downloads, independent readers, desktop/mobile/keyboard behavior,
 in-range changes, out-of-range changes, revocation and zero export writes passed.
 
 No migration or company time-zone/budget setting changed in this feature. The
-original root and hosted databases were untouched. Next bounded C4 outcome:
-product filters shared by history and exports. C4/C5/M8 remain open; the hosted
+original root and hosted databases were untouched. The subsequent
+[product filters](C4_HISTORY_PRODUCT_FILTERS_LOCAL_EVIDENCE.md) now apply to the
+same history and exports. C4/C5/M8 remain open; the hosted
 release stays paused.
 
 ## Latest local C4 filtered history exports — 2026-10-25

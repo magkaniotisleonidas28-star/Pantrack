@@ -557,7 +557,14 @@ For every numbered item, the assigned person follows the same delivery loop:
   using existing timestamps and calendar logic with no schema change. Both DST
   transitions, precise boundaries, later edits, paging, cancellation, actual
   files/provenance and tenant/role guards passed. The full local pipeline passed
-  with 119 executed suites plus twelve Windows skips. Product filtering is next.
+  with 119 executed suites plus twelve Windows skips. The
+  [saved-product filters](C4_HISTORY_PRODUCT_FILTERS_LOCAL_EVIDENCE.md) now match
+  current saved descriptions/SKUs/product IDs before paging and complete export,
+  retaining whole orders and criterion/scope provenance. Stable page boundaries,
+  actual native files, combined criteria and access/change/cancellation guards
+  passed locally, with 120 executed suites plus twelve Windows skips and the
+  full pipeline. No schema change. Next define/test the immutable private issued-
+  document contract, coordinating the migration queue before storage integration.
   Issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
