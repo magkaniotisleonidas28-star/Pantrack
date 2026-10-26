@@ -578,7 +578,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   floor; migration `0037`, local only). [Part 2](C4_SUPPLIER_CONFIRMATION_LOCAL_EVIDENCE.md)
   records manager-entered supplier confirmations. Within the cap they become incoming
   exactly once; over the cap they are held for owner review (migration `0038`, local
-  only). Over-cap approval and receiving remain open.
+  only). Over-cap approval remains open. Receiving follows a
+  [three-part plan](C4_RECEIVING_PLAN_20261026.md) with blind staff counts and manager
+  approval. [Part 1](C4_ORDER_RECEIPT_PORT_LOCAL_EVIDENCE.md) builds A's receipt
+  posting port at the owner's request. It accepts, releases or adds excess per line
+  exactly once and all-or-nothing, and skips stock that a later count already
+  included (migration `0039`, local only). The count and approval screens and order
+  closure remain open.
   C4 is not complete and purchasing stays disabled.
   The owner-selected [cart preparation preview](C4_CART_PREVIEW_LOCAL_EVIDENCE.md)
   now proves reviewed-draft-to-fictional-cart mechanics locally, including 16

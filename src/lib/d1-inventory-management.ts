@@ -20,6 +20,8 @@ import type {
   ManagedInventoryRecord,
   OrderIncomingInput,
   OrderIncomingRow,
+  OrderReceiptInput,
+  OrderReceiptRow,
   ManagedUnitInput,
   ModifierActivationInput,
   ModifierDraftInput,
@@ -356,16 +358,91 @@ export class D1InventoryManagementService implements InventoryManagementService 
 
   /** Exact stock-unit minors that confirmed supplier orders still owe for a product. */
   async orderIncomingOwed(companyId:string,productId:string):Promise<bigint>{
-    const rows=await this.db.prepare('SELECT quantity_minor,received_minor FROM inventory_order_incoming WHERE company_id=? AND product_id=?')
-      .bind(companyId,productId).all<{quantity_minor:string;received_minor:string}>();
-    return rows.results.reduce((sum,r)=>sum+BigInt(r.quantity_minor)-BigInt(r.received_minor),ZERO);
+    const rows=await this.db.prepare('SELECT quantity_minor,received_minor,released_minor FROM inventory_order_incoming WHERE company_id=? AND product_id=?')
+      .bind(companyId,productId).all<{quantity_minor:string;received_minor:string;released_minor:string}>();
+    return rows.results.reduce((sum,r)=>sum+BigInt(r.quantity_minor)-BigInt(r.received_minor)-BigInt(r.released_minor),ZERO);
   }
   async orderIncoming(companyId:string,confirmationId:string):Promise<OrderIncomingRow[]>{
-    const rows=await this.db.prepare(`SELECT line_id,product_id,config_id,dimension,quantity_minor,received_minor,event_id,actor,created_at
+    const rows=await this.db.prepare(`SELECT line_id,product_id,config_id,dimension,quantity_minor,received_minor,released_minor,event_id,actor,created_at
       FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=? ORDER BY line_id`).bind(companyId,confirmationId)
-      .all<{line_id:string;product_id:string;config_id:string;dimension:UnitDimension;quantity_minor:string;received_minor:string;event_id:string;actor:string;created_at:string}>();
+      .all<{line_id:string;product_id:string;config_id:string;dimension:UnitDimension;quantity_minor:string;received_minor:string;released_minor:string;event_id:string;actor:string;created_at:string}>();
     return rows.results.map(r=>({lineId:r.line_id,productId:r.product_id,configId:r.config_id,dimension:r.dimension,quantityMinor:r.quantity_minor,
-      receivedMinor:r.received_minor,eventId:r.event_id,actor:r.actor,createdAt:r.created_at}));
+      receivedMinor:r.received_minor,releasedMinor:r.released_minor,eventId:r.event_id,actor:r.actor,createdAt:r.created_at}));
+  }
+  async orderReceipts(companyId:string,confirmationId:string):Promise<OrderReceiptRow[]>{
+    const rows=await this.db.prepare(`SELECT receipt_id,line_id,product_id,accepted_minor,released_minor,excess_minor,stock_added,delivered_at,event_id,actor,created_at
+      FROM inventory_order_receipts WHERE company_id=? AND confirmation_id=? ORDER BY created_at,receipt_id,line_id`).bind(companyId,confirmationId)
+      .all<{receipt_id:string;line_id:string;product_id:string;accepted_minor:string;released_minor:string;excess_minor:string;stock_added:number;delivered_at:string;event_id:string;actor:string;created_at:string}>();
+    return rows.results.map(r=>({receiptId:r.receipt_id,lineId:r.line_id,productId:r.product_id,acceptedMinor:r.accepted_minor,releasedMinor:r.released_minor,
+      excessMinor:r.excess_minor,stockAdded:r.stock_added===1,deliveredAt:r.delivered_at,eventId:r.event_id,actor:r.actor,createdAt:r.created_at}));
+  }
+  /**
+   * A's receipt posting port for one approved delivery. Returns statements for the caller's own batch.
+   * Accepted amounts move from order-linked incoming into stock, released amounts leave incoming only,
+   * and excess adds stock beyond the order. A delivery that arrived at or before the latest physical
+   * count was already counted, so it reduces incoming without adding stock again. Every precondition
+   * is re-checked inside the batch, and any failure aborts all of it.
+   */
+  async orderReceiptStatements(input:OrderReceiptInput):Promise<D1PreparedStatement[]>{
+    const amount=/^(0|[1-9][0-9]{0,17})$/;
+    if(!validId(input.companyId)||!validId(input.confirmationId)||!validId(input.receiptId)||!validId(input.actor)||!input.lines.length||input.lines.length>100)
+      throw new InventoryManagementError('invalid_input','A confirmation, receipt, actor and 1–100 lines are required.');
+    if(new Set(input.lines.map(l=>l.lineId)).size!==input.lines.length||input.lines.some(l=>!validId(l.lineId)||![l.acceptedMinor,l.releasedMinor,l.excessMinor].every(v=>amount.test(v))
+        ||(l.acceptedMinor==='0'&&l.releasedMinor==='0'&&l.excessMinor==='0')))
+      throw new InventoryManagementError('invalid_input','Each line needs a unique identity and exact whole amounts, at least one of them positive.');
+    const deliveredAt=this.normalizedTime(input.deliveredAt);
+    const guard=(sql:string,args:(string|number)[])=>this.db.prepare(`INSERT INTO inventory_port_guards(reason) SELECT 'stale' WHERE NOT EXISTS (${sql})`).bind(...args);
+    // A receipt is posted once, as a whole.
+    const unposted='SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory_order_receipts WHERE company_id=? AND receipt_id=?)';
+    if(!await this.db.prepare(unposted).bind(input.companyId,input.receiptId).first())
+      throw new InventoryManagementError('operation_conflict','This delivery receipt was already posted.');
+    const owed=new Map((await this.orderIncoming(input.companyId,input.confirmationId)).map(r=>[r.lineId,r]));
+    const lines=input.lines.map(l=>{
+      const order=owed.get(l.lineId);
+      if(!order)throw new InventoryManagementError('invalid_input','Each line must belong to this confirmed supplier order.');
+      const remaining=BigInt(order.quantityMinor)-BigInt(order.receivedMinor)-BigInt(order.releasedMinor),resolved=BigInt(l.acceptedMinor)+BigInt(l.releasedMinor);
+      if(resolved>remaining)throw new InventoryManagementError('invalid_quantity','A line cannot receive or release more than the order still owes.');
+      if(l.excessMinor!=='0'&&(l.releasedMinor!=='0'||l.acceptedMinor==='0'||resolved!==remaining))
+        throw new InventoryManagementError('invalid_quantity','Excess is only possible on the delivery that completes everything the order owes for that line.');
+      return {...l,order};
+    });
+    const at=this.now(),statements:D1PreparedStatement[]=[guard(unposted,[input.companyId,input.receiptId])];
+    for(const productId of [...new Set(lines.map(l=>l.order.productId))]){
+      const mine=lines.filter(l=>l.order.productId===productId);
+      await this.product(input.companyId,productId);
+      const row=await this.balance(input.companyId,productId);
+      if(!row)throw new InventoryManagementError('inventory_not_configured','Classify this product and record an opening count first.');
+      if(mine.some(l=>l.order.dimension!==row.dimension))throw new InventoryManagementError('unit_incompatible','The order line has a different unit dimension than current stock.');
+      if(row.latest_count_effective_at&&Date.parse(at)<=Date.parse(row.latest_count_effective_at))throw new InventoryManagementError('before_count_cutoff','Stock movements must occur after the latest physical count.');
+      // Count-cutoff reconciliation: a physical count at or after the delivery already included it.
+      const counted=row.latest_count_effective_at!==null&&Date.parse(deliveredAt)<=Date.parse(row.latest_count_effective_at);
+      const sum=(pick:(l:typeof mine[number])=>string)=>mine.reduce((total,l)=>total+BigInt(pick(l)),ZERO);
+      const stock=counted?ZERO:sum(l=>l.acceptedMinor)+sum(l=>l.excessMinor),leaving=sum(l=>l.acceptedMinor)+sum(l=>l.releasedMinor);
+      const onHand=readCanonical(exact(row.dimension,row.on_hand_minor))+stock,incoming=readCanonical(exact(row.dimension,row.incoming_minor))-leaving;
+      const legacy=await this.legacy(input.companyId,productId),stockUnit=await this.unit(input.companyId,productId,row.stock_unit_id,row.stock_unit_version);
+      const legacyRecord=this.legacyRecord(legacy,productId,at);legacyRecord.onHand=legacyNumber(exact(row.dimension,String(onHand)),stockUnit);
+      legacyRecord.incoming=legacyNumber(exact(row.dimension,String(incoming)),stockUnit);legacyRecord.updated=at;legacyRecord.version=(legacy?.version??0)+1;
+      const eventId=`order-receipt:${input.receiptId}:${productId}`;
+      const note=counted?`Received supplier order; already included in the physical count at ${row.latest_count_effective_at}`:'Received supplier order';
+      statements.push(
+        guard('SELECT 1 FROM inventory_balances_exact WHERE company_id=? AND product_id=? AND version=? AND config_id=? AND dimension=? AND on_hand_minor=? AND incoming_minor=?',
+          [input.companyId,productId,row.version,row.config_id,row.dimension,row.on_hand_minor,row.incoming_minor]),
+        legacy?guard('SELECT 1 FROM inventory WHERE company_id=? AND product_id=? AND version=?',[input.companyId,productId,legacy.version])
+          :guard('SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM inventory WHERE company_id=? AND product_id=?)',[input.companyId,productId]),
+        // Receipt rows go first: each grows its order line, which lowers what orders owe before incoming drops.
+        ...mine.flatMap(l=>[
+          guard('SELECT 1 FROM inventory_order_incoming WHERE company_id=? AND confirmation_id=? AND line_id=? AND received_minor=? AND released_minor=?',
+            [input.companyId,input.confirmationId,l.lineId,l.order.receivedMinor,l.order.releasedMinor]),
+          this.db.prepare(`INSERT INTO inventory_order_receipts(company_id,receipt_id,confirmation_id,line_id,product_id,accepted_minor,released_minor,excess_minor,stock_added,delivered_at,event_id,actor,created_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(input.companyId,input.receiptId,input.confirmationId,l.lineId,productId,l.acceptedMinor,l.releasedMinor,l.excessMinor,counted?0:1,deliveredAt,eventId,input.actor,at)]),
+        this.db.prepare(`INSERT INTO inventory_events_exact(company_id,id,product_id,config_id,action,dimension,quantity_minor,entered_amount,entered_unit_id,balance_version_before,balance_version_after,effective_at,recorded_at,actor,note,consumption_key,waste_reason)
+          VALUES (?,?,?,?,'order_receipt',?,?,NULL,NULL,?,?,?,?,?,?,NULL,NULL)`).bind(input.companyId,eventId,productId,row.config_id,row.dimension,String(stock),row.version,row.version+1,counted?at:deliveredAt,at,input.actor,note),
+        this.db.prepare('UPDATE inventory_balances_exact SET on_hand_minor=?,incoming_minor=?,version=?,updated_at=? WHERE company_id=? AND product_id=? AND version=?')
+          .bind(String(onHand),String(incoming),row.version+1,at,input.companyId,productId,row.version),
+        legacy?this.db.prepare('UPDATE inventory SET data=?,version=? WHERE company_id=? AND product_id=? AND version=?').bind(JSON.stringify(legacyRecord),legacyRecord.version,input.companyId,productId,legacy.version)
+          :this.db.prepare('INSERT INTO inventory(company_id,product_id,data,version) VALUES (?,?,?,?)').bind(input.companyId,productId,JSON.stringify(legacyRecord),legacyRecord.version));
+    }
+    return statements;
   }
   /**
    * A's order-linked incoming port. Returns statements for the caller's own batch. They add each
