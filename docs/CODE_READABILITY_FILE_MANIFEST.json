@@ -5380,551 +5380,2074 @@
     {
       "path": "src/components/ui/accordion.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "a4f153089ba886dfcf73fac26b5c01ca933fa12fbe88df6fb723912bfffdfbb0",
+      "interfaceReview": {
+        "exports": [
+          "Accordion",
+          "AccordionItem",
+          "AccordionTrigger",
+          "AccordionContent"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/alert-dialog.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "9a8d950f2b9b4352d5ebb762fb44d5c28c2d353aa29712071973656a8736e311",
+      "interfaceReview": {
+        "exports": [
+          "AlertDialog",
+          "AlertDialogAction",
+          "AlertDialogCancel",
+          "AlertDialogContent",
+          "AlertDialogDescription",
+          "AlertDialogFooter",
+          "AlertDialogHeader",
+          "AlertDialogMedia",
+          "AlertDialogOverlay",
+          "AlertDialogPortal",
+          "AlertDialogTitle",
+          "AlertDialogTrigger"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils",
+          "@/components/ui/button"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/components/workspace/clover-connection.tsx",
+          "src/components/workspace/company-portal.tsx",
+          "src/components/workspace/menu-waste-recorder.tsx",
+          "src/components/workspace/payment-methods.tsx",
+          "src/components/workspace/register-provider.tsx",
+          "src/components/workspace/setup-register.tsx",
+          "src/components/workspace/vendor-automation.tsx",
+          "src/components/workspace/waste-recorder.tsx",
+          "src/components/workspace/workspace.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/alert.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "2cc59b5f7bda91c1670884b1bf46bfc8a2a6f226cef184f5762acc037188885b",
+      "interfaceReview": {
+        "exports": [
+          "Alert",
+          "AlertTitle",
+          "AlertDescription"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/aspect-ratio.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "b1c157886236782cb92d8fbcd4749532aaf6d8aabefd6e157ca40358f902f407",
+      "interfaceReview": {
+        "exports": [
+          "AspectRatio"
+        ],
+        "imports": [
+          "radix-ui"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/attachment.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "ae8a25dd1a896d3964e3ef54d97e51221b418cde287dfd794428b89951c5c790",
+      "interfaceReview": {
+        "exports": [
+          "Attachment",
+          "AttachmentGroup",
+          "AttachmentMedia",
+          "AttachmentContent",
+          "AttachmentTitle",
+          "AttachmentDescription",
+          "AttachmentActions",
+          "AttachmentAction",
+          "AttachmentTrigger"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils",
+          "@/components/ui/button"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/avatar.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "58a846bf1617b94b9681921db9b8461d0145f311424663d11678a06b6153cb34",
+      "interfaceReview": {
+        "exports": [
+          "Avatar",
+          "AvatarImage",
+          "AvatarFallback",
+          "AvatarBadge",
+          "AvatarGroup",
+          "AvatarGroupCount"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/badge.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "46a0de5224f6a5d5d63d45246534288518dce888f031064bff925bbc7fe6ad97",
+      "interfaceReview": {
+        "exports": [
+          "Badge",
+          "badgeVariants"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/breadcrumb.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "d4c0831bba2212e778248f54a6ace6ef378df8bba4616d1abf27787a31eabae5",
+      "interfaceReview": {
+        "exports": [
+          "Breadcrumb",
+          "BreadcrumbList",
+          "BreadcrumbItem",
+          "BreadcrumbLink",
+          "BreadcrumbPage",
+          "BreadcrumbSeparator",
+          "BreadcrumbEllipsis"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/bubble.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "870cc0c5cfc8a515053f7e41e706a6bd017a909b45f1305fd3b164a52cc4483b",
+      "interfaceReview": {
+        "exports": [
+          "BubbleGroup",
+          "Bubble",
+          "BubbleContent",
+          "BubbleReactions"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/button-group.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "784c89d8ee683e1bc972ae69e6ea8225a7f63abe22aa1b5fc3423ae8a2a399c0",
+      "interfaceReview": {
+        "exports": [
+          "ButtonGroup",
+          "ButtonGroupSeparator",
+          "ButtonGroupText",
+          "buttonGroupVariants"
+        ],
+        "imports": [
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils",
+          "@/components/ui/separator"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/button.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "cc36af0f8b5019c33cc039fbf03bb952a513072b15b55b53c592b78af3e5f4c4",
+      "interfaceReview": {
+        "exports": [
+          "Button",
+          "buttonVariants"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/app/auth/auth-form.tsx",
+          "src/app/invite/page.tsx",
+          "src/components/workspace/a8-review-preview.tsx",
+          "src/components/workspace/a8-saved-reviews.tsx",
+          "src/components/workspace/cart-preview.tsx",
+          "src/components/workspace/clover-connection.tsx",
+          "src/components/workspace/company-portal.tsx",
+          "src/components/workspace/durable-cart.tsx",
+          "src/components/workspace/employee-workspace.tsx",
+          "src/components/workspace/exact-inventory-panel.tsx",
+          "src/components/workspace/inventory-layout.tsx",
+          "src/components/workspace/inventory-panel.tsx",
+          "src/components/workspace/manager-operations.tsx",
+          "src/components/workspace/members-panel.tsx",
+          "src/components/workspace/menu-waste-recorder.tsx",
+          "src/components/workspace/payment-methods.tsx",
+          "src/components/workspace/product-catalog.tsx",
+          "src/components/workspace/purchase-order-downloads.tsx",
+          "src/components/workspace/purchase-order-drafts.tsx",
+          "src/components/workspace/purchase-order-history-downloads.tsx",
+          "src/components/workspace/purchasing-suppliers.tsx",
+          "src/components/workspace/recipe-builder.tsx",
+          "src/components/workspace/recipe-list.tsx",
+          "src/components/workspace/recipe-modifiers.tsx",
+          "src/components/workspace/register-provider.tsx",
+          "src/components/workspace/sales-exceptions.tsx",
+          "src/components/workspace/setup-register.tsx",
+          "src/components/workspace/spending-limits.tsx",
+          "src/components/workspace/stock-entry.tsx",
+          "src/components/workspace/supplier-confirmation.tsx",
+          "src/components/workspace/vendor-automation.tsx",
+          "src/components/workspace/waste-recorder.tsx",
+          "src/components/workspace/workspace.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/calendar.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "3855fbe0d3f8ad3a4b93071f98b76a9f6782d46ec8b05f5d2ddbee1e4e39bc84",
+      "interfaceReview": {
+        "exports": [
+          "Calendar",
+          "CalendarDayButton"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "react-day-picker",
+          "@/lib/utils",
+          "@/components/ui/button"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useRef",
+          "React.useEffect"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/card.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "c48dd3b96be90a7066f1aebf294f0af9d00ebcdc367d5d4aca55429ade570c1c",
+      "interfaceReview": {
+        "exports": [
+          "Card",
+          "CardHeader",
+          "CardFooter",
+          "CardTitle",
+          "CardAction",
+          "CardDescription",
+          "CardContent"
+        ],
+        "imports": [
+          "react",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/carousel.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "b7ea0dda3903d972c186f739e23da61f547bc83b5a0bf13b16856577846d5fc3",
+      "interfaceReview": {
+        "exports": [
+          "CarouselApi",
+          "Carousel",
+          "CarouselContent",
+          "CarouselItem",
+          "CarouselPrevious",
+          "CarouselNext"
+        ],
+        "imports": [
+          "react",
+          "embla-carousel-react",
+          "lucide-react",
+          "@/lib/utils",
+          "@/components/ui/button"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useContext",
+          "useEmblaCarousel",
+          "React.useState",
+          "React.useCallback",
+          "React.useEffect",
+          "useCarousel"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/chart.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "45aa5ea4a386f4fb5b8869ff4bab3a08cf89255190ee322043baf84c3e950b6a",
+      "interfaceReview": {
+        "exports": [
+          "ChartConfig",
+          "ChartContainer",
+          "ChartTooltip",
+          "ChartTooltipContent",
+          "ChartLegend",
+          "ChartLegendContent",
+          "ChartStyle"
+        ],
+        "imports": [
+          "react",
+          "recharts",
+          "recharts",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useContext",
+          "React.useId",
+          "useChart",
+          "React.useMemo"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/checkbox.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "b23ab9d4deeedf2ac8f512c368361ede681aa383437ef48563a6f9b7dbe95f27",
+      "interfaceReview": {
+        "exports": [
+          "Checkbox"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/components/workspace/inventory-panel.tsx",
+          "src/components/workspace/vendor-automation.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/collapsible.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "c6598e5584f4258b5d9fefadbc5ad6a66888ad58729f4b634a0bb2d9c513188b",
+      "interfaceReview": {
+        "exports": [
+          "Collapsible",
+          "CollapsibleTrigger",
+          "CollapsibleContent"
+        ],
+        "imports": [
+          "radix-ui"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/combobox.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "2d68e78b2dc7e38a085f222dede60a80b4f8229a6e91732c484605e204d46735",
+      "interfaceReview": {
+        "exports": [
+          "Combobox",
+          "ComboboxInput",
+          "ComboboxContent",
+          "ComboboxList",
+          "ComboboxItem",
+          "ComboboxGroup",
+          "ComboboxLabel",
+          "ComboboxCollection",
+          "ComboboxEmpty",
+          "ComboboxSeparator",
+          "ComboboxChips",
+          "ComboboxChip",
+          "ComboboxChipsInput",
+          "ComboboxTrigger",
+          "ComboboxValue",
+          "useComboboxAnchor"
+        ],
+        "imports": [
+          "react",
+          "@base-ui/react",
+          "lucide-react",
+          "@/lib/utils",
+          "@/components/ui/button",
+          "@/components/ui/input-group"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useRef"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/command.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "361193df1e3d64a9e9b5048f045264782fcb387aab3f00f2b805fdcbf538b16a",
+      "interfaceReview": {
+        "exports": [
+          "Command",
+          "CommandDialog",
+          "CommandInput",
+          "CommandList",
+          "CommandEmpty",
+          "CommandGroup",
+          "CommandItem",
+          "CommandShortcut",
+          "CommandSeparator"
+        ],
+        "imports": [
+          "react",
+          "cmdk",
+          "lucide-react",
+          "@/lib/utils",
+          "@/components/ui/dialog"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/context-menu.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "2cf1fcf59df0649a3e2a126d1df2f639145f6b6bf5689ee54af1f40ab1245017",
+      "interfaceReview": {
+        "exports": [
+          "ContextMenu",
+          "ContextMenuTrigger",
+          "ContextMenuContent",
+          "ContextMenuItem",
+          "ContextMenuCheckboxItem",
+          "ContextMenuRadioItem",
+          "ContextMenuLabel",
+          "ContextMenuSeparator",
+          "ContextMenuShortcut",
+          "ContextMenuGroup",
+          "ContextMenuPortal",
+          "ContextMenuSub",
+          "ContextMenuSubContent",
+          "ContextMenuSubTrigger",
+          "ContextMenuRadioGroup"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/dialog.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "dce39c6adc47d997bd2567f8b7a72f466b0134715105cd42f9194007b8ecdb14",
+      "interfaceReview": {
+        "exports": [
+          "Dialog",
+          "DialogClose",
+          "DialogContent",
+          "DialogDescription",
+          "DialogFooter",
+          "DialogHeader",
+          "DialogOverlay",
+          "DialogPortal",
+          "DialogTitle",
+          "DialogTrigger"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils",
+          "@/components/ui/button"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/components/workspace/company-portal.tsx",
+          "src/components/workspace/inventory-panel.tsx",
+          "src/components/workspace/vendor-automation.tsx",
+          "src/components/workspace/workspace.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/direction.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "84ae2ad658207f0e0f367978e5508cd8027cd00c29c41d3d13db21a708c3d1e6",
+      "interfaceReview": {
+        "exports": [
+          "DirectionProvider",
+          "useDirection"
+        ],
+        "imports": [
+          "react",
+          "radix-ui"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/drawer.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "cb6eaf58eb0757ca91af284e5d925b89a42ad7eb19cb3f44c575a3487aa9350f",
+      "interfaceReview": {
+        "exports": [
+          "Drawer",
+          "DrawerPortal",
+          "DrawerOverlay",
+          "DrawerTrigger",
+          "DrawerClose",
+          "DrawerContent",
+          "DrawerHeader",
+          "DrawerFooter",
+          "DrawerTitle",
+          "DrawerDescription"
+        ],
+        "imports": [
+          "react",
+          "vaul",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/dropdown-menu.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "98f0dcdae38225b73734aceeb9213dd751fea2c72ea520df31003cd133deac8a",
+      "interfaceReview": {
+        "exports": [
+          "DropdownMenu",
+          "DropdownMenuPortal",
+          "DropdownMenuTrigger",
+          "DropdownMenuContent",
+          "DropdownMenuGroup",
+          "DropdownMenuLabel",
+          "DropdownMenuItem",
+          "DropdownMenuCheckboxItem",
+          "DropdownMenuRadioGroup",
+          "DropdownMenuRadioItem",
+          "DropdownMenuSeparator",
+          "DropdownMenuShortcut",
+          "DropdownMenuSub",
+          "DropdownMenuSubTrigger",
+          "DropdownMenuSubContent"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/empty.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "ae95bdcf367a076ae02e7925f14522a148798f72d9651749c6d55497dba584c0",
+      "interfaceReview": {
+        "exports": [
+          "Empty",
+          "EmptyHeader",
+          "EmptyTitle",
+          "EmptyDescription",
+          "EmptyContent",
+          "EmptyMedia"
+        ],
+        "imports": [
+          "class-variance-authority",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/field.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "ba67d76f017ac059fc86cf8c344e0b2991c4322d3619e125498c19b87f6eefbd",
+      "interfaceReview": {
+        "exports": [
+          "Field",
+          "FieldLabel",
+          "FieldDescription",
+          "FieldError",
+          "FieldGroup",
+          "FieldLegend",
+          "FieldSeparator",
+          "FieldSet",
+          "FieldContent",
+          "FieldTitle"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "@/lib/utils",
+          "@/components/ui/label",
+          "@/components/ui/separator"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "useMemo"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/form.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "315b46bb75ab7d1c6061b5d750aa4bedf6e7a455e15e2d7f9182f053d5972b1e",
+      "interfaceReview": {
+        "exports": [
+          "useFormField",
+          "Form",
+          "FormItem",
+          "FormLabel",
+          "FormControl",
+          "FormDescription",
+          "FormMessage",
+          "FormField"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "radix-ui",
+          "react-hook-form",
+          "@/lib/utils",
+          "@/components/ui/label"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useContext",
+          "useFormContext",
+          "useFormState",
+          "React.useId",
+          "useFormField"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/hover-card.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "f5d8df42c59370ec14d61bcc54f7d68e9bb7dfa0d6a872b2f7cffc2aafbf23b8",
+      "interfaceReview": {
+        "exports": [
+          "HoverCard",
+          "HoverCardTrigger",
+          "HoverCardContent"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/input-group.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "6afbd58fea4c438e6252dc4568bddc122e84ababead4ad5cee50ace01100c9a0",
+      "interfaceReview": {
+        "exports": [
+          "InputGroup",
+          "InputGroupAddon",
+          "InputGroupButton",
+          "InputGroupText",
+          "InputGroupInput",
+          "InputGroupTextarea"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "@/lib/utils",
+          "@/components/ui/button",
+          "@/components/ui/input",
+          "@/components/ui/textarea"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/input-otp.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "161946daa89f0eda2575b9271c0494e35807c4ffb55598a49f67160c17fec299",
+      "interfaceReview": {
+        "exports": [
+          "InputOTP",
+          "InputOTPGroup",
+          "InputOTPSlot",
+          "InputOTPSeparator"
+        ],
+        "imports": [
+          "react",
+          "input-otp",
+          "lucide-react",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useContext"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/input.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "8c4612a7c41319ac5049daa3b34b080f9784b6245c17780eb87c127e58e473db",
+      "interfaceReview": {
+        "exports": [
+          "Input"
+        ],
+        "imports": [
+          "react",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/app/auth/auth-form.tsx",
+          "src/components/workspace/a8-saved-reviews.tsx",
+          "src/components/workspace/company-portal.tsx",
+          "src/components/workspace/inventory-layout.tsx",
+          "src/components/workspace/inventory-panel.tsx",
+          "src/components/workspace/members-panel.tsx",
+          "src/components/workspace/menu-waste-recorder.tsx",
+          "src/components/workspace/product-catalog.tsx",
+          "src/components/workspace/purchase-order-drafts.tsx",
+          "src/components/workspace/purchasing-suppliers.tsx",
+          "src/components/workspace/recipe-builder.tsx",
+          "src/components/workspace/recipe-list.tsx",
+          "src/components/workspace/recipe-modifiers.tsx",
+          "src/components/workspace/register-provider.tsx",
+          "src/components/workspace/sales-exceptions.tsx",
+          "src/components/workspace/setup-register.tsx",
+          "src/components/workspace/spending-limits.tsx",
+          "src/components/workspace/stock-entry.tsx",
+          "src/components/workspace/supplier-confirmation.tsx",
+          "src/components/workspace/vendor-automation.tsx",
+          "src/components/workspace/waste-recorder.tsx",
+          "src/components/workspace/workspace.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/item.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "6e2144d6d87142dbbe56d568810bf546318c8aa661447ebb0d76ebbf382cb45f",
+      "interfaceReview": {
+        "exports": [
+          "Item",
+          "ItemMedia",
+          "ItemContent",
+          "ItemActions",
+          "ItemGroup",
+          "ItemSeparator",
+          "ItemTitle",
+          "ItemDescription",
+          "ItemHeader",
+          "ItemFooter"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils",
+          "@/components/ui/separator"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/kbd.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "6088c3a5432338b1719c17e9b5d0e1fa74fd1f66060f248fc88909d33a82cd13",
+      "interfaceReview": {
+        "exports": [
+          "Kbd",
+          "KbdGroup"
+        ],
+        "imports": [
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/label.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "a476e41f08b9de5bd447de66a33d8bc2ad18f2fa6b96c064778bab4b6f439f4c",
+      "interfaceReview": {
+        "exports": [
+          "Label"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/marker.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "3d798763f094b2bb5e7ade2d5cd1b9bab498bc8ca7fd4cfaf4e5835bdedc34a0",
+      "interfaceReview": {
+        "exports": [
+          "Marker",
+          "MarkerIcon",
+          "MarkerContent",
+          "markerVariants"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/menubar.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "9243af8afcea03703398ccd1c2a8c0a87ad6cbaf2bd272fb609f5b79fe46aebb",
+      "interfaceReview": {
+        "exports": [
+          "Menubar",
+          "MenubarPortal",
+          "MenubarMenu",
+          "MenubarTrigger",
+          "MenubarContent",
+          "MenubarGroup",
+          "MenubarSeparator",
+          "MenubarLabel",
+          "MenubarItem",
+          "MenubarShortcut",
+          "MenubarCheckboxItem",
+          "MenubarRadioGroup",
+          "MenubarRadioItem",
+          "MenubarSub",
+          "MenubarSubTrigger",
+          "MenubarSubContent"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/message-scroller.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "bb7660a248e4e9589c3816c7c1c199ea1381a70d2c8476ae895b567a7a4d86cf",
+      "interfaceReview": {
+        "exports": [
+          "MessageScrollerProvider",
+          "MessageScroller",
+          "MessageScrollerViewport",
+          "MessageScrollerContent",
+          "MessageScrollerItem",
+          "MessageScrollerButton",
+          "useMessageScroller",
+          "useMessageScrollerScrollable",
+          "useMessageScrollerVisibility"
+        ],
+        "imports": [
+          "react",
+          "@shadcn/react/message-scroller",
+          "lucide-react",
+          "@/lib/utils",
+          "@/components/ui/button"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/message.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "9d2952bf3b641081f09aa2739535e6bbd1be0a4946789752a2c20d8aaef43185",
+      "interfaceReview": {
+        "exports": [
+          "MessageGroup",
+          "Message",
+          "MessageAvatar",
+          "MessageContent",
+          "MessageFooter",
+          "MessageHeader"
+        ],
+        "imports": [
+          "react",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/native-select.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "007516b111fca8c98a6c40c94ab91bb68cc5b52afce1ed1f5e510c3d86e7347c",
+      "interfaceReview": {
+        "exports": [
+          "NativeSelect",
+          "NativeSelectOptGroup",
+          "NativeSelectOption"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/navigation-menu.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "889d358a77de88e9cb6f39ea4895ea4c76eaf01d731b74e44f1c41e97a78a044",
+      "interfaceReview": {
+        "exports": [
+          "NavigationMenu",
+          "NavigationMenuList",
+          "NavigationMenuItem",
+          "NavigationMenuContent",
+          "NavigationMenuTrigger",
+          "NavigationMenuLink",
+          "NavigationMenuIndicator",
+          "NavigationMenuViewport",
+          "navigationMenuTriggerStyle"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/pagination.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "374ad135c3d4ff3ec080a0009cd9745cdd0e12faa89d2b0e86074f11e5127fd1",
+      "interfaceReview": {
+        "exports": [
+          "Pagination",
+          "PaginationContent",
+          "PaginationLink",
+          "PaginationItem",
+          "PaginationPrevious",
+          "PaginationNext",
+          "PaginationEllipsis"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "@/lib/utils",
+          "@/components/ui/button"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/popover.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "31c350309ff5d3034e6ecf1b0eda75ba8855bdbf987fc7ad6d71f0ef07c5a447",
+      "interfaceReview": {
+        "exports": [
+          "Popover",
+          "PopoverTrigger",
+          "PopoverContent",
+          "PopoverAnchor",
+          "PopoverHeader",
+          "PopoverTitle",
+          "PopoverDescription"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/progress.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "c8c26e8f5f041c3cdf4915347dc1d9c022f9448f149990fadcaf303e952fa57d",
+      "interfaceReview": {
+        "exports": [
+          "Progress"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/radio-group.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "fe5ce39636d0818c2bf9c4eebddff893d1225fa2c81b5fa4bb8cbb39a8c913ce",
+      "interfaceReview": {
+        "exports": [
+          "RadioGroup",
+          "RadioGroupItem"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/resizable.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "bc63958467aa00557c551bb0d96a5ae4c965c1e1ba2380e595949d933b132f7c",
+      "interfaceReview": {
+        "exports": [
+          "ResizableHandle",
+          "ResizablePanel",
+          "ResizablePanelGroup"
+        ],
+        "imports": [
+          "lucide-react",
+          "react-resizable-panels",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/scroll-area.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "8bd9d986b2844c9a87de825c6de4787b6739b36c3dc9a05ccf3eb107160e4043",
+      "interfaceReview": {
+        "exports": [
+          "ScrollArea",
+          "ScrollBar"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/select.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "0b796a108a4eb5ba52d9ad938b7aea36dc56ae66c703a6d0a23dbc24f96daff3",
+      "interfaceReview": {
+        "exports": [
+          "Select",
+          "SelectContent",
+          "SelectGroup",
+          "SelectItem",
+          "SelectLabel",
+          "SelectScrollDownButton",
+          "SelectScrollUpButton",
+          "SelectSeparator",
+          "SelectTrigger",
+          "SelectValue"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/components/workspace/a8-review-preview.tsx",
+          "src/components/workspace/a8-saved-reviews.tsx",
+          "src/components/workspace/company-portal.tsx",
+          "src/components/workspace/inventory-panel.tsx",
+          "src/components/workspace/register-provider.tsx",
+          "src/components/workspace/setup-register.tsx",
+          "src/components/workspace/vendor-automation.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/separator.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "6da346505c8629a4668420d2a5ca48891383bbe0b0ceb14163537c671879427e",
+      "interfaceReview": {
+        "exports": [
+          "Separator"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/sheet.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "63863cf2df8f8973e52b3459ac9bdbf81be1262dbc70eb53d5271ffb03488e16",
+      "interfaceReview": {
+        "exports": [
+          "Sheet",
+          "SheetTrigger",
+          "SheetClose",
+          "SheetContent",
+          "SheetHeader",
+          "SheetFooter",
+          "SheetTitle",
+          "SheetDescription"
+        ],
+        "imports": [
+          "react",
+          "lucide-react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/components/workspace/menu-waste-recorder.tsx",
+          "src/components/workspace/waste-recorder.tsx",
+          "src/components/workspace/workspace.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/sidebar.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "4a8d73e7730a2b1fcecfca31299ed26db65c2307b84197a59c6ec7c01c7ad28e",
+      "interfaceReview": {
+        "exports": [
+          "Sidebar",
+          "SidebarContent",
+          "SidebarFooter",
+          "SidebarGroup",
+          "SidebarGroupAction",
+          "SidebarGroupContent",
+          "SidebarGroupLabel",
+          "SidebarHeader",
+          "SidebarInput",
+          "SidebarInset",
+          "SidebarMenu",
+          "SidebarMenuAction",
+          "SidebarMenuBadge",
+          "SidebarMenuButton",
+          "SidebarMenuItem",
+          "SidebarMenuSkeleton",
+          "SidebarMenuSub",
+          "SidebarMenuSubButton",
+          "SidebarMenuSubItem",
+          "SidebarProvider",
+          "SidebarRail",
+          "SidebarSeparator",
+          "SidebarTrigger",
+          "useSidebar"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "lucide-react",
+          "radix-ui",
+          "@/hooks/use-mobile",
+          "@/lib/utils",
+          "@/components/ui/button",
+          "@/components/ui/input",
+          "@/components/ui/separator",
+          "@/components/ui/sheet",
+          "@/components/ui/skeleton",
+          "@/components/ui/tooltip"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useContext",
+          "useIsMobile",
+          "React.useState",
+          "React.useCallback",
+          "React.useEffect",
+          "React.useMemo",
+          "useSidebar"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/skeleton.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "ba48dd5be5a6a1378bd4e011028654b5bf419f1e7d20ee4b9f8330c1264e7239",
+      "interfaceReview": {
+        "exports": [
+          "Skeleton"
+        ],
+        "imports": [
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/components/workspace/payment-methods.tsx",
+          "src/components/workspace/workspace.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/slider.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "0e37484f4b416e79ac18c655cac961aefacf6e67085cfc2b320ea8af545635a3",
+      "interfaceReview": {
+        "exports": [
+          "Slider"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useMemo"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/sonner.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "13ccc9b0fe4248e622f83a1d3b2f0566b72b5e04162d7d0c8db8945ecc71b55f",
+      "interfaceReview": {
+        "exports": [
+          "Toaster"
+        ],
+        "imports": [
+          "lucide-react",
+          "next-themes",
+          "sonner"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "useTheme"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/spinner.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "3e6e6e8d37fb4069f8e43e55318f8db06fbc36e6c8be0096da3c9337c1c798b9",
+      "interfaceReview": {
+        "exports": [
+          "Spinner"
+        ],
+        "imports": [
+          "lucide-react",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/switch.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "386d4d4deb39f34126f9700fe9bf5393d238485dd94018bba9d154dda84c62ae",
+      "interfaceReview": {
+        "exports": [
+          "Switch"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/table.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "20e5a7f224959c6b75802995706a97e9da171f693d4b6b1b436388fcd9df96f3",
+      "interfaceReview": {
+        "exports": [
+          "Table",
+          "TableHeader",
+          "TableBody",
+          "TableFooter",
+          "TableHead",
+          "TableRow",
+          "TableCell",
+          "TableCaption"
+        ],
+        "imports": [
+          "react",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": [
+          "src/components/workspace/exact-inventory-panel.tsx",
+          "src/components/workspace/inventory-panel.tsx",
+          "src/components/workspace/sales-exceptions.tsx",
+          "src/components/workspace/setup-register.tsx",
+          "src/components/workspace/workspace.tsx"
+        ]
+      }
     },
     {
       "path": "src/components/ui/tabs.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "865d0194331b9b2be36723fa79d3575dc83078b4cb941cafee87cb72fc2cff46",
+      "interfaceReview": {
+        "exports": [
+          "Tabs",
+          "TabsList",
+          "TabsTrigger",
+          "TabsContent",
+          "tabsListVariants"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/textarea.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "253cdeb487c73beaaccdf47fc163e36e7d5b7ae6ddf09a4f64998a109a112979",
+      "interfaceReview": {
+        "exports": [
+          "Textarea"
+        ],
+        "imports": [
+          "react",
+          "@/lib/utils"
+        ],
+        "directives": [],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/toggle-group.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "69f643e889e933f05c1439084480d8646f66a161c7d1cf0730ee926382ade35e",
+      "interfaceReview": {
+        "exports": [
+          "ToggleGroup",
+          "ToggleGroupItem"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils",
+          "@/components/ui/toggle"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [
+          "React.useContext"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/toggle.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "ba4d0b0a2b2fee75dc36dfc19e32082e721024b919050c97fd5dc70faa924e16",
+      "interfaceReview": {
+        "exports": [
+          "Toggle",
+          "toggleVariants"
+        ],
+        "imports": [
+          "react",
+          "class-variance-authority",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/ui/tooltip.tsx",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "a0784eb77831a799fad7991df4f1b666f876201565a80175e1aa68733574a2e4",
+      "interfaceReview": {
+        "exports": [
+          "Tooltip",
+          "TooltipTrigger",
+          "TooltipContent",
+          "TooltipProvider"
+        ],
+        "imports": [
+          "react",
+          "radix-ui",
+          "@/lib/utils"
+        ],
+        "directives": [
+          "use client"
+        ],
+        "hooks": [],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/components/workspace/a8-review-preview.tsx",
@@ -6394,11 +7917,28 @@
     {
       "path": "src/hooks/use-mobile.ts",
       "section": "S14",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "vendored-or-binary-review-only",
       "baselineTracked": true,
       "baselineSha256": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b",
-      "results": []
+      "results": [
+        "S14 reviewed unchanged: repository-declared shadcn@4.17.0 provenance, existing vendor lint exceptions, interface/import/directive/hook/consumer inventory and baseline byte hash verified. All 62 files and 348 export names retained; nine primitive modules have direct owned consumers. Guard suite, scoped lint under unchanged exceptions, typecheck/build/diff pass. No vendor formatting or independent upstream registry comparison claimed; see sectionReviews.S14."
+      ],
+      "cleanupSha256": "ad0936f84f1df79d3697bfbff9c18f8ad58431c1cbaf2359c6a853b0fcc9f28b",
+      "interfaceReview": {
+        "exports": [
+          "useIsMobile"
+        ],
+        "imports": [
+          "react"
+        ],
+        "directives": [],
+        "hooks": [
+          "React.useState",
+          "React.useEffect"
+        ],
+        "ownedConsumers": []
+      }
     },
     {
       "path": "src/lib/a8-review-source.ts",
@@ -10454,7 +11994,76 @@
             "sha256": "eccef56e1a4668e82cff1e1705b20185779b4f4f846a9187d1dfe18e612352fc"
           }
         ]
-      }
+      },
+      "commits": [
+        "3cd0efd",
+        "57638a9",
+        "b5c514f"
+      ]
+    },
+    "S14": {
+      "outcome": "Completed",
+      "safeFilesCompleted": 62,
+      "heldFiles": [],
+      "preSectionCommit": "b5c514f",
+      "codeCommits": [
+        "docs(readability): record protected shared UI review"
+      ],
+      "baseline": [],
+      "final": [
+        {
+          "command": "pnpm test code-readability",
+          "exit": 0,
+          "seconds": 1.2,
+          "log": ".sites-runtime/readability/S14/final/0-test.log",
+          "logSha256": "a641e0ca7e88e88aec75d161165f5267dc9e6abcaac852c1946562d8b69fc922"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/components/ui/accordion.tsx src/components/ui/alert-dialog.tsx src/components/ui/alert.tsx src/components/ui/aspect-ratio.tsx src/components/ui/attachment.tsx src/components/ui/avatar.tsx src/components/ui/badge.tsx src/components/ui/breadcrumb.tsx src/components/ui/bubble.tsx src/components/ui/button-group.tsx src/components/ui/button.tsx src/components/ui/calendar.tsx src/components/ui/card.tsx src/components/ui/carousel.tsx src/components/ui/chart.tsx src/components/ui/checkbox.tsx src/components/ui/collapsible.tsx src/components/ui/combobox.tsx src/components/ui/command.tsx src/components/ui/context-menu.tsx src/components/ui/dialog.tsx src/components/ui/direction.tsx src/components/ui/drawer.tsx src/components/ui/dropdown-menu.tsx src/components/ui/empty.tsx src/components/ui/field.tsx src/components/ui/form.tsx src/components/ui/hover-card.tsx src/components/ui/input-group.tsx src/components/ui/input-otp.tsx src/components/ui/input.tsx src/components/ui/item.tsx src/components/ui/kbd.tsx src/components/ui/label.tsx src/components/ui/marker.tsx src/components/ui/menubar.tsx src/components/ui/message-scroller.tsx src/components/ui/message.tsx src/components/ui/native-select.tsx src/components/ui/navigation-menu.tsx src/components/ui/pagination.tsx src/components/ui/popover.tsx src/components/ui/progress.tsx src/components/ui/radio-group.tsx src/components/ui/resizable.tsx src/components/ui/scroll-area.tsx src/components/ui/select.tsx src/components/ui/separator.tsx src/components/ui/sheet.tsx src/components/ui/sidebar.tsx src/components/ui/skeleton.tsx src/components/ui/slider.tsx src/components/ui/sonner.tsx src/components/ui/spinner.tsx src/components/ui/switch.tsx src/components/ui/table.tsx src/components/ui/tabs.tsx src/components/ui/textarea.tsx src/components/ui/toggle-group.tsx src/components/ui/toggle.tsx src/components/ui/tooltip.tsx src/hooks/use-mobile.ts",
+          "exit": 0,
+          "seconds": 1.9,
+          "log": ".sites-runtime/readability/S14/final/1-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 1.6,
+          "log": ".sites-runtime/readability/S14/final/2-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 5.5,
+          "log": ".sites-runtime/readability/S14/final/3-build.log",
+          "logSha256": "5653eb79defdc2894a09b06686288fbf9f146873cdedf8f8b8f9492606ce7691"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S14/final/4-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "612c015476628716fffa6b412a8d59866960b194318073082c91c9d087b8b6d6",
+      "review": "Review-only section. All 62 baseline byte hashes remain identical, preserving licenses/comments, public names, DOM/text/classes/ARIA, Slot/asChild/context composition and hook logic. Complete interface/dependency/directive/hook/consumer inventory records 348 exports; nine primitive modules are directly imported by owned modules. Repository config records shadcn@4.17.0 with new-york/rsc/tsx aliases and vendor-specific lint exceptions; those policies remain unchanged. No duplicate removal, rename, registry fork or blanket formatting.",
+      "limitations": [
+        "Provenance verified from committed repository configuration, not by contacting or comparing the upstream registry.",
+        "Unused primitives remain available; no removal or redesign. Original quote/semicolon conventions are deliberate vendor exceptions.",
+        "Single frozen review check run plus original baseline hash verification; no source edit, visual walkthrough or repeated full domain suite needed. S13 full 139-suite result remains separate evidence."
+      ],
+      "receipts": [
+        {
+          "path": ".sites-runtime/readability/S14/primitive-usage.json",
+          "sha256": "f17b3808114cd4c24cf00f9daa7b90551c107b6a2b9b78895c72f48afbd51a6c"
+        },
+        {
+          "path": ".sites-runtime/readability/S14/vendor-review.json",
+          "sha256": "39da4955e6a5c4357e00806c9809f8a547539beee4a4392abeb7a5071168b7c5"
+        }
+      ]
     }
   }
 }

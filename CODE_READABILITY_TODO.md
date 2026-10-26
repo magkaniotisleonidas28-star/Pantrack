@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S13** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S14** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **8 of 22 Completed; 5 Blocked (recorded handoffs/holds); 0 In Progress; 9 Pending**.
+- Cleanup sections: **9 of 22 Completed; 5 Blocked (recorded handoffs/holds); 0 In Progress; 8 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -98,7 +98,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S11 | Browser-session services and worker implementation | 28 | Completed |
 | S12 | Supplier confirmation, incoming stock and receiving | 1 | Blocked: receiving service handoff; confirmation verified |
 | S13 | API routes and server integration boundaries | 36 | Blocked: delivery-route handoff; existing routes verified |
-| S14 | Shared UI primitives and vendor boundaries | 62 | Pending |
+| S14 | Shared UI primitives and vendor boundaries | 62 | Completed |
 | S15 | Application entrypoints, identity pages and workspace shell | 15 | Pending |
 | S16 | Inventory, recipes, waste and POS workspace components | 14 | Pending |
 | S17 | Purchasing, cart, spending and document workspace components | 17 | Pending |
@@ -463,20 +463,26 @@ Commits are grouped by identity/integrations, inventory/sales/waste and purchasi
 
 ## S14 — Shared UI primitives and vendor boundaries
 
-Status: Pending. Depends on: S13.
+Status: Completed. Depends on: S13.
 
 **Files:** `src/components/ui/**`, `src/hooks/use-mobile.ts`; vendor CSS/assets are reviewed in S18.
 
-- [ ] S14.1 — Verify the shadcn provenance and existing ESLint exceptions. These sources are vendored verbatim: review and retain their bytes rather than applying a blanket formatter.
-- [ ] S14.2 — Inventory usage, exports, aliases and composition patterns so owned components can use them consistently.
-- [ ] S14.3 — Document any apparent duplication or naming issue as an upstream/vendor limitation; do not fork, rename or replace primitives during cleanup.
+- [x] S14.1 — Verify the shadcn provenance and existing ESLint exceptions. These sources are vendored verbatim: review and retain their bytes rather than applying a blanket formatter.
+- [x] S14.2 — Inventory usage, exports, aliases and composition patterns so owned components can use them consistently.
+- [x] S14.3 — Document any apparent duplication or naming issue as an upstream/vendor limitation; do not fork, rename or replace primitives during cleanup.
 
 **Verification:** Verify baseline hashes, exports and licensed headers, then typecheck/build and relevant lint under the existing vendor exceptions. A completed review can explicitly say unchanged; it must not claim vendor formatting occurred.
 
-- [ ] S14.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S14.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S14.V — Record protected-file baseline hashes and exact frozen review verification; inspect interface consumers and the documentation-only diff.
+- [x] S14.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All 61 UI primitive modules and the mobile hook reviewed as protected vendor sources. Repository `eslint.config.mjs` identifies shadcn@4.17.0 and records three scoped exceptions; `components.json` identifies new-york/RSC/TSX aliases. The interface/dependency/directive/hook/consumer inventory covers all 62 files and 348 ordered export names. Nine primitive modules are imported directly by owned Pantrack code; internal registry composition remains separate. Button/Input/Table/Select/dialog/sheet composition and sidebar/mobile state boundaries were inspected. No independent upstream registry comparison is claimed.
+
+Every file retains its original baseline byte hash, including comments, headers, DOM/ARIA/text, classes, hooks and exports. Vendor double-quote/semicolon conventions remain an explicit exception to owned-source formatting. Similar wrappers, Slot/asChild patterns and unused registry components were retained; deleting or consolidating them would fork the registry or alter available public exports. No vendor code was formatted or reorganized.
+
+The baseline hashes and current frozen-source review passed: `pnpm test code-readability` (one suite), scoped ESLint for all 62 files under the unchanged vendor exceptions (exit 0, no diagnostics), `pnpm typecheck`, `pnpm build` and `git diff --check`. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S14`; interface/usage and byte-preservation receipts: `.sites-runtime/readability/S14/`. No visual instruction or source changed, so no visual walkthrough or repeat domain full suite was needed; the S13 139-suite result remains separate evidence.
+
+Commit: `docs(readability): record protected shared UI review`. No S14 hold remains. Rollback affects this review/tracking commit only. Next: S15 owned pages and workspace shell, with the receiving-owned employee shell still held.
 
 ## S15 — Application entrypoints, identity pages and workspace shell
 
@@ -654,6 +660,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S11 | 28 browser/worker/AI/preview modules formatted; 124 declaration/method boundaries; literal fixture markup/prompts retained | Eighteen focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; inherited scoped lint 29 errors/4 warnings matched | Four local commits grouped by services, worker ownership, AI/evidence and preview; no S11 hold; independent S12 confirmation next |
 | 2026-10-26 / S12 | Present confirmation service formatted; eight declaration/method boundaries; atomic A-owned incoming handoff preserved | Four focused baseline/final suites and full 139 suites pass; scoped lint/equivalence/format/typecheck/db/build/diff pass | Local section commit; absent delivery service remains explicitly Blocked; independent existing-route S13 review next |
 | 2026-10-26 / S13 | 36 existing routes formatted; 71 declaration boundaries; policy/response/dispatch contracts retained | 23 focused baseline/final and all 139 suites; scoped lint/format/typecheck/db/build/local setup/apply/HTTP/diff pass; initial formatter refusal and stable equivalent recovery retained | Three local commits grouped by identity/integrations, stock/sales/waste and purchasing/cart; delivery API remains Blocked; independent S14 next |
+| 2026-10-26 / S14 | 62 vendor files reviewed unchanged; 348 exports and import/hook/consumer inventory; nine directly used primitive modules | All baseline hashes preserved; guard suite, scoped lint under unchanged vendor exceptions, typecheck/build/diff pass | Documentation-only local review commit; no vendor rewrite or S14 hold; S15 next |
 
 ## Final report requirements
 
