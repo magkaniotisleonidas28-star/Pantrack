@@ -91,7 +91,7 @@ the confirmation table is the source of truth for the purchase.
 | `pnpm cart:confirmation:check` against `pnpm dev:cart-browser-worker`, in an isolated clean clone | A real local browser worker prepares the practice cart. The manager then records a within-cap confirmation and an over-cap one through the form. Checked: states and messages, a refused second save, no cancel or stale guidance afterwards, no narrow overflow, unchanged stock (the practice catalog is non-stock) and no page errors. The run counts are in the final row. |
 | Visual review | Form and summary screenshots. The review hid stale preparation guidance after confirmation. |
 | Planted defects | **12 of 12 caught**; see the list below |
-| `pnpm typecheck`, `pnpm test` (**134 suites**), `pnpm db:check` (39 migrations), `pnpm build`, `pnpm db:migrate:local`, `pnpm test:local` | Passed; served check runs: see the final row |
+| `pnpm typecheck`, `pnpm test` (**133 suites**), `pnpm db:check` (39 migrations), `pnpm build`, `pnpm db:migrate:local`, `pnpm test:local` | Passed; served check runs: see the final row |
 
 The `po-cart-confirmations` suite proves:
 
