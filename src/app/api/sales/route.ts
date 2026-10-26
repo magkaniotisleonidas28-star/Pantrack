@@ -1,50 +1,226 @@
-import {UserFacingError,userFacingMessage} from '@/lib/user-facing-error';
-import {withCompanyRoute} from '@/lib/authorization';
-import {importSales} from '@/lib/import-sales';
-import {getChatGPTUser} from '@/lib/chatgpt-auth';
-import {companyAccess} from '@/lib/company-access';
-import {database} from '@/db/raw';
-import {type InventoryRecord} from '@/lib/inventory';
-import {exactInventoryPreviewEnabled} from '@/lib/exact-inventory-gate';
-import {ingestLocalSale,localUserActor} from '@/lib/d1-sales-runtime';
-import {z} from 'zod';
-async function handleGET(req:Request){
- const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
- try{const companyId=new URL(req.url).searchParams.get('companyId');const member=await companyAccess(u.userId,companyId);if(!member)return Response.json({error:'Company access denied.'},{status:403});const db=database();if(member.role==='employee'){const recipes=await db.prepare('SELECT data FROM recipes WHERE company_id=?').bind(companyId).all<{data:string}>();return Response.json({mappings:[],recipes:recipes.results.map(x=>JSON.parse(x.data)),imports:[]},{headers:{'Cache-Control':'no-store'}});}const [r,i,m]=await Promise.all([db.prepare('SELECT data FROM recipes WHERE company_id=?').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM sales_imports WHERE company_id=? ORDER BY created DESC LIMIT 30').bind(companyId).all<{data:string}>(),db.prepare('SELECT data FROM register_mappings WHERE company_id=?').bind(companyId).all<{data:string}>()]);return Response.json({mappings:m.results.map(x=>JSON.parse(x.data)),recipes:r.results.map(x=>JSON.parse(x.data)),imports:i.results.map(x=>JSON.parse(x.data))},{headers:{'Cache-Control':'no-store'}});}catch{return Response.json({error:'Could not load recipes and sales.'},{status:503});}
+import { UserFacingError, userFacingMessage } from '@/lib/user-facing-error';
+import { withCompanyRoute } from '@/lib/authorization';
+import { importSales } from '@/lib/import-sales';
+import { getChatGPTUser } from '@/lib/chatgpt-auth';
+import { companyAccess } from '@/lib/company-access';
+import { database } from '@/db/raw';
+import { type InventoryRecord } from '@/lib/inventory';
+import { exactInventoryPreviewEnabled } from '@/lib/exact-inventory-gate';
+import { ingestLocalSale, localUserActor } from '@/lib/d1-sales-runtime';
+import { z } from 'zod';
+async function handleGET(req: Request) {
+  const u = await getChatGPTUser();
+  if (!u) return Response.json({ error: 'Please sign in.' }, { status: 401 });
+  try {
+    const companyId = new URL(req.url).searchParams.get('companyId');
+    const member = await companyAccess(u.userId, companyId);
+    if (!member) return Response.json({ error: 'Company access denied.' }, { status: 403 });
+    const db = database();
+    if (member.role === 'employee') {
+      const recipes = await db
+        .prepare('SELECT data FROM recipes WHERE company_id=?')
+        .bind(companyId)
+        .all<{ data: string }>();
+      return Response.json(
+        { mappings: [], recipes: recipes.results.map((x) => JSON.parse(x.data)), imports: [] },
+        { headers: { 'Cache-Control': 'no-store' } },
+      );
+    }
+    const [r, i, m] = await Promise.all([
+      db
+        .prepare('SELECT data FROM recipes WHERE company_id=?')
+        .bind(companyId)
+        .all<{ data: string }>(),
+      db
+        .prepare('SELECT data FROM sales_imports WHERE company_id=? ORDER BY created DESC LIMIT 30')
+        .bind(companyId)
+        .all<{ data: string }>(),
+      db
+        .prepare('SELECT data FROM register_mappings WHERE company_id=?')
+        .bind(companyId)
+        .all<{ data: string }>(),
+    ]);
+    return Response.json(
+      {
+        mappings: m.results.map((x) => JSON.parse(x.data)),
+        recipes: r.results.map((x) => JSON.parse(x.data)),
+        imports: i.results.map((x) => JSON.parse(x.data)),
+      },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
+  } catch {
+    return Response.json({ error: 'Could not load recipes and sales.' }, { status: 503 });
+  }
 }
-async function handlePOST(req:Request){
- const u=await getChatGPTUser();if(!u)return Response.json({error:'Please sign in.'},{status:401});
- if(req.headers.get('sec-fetch-site')==='cross-site'||!req.headers.get('content-type')?.startsWith('application/json'))return Response.json({error:'Invalid request.'},{status:403});
- try{
- const b=z.object({companyId:z.string().min(1),action:z.enum(['recipe','import','mapping','removeMapping']),mapping:z.object({provider:z.string().trim().min(1).max(60),location:z.string().trim().min(1).max(100),itemId:z.string().trim().min(1).max(150),name:z.string().trim().min(1).max(100),recipeId:z.string().uuid()}).optional(),mappingKey:z.string().min(1).max(500).optional(),recipe:z.object({id:z.string().uuid(),name:z.string().trim().min(1).max(100),ingredients:z.array(z.object({productId:z.string().min(1),quantity:z.number().positive().max(100000),unit:z.string().min(1)})).min(1).max(20)}).optional(),reference:z.string().trim().min(1).max(100).optional(),occurredAt:z.string().min(20).max(35).optional(),source:z.enum(['manual','recipe_csv','mapped_csv']).optional(),lines:z.array(z.object({recipeId:z.string().uuid().optional(),mappingKey:z.string().min(1).max(500).optional(),quantity:z.number().int().min(1).max(10000),modifiers:z.array(z.object({modifierId:z.string().min(1).max(150),perItem:z.number().int().min(1).max(5)})).max(20).optional()}).refine(v=>!!v.recipeId!==!!v.mappingKey,'Choose a recipe or register mapping')).min(1).max(20).optional()}).parse(await req.json());
- const member=await companyAccess(u.userId,b.companyId);if(!member||!['owner','manager'].includes(member.role))return Response.json({error:'Company access denied.'},{status:403});
- if(exactInventoryPreviewEnabled()&&b.action==='recipe')return Response.json({error:'Exact inventory preview is enabled. Recipe changes use the versioned inventory editor.'},{status:409});
- const db=database(),rows=await db.prepare('SELECT data FROM inventory WHERE company_id=?').bind(b.companyId).all<{data:string}>(),records=rows.results.map(x=>JSON.parse(x.data) as InventoryRecord);
- if(b.action==='mapping'){
- if(!b.mapping)throw new UserFacingError('Enter register item details.');
- if(!await db.prepare('SELECT id FROM recipes WHERE company_id=? AND id=?').bind(b.companyId,b.mapping.recipeId).first())throw new UserFacingError('Choose a recipe belonging to this company.');
- const key=JSON.stringify([b.mapping.provider,b.mapping.location,b.mapping.itemId]);
- await db.prepare('INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?) ON CONFLICT(company_id,external_key) DO UPDATE SET data=excluded.data').bind(b.companyId,key,JSON.stringify({...b.mapping,key})).run();return Response.json({ok:true});
- }
- if(b.action==='removeMapping'){
- if(!b.mappingKey)throw new UserFacingError('Select a mapping.');
- await db.prepare('DELETE FROM register_mappings WHERE company_id=? AND external_key=?').bind(b.companyId,b.mappingKey).run();return Response.json({ok:true});
- }
- if(b.action==='recipe'){
- if(!b.recipe)throw new UserFacingError('Enter recipe ingredients.');
- if(new Set(b.recipe.ingredients.map(i=>i.productId)).size!==b.recipe.ingredients.length)throw new UserFacingError('Use each ingredient once per recipe.');
- for(const i of b.recipe.ingredients){const r=records.find(r=>r.productId===i.productId);if(!r||r.settings.unit!==i.unit)throw new UserFacingError('Configure inventory units before saving the recipe.');}
- await db.prepare('INSERT INTO recipes(company_id,id,data) VALUES (?,?,?) ON CONFLICT(company_id,id) DO UPDATE SET data=excluded.data').bind(b.companyId,b.recipe.id,JSON.stringify(b.recipe)).run();return Response.json({ok:true});
- }
- if(!b.reference||!b.lines)throw new UserFacingError('Enter a unique sales reference and quantities.');
- if(exactInventoryPreviewEnabled()){
-  if(!b.occurredAt)throw new UserFacingError('Confirm when these sales occurred before importing.');
-  const source=b.source??(b.lines.some(line=>line.mappingKey)?'mapped_csv':'manual');
-  if(source==='mapped_csv'&&b.lines.some(line=>!line.mappingKey)||source!=='mapped_csv'&&b.lines.some(line=>!line.recipeId))throw new UserFacingError('Sales source does not match its lines.');
-  return Response.json(await ingestLocalSale({db,companyId:b.companyId,source,reference:b.reference,occurredAt:b.occurredAt,lines:b.lines,actor:localUserActor(u,b.companyId,member.role)}));
- }
- return Response.json(await importSales(b.companyId,b.reference,b.lines,u.email));
- }catch(e){return Response.json({error:e instanceof z.ZodError?'Check recipes and sales quantities.':userFacingMessage(e,'Could not save sales.')},{status:400});}
+
+async function handlePOST(req: Request) {
+  const u = await getChatGPTUser();
+  if (!u) return Response.json({ error: 'Please sign in.' }, { status: 401 });
+  if (
+    req.headers.get('sec-fetch-site') === 'cross-site' ||
+    !req.headers.get('content-type')?.startsWith('application/json')
+  )
+    return Response.json({ error: 'Invalid request.' }, { status: 403 });
+  try {
+    const b = z
+      .object({
+        companyId: z.string().min(1),
+        action: z.enum(['recipe', 'import', 'mapping', 'removeMapping']),
+        mapping: z
+          .object({
+            provider: z.string().trim().min(1).max(60),
+            location: z.string().trim().min(1).max(100),
+            itemId: z.string().trim().min(1).max(150),
+            name: z.string().trim().min(1).max(100),
+            recipeId: z.string().uuid(),
+          })
+          .optional(),
+        mappingKey: z.string().min(1).max(500).optional(),
+        recipe: z
+          .object({
+            id: z.string().uuid(),
+            name: z.string().trim().min(1).max(100),
+            ingredients: z
+              .array(
+                z.object({
+                  productId: z.string().min(1),
+                  quantity: z.number().positive().max(100000),
+                  unit: z.string().min(1),
+                }),
+              )
+              .min(1)
+              .max(20),
+          })
+          .optional(),
+        reference: z.string().trim().min(1).max(100).optional(),
+        occurredAt: z.string().min(20).max(35).optional(),
+        source: z.enum(['manual', 'recipe_csv', 'mapped_csv']).optional(),
+        lines: z
+          .array(
+            z
+              .object({
+                recipeId: z.string().uuid().optional(),
+                mappingKey: z.string().min(1).max(500).optional(),
+                quantity: z.number().int().min(1).max(10000),
+                modifiers: z
+                  .array(
+                    z.object({
+                      modifierId: z.string().min(1).max(150),
+                      perItem: z.number().int().min(1).max(5),
+                    }),
+                  )
+                  .max(20)
+                  .optional(),
+              })
+              .refine(
+                (v) => !!v.recipeId !== !!v.mappingKey,
+                'Choose a recipe or register mapping',
+              ),
+          )
+          .min(1)
+          .max(20)
+          .optional(),
+      })
+      .parse(await req.json());
+    const member = await companyAccess(u.userId, b.companyId);
+    if (!member || !['owner', 'manager'].includes(member.role))
+      return Response.json({ error: 'Company access denied.' }, { status: 403 });
+    if (exactInventoryPreviewEnabled() && b.action === 'recipe')
+      return Response.json(
+        {
+          error:
+            'Exact inventory preview is enabled. Recipe changes use the versioned inventory editor.',
+        },
+        { status: 409 },
+      );
+    const db = database(),
+      rows = await db
+        .prepare('SELECT data FROM inventory WHERE company_id=?')
+        .bind(b.companyId)
+        .all<{ data: string }>(),
+      records = rows.results.map((x) => JSON.parse(x.data) as InventoryRecord);
+    if (b.action === 'mapping') {
+      if (!b.mapping) throw new UserFacingError('Enter register item details.');
+      if (
+        !(await db
+          .prepare('SELECT id FROM recipes WHERE company_id=? AND id=?')
+          .bind(b.companyId, b.mapping.recipeId)
+          .first())
+      )
+        throw new UserFacingError('Choose a recipe belonging to this company.');
+      const key = JSON.stringify([b.mapping.provider, b.mapping.location, b.mapping.itemId]);
+      await db
+        .prepare(
+          'INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?) ON CONFLICT(company_id,external_key) DO UPDATE SET data=excluded.data',
+        )
+        .bind(b.companyId, key, JSON.stringify({ ...b.mapping, key }))
+        .run();
+      return Response.json({ ok: true });
+    }
+    if (b.action === 'removeMapping') {
+      if (!b.mappingKey) throw new UserFacingError('Select a mapping.');
+      await db
+        .prepare('DELETE FROM register_mappings WHERE company_id=? AND external_key=?')
+        .bind(b.companyId, b.mappingKey)
+        .run();
+      return Response.json({ ok: true });
+    }
+    if (b.action === 'recipe') {
+      if (!b.recipe) throw new UserFacingError('Enter recipe ingredients.');
+      if (
+        new Set(b.recipe.ingredients.map((i) => i.productId)).size !== b.recipe.ingredients.length
+      )
+        throw new UserFacingError('Use each ingredient once per recipe.');
+      for (const i of b.recipe.ingredients) {
+        const r = records.find((r) => r.productId === i.productId);
+        if (!r || r.settings.unit !== i.unit)
+          throw new UserFacingError('Configure inventory units before saving the recipe.');
+      }
+      await db
+        .prepare(
+          'INSERT INTO recipes(company_id,id,data) VALUES (?,?,?) ON CONFLICT(company_id,id) DO UPDATE SET data=excluded.data',
+        )
+        .bind(b.companyId, b.recipe.id, JSON.stringify(b.recipe))
+        .run();
+      return Response.json({ ok: true });
+    }
+    if (!b.reference || !b.lines)
+      throw new UserFacingError('Enter a unique sales reference and quantities.');
+    if (exactInventoryPreviewEnabled()) {
+      if (!b.occurredAt)
+        throw new UserFacingError('Confirm when these sales occurred before importing.');
+      const source =
+        b.source ?? (b.lines.some((line) => line.mappingKey) ? 'mapped_csv' : 'manual');
+      if (
+        (source === 'mapped_csv' && b.lines.some((line) => !line.mappingKey)) ||
+        (source !== 'mapped_csv' && b.lines.some((line) => !line.recipeId))
+      )
+        throw new UserFacingError('Sales source does not match its lines.');
+      return Response.json(
+        await ingestLocalSale({
+          db,
+          companyId: b.companyId,
+          source,
+          reference: b.reference,
+          occurredAt: b.occurredAt,
+          lines: b.lines,
+          actor: localUserActor(u, b.companyId, member.role),
+        }),
+      );
+    }
+    return Response.json(await importSales(b.companyId, b.reference, b.lines, u.email));
+  } catch (e) {
+    return Response.json(
+      {
+        error:
+          e instanceof z.ZodError
+            ? 'Check recipes and sales quantities.'
+            : userFacingMessage(e, 'Could not save sales.'),
+      },
+      { status: 400 },
+    );
+  }
 }
-export const GET=withCompanyRoute('sales',handleGET);
-export const POST=withCompanyRoute('sales',handlePOST);
+
+export const GET = withCompanyRoute('sales', handleGET);
+export const POST = withCompanyRoute('sales', handlePOST);
