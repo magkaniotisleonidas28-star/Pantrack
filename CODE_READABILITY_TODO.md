@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S12** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S13** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **8 of 22 Completed; 4 Blocked (recorded handoffs/holds); 0 In Progress; 10 Pending**.
+- Cleanup sections: **8 of 22 Completed; 5 Blocked (recorded handoffs/holds); 0 In Progress; 9 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -97,7 +97,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S10 | Durable cart authorization, jobs and spending limits | 3 | Completed |
 | S11 | Browser-session services and worker implementation | 28 | Completed |
 | S12 | Supplier confirmation, incoming stock and receiving | 1 | Blocked: receiving service handoff; confirmation verified |
-| S13 | API routes and server integration boundaries | 36 | Pending |
+| S13 | API routes and server integration boundaries | 36 | Blocked: delivery-route handoff; existing routes verified |
 | S14 | Shared UI primitives and vendor boundaries | 62 | Pending |
 | S15 | Application entrypoints, identity pages and workspace shell | 15 | Pending |
 | S16 | Inventory, recipes, waste and POS workspace components | 14 | Pending |
@@ -435,23 +435,31 @@ Commit: `style(readability): clarify supplier confirmation and incoming handoff`
 
 ## S13 — API routes and server integration boundaries
 
-Status: Pending. Depends on: S05–S12; receiving route remains on hold until its own dependencies are ready.
+Status: Blocked only for delivery-route handoff; 36 existing routes verified. Depends on: S05–S12; receiving route remains on hold until its own dependencies are ready.
 
 **Files:** Every `src/app/api/**/route.ts`, including browser company routes, machine transports, callbacks, webhooks, exports, automation and the pending delivery API.
 
-- [ ] S13.1 — Review routes family by family: identity/company/members; inventory/waste/replenishment; sales/register/Clover; purchasing/history/cart; internal worker/browser/machine callbacks.
-- [ ] S13.2 — Expand compressed request parsing and response branches, clarify local names and group existing action handlers without changing dispatch order.
-- [ ] S13.3 — Keep thin boundaries where already present; extract only route-local pure helpers with meaningful regression coverage. Do not redesign the shared wrapper or merge incompatible error policies.
-- [ ] S13.4 — Preserve verbs/paths, schemas, response bodies/statuses/headers, caching, CSRF, body limits, role/tenant checks, machine credentials and pre/post-dispatch uncertainty. Keep the active delivery route Blocked.
+- [x] S13.1 — Review routes family by family: identity/company/members; inventory/waste/replenishment; sales/register/Clover; purchasing/history/cart; internal worker/browser/machine callbacks.
+- [x] S13.2 — Expand compressed request parsing and response branches, clarify local names and group existing action handlers without changing dispatch order.
+- [x] S13.3 — Keep thin boundaries where already present; extract only route-local pure helpers with meaningful regression coverage. Do not redesign the shared wrapper or merge incompatible error policies.
+- [!] S13.4 — Existing verbs/paths, schemas, responses/headers, caching, CSRF/body limits, role/tenant checks, machine credentials and uncertainty are verified unchanged. The absent delivery route remains Blocked until receiving integration/handoff.
 
-**Focused command:** `pnpm test m2-security b4-sales-inventory po-cart-authorizations-api po-cart-jobs-api po-cart-browser-session-api po-cart-worker-api po-cart-confirmations-api purchase-order-export-api purchase-order-history-export-api purchasing-suppliers-api`.
+**Focused command:** `pnpm test m2-security b4-sales-inventory po-cart-authorizations-api po-cart-jobs-api po-cart-browser-session-api po-cart-worker-api po-cart-confirmations-api purchase-order-export-api purchase-order-history-export-api purchasing-suppliers-api local-auth cart-preview-api po-cart-spending-limits-api po-cart-reconciliation-api purchase-order-api clover-connection clover-b6-local register-bridge pos-register-status waste-recording menu-waste inventory-management-contract replenishment-review-group`.
 
 **Verification:** Run every affected API suite and full tests, scoped lint, typecheck, build, then isolated local migration/HTTP smoke for boundary verification. Recheck anonymous/wrong-company/forbidden-role cases; no hosted requests.
 
-- [ ] S13.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S13.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S13.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S13.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All 36 existing routes read fully and formatted; 71 whitespace-only declaration boundaries separate types/helpers/handlers. Identity/company/membership, legacy automation/payments, Clover/callback/bridge, inventory/sales/replenishment/waste, purchasing/history/cart and machine-worker boundaries are easier to scan. Thin delegates remain thin; route-local policy differences and existing wrapper families are retained. No new abstraction, route or shared-wrapper redesign was introduced.
+
+All 36 routes match pre-section `66104fe` syntax/types/exports/literals/comments/emitted runtime. Verbs/paths, Zod schemas/default order, response bodies/statuses/headers/cookies/caching, current membership/roles, CSRF/origin checks, loopback/default-off gates, streaming limits, machine scopes, dispatch/SQL/binding/effect order, permanent replay and uncertainty semantics are unchanged.
+
+The pinned formatter initially refused the Clover callback because its first and second output differed. The formatter wrote no files; the following blank-line step ran despite that refusal, and the initial check attempt passed 23 suites then stopped at format-check exit 1. That partial attempt and a reproduced formatter refusal are retained under `.sites-runtime/readability/S13/initial-format-refusal/` and `formatter-refusal.log`. Two explicit callback formatting passes each preserved complete syntax/type/literal/runtime signatures and reached a stable result; independent Prettier debug-check then passed. The formatter configuration/implementation/refusal checks were not changed. The full section was subsequently formatted and independently compared to the original commit.
+
+Ten planned and thirteen additional focused suites passed before editing; the final combined command passed all 23 suites, including anonymous/wrong-company/forbidden-role, audit-failure credential responses, malformed waste JSON, recovery fences, CSRF and machine denial cases. Full `pnpm test` passed all 139 suites. Scoped lint exited 0 with the inherited workspace `samples` unused-import warning. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build, `local:setup`, worktree-only `db:migrate:local`, loopback `test:local` and diff check passed against frozen source. The smoke uses fictional worktree state and proves forged-header/anonymous/tenant/CSRF/default-off behavior; no owner or remote database is used. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S13`; logs: `.sites-runtime/readability/S13/`.
+
+Commits are grouped by identity/integrations, inventory/sales/waste and purchasing/cart/worker boundaries. **Remaining hold:** absent delivery API plus its receiving contract/service/schema/UI/tests; authorization-wrapper handoff remains recorded in S05. No behavioral API change or new schema was made. S14 can independently review the vendored UI primitives unchanged. Rollback: these three source/docs commits only.
 
 ## S14 — Shared UI primitives and vendor boundaries
 
@@ -645,6 +653,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S10 | Three cart authorization/job/spending modules formatted; 71 declaration/method boundaries | Nine focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains inherited prefer-const error and unused warning | Two local commits grouped by authorization/spending and jobs; no S10 source hold; S11 next |
 | 2026-10-26 / S11 | 28 browser/worker/AI/preview modules formatted; 124 declaration/method boundaries; literal fixture markup/prompts retained | Eighteen focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; inherited scoped lint 29 errors/4 warnings matched | Four local commits grouped by services, worker ownership, AI/evidence and preview; no S11 hold; independent S12 confirmation next |
 | 2026-10-26 / S12 | Present confirmation service formatted; eight declaration/method boundaries; atomic A-owned incoming handoff preserved | Four focused baseline/final suites and full 139 suites pass; scoped lint/equivalence/format/typecheck/db/build/diff pass | Local section commit; absent delivery service remains explicitly Blocked; independent existing-route S13 review next |
+| 2026-10-26 / S13 | 36 existing routes formatted; 71 declaration boundaries; policy/response/dispatch contracts retained | 23 focused baseline/final and all 139 suites; scoped lint/format/typecheck/db/build/local setup/apply/HTTP/diff pass; initial formatter refusal and stable equivalent recovery retained | Three local commits grouped by identity/integrations, stock/sales/waste and purchasing/cart; delivery API remains Blocked; independent S14 next |
 
 ## Final report requirements
 

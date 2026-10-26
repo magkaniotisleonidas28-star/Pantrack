@@ -4822,146 +4822,210 @@
     {
       "path": "src/app/api/auth/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "df4f4bae84a5d85fc88ef7d4bc5951d482db219b885ded878f807a42340c3397",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "cf48816fc8d1f56cb6ca9d9df275f55d386c840250e7f54bd5eae757045545f8"
     },
     {
       "path": "src/app/api/automation/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "74775ae74831505718b0411666cfe6d7dd87a87a142552b9ece85eb5081d0dbe",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "d931f57fa3165c752c9b73f99bd2e5bdc666ac5b61f2461be0005d443f605c98"
     },
     {
       "path": "src/app/api/automation/tick/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "22c4a754dc92e940e8aa73d9690cb8af96e9192420d62ec023ee1968c9d490c6",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "f2ce4a0666bd80e3d93dfdd4f87219b2c024c41791757663d6d1973da7fcb159"
     },
     {
       "path": "src/app/api/cart-preview-context/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f61c34526dc76dddb558e1387818bbaf71fd38aa7cb046a457cbd5059064d302",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "acc69bfbb9d9068a57b358305ae892c6773b009b3772743db9480cfe19f294fc"
     },
     {
       "path": "src/app/api/clover/callback/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "15985eaca83f4c9b3fec9d931c0ab92f495a5d532950a4d02aa6d54e5addd100",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "85b2ee1e5b8958eb889d8cb8191f580ec2e8f11a0c86059b2c7d80703d4b720a"
     },
     {
       "path": "src/app/api/clover/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2b2e05cd7be975ff89eed56d794cf24916f270f81028edf4bde718f27029a098",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "0a0c950784c12b70a1c218c66bcd19273482843b403e59cc1ddb992b1c17d6db"
     },
     {
       "path": "src/app/api/clover/webhook/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "954a82b5672b72e323758cffe5ab19a8e155eebd67c90d3e1822dc9bdf675286",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "0fb36f234aa75b5903083c2315f98ee76df828e3ea6f5d4ac72fe788c5dbcfa4"
     },
     {
       "path": "src/app/api/clover/webhook/setup/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "71695f9c1febdbbe12271f51989a41017a1da979837ebd5afbfcce748d70ae92",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "91968be1283ca8c5b9d5a5281cbcf80d92146318892c2b96dfbd9c5a327d102d"
     },
     {
       "path": "src/app/api/companies/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "e8bd5a1cab7f06ec85d499214d1e4868eb0f156cfb4fdd0532faaa42887506ed",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "72d3ee034f03f6383984b8059d3b9ef6513ab38d9603fa1af5f07399d8320ac5"
     },
     {
       "path": "src/app/api/internal/po-cart-browser-session/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "475041cafe602050226a6b46c992ab58a7042350d9ab60e865d976d71305f042",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "1c9b12947a7749de6d7e2abc4c0c98d0fd9809d991e3c9ca82ffe009f545d610"
     },
     {
       "path": "src/app/api/internal/po-cart-worker/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5734d1e086aebe8113938753f3ad3ed4ee5135ef1ea999f70251a8aca3ea3c24",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "6835a9491444f3f065e9ba8b7b1c465218a1205589fddbfd9d0ba5fe690ad248"
     },
     {
       "path": "src/app/api/inventory/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "583d0205e6246cc5843728dc81b5dd7d227e7470fbfb18c8e00db7edac3a97c0",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "d759c41294994cb63a80b774d782bf04f97c14684380e40a18df20ad4adc6163"
     },
     {
       "path": "src/app/api/members/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "613a848acafbaaf822f990406ecb5066f180696d1f1873caf0dc0949fe9f4e31",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "bbaf6155e0b3e74449ff5dc407c0019b5f94a3d4c3d546e1aae0d278ca881d50"
     },
     {
       "path": "src/app/api/payments/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8e09f0c1a768c359fdf1d913f9d6019f2cbb9070d65d65bc77333e6de7821ab4",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "721cb3983a55b86a8aaa02af3e14bf94954a15f94a880272890deef7721e693e"
     },
     {
       "path": "src/app/api/po-cart-authorizations/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3718a0e6e48e7f8e1767cf5956a29312a64729c2d422b2d3e94e0ffd483bd3f6",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "2126f9ac5bdae823baa10dc011712c66f5e738ddaa0463cdcebfec6347e55d2f"
     },
     {
       "path": "src/app/api/po-cart-confirmations/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5569d2720f76a9e0c55d48533228c7925cb22c2d68efce2d83608cd8bf027e5f",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "1852a2f96e714a7f2a88ab14d28cae6c835e9be85d42cc5d1d3acc3cdb639b39"
     },
     {
       "path": "src/app/api/po-cart-deliveries/route.ts",
@@ -4975,182 +5039,262 @@
     {
       "path": "src/app/api/po-cart-jobs/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3bb2dbdd13ed8e6e10f1072f1c583e60009fd189532a0319561e90b7168c6056",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "549a084edf85ad93c680d48eb2fc0772306ae8169609f844e9bfe22174bd3bb2"
     },
     {
       "path": "src/app/api/po-cart-spending-limits/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "610869e263de6aff41fda7b6937a2a157900d75b56df52c650fa2ae7056442a8",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "18b747f9bbd5b6c1b5d1edafbc50f2ab0b436f66f48e15dc643c8b914568d3e6"
     },
     {
       "path": "src/app/api/purchase-order-exports/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "eedad6708c7360626811ceab59fc91e5ddebc8f5ed3a8a9d8f9b5867fd06ed6d",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "8135bedbea9b190e859b5a2d0e547f8200feaa52538d22b849193c14ff5ba70f"
     },
     {
       "path": "src/app/api/purchase-order-history-exports/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2f94da82c5d63d0577c192340fd542092cc4e814762a2d8eabecf2a72ee61c06",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "43fe65eb7d0f522069fda3b491dfa8a62198752a971958f2c33d058654054281"
     },
     {
       "path": "src/app/api/purchase-orders/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ba0f7e7ab53b20b9683cad34c6ba073ce04cde25ea061c8d542e8b3e6e17ee4a",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "f2458ff4b1ee45d7e5db61a3dbe01a682e8f892e4fb9dc69a469946ee9956465"
     },
     {
       "path": "src/app/api/purchasing-suppliers/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f3c4106768dac35dbff3e93652b46d3734930a569cc707d75d248d1c4043c8d7",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "9e1da4d4cf6326a3d70192f16a5754635690fdfad4793cde17f0fbfd85e10dcd"
     },
     {
       "path": "src/app/api/register/ingest/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "263fe3b17f6266208ae5b68881a64ea0ede76bb0fad27426ffdad07c1340e637",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "a5df31655ec53abb4981d3fa427a0e2ac64e2a89f006a846bacce673a0fa5bc8"
     },
     {
       "path": "src/app/api/register/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3d226e4299aaa419591b66882b5cc68b7110a40f90581cc96146862cd2af7043",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "3f34f10d45132513e976bc0abf93a868ee1779f1b80fe9abf1b61f4e0d08ee02"
     },
     {
       "path": "src/app/api/replenishment/proposals/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8fc0ec1fb20a0b0f6b0ad1c7b4f3a053ab01bf4bf87f3665fba8c9fb5cfc6d82",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "88ae2a00d4862e5afea4d5d7586ada2f326f881880c2381c552359b3cbe22b4c"
     },
     {
       "path": "src/app/api/replenishment/review/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "da963dda8524e68c135d4fefbe6ad78ec5d121977da34377fd7e879585ffa31a",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "2f64ef0f2fa00ec4a2d90ab85cb2853c5be490cb09474db32d4cb05200de784a"
     },
     {
       "path": "src/app/api/sales/events/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "c6d88b11d8398c45ae2210b45866e2f55160227c7ce94e9fa2f657176fe1b13e",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "bc4886d3ea97f0c26cccb3cfb6c9ca999bbc329aa27f4c6c9cce382d35e9b77e"
     },
     {
       "path": "src/app/api/sales/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ae71badc5e21fdcfde1205f591874e5db9cd6a4fd277ac7510db990b725d9854",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "2115d5c4db8f6806a81fd2deb6b3a788022300a1f03ee41e62b773d967db7ad5"
     },
     {
       "path": "src/app/api/waste/entries/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "fe112c7c5f2cf294aae19a26948d11b77426ce565ccbf848339e6ca0ff7402e0",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "8ef601b56fdce66e465cdcaddd79761ac84fc4252a40281d4dfc7d57d01330c1"
     },
     {
       "path": "src/app/api/waste/items/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "588fbdc53e80a7eb395a9f0d35673c1c61f958cfbdc4258b69bf1c86c041f9e6",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "69e8b5f3b198d26fad11b2c85e9405388d90acdd12d5d844461f64b3a44e8800"
     },
     {
       "path": "src/app/api/waste/review/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "1d4c31739e73e4779f05b0dd76c6d148f378fa6f156b2c9292254eb216e326ca",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "2c9811aa8215678c9792209ecc443288c06c7ce62c45bd70c7968002771aedf9"
     },
     {
       "path": "src/app/api/waste/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "dc1e7fbe4e55085832f38212dff26aa2699430cb966bc60b87e6215e046d9934",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "99e2f2119bd9950340ac73e5e6491bafc9959d6ce660b5dab29e04cd036d127e"
     },
     {
       "path": "src/app/api/waste/sales/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b33fd42d870a71c7c510e0c59eef5aba7421e7879fda18313b4aa03838e57e28",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "4fdac63deeb54eefb0437403e0b2a4db6884364046c9caec75871bdf293b3385"
     },
     {
       "path": "src/app/api/waste/setup/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7566bc01849f492eeccc8e31dbcd1c71e24767f9a0bfde3fbacd0099fbba1b4c",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "9d3b2a7ad8baec9df3b332903adbfea0eaeba3ed42b818c9cf0d596eb4f169f3"
     },
     {
       "path": "src/app/api/waste/shortcuts/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8a00346faa35e79b75033449af653db318c1b464f7385147cc07ecb841763ae7",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "4649d9edc320e6e27c5e9b95fd1292d0d3015eae36578b1c3bc79cc6eeb27c94"
     },
     {
       "path": "src/app/api/workspace/route.ts",
       "section": "S13",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a93c2e56d4a72d36df2ec064ff2ece1dbd6ff4c01c6f5a3a2607874949dcfbef",
-      "results": []
+      "results": [
+        "S13 preparation: full route source, shared boundary and existing authorization/fake-provider test coverage reviewed before edits. Preserve route exports, parsing/dispatch/effect order, schemas, responses/status/headers, uncertainty and isolated machine/browser protocols. No wrapper redesign or delivery import.",
+        "S13 existing route source fully reviewed and formatted with 71 declaration boundaries; all 36 routes equivalent to 66104fe syntax/types/comments/literals/emitted runtime. Twenty-three focused suites before/after, all 139 suites, scoped lint/format/typecheck/db/build and isolated local setup/migration/HTTP smoke/diff pass. One inherited unused import warning. Delivery API remains held; formatter refusal/convergence retained in sectionReviews.S13."
+      ],
+      "cleanupSha256": "9c23c885efa3cdfe56eb10bdfd67f2a8e66116ae34874dc40b65c53765e091a6"
     },
     {
       "path": "src/app/auth/auth-form.tsx",
@@ -10155,7 +10299,162 @@
       "limitations": [
         "Receiving delivery service remains Blocked until its committed owner branch is integrated and handoff reviewed. No delivery implementation is claimed completed.",
         "Local/macOS SQLite/fake D1/provider evidence only. No supplier contact, confirmation at a live service, new approval path or receiving schema change."
+      ],
+      "commits": [
+        "66104fe"
       ]
+    },
+    "S13": {
+      "outcome": "Blocked only for delivery-route handoff; 36 existing routes verified",
+      "safeFilesCompleted": 36,
+      "heldFiles": [
+        "src/app/api/po-cart-deliveries/route.ts"
+      ],
+      "preSectionCommit": "66104fe",
+      "codeCommits": [
+        "style(readability): expand identity and integration API boundaries",
+        "style(readability): clarify inventory sales and waste API dispatch",
+        "style(readability): expand purchasing and cart API boundaries"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm test m2-security b4-sales-inventory po-cart-authorizations-api po-cart-jobs-api po-cart-browser-session-api po-cart-worker-api po-cart-confirmations-api purchase-order-export-api purchase-order-history-export-api purchasing-suppliers-api",
+          "exit": 0,
+          "suites": 10,
+          "log": ".sites-runtime/readability/S13/baseline.log",
+          "logSha256": "84901e647aad2f260f69a49ba02bba0703857253a2f27402e9414b6da5dc7050"
+        },
+        {
+          "command": "pnpm test local-auth cart-preview-api po-cart-spending-limits-api po-cart-reconciliation-api purchase-order-api clover-connection clover-b6-local register-bridge pos-register-status waste-recording menu-waste inventory-management-contract replenishment-review-group",
+          "exit": 0,
+          "suites": 13,
+          "log": ".sites-runtime/readability/S13/baseline-additional.log",
+          "logSha256": "0ce3397ab2c3252812368b6d6f772826df3fb438ff21c8b952b8d37aa7388922"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm test m2-security b4-sales-inventory po-cart-authorizations-api po-cart-jobs-api po-cart-browser-session-api po-cart-worker-api po-cart-confirmations-api purchase-order-export-api purchase-order-history-export-api purchasing-suppliers-api local-auth cart-preview-api po-cart-spending-limits-api po-cart-reconciliation-api purchase-order-api clover-connection clover-b6-local register-bridge pos-register-status waste-recording menu-waste inventory-management-contract replenishment-review-group",
+          "exit": 0,
+          "seconds": 3.5,
+          "log": ".sites-runtime/readability/S13/final/0-test.log",
+          "logSha256": "31b577b5a8f14d9ab9f6a86d17f922dd76aa114eaf5aafba0d6657af138b788d"
+        },
+        {
+          "command": "pnpm format:check --section S13",
+          "exit": 0,
+          "seconds": 1.3,
+          "log": ".sites-runtime/readability/S13/final/1-format-check.log",
+          "logSha256": "68cb019dfff1a75ce590a910fb35f516486eed12cd9bee359fc1dab265e1e561"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/app/api/auth/route.ts src/app/api/automation/route.ts src/app/api/automation/tick/route.ts src/app/api/cart-preview-context/route.ts src/app/api/clover/callback/route.ts src/app/api/clover/route.ts src/app/api/clover/webhook/route.ts src/app/api/clover/webhook/setup/route.ts src/app/api/companies/route.ts src/app/api/internal/po-cart-browser-session/route.ts src/app/api/internal/po-cart-worker/route.ts src/app/api/inventory/route.ts src/app/api/members/route.ts src/app/api/payments/route.ts src/app/api/po-cart-authorizations/route.ts src/app/api/po-cart-confirmations/route.ts src/app/api/po-cart-jobs/route.ts src/app/api/po-cart-spending-limits/route.ts src/app/api/purchase-order-exports/route.ts src/app/api/purchase-order-history-exports/route.ts src/app/api/purchase-orders/route.ts src/app/api/purchasing-suppliers/route.ts src/app/api/register/ingest/route.ts src/app/api/register/route.ts src/app/api/replenishment/proposals/route.ts src/app/api/replenishment/review/route.ts src/app/api/sales/events/route.ts src/app/api/sales/route.ts src/app/api/waste/entries/route.ts src/app/api/waste/items/route.ts src/app/api/waste/review/route.ts src/app/api/waste/route.ts src/app/api/waste/sales/route.ts src/app/api/waste/setup/route.ts src/app/api/waste/shortcuts/route.ts src/app/api/workspace/route.ts",
+          "exit": 0,
+          "seconds": 1.2,
+          "log": ".sites-runtime/readability/S13/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e260fc1d93a699efb0f76d2dbe0b71cf9a00311521c961f80aa5e3e50d5ff2ef"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 2.2,
+          "log": ".sites-runtime/readability/S13/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 152.2,
+          "log": ".sites-runtime/readability/S13/final/4-test.log",
+          "logSha256": "47a39895b3057f7a7b985d1971fa67f64a3d8605a31d45fd485a5d5fc10ff16f"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S13/final/5-db-check.log",
+          "logSha256": "f2ee99ed0f28c1a148c1c8e85c32d1c4c61372755f19612e763d3f96206e52d2"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.2,
+          "log": ".sites-runtime/readability/S13/final/6-build.log",
+          "logSha256": "7aa641785a428e78b0c730bd38d8c32b9f51e707232e01e391d6ed3835334584"
+        },
+        {
+          "command": "pnpm local:setup",
+          "exit": 0,
+          "seconds": 0.2,
+          "log": ".sites-runtime/readability/S13/final/7-local-setup.log",
+          "logSha256": "12310241a36c6913163cf8e42aeae88fb74f8ae3b7a1a14bf7d49d208433acda"
+        },
+        {
+          "command": "pnpm db:migrate:local",
+          "exit": 0,
+          "seconds": 0.8,
+          "log": ".sites-runtime/readability/S13/final/8-db-migrate-local.log",
+          "logSha256": "b8c342c16ecde72207b1ad2a289f887502b035db05ebcb1d2cc844d9ea651fdf"
+        },
+        {
+          "command": "pnpm test:local",
+          "exit": 0,
+          "seconds": 3.8,
+          "log": ".sites-runtime/readability/S13/final/9-test-local.log",
+          "logSha256": "47dc3f36955b62e916f94bf001fa6fa44b4eefc66ba4268deae09133b6bdc978"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S13/final/10-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "612c015476628716fffa6b412a8d59866960b194318073082c91c9d087b8b6d6",
+      "review": "All 36 existing routes read before edits; parsing/validation/authorization/dispatch/response branches expanded and 71 whitespace-only declaration boundaries separated. Original exported verbs, wrapper family, schema/default order, route-local policy distinctions, transport/body/CSRF/current membership checks, callbacks/cookies/headers/error statuses/messages, SQL/bindings and effect order, machine scopes, permanent UUID replay and pre/post-dispatch uncertainty unchanged. No extraction, shared-wrapper redesign or new route. Initial formatter refusal retained; one callback manually converged through two independently equivalent passes, then the unchanged independent debug-check and complete section guard passed.",
+      "limitations": [
+        "Delivery API is absent and Blocked until receiving integration/handoff. Shared authorization wrapper remains held under S05; existing routes use its unchanged main-based implementation.",
+        "Local/macOS fake providers and worktree-local loopback HTTP/SQLite only; no real Supabase/Clover/Stripe/supplier access, purchasing/sync enablement, browser/gate or owner database operation.",
+        "Scoped ESLint exits 0 retaining the same workspace samples unused-import warning. No lint suppression."
+      ],
+      "priorAttempts": [
+        {
+          "outcome": "Incomplete: focused tests passed, then format check refused before broad checks",
+          "results": [
+            {
+              "command": "pnpm test m2-security b4-sales-inventory po-cart-authorizations-api po-cart-jobs-api po-cart-browser-session-api po-cart-worker-api po-cart-confirmations-api purchase-order-export-api purchase-order-history-export-api purchasing-suppliers-api local-auth cart-preview-api po-cart-spending-limits-api po-cart-reconciliation-api purchase-order-api clover-connection clover-b6-local register-bridge pos-register-status waste-recording menu-waste inventory-management-contract replenishment-review-group",
+              "exit": 0,
+              "seconds": 3.4,
+              "log": ".sites-runtime/readability/S13/initial-format-refusal/0-test.log",
+              "logSha256": "6be9a1a8fb423e73d0e2fc6e8352f5b49dfe4cbabe1280880bb93aa65b4f504c"
+            },
+            {
+              "command": "pnpm format:check --section S13",
+              "exit": 1,
+              "seconds": 1.3,
+              "log": ".sites-runtime/readability/S13/initial-format-refusal/1-format-check.log",
+              "logSha256": "118567b1fe35f790b69e3035a5a1d70a26389f8662f4915f3af1ab7327f5e6d1"
+            }
+          ],
+          "sourceDigest": "ffba4aa3c794c46c32547893b1588d5b5f34d11165f0b213cc6f7fba39c80109"
+        }
+      ],
+      "formatterRecovery": {
+        "reason": "Pinned formatter first/second pass non-idempotence on one callback expression; no formatter implementation/configuration/refusal change",
+        "firstFormatterWroteFiles": false,
+        "followingBlankLineStepRanDespiteRefusal": true,
+        "files": [
+          {
+            "path": ".sites-runtime/readability/S13/formatter-refusal.log",
+            "sha256": "ca820ec86bf63c6114c93f2219ae6105b856a46072db75ce50f8da1d595554e9"
+          },
+          {
+            "path": ".sites-runtime/readability/S13/callback-format-convergence.json",
+            "sha256": "eccef56e1a4668e82cff1e1705b20185779b4f4f846a9187d1dfe18e612352fc"
+          }
+        ]
+      }
     }
   }
 }
