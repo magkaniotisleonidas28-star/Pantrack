@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S07 sales/register/Clover services are Completed; S08 is next**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S08 supplier/draft/purchasing services are Completed; S09 is next**.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **4 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 15 Pending**.
+- Cleanup sections: **5 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 14 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -92,7 +92,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S05 | Authentication, tenant authorization and memberships | 9 | Blocked: shared wrapper handoff; present files verified |
 | S06 | Inventory, recipes, waste and replenishment services | 26 | Completed |
 | S07 | Sales ingestion, register bridge and Clover | 16 | Completed |
-| S08 | Supplier registry, draft foundations and gated purchasing | 9 | Pending |
+| S08 | Supplier registry, draft foundations and gated purchasing | 9 | Completed |
 | S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Pending |
 | S10 | Durable cart authorization, jobs and spending limits | 3 | Pending |
 | S11 | Browser-session services and worker implementation | 28 | Pending |
@@ -303,23 +303,29 @@ Commits: core sales/recovery `4291b10`; POS/Clover/tracker `style(readability): 
 
 ## S08 — Supplier registry, draft foundations and gated purchasing
 
-Status: Pending. Depends on: S07.
+Status: Completed. Depends on: S07.
 
 **Files:** `d1-purchasing-suppliers.ts`, `d1-purchase-order-drafts.ts`, `d1-supplier-simulation.ts`, `supplier-order-draft.ts`, supplier fakes, `purchasing-engine.ts`, `vendor-adapter.ts`, `stripe-payments.ts`.
 
-- [ ] S08.1 — Separate visually the lookup/validation/claim/effect/persistence stages; expand compressed legacy automation handlers and connector parsing.
-- [ ] S08.2 — Document immutable draft revisions, supplier/account mappings, exact quotes, guarded external effects, fenced lease release and retained unknown outcomes.
-- [ ] S08.3 — Retain public interfaces, integer/string money, budget calculations, request bodies, timeout/error semantics and the unconditional real-submission block.
-- [ ] S08.4 — Do not remove apparently unreachable safety paths, replace the supplier connector, provision scheduling, enable automatic mode or call Stripe/suppliers.
+- [x] S08.1 — Separate visually the lookup/validation/claim/effect/persistence stages; expand compressed legacy automation handlers and connector parsing.
+- [x] S08.2 — Document immutable draft revisions, supplier/account mappings, exact quotes, guarded external effects, fenced lease release and retained unknown outcomes.
+- [x] S08.3 — Retain public interfaces, integer/string money, budget calculations, request bodies, timeout/error semantics and the unconditional real-submission block.
+- [x] S08.4 — Do not remove apparently unreachable safety paths, replace the supplier connector, provision scheduling, enable automatic mode or call Stripe/suppliers.
 
 **Focused command:** `pnpm test supplier-simulation-contract supplier-simulation-d1 purchasing-suppliers purchasing-suppliers-api purchase-order-drafts purchase-order-api purchase-order-review purchasing-safety`.
 
 **Verification:** Run these tests, the full suite, scoped lint, typecheck and build. Confirm zero real connector calls and unchanged disabled purchasing.
 
-- [ ] S08.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S08.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S08.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S08.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All nine modules formatted; 111 whitespace-only declaration/method boundaries separated. Registry version/mapping reads and guarded writes, draft revision/review/cancellation, simulated quote/approval/reservation/reconciliation, legacy purchasing and crypto/payment adapters are easier to scan. Existing comments explain frozen quantities, unknown outcomes, atomic receipt/audit guards and the unconditional real-submission refusal. Independent handoff validation remains separate; dormant safety paths are retained. No structural extraction or new abstraction was introduced.
+
+All nine modules match pre-section `2179469` syntax/types/exports/literals/comments/emitted runtime. SQL, bindings and effect order, whole-pack/cents arithmetic, exact quote approval, registered fake-only connector requirement, membership/source/version/budget guards, response/error text, transport/crypto and fenced lease release are unchanged. `submit()` still calls the unconditional pilot block before reading or sending. Supplier submission, purchasing and sync remain disabled; no real supplier or Stripe request was made.
+
+The exact eight focused suites above passed before and after. Full `pnpm test` passed all 139 suites. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. **Scoped ESLint exited 1** on the same pre-existing `vendor-adapter.ts` `no-explicit-any` error observed at the integrated baseline; no new diagnostic or suppression, and no false lint-pass claim. Its existing type contract was retained. Exact commands/results/log hashes/source digest and this inherited failure: inventory `sectionReviews.S08`; logs: `.sites-runtime/readability/S08/`. Local/macOS fake-provider evidence only; no new API/schema/UI behavior or external acceptance.
+
+Commits: registry/draft persistence `7e569d7`; simulation/gated adapters/tracker `style(readability): expand simulated and gated purchasing flows`. No S08 source hold remains; inherited lint debt and earlier receiving holds remain open. Rollback: those two source/docs commits only. Next: S09 history, exports, documents and downloads.
 
 ## S09 — Purchase-order history, export models and document downloads
 
@@ -608,6 +614,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S05 | Eight identity modules formatted; 32 declaration boundaries; D1 revocation rationale added | Both focused suites/all BUG-01 regressions and full 139 suites pass; format/typecheck/db/build/diff pass; scoped lint retains one inherited warning | Local section commit; authorization wrapper handoff remains Blocked; independent S06 next |
 | 2026-10-26 / S06 | 26 domain modules formatted; 77 declaration/method boundaries; two ordered-batch rationale comments | Twelve focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains one inherited warning | Three local commits grouped by inventory, waste and replenishment; no S06 hold; S07 next |
 | 2026-10-26 / S07 | Fifteen sales/POS/Clover modules formatted; one SQL helper reviewed unchanged; 58 declaration/method boundaries | Ten focused baseline/final suites and full 139 suites pass; equivalent syntax/types/runtime; scoped lint/format/typecheck/db/build/diff pass | Two local commits grouped by core and adapters; no S07 hold; S08 next |
+| 2026-10-26 / S08 | Nine supplier/draft/gated-purchasing modules formatted; 111 declaration/method boundaries | Eight focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains one inherited any error (exit 1) | Two local commits grouped by persistence and simulated/gated flows; no S08 source hold; S09 next |
 
 ## Final report requirements
 

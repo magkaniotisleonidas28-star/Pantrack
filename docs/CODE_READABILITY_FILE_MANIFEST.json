@@ -6245,11 +6245,15 @@
     {
       "path": "src/lib/c4-fake-supplier-consumer.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2628dc811b4638f1bff6979b9bd12edbe8218484200abd1399fd25de31aef670",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "1f386ea0ea116d626d3bcf1a4b3fb848a79c6ef994caa70830f22f7804bbc5d7"
     },
     {
       "path": "src/lib/cart-preview-contract.ts",
@@ -6492,11 +6496,15 @@
     {
       "path": "src/lib/d1-purchase-order-drafts.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "04f045f40b368d7c04a1aea852a8be15e648e63dfe696a8f5e55313dd4e9ca0b",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "c874ccb11597a6bde66d7de85d403fc49b8b5ddf281ec1e9ddf677f208b87e88"
     },
     {
       "path": "src/lib/d1-purchase-order-exports.ts",
@@ -6528,11 +6536,15 @@
     {
       "path": "src/lib/d1-purchasing-suppliers.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "6e9d291145d6f3e75b7bca675d474f06181694d1c97481b8bd49d100d5563247",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "0b62dafac742576fb3de7a13343e8b2aa856e8bedca84e84f5e0074735bc6d64"
     },
     {
       "path": "src/lib/d1-recipe-publisher.ts",
@@ -6680,11 +6692,15 @@
     {
       "path": "src/lib/d1-supplier-simulation.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3e2fbcf4e3a475b5123986f7c79f08a2e32f1d641cbdb68af02e9f2ae585bc84",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "e499b0528bd2848498e11406c0c9bf415aa44a2db970f2aaf213079a7372a636"
     },
     {
       "path": "src/lib/d1-waste.ts",
@@ -6733,11 +6749,15 @@
     {
       "path": "src/lib/fake-supplier-connector.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "aba58526752f7ec42e88f3676e2d89c3ba47c1689abf4f6d8076162ea80d2bb2",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "24f1d0554168c77364df2b166337ac20cc19d339622eb349b391b26b6bd07609"
     },
     {
       "path": "src/lib/import-sales.ts",
@@ -7216,11 +7236,15 @@
     {
       "path": "src/lib/purchasing-engine.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ef010f212ec4270d00c48b7aaaa0f33e6dfc175c1df489cd9ebff47d827279a6",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "3dc7bb0c37e2dc220ea05d4e668085a7fcd5fb96d24377781898f68248d2adda"
     },
     {
       "path": "src/lib/purchasing-supplier-contract.ts",
@@ -7352,20 +7376,28 @@
     {
       "path": "src/lib/stripe-payments.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "0ce85b8a8d51c35fa8f48c3f3de2b2904988d28c9c14bd60a649eaec0555ebc4",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "370eb3d34c9fbe79e9d37218cffd3f1231ca25a32609ce1d0b9fe75ffcf08a8f"
     },
     {
       "path": "src/lib/supplier-order-draft.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b073dda9d906edfe47546f8ed5759f43d650fa045cc6e4ed8873ce252c4fb24e",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "12b927ec766628bbfd024e3c10b75065264647e1305c47472f2f12bde82cc34a"
     },
     {
       "path": "src/lib/supplier-simulation-contract.ts",
@@ -7406,11 +7438,15 @@
     {
       "path": "src/lib/vendor-adapter.ts",
       "section": "S08",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4e6095930ad7f2f9c61ef2bf0ae94f081e8c7171c6c93fabe8bdeb6beda3b9f5",
-      "results": []
+      "results": [
+        "S08 preparation: full source and supplier/draft/fake-transport/legacy-purchasing boundaries reviewed before edits. Submission block, exact quotes, audit/receipt guard ordering, leases and unknown reservations must remain unchanged; verification still In Progress.",
+        "S08 formatting and declaration/method separation verified against 2179469; no syntax/type/literal/runtime changes. Eight focused baseline/final suites, full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the pre-existing vendor-adapter any error; no suppression or type-contract change. See sectionReviews.S08."
+      ],
+      "cleanupSha256": "8b310be8830e60f226b1e2c6054f1eba1ce80de9ec42595650e5333b228dea5a"
     },
     {
       "path": "src/lib/waste-client.ts",
@@ -9067,7 +9103,10 @@
       ],
       "sourceDigest": "ba93f24a5f6e210875298a655aba0285c28041ea4ed4480958bd2d8bc863b770",
       "review": "All three modules equivalent to pre-section source after excluding exactly two new explanatory stream/UTF-8 comments. No API/error/byte/stream/authorization change. Full lint inherited separately; scoped lint clean.",
-      "rollback": "Revert this section source/documentation commit only."
+      "rollback": "Revert this section source/documentation commit only.",
+      "commits": [
+        "7d36d9e"
+      ]
     },
     "S03": {
       "outcome": "Blocked",
@@ -9141,7 +9180,10 @@
       ],
       "sourceDigest": "10a3511f93fefdcc2bc4b432df008b98a9052a53374997b4ae72f5711d5b9fed",
       "review": "All 25 present modules equivalent to pre-section HEAD, including 299 ordered exports and complete types/schema structures; 163 whitespace-only declaration boundaries separated. No exported names, calculations, SQL, defaults, messages, field order or authorization changed. Type-query parentheses normalized in formatter after a failing regression then passing meaningful grouping tests; all 139 suites pass.",
-      "unblocker": "Integrate the receiving-counts owner branch and inspect the absent delivery contract; no competing implementation. S04 raw/index and immutable-history reviews are independent of that missing contract."
+      "unblocker": "Integrate the receiving-counts owner branch and inspect the absent delivery contract; no competing implementation. S04 raw/index and immutable-history reviews are independent of that missing contract.",
+      "commits": [
+        "c55651c"
+      ]
     },
     "S04": {
       "outcome": "Blocked",
@@ -9217,7 +9259,10 @@
       ],
       "sourceDigest": "1e76269c9e94738b11b82f9f307cd60f57d7dbfd376292e40bf7ee28fc8ffa7d",
       "review": "Two binding helpers equivalent to pre-section source. Forty SQL files (226 trigger definitions), forty metadata snapshots and the present held schema/journal retain baseline bytes. No migration or database behavior change.",
-      "unblocker": "Receiving-counts integration/handoff before schema/journal/new migration review; S05 safe identity modules do not depend on the absent delivery tables."
+      "unblocker": "Receiving-counts integration/handoff before schema/journal/new migration review; S05 safe identity modules do not depend on the absent delivery tables.",
+      "commits": [
+        "800f1c0"
+      ]
     },
     "S05": {
       "outcome": "Blocked",
@@ -9291,7 +9336,10 @@
       ],
       "sourceDigest": "3a211fb3851e4fd560ee6425d59ff3af11d44a570ff257cc6a829712c8834460",
       "review": "Eight modules equivalent to pre-section source, except one reviewed D1-revocation rationale comment; 32 whitespace-only declaration boundaries separated. Auth wrapper retains baseline bytes. All BUG-01 recovery regressions pass; per-request verification, D1 checks before/after verification, recovery fences, encryption/cookies, tenant/role and audit ordering unchanged. Scoped lint exits 0 with one inherited unused destructuring warning.",
-      "unblocker": "Receiving owner integration/handoff before shared route wrapper formatting; S06 inventory services are independent of that unchanged wrapper addition."
+      "unblocker": "Receiving owner integration/handoff before shared route wrapper formatting; S06 inventory services are independent of that unchanged wrapper addition.",
+      "commits": [
+        "230e3e9"
+      ]
     },
     "S06": {
       "outcome": "Completed",
@@ -9369,7 +9417,12 @@
       ],
       "sourceDigest": "a6343f8599b596543e2db8ce862b7da084c2dd84e3dc859f5aad1392f0342128",
       "review": "All 26 modules equivalent to pre-section source after excluding exactly two new comments explaining changes()-dependent batch order. Seventy-seven whitespace-only declaration/method boundaries separated. Full source and callers reviewed before edits; existing helpers retained, no extraction of transaction/closure bodies. All SQL/templates, binding/effect order, replay identities, quantity/legacy projections, cutoffs, readiness and disabled supplier effects unchanged. Scoped lint exits 0 with the one inherited unused changes helper warning. All 139 suites pass.",
-      "compatibility": "Existing A-owned incoming/receipt ports retain behavior and frozen units; receiving-counts branch does not modify these source files. No new delivery contract/schema was imported; prior holds remain."
+      "compatibility": "Existing A-owned incoming/receipt ports retain behavior and frozen units; receiving-counts branch does not modify these source files. No new delivery contract/schema was imported; prior holds remain.",
+      "commits": [
+        "8ccc6d7",
+        "5c1e8c0",
+        "7739d8e"
+      ]
     },
     "S07": {
       "outcome": "Completed",
@@ -9450,7 +9503,111 @@
       ],
       "sourceDigest": "9602b677a18f8d6a76b815bd6e3454f9e135bd8ddd72b9b2a2c8587dbe9a6921",
       "review": "All 16 modules equivalent to pre-section 7739d8e, including types, exports, literals/comments, raw SQL/template values and emitted runtime. Fifty-eight whitespace-only declaration/method boundaries separated. No source extraction or new comment. Pagination cursor/ties/dedup/MAX_PAGES/checkpoint refusal, provider fetch timing/refresh leases, challenge replacement, exactly-once inventory/recovery and unknown-state holds preserved. Scoped lint clean; all 139 suites pass.",
-      "compatibility": "No new API/schema behavior or provider configuration; sync remains disabled. Local/macOS fake-provider and migrated in-memory D1 evidence only."
+      "compatibility": "No new API/schema behavior or provider configuration; sync remains disabled. Local/macOS fake-provider and migrated in-memory D1 evidence only.",
+      "commits": [
+        "4291b10",
+        "2179469"
+      ]
+    },
+    "S08": {
+      "outcome": "Completed",
+      "safeFilesCompleted": 9,
+      "heldFiles": [],
+      "preSectionCommit": "2179469",
+      "codeCommits": [
+        "7e569d7",
+        "style(readability): expand simulated and gated purchasing flows"
+      ],
+      "baseline": {
+        "command": "pnpm test supplier-simulation-contract supplier-simulation-d1 purchasing-suppliers purchasing-suppliers-api purchase-order-drafts purchase-order-api purchase-order-review purchasing-safety",
+        "exit": 0,
+        "suites": 8,
+        "log": ".sites-runtime/readability/S08/baseline.log"
+      },
+      "final": [
+        {
+          "command": "pnpm test supplier-simulation-contract supplier-simulation-d1 purchasing-suppliers purchasing-suppliers-api purchase-order-drafts purchase-order-api purchase-order-review purchasing-safety",
+          "exit": 0,
+          "seconds": 2.0,
+          "log": ".sites-runtime/readability/S08/final/0-test.log",
+          "logSha256": "2bd3ea55d79a14e768225a9bf46fe52f82e40e56e5cd3b940ccc601ef9a7c95f"
+        },
+        {
+          "command": "pnpm format:check --section S08",
+          "exit": 0,
+          "seconds": 1.2,
+          "log": ".sites-runtime/readability/S08/final/1-format-check.log",
+          "logSha256": "849010081569ee09f354ff712934a4be2adaecbccb95f7927f814174e363cffd"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/lib/c4-fake-supplier-consumer.ts src/lib/d1-purchase-order-drafts.ts src/lib/d1-purchasing-suppliers.ts src/lib/d1-supplier-simulation.ts src/lib/fake-supplier-connector.ts src/lib/purchasing-engine.ts src/lib/stripe-payments.ts src/lib/supplier-order-draft.ts src/lib/vendor-adapter.ts",
+          "exit": 1,
+          "seconds": 1.1,
+          "log": ".sites-runtime/readability/S08/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e43e2739655f3cd6b2eb36c4e0a2a1bbdf44bab7456af974072329b0c94c70a5"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 3.2,
+          "log": ".sites-runtime/readability/S08/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.6,
+          "log": ".sites-runtime/readability/S08/final/4-test.log",
+          "logSha256": "2435105ee89e3c79154a119ea81d501950cf7374264f2c1e82991d1d27ab5fe2"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S08/final/5-db-check.log",
+          "logSha256": "2f000dc59d7943ee463fa0801a5e4a6334e54ae96d7403734353f7364d1d17f3"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.2,
+          "log": ".sites-runtime/readability/S08/final/6-build.log",
+          "logSha256": "791b6e009ede5b29d6cab75b525712f80662986d2a27edad8f93fe04733f6490"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S08/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "8cc24431f864634dde6bd1e5960a7133313532251903c8e14b8251c06887034c",
+      "inheritedFailures": [
+        {
+          "check": "scoped ESLint",
+          "exit": 1,
+          "file": "src/lib/vendor-adapter.ts",
+          "rule": "@typescript-eslint/no-explicit-any",
+          "message": "Unexpected any. Specify a different type",
+          "baseline": ".sites-runtime/readability/S01/integration/0-lint.log",
+          "action": "Retain existing connector type contract and lint policy; no new diagnostic."
+        }
+      ],
+      "review": "All nine modules equivalent to pre-section source, including complete types/exports/comments/literals and emitted runtime. One hundred eleven whitespace-only declaration/method boundaries separated. Unconditional pilot block, dormant safety checks, registered network-free connector requirement, immutable versions/receipts, exactly approved quote, source/member/budget guard order, fenced lease release, unknown reservations, transport and crypto preserved. Full 139 suites pass; scoped lint retains the one inherited any error.",
+      "compatibility": "No runtime/config/schema/API/UI or real supplier/Stripe call, no purchasing/sync enablement. Local/macOS fake-provider evidence only."
+    },
+    "S01": {
+      "outcome": "Completed",
+      "commits": [
+        "dc47f5c"
+      ],
+      "receipt": "docs/readability/S01-verification.json",
+      "integrationCommits": [
+        "f42c790",
+        "e9c6cd6"
+      ],
+      "note": "Original receipt retained as recorded. Later formatter type-parenthesis refinement is separately verified in S03 c55651c."
     }
   }
 }
