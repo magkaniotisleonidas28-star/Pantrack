@@ -85,6 +85,9 @@ Built and verified locally: [Part 1 evidence](C4_SUPPLIER_SUGGESTIONS_LOCAL_EVID
 
 ### Part 2 — schedules and the weekly check (one migration)
 
+Built and verified locally: [Part 2 evidence](C4_WEEKLY_SCHEDULES_LOCAL_EVIDENCE.md).
+
+
 - **Schema:**
   - versioned `po_draft_schedules`: supplier, account, location, weekday, local
     time, margin, responsible manager and paused flag;
