@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S20** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S21** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **9 of 22 Completed; 11 Blocked (recorded handoffs/holds); 0 In Progress; 2 Pending**.
+- Cleanup sections: **9 of 22 Completed; 12 Blocked (recorded handoffs/holds); 0 In Progress; 1 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -105,7 +105,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S18 | Owned styles, static site, standalone previews and assets | 32 | Blocked: visual/receiving holds; safe files verified |
 | S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Blocked: formatter/receiving holds; safe files verified |
 | S20 | Operational CLIs, lifecycle diagnostics, shell and Python audits | 88 | Blocked: source-pin/receiving holds; safe files verified |
-| S21 | Documentation, architecture navigation and managed instructions | 218 + 1 upstream | Pending |
+| S21 | Documentation, architecture navigation and managed instructions | 218 + 1 upstream | Blocked: receiving docs; safe navigation review complete |
 | S22 | Final consistency, preservation review and handoff | whole project | Pending |
 
 ## S00 — Architecture survey and complete plan
@@ -664,22 +664,28 @@ The lifecycle evidence is local/macOS injected-controller and independent-audit 
 
 ## S21 — Documentation, architecture navigation and managed instructions
 
-Status: Pending. Depends on: S20.
+Status: Blocked for receiving documentation handoff; 217 safe files reviewed. Depends on: S20.
 
 **Files:** `README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `docs/**`, `public/*.md`, `openspec/**`, `.claude/**` and GitHub instruction/prompt files assigned in the inventory.
 
-- [ ] S21.1 — Provide a concise navigation map for contracts, D1 services, APIs, workspace clients, document engines, workers and tests; prefer links over moving established modules.
-- [ ] S21.2 — Check setup/code examples and cross-links for readability and actual paths, while separating current instructions from historical evidence.
-- [ ] S21.3 — Preserve historical reports, accepted decisions, source fingerprints, consumed attempts and milestone checkboxes. Do not rewrite past results to reflect the cleanup.
-- [ ] S21.4 — Review generated OpenSpec/assistant instructions and licenses as managed sources; retain them unchanged unless a clearly scoped, behavior-neutral documentation edit is justified.
-- [ ] S21.5 — Update cleanup records and maintain author-facing guidance without adding new operational approval, integration or purchasing authority.
+- [x] S21.1 — Provide a concise navigation map for contracts, D1 services, APIs, workspace clients, document engines, workers and tests; prefer links over moving established modules.
+- [!] S21.2 — Safe navigation/links are verified; four receiving-owned documents await integration/handoff. Check setup/code examples and cross-links for readability and actual paths, while separating current instructions from historical evidence.
+- [x] S21.3 — Preserve historical reports, accepted decisions, source fingerprints, consumed attempts and milestone checkboxes. Do not rewrite past results to reflect the cleanup.
+- [x] S21.4 — Review generated OpenSpec/assistant instructions and licenses as managed sources; retain them unchanged unless a clearly scoped, behavior-neutral documentation edit is justified.
+- [x] S21.5 — Update cleanup records and maintain author-facing guidance without adding new operational approval, integration or purchasing authority.
 
 **Verification:** Run `git diff --check`, validate every changed relative link and review instruction consistency. Historical-evidence hashes must remain unchanged; code examples are checked against current source. Do not archive/sync OpenSpec or change acceptance statuses.
 
-- [ ] S21.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S21.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S21.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S21.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** Added `docs/CODEBASE_MAP.md`, linked it from both README indexes, and rewrapped `CONTRIBUTING.md`. The map follows real source entrypoints for identity/company authorization, contracts/D1 persistence, inventory/waste/sales/replenishment, supplier drafts/cart/spending, PDF/Excel/history/archive, local UI state/error clients, workers and tests. It explains navigation and boundaries without moving files, changing source or adding execution authority.
+
+Contributor words and fenced command examples match `006391e`; all original root/docs-index lines are retained. The other 216 original present S21 files remain byte-identical, including 97 historical evidence files and 73 managed OpenSpec/assistant artifacts. Accepted decisions, public integration contracts, instructions, licenses, historical source hashes and milestone checkboxes were not rewritten. The new map and tracker link the existing author-facing formatting guidance. This is navigation/structure and preservation review, not a new hand audit or external revalidation of every historical report.
+
+The baseline filesystem link review covered 208 Markdown documents and 1,133 relative references with no missing targets. The final review covered 209 documents and 1,249 relative references with no missing targets. Changed links have no fragments; fenced examples, external URLs and absolute/runtime destinations are not fetched. The documentation preservation check, existing `code-readability` suite and `git diff --check` passed on frozen source. Exact commands/exits/log hashes and receipt digests: inventory `sectionReviews.S21`; local logs: `.sites-runtime/readability/S21/`.
+
+Four receiving-owned documentation files remain held for integration/handoff, including `CURRENT_STATUS.md` and `PANTRACK_MILESTONES.md`. They were not silently edited or marked cleaned. Full code/type/database/build verification belongs to S22 after this documentation-only section; S20 already passed those checks, and no new S21 run is claimed. One local documentation commit contains the map/index/wrapping and review records. Rollback is that commit only. Next: S22 whole-project consistency, preserved-byte/source-equivalence/manifest review and final local pipeline. C4/M8 and A8/M7 remain open.
 
 ## S22 — Final consistency, preservation review and handoff
 
@@ -725,6 +731,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S18 | Five preview/config files formatted; declaration plus thirteen assets/docs reviewed unchanged; seven boundaries; font/license/static bytes retained | Five focused baseline/final and all 139 suites; scoped lint/format/typecheck/db/build/diff, in-memory standalone bundle, CSS parse/XML/assets/local links/font hashes pass | Two local commits; thirteen CSS/HTML visual and one receiving CSS hold remain Blocked; independent S19 next |
 | 2026-10-26 / S19 | 144 test modules formatted; 340 boundaries; two fixtures unchanged; all 5,640 static assertion sites preserved | Baseline/final 139 suites (Mac, zero skips); guard/format/type/db/build/diff pass; scoped lint 29 inherited warnings match baseline; full equivalence and fixture hashes pass | Seven local commits; four formatter and three receiving holds remain Blocked; S20 next |
 | 2026-10-26 / S20 | 73 JavaScript scripts formatted; 141 boundaries; nine safe Python auditors reviewed unchanged | Eleven focused baseline/final and all 139 suites; format/type/db/build/diff; ten scoped inherited lint warnings match; full compiler equivalence and ten unchanged Python AST/token/mode checks pass | Five local commits; six source pins and one receiving hold remain Blocked; no real operational run; S21 next |
+| 2026-10-26 / S21 | Added codebase map; linked root/docs indexes; contributor whitespace-only reflow; 216 other original documents/artifacts unchanged | Baseline/final link review: zero missing targets (1,133 → 1,249 references); preservation, guard suite and diff check pass | One local documentation commit; four receiving documentation holds remain Blocked; S22 final review next |
 
 ## Final report requirements
 

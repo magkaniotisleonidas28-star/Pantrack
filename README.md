@@ -27,6 +27,8 @@ Local database migration and HTTP smoke commands are in that guide. No
 production credentials are needed for local development.
 
 For scope and acceptance gates, use the [milestone roadmap](docs/PANTRACK_MILESTONES.md).
+The [codebase map](docs/CODEBASE_MAP.md) connects application workflows to their
+contracts, services, routes, components, and tests.
 AI-assisted changes follow [AGENTS.md](AGENTS.md) and the
 [development playbook](docs/AI_DEVELOPMENT.md). The [documentation index](docs/README.md)
 links to setup, decisions, integration contracts, and historical evidence.

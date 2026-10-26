@@ -6,6 +6,11 @@ Start with these documents:
   blockers, and the next work to perform.
 - [Local development](LOCAL_DEVELOPMENT.md) — installation, local D1, fixture
   authentication, verification, reset, and recovery.
+- [Codebase map](CODEBASE_MAP.md) — architecture, workflow entrypoints, persistence,
+  UI state, tests, and operational script boundaries.
+- [Readability workflow](CODE_READABILITY_GUIDE.md) and
+  [cleanup tracker](../CODE_READABILITY_TODO.md) — formatting safeguards, sequential
+  reviews, verification records, and unresolved cleanup holds.
 - [Milestone roadmap](PANTRACK_MILESTONES.md) — M0–M12 dependencies, scope, and
   acceptance criteria, including the three-person work split and individual
   checklists.
