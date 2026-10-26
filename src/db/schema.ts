@@ -983,3 +983,19 @@ export const poCartReconciliations=sqliteTable('po_cart_reconciliations',{
  foreignKey({columns:[t.companyId,t.sessionId],foreignColumns:[poCartReconciliationEvidence.companyId,poCartReconciliationEvidence.sessionId]}),
  foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]}),
  foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]})]);
+// Manager-entered supplier purchase confirmation. One per cart job; the supplier reference is
+// unique per company/supplier/account. Immutable once saved; over-cap totals wait for owner review.
+export const poCartConfirmations=sqliteTable('po_cart_confirmations',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),jobId:text('job_id').notNull(),jobRevision:integer('job_revision').notNull(),
+ authorizationId:text('authorization_id').notNull(),authorizationRevision:integer('authorization_revision').notNull(),orderId:text('order_id').notNull(),
+ supplierId:text('supplier_id').notNull(),accountId:text('account_id').notNull(),supplierReference:text('supplier_reference').notNull(),
+ currency:text('currency').notNull(),linesJson:text('lines_json').notNull(),extrasJson:text('extras_json').notNull(),chargesJson:text('charges_json').notNull(),
+ itemSubtotalMinor:integer('item_subtotal_minor').notNull(),chargesMinor:integer('charges_minor').notNull(),totalMinor:integer('total_minor').notNull(),
+ capMinor:integer('cap_minor').notNull(),expectedDelivery:text('expected_delivery').notNull(),state:text('state').notNull(),provenance:text('provenance').notNull(),
+ note:text('note').notNull(),actor:text('actor').notNull(),createdAt:text('created_at').notNull(),
+ operationId:text('operation_id').notNull(),fingerprint:text('fingerprint').notNull(),receiptJson:text('receipt_json').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),uniqueIndex('po_cart_one_confirmation').on(t.companyId,t.jobId),
+ uniqueIndex('po_cart_confirmation_reference').on(t.companyId,t.supplierId,t.accountId,t.supplierReference),
+ uniqueIndex('po_cart_confirmation_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.jobId],foreignColumns:[poCartJobs.companyId,poCartJobs.id]}),
+ foreignKey({columns:[t.companyId,t.authorizationId],foreignColumns:[poCartAuthorizations.companyId,poCartAuthorizations.id]})]);
