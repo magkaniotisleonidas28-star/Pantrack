@@ -45,6 +45,8 @@ for(const populated of [false,true]){
     assert.equal(sql.prepare("SELECT count(*) n FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'").get().n,tables.length+2);
     if(populated){
       // An order confirmed before the upgrade is counted and approved after it.
+      // Today's service also reads later receiving tables, so apply the migrations after 0040 first.
+      for(const e of entries.filter(e=>e.idx>m.idx))sql.exec(readFileSync(`drizzle/${e.tag}.sql`,'utf8'));
       now='2026-10-11T09:00:00.000Z';const deliveries=new D1PoCartDeliveries(db,options),line=job.inputs.preflight.lines[0];
       const counted=await deliveries.count({action:'count',companyId:'a',confirmationId,operationId:randomUUID(),deliveredAt:'2026-10-11T08:30:00.000Z',
         lines:[{lineId:line.lineId,receivedPacks:'1',damagedPacks:'0'}],note:''});

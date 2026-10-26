@@ -5,7 +5,7 @@ import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {D1PoCartDeliveries} from '@/lib/d1-po-cart-deliveries';
 import {PoCartDeliveryError} from '@/lib/po-cart-delivery-contract';
 
-// Delivery counts and manager approval for the fictional cart preview; off by default and local only.
+// Delivery counts, manager approval and order closure for the fictional cart preview; off by default and local only.
 function enabled(req:Request){return (env as unknown as {PANTRACK_CART_PREVIEW?:string}).PANTRACK_CART_PREVIEW==='enabled'
   &&new URL(req.url).hostname==='127.0.0.1';}
 function service(){return new D1PoCartDeliveries(database(),{identity:async()=>(await getChatGPTUser())?.userId??null});}
@@ -29,6 +29,7 @@ export const POST=withCompanyRoute('deliveries',async(req:Request)=>{
     if(action==='count')return Response.json(await service().count(body));
     if(action==='approve')return Response.json(await service().approve(body));
     if(action==='recount')return Response.json(await service().recount(body));
-    return Response.json({error:'Choose count, approve or recount.'},{status:400});
+    if(action==='close')return Response.json(await service().close(body));
+    return Response.json({error:'Choose count, approve, recount or close.'},{status:400});
   }catch(error){return failure(error);}
 });

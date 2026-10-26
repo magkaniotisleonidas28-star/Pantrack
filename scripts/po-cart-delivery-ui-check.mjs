@@ -1,6 +1,6 @@
 // Served delivery receiving check. Start pnpm dev:cart-browser-worker first.
 // Fictional local D1 only: a real local browser worker prepares the practice cart, the manager
-// records the supplier confirmation, then staff count blind and the manager reviews.
+// records the supplier confirmation, then staff count blind, the manager reviews and closes the order early.
 // No checkout, supplier or payment.
 import {confineManagerContext} from './po-cart-worker/full-gate-runtime.mjs';
 import assert from 'node:assert/strict';
@@ -55,7 +55,7 @@ UPDATE memberships SET role='employee' WHERE company_id=${quote(f.companyId)} AN
   await page.setViewportSize({width:390,height:844});await shot(page,'staff-390');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No narrow overflow for staff');
   await page.setViewportSize({width:1440,height:1000});
-  // Manager: review the count, send it back with a reason, count again and approve with a shortfall and an extra pack.
+  // Manager: review the count, send it back with a reason, count again, approve with a shortfall and an extra pack, then close early.
   await f.execute(`UPDATE memberships SET role='owner' WHERE company_id=${quote(f.companyId)} AND user_id=${quote(actor)};
 DELETE FROM memberships WHERE company_id=${quote(f.companyId)} AND user_id='fictional-second-owner';`);
   panel=await openOrder(page);const review=panel.locator('[data-delivery-review]');await review.waitFor();
@@ -65,19 +65,28 @@ DELETE FROM memberships WHERE company_id=${quote(f.companyId)} AND user_id='fict
   const again=panel.locator('[data-supplier-deliveries] [data-delivery-count]');await again.waitFor();
   await fill(again,{'Packs received of House coffee beans':'1','Packs received of Barista oat milk':'1','Packs received of 12 oz paper cups':'4'});
   await again.getByRole('button',{name:'Save count'}).click();await review.waitFor();
-  await review.getByLabel("The rest of Barista oat milk won't arrive").check();await review.getByLabel('Extra packs of 12 oz paper cups').fill('1');
+  await review.getByLabel('Extra packs of 12 oz paper cups').fill('1');
   await shot(page,'manager-review');await review.getByRole('button',{name:'Approve delivery'}).click();
-  await panel.getByText('Everything on this order is received or marked as not arriving.').waitFor();
+  // One oat milk pack is still expected; the manager closes the order early with a reason.
+  const closing=panel.locator('[data-order-close]');await closing.getByRole('heading',{name:'Close the order early'}).waitFor();
+  assert.ok(await panel.locator('[data-supplier-deliveries] [data-delivery-count]').isVisible(),'The order still takes counts until it is closed');
+  await closing.getByRole('button',{name:'Close order early'}).click();await closing.getByRole('alert').filter({hasText:'Say why the rest of this order will not arrive.'}).waitFor();
+  await closing.getByLabel("Why won't the rest arrive?").fill('Supplier is out of oat milk');await shot(page,'manager-close');
+  await closing.getByRole('button',{name:'Close order early'}).click();
+  const closed=panel.locator('[data-order-closed]');await closed.waitFor();await panel.getByText('This order is closed.').waitFor();
+  assert.match(await closed.innerText(),/Closed early; the rest will not arrive · by local_seedy .*Supplier is out of oat milk.*in-progress spending hold is freed/);
+  assert.equal(await panel.locator('[data-order-close], [data-supplier-deliveries] [data-delivery-count]').count(),0,'A closed order takes no more counts');
   const progress=await panel.locator('[data-supplier-deliveries] table').first().locator('tbody tr').allInnerTexts();
   assert.deepEqual(progress.map(r=>r.split('\t').slice(1)),[['1','1','0','0'],['2','1','1','0'],['3','3 + 1 extra','0','0']]);
   const history=await panel.locator('.delivery-history li').allInnerTexts();
   assert.equal(history.length,2);assert.match(history[0],/Sent back for recount.*Recount the cups/);assert.match(history[1],/Approved.*counted by local_seedy.*decided by local_seedy/);
+  panel=await openOrder(page);await panel.locator('.cart-reservation').getByText('Settled (order closed)').waitFor();
   assert.equal((await api('/api/po-cart-deliveries',{action:'count',companyId:f.companyId,confirmationId:recorded.data.receipt.confirmationId,operationId:randomUUID(),
-    deliveredAt:new Date().toISOString(),lines:[{lineId:view.authorizedLines[0].lineId,receivedPacks:'1',damagedPacks:'0'}],note:''})).status,409,'A received order takes no more counts');
+    deliveredAt:new Date().toISOString(),lines:[{lineId:view.authorizedLines[0].lineId,receivedPacks:'1',damagedPacks:'0'}],note:''})).status,409,'A closed order takes no more counts');
   assert.deepEqual(await f.request('/api/inventory?companyId='+f.companyId),f.inventory,'Non-stock deliveries leave stock unchanged');
   await shot(page,'manager-done');await page.setViewportSize({width:390,height:844});await panel.scrollIntoViewIfNeeded();await shot(page,'manager-390');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'No narrow overflow for the manager');
   assert.deepEqual(errors,[]);await context.close();
 }finally{if(worker?.process.exitCode===null)worker.process.kill('SIGTERM');
   for(const file of f.credentialFiles)await fixtureCredential({execute:f.execute,file,action:'revoke'});await browser.close();}
-console.log('PASS: served delivery receiving after real local cart preparation: staff blind count without prices, manager recount with a reason, manager count and approval with a shortfall and an extra pack, history, no further counts and narrow layout.');
+console.log('PASS: served delivery receiving after real local cart preparation: staff blind count without prices, manager recount with a reason, manager count and approval with an extra pack, early closure with a required reason that settles the spending hold, history, no further counts and narrow layout.');

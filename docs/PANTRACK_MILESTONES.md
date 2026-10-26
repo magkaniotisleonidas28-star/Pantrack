@@ -589,8 +589,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   exactly once and all-or-nothing, and skips stock that a later count already
   included (migration `0039`, local only). [Part 2](C4_DELIVERY_RECEIVING_LOCAL_EVIDENCE.md)
   adds blind staff delivery counts and owner/manager approval or recount. Approval
-  posts accepted stock once through that port (migration `0040`, local only). Order
-  closure remains open.
+  posts accepted stock once through that port (migration `0040`, local only).
+  [Part 3](C4_ORDER_CLOSURE_LOCAL_EVIDENCE.md) closes an order when its last delivery
+  is approved, or early with a manager's reason. Closing settles the in-progress
+  spending hold, while daily and monthly limits keep the cap (migration `0041`, local
+  only).
   C4 is not complete and purchasing stays disabled.
   The owner-selected [cart preparation preview](C4_CART_PREVIEW_LOCAL_EVIDENCE.md)
   now proves reviewed-draft-to-fictional-cart mechanics locally, including 16

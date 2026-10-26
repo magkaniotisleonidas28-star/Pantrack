@@ -2,20 +2,25 @@ import {z} from 'zod';
 import {D1InventoryManagementService,InventoryManagementError} from './d1-inventory-management';
 import {canonicalJson,frozenCopy} from './supplier-simulation-contract';
 import type {PreparationPreflight} from './po-cart-preparation-contract';
-import {approveDeliverySchema,checkCount,countDeliverySchema,decide,deliveryFail as fail,managerDeliveriesQuerySchema,progress,receivables,
-  recountDeliverySchema,staffDeliveriesQuerySchema,type CountedLine,type DecidedLine,type DeliveryReceipt,type DeliveryState} from './po-cart-delivery-contract';
+import {approveDeliverySchema,checkCount,closeOrderSchema,countDeliverySchema,decide,deliveryFail as fail,managerDeliveriesQuerySchema,progress,receivables,
+  recountDeliverySchema,staffDeliveriesQuerySchema,type ClosureKind,type ClosureReceipt,type CountedLine,type DecidedLine,type DeliveryReceipt,type DeliveryState} from './po-cart-delivery-contract';
 const MEMBER="EXISTS (SELECT 1 FROM memberships WHERE company_id=? AND user_id=? AND role IN ('owner','manager','employee'))";
 const MANAGER="EXISTS (SELECT 1 FROM memberships WHERE company_id=? AND user_id=? AND role IN ('owner','manager'))";
-type Confirmation={id:string;job_id:string;supplier_reference:string;expected_delivery:string;lines_json:string;extras_json:string;created_at:string;inputs_json:string};
+type Confirmation={id:string;job_id:string;authorization_id:string;supplier_reference:string;expected_delivery:string;lines_json:string;extras_json:string;created_at:string;inputs_json:string};
 type Delivery={id:string;confirmation_id:string;job_id:string;delivered_at:string;count_json:string;count_note:string;counted_by:string;counted_at:string;
   count_operation_id:string;count_fingerprint:string;state:DeliveryState;decision_json:string|null;decision_note:string|null;stock_receipt:number|null;
   decided_by:string|null;decided_at:string|null;decision_operation_id:string|null;decision_fingerprint:string|null};
+type Closure={kind:ClosureKind;release_json:string;stock_receipt:number;note:string;closed_by:string;closed_at:string;operation_id:string;fingerprint:string};
+type Released={lineId:string;releasePacks:string};
 
 /**
  * Receiving for confirmed (within-cap) fictional supplier orders. Any company member counts a
  * delivery blind: staff see item names and pack descriptions only, never expected amounts or
  * prices. An owner or manager then approves it, posting A's receipt port in the same batch, or
  * sends it back for a recount. One pending count per order; counts and decisions are permanent.
+ * The order closes once nothing more is expected: automatically with the approval that resolves
+ * everything, or when a manager marks the rest as not arriving. Closing settles the order's
+ * in-progress spending hold (daily and monthly limits keep counting its cap) and ends counting.
  */
 export class D1PoCartDeliveries {
   constructor(private readonly db:D1Database,private readonly options:{identity:()=>Promise<string|null>;clock?:{now():Date}}) {}
@@ -33,19 +38,26 @@ export class D1PoCartDeliveries {
   }
   private inventory(){return new D1InventoryManagementService(this.db,this.options);}
   private confirmations(companyId:string,where:string,...args:string[]){
-    return this.db.prepare(`SELECT c.id,c.job_id,c.supplier_reference,c.expected_delivery,c.lines_json,c.extras_json,c.created_at,j.inputs_json
+    return this.db.prepare(`SELECT c.id,c.job_id,c.authorization_id,c.supplier_reference,c.expected_delivery,c.lines_json,c.extras_json,c.created_at,j.inputs_json
       FROM po_cart_confirmations c JOIN po_cart_jobs j ON j.company_id=c.company_id AND j.id=c.job_id
       WHERE c.company_id=? AND c.state='confirmed' ${where} ORDER BY c.created_at,c.id`).bind(companyId,...args).all<Confirmation>();
   }
-  private deliveries(companyId:string,confirmationId:string){
-    return this.db.prepare('SELECT * FROM po_cart_deliveries WHERE company_id=? AND confirmation_id=? ORDER BY counted_at,id').bind(companyId,confirmationId).all<Delivery>();
-  }
-  /** Lines with what is accepted, released and still owed, from approved decisions. */
+  /** Lines with what is accepted, released and still owed, from approved decisions and any closure. */
   private async state(companyId:string,c:Confirmation){
     const items=receivables((JSON.parse(c.inputs_json) as {preflight:PreparationPreflight}).preflight,c.lines_json,c.extras_json);
-    const deliveries=(await this.deliveries(companyId,c.id)).results;
-    const lines=progress(items,deliveries.filter(d=>d.state==='approved').map(d=>JSON.parse(d.decision_json!) as DecidedLine[]));
-    return {items,deliveries,lines,pending:deliveries.find(d=>d.state==='counted')??null};
+    const list=(await this.db.prepare('SELECT * FROM po_cart_deliveries WHERE company_id=? AND confirmation_id=? ORDER BY counted_at,id').bind(companyId,c.id).all<Delivery>()).results;
+    const closed=await this.db.prepare('SELECT * FROM po_cart_order_closures WHERE company_id=? AND confirmation_id=?').bind(companyId,c.id).first<Closure>();
+    const hold=await this.db.prepare('SELECT state FROM po_cart_reservations WHERE company_id=? AND authorization_id=?').bind(companyId,c.authorization_id).first<{state:'reserved'|'released'|'settled'}>();
+    const kind=(lineId:string)=>items.find(i=>i.lineId===lineId)?.kind??'extra';
+    const released=closed?(JSON.parse(closed.release_json) as Released[]).map(r=>({lineId:r.lineId,kind:kind(r.lineId),acceptPacks:'0',excessPacks:'0',releasePacks:r.releasePacks})):[];
+    const lines=progress(items,[...list.filter(d=>d.state==='approved').map(d=>JSON.parse(d.decision_json!) as DecidedLine[]),released]);
+    return {items,deliveries:list,lines,pending:list.find(d=>d.state==='counted')??null,closure:closed,hold:hold?.state??null};
+  }
+  // Inserted last in its batch: the database refuses it unless nothing on the order is still owed.
+  private closure(companyId:string,c:Confirmation,values:{kind:ClosureKind;release:Released[];stock:number;note:string;actor:string;at:string;operationId:string;fingerprint:string}){
+    return this.db.prepare(`INSERT INTO po_cart_order_closures(company_id,confirmation_id,job_id,authorization_id,kind,release_json,stock_receipt,note,closed_by,closed_at,operation_id,fingerprint)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`).bind(companyId,c.id,c.job_id,c.authorization_id,values.kind,JSON.stringify(values.release),values.stock,values.note,
+      values.actor,values.at,values.operationId,values.fingerprint);
   }
   /** Blind list for counting: open orders with item names and pack descriptions only. */
   private countable(c:Confirmation,s:Awaited<ReturnType<D1PoCartDeliveries['state']>>){
@@ -68,7 +80,9 @@ export class D1PoCartDeliveries {
     return frozenCopy({confirmationId:c.id,supplierReference:c.supplier_reference,expectedDelivery:c.expected_delivery,
       lines:s.lines.map(l=>({lineId:l.item.lineId,kind:l.item.kind,sku:l.item.sku,description:l.item.description,unitLabel:l.item.unitLabel,
         confirmedPacks:String(l.item.confirmedPacks),acceptedPacks:String(l.accepted),releasedPacks:String(l.released),excessPacks:String(l.excess),owedPacks:String(l.owed)})),
-      complete:s.lines.every(l=>l.owed===BigInt(0)),countable:this.countable(c,s),
+      complete:s.lines.every(l=>l.owed===BigInt(0)),countable:this.countable(c,s),hold:s.hold,
+      closure:s.closure&&{kind:s.closure.kind,note:s.closure.note,closedBy:s.closure.closed_by,closedAt:s.closure.closed_at,stockLowered:s.closure.stock_receipt===1,
+        released:JSON.parse(s.closure.release_json) as Released[]},
       deliveries:s.deliveries.map(d=>({id:d.id,state:d.state,deliveredAt:d.delivered_at,countedBy:d.counted_by,countedAt:d.counted_at,
         count:JSON.parse(d.count_json) as CountedLine[],countNote:d.count_note,decision:d.decision_json?JSON.parse(d.decision_json) as DecidedLine[]:null,
         decisionNote:d.decision_note,decidedBy:d.decided_by,decidedAt:d.decided_at,stockAdded:d.stock_receipt===1}))});
@@ -80,15 +94,22 @@ export class D1PoCartDeliveries {
     if(row.fingerprint!==fingerprint)fail('conflict','Operation identity was used for another delivery entry or person.');
     return frozenCopy({operationId,deliveryId:row.id,state:column==='count'?'counted':row.state,at:row.at});
   }
-  private async save(companyId:string,actor:string,managers:boolean,column:'count'|'decision',operationId:string,fingerprint:string,statements:D1PreparedStatement[]){
+  private async closed(companyId:string,operationId:string,fingerprint:string):Promise<ClosureReceipt|null>{
+    const row=await this.db.prepare('SELECT confirmation_id,kind,fingerprint,closed_at FROM po_cart_order_closures WHERE company_id=? AND operation_id=?')
+      .bind(companyId,operationId).first<{confirmation_id:string;kind:ClosureKind;fingerprint:string;closed_at:string}>();
+    if(!row)return null;
+    if(row.fingerprint!==fingerprint)fail('conflict','Operation identity was used for another order closure or person.');
+    return frozenCopy({operationId,confirmationId:row.confirmation_id,kind:row.kind,at:row.closed_at});
+  }
+  private async save<R>(companyId:string,actor:string,managers:boolean,replay:()=>Promise<R|null>,statements:D1PreparedStatement[]){
     try{
       if(await this.actor(companyId,managers)!==actor)fail('forbidden','Session changed before saving.');
       await this.db.batch(statements);
     }catch{
-      await this.actor(companyId,managers);const replay=await this.replay(companyId,column,operationId,fingerprint);if(replay)return {receipt:replay};
+      await this.actor(companyId,managers);const replayed=await replay();if(replayed)return {receipt:replayed};
       fail('conflict','The order, its stock or the delivery changed; nothing was saved. Refresh and try again.');
     }
-    const saved=await this.replay(companyId,column,operationId,fingerprint);
+    const saved=await replay();
     if(!saved)fail('storage_failure','Save outcome is uncertain. Retry the same operation identity.');
     return {receipt:saved};
   }
@@ -100,11 +121,12 @@ export class D1PoCartDeliveries {
     const c=(await this.confirmations(input.companyId,'AND c.id=?',input.confirmationId)).results[0];
     if(!c)fail('missing','This order is not waiting for a delivery.');
     const s=await this.state(input.companyId,c);
+    if(s.closure)fail('conflict','This order is closed; it takes no more counts.');
     if(s.pending)fail('conflict','A count for this order is waiting for a manager. It must be approved or sent back first.');
     const open=s.items.filter(i=>s.lines.find(l=>l.item.lineId===i.lineId)!.owed>BigInt(0));
     if(!open.length)fail('conflict','Everything on this order is already received or marked as not arriving.');
     const lines=checkCount(open,input);
-    return this.save(input.companyId,actor,false,'count',input.operationId,fingerprint,[this.db.prepare(`INSERT INTO po_cart_deliveries(company_id,id,confirmation_id,job_id,delivered_at,
+    return this.save(input.companyId,actor,false,()=>this.replay(input.companyId,'count',input.operationId,fingerprint),[this.db.prepare(`INSERT INTO po_cart_deliveries(company_id,id,confirmation_id,job_id,delivered_at,
       count_json,count_note,counted_by,counted_at,count_operation_id,count_fingerprint,state) VALUES (?,?,?,?,?,?,?,?,?,?,?,'counted')`).bind(input.companyId,crypto.randomUUID(),
       c.id,c.job_id,new Date(t).toISOString(),JSON.stringify(lines),input.note,actor,at,input.operationId,fingerprint)]);
   }
@@ -132,14 +154,38 @@ export class D1PoCartDeliveries {
       try{effects=await this.inventory().orderReceiptStatements({companyId:input.companyId,confirmationId:c.id,receiptId:d.id,actor,deliveredAt:d.delivered_at,lines:receipt});}
       catch(error){if(error instanceof InventoryManagementError)fail('conflict','Stock for a delivered item changed or needs attention: '+error.message);throw error;}
     }
-    return this.save(input.companyId,actor,true,'decision',input.operationId,fingerprint,[...effects,
-      ...this.decision(input.companyId,d.id,input.operationId,{state:'approved',json:JSON.stringify(decided),note:input.note,stock:receipt.length?1:0,actor,at,fingerprint})]);
+    // The approval that resolves everything still expected also closes the order.
+    const resolved=new Map(decided.map(x=>[x.lineId,BigInt(x.acceptPacks)+BigInt(x.releasePacks)]));
+    const completes=s.lines.every(l=>l.owed-(resolved.get(l.item.lineId)??BigInt(0))===BigInt(0));
+    return this.save(input.companyId,actor,true,()=>this.replay(input.companyId,'decision',input.operationId,fingerprint),[...effects,
+      ...this.decision(input.companyId,d.id,input.operationId,{state:'approved',json:JSON.stringify(decided),note:input.note,stock:receipt.length?1:0,actor,at,fingerprint}),
+      ...(completes?[this.closure(input.companyId,c,{kind:'complete',release:[],stock:0,note:'',actor,at,operationId:input.operationId,fingerprint})]:[])]);
   }
   async recount(value:unknown){
     const input=this.parse(recountDeliverySchema,value),actor=await this.actor(input.companyId,true),fingerprint=canonicalJson({actor,input});
     const prior=await this.replay(input.companyId,'decision',input.operationId,fingerprint);if(prior)return {receipt:prior};
     const {d}=await this.pending(input.companyId,input.deliveryId);
-    return this.save(input.companyId,actor,true,'decision',input.operationId,fingerprint,
+    return this.save(input.companyId,actor,true,()=>this.replay(input.companyId,'decision',input.operationId,fingerprint),
       this.decision(input.companyId,d.id,input.operationId,{state:'recount',json:null,note:input.note,stock:null,actor,at:this.now(),fingerprint}));
+  }
+  /** Closes the order: anything still expected is marked as not arriving, with a reason. */
+  async close(value:unknown){
+    const input=this.parse(closeOrderSchema,value),actor=await this.actor(input.companyId,true),fingerprint=canonicalJson({actor,input});
+    const prior=await this.closed(input.companyId,input.operationId,fingerprint);if(prior)return {receipt:prior};
+    const c=(await this.confirmations(input.companyId,'AND c.id=?',input.confirmationId)).results[0];
+    if(!c)fail('missing','No within-cap supplier confirmation is recorded for this order.');
+    const s=await this.state(input.companyId,c),at=this.now();
+    if(s.closure)fail('conflict','This order is already closed.');
+    if(s.pending)fail('conflict','A count for this order is waiting for review. Approve it or send it back first.');
+    const open=s.lines.filter(l=>l.owed>BigInt(0)),release=open.map(l=>({lineId:l.item.lineId,releasePacks:String(l.owed)}));
+    if(release.length&&!input.note)fail('invalid_request','Say why the rest of this order will not arrive.');
+    const stock=open.filter(l=>l.item.kind==='stock').map(l=>({lineId:l.item.lineId,acceptedMinor:'0',releasedMinor:String(l.owed*l.item.minorPerPack!),excessMinor:'0'}));
+    let effects:D1PreparedStatement[]=[];
+    if(stock.length){
+      try{effects=await this.inventory().orderReceiptStatements({companyId:input.companyId,confirmationId:c.id,receiptId:input.operationId,actor,deliveredAt:at,lines:stock});}
+      catch(error){if(error instanceof InventoryManagementError)fail('conflict','Incoming stock for this order changed or needs attention: '+error.message);throw error;}
+    }
+    return this.save(input.companyId,actor,true,()=>this.closed(input.companyId,input.operationId,fingerprint),[...effects,
+      this.closure(input.companyId,c,{kind:release.length?'closed_short':'complete',release,stock:stock.length?1:0,note:input.note,actor,at,operationId:input.operationId,fingerprint})]);
   }
 }

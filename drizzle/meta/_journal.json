@@ -288,6 +288,13 @@
       "when": 1793040103074,
       "tag": "0040_po_cart_deliveries",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1793052367605,
+      "tag": "0041_po_cart_order_closures",
+      "breakpoints": true
     }
   ]
 }
