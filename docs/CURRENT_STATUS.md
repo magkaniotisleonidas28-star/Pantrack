@@ -22,15 +22,16 @@ revisions drive matching; live catalog renames do not alter saved history.
 The implementation reuses the existing contracts, serializers and download
 lifecycle. A deterministic regression and the actual Worker verify paging
 without overlap for tied timestamps and multiple matching lines. All six local
-checks passed: 120 executed suites plus twelve Windows skips, typecheck/build,
-all 38 migration checks, fresh isolated apply and HTTP smoke. Nine real browser
+checks passed on the combined source: 123 executed suites plus twelve Windows skips,
+typecheck/build, all 39 migration checks, isolated apply and HTTP smoke. Nine real browser
 downloads, independent file readers, input/navigation cancellation, role/change
 guards and desktop/mobile/keyboard checks passed. Read/export paths preserved
 every application table.
 
-No schema, migration, dependency or business data change was introduced. The
-root and hosted databases were untouched. Supplier-confirmation PR 17 remains
-separate with no application-file overlap. Next bounded document item: the
+No schema, migration, dependency or business data change was introduced by this
+filter. Supplier-confirmation PR 17 merged upstream during final sync and was
+integrated cleanly, with its migration checked only in the isolated test database.
+The root and hosted databases were untouched. Next bounded document item: the
 immutable private issued-document storage contract, checking the shared migration
 queue before persistence integration. C4/C5/M8 remain open; hosted release stays paused.
 
@@ -43,8 +44,9 @@ original creation dates after edits and precise boundaries are verified; files
 retain their criteria and time-zone provenance. Invalid ranges keep applied
 results, and changing dates or zone cancels pending exports.
 
-The seven merged commits through `2d7e49f` were synced first. The open supplier-
-confirmation PR has no overlapping application files and remains untouched.
+The seven merged commits through `2d7e49f` were synced first. The then-open supplier-
+confirmation PR used different application files; its subsequent merge is recorded
+with the product-filter integration above.
 All six local checks passed: 119 executed suites plus twelve Windows skips,
 typecheck/build, all 38 migration checks, fresh isolated apply and HTTP smoke.
 Nine real-app downloads, independent readers, desktop/mobile/keyboard behavior,

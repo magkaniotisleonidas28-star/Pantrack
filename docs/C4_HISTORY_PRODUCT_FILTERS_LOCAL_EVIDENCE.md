@@ -13,10 +13,14 @@ The clean root and refreshed remote `main` were at `ac5e419`. The existing
 Work used `work/c4-history-product-filter-20261026`; feature commit `b9d719f`.
 
 The refreshed [supplier-confirmation PR 17](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/17)
-uses different application files and remains untouched. Status/roadmap edits
-are shared handoffs and must preserve both outcomes when that PR merges.
+used different application files. It merged upstream as `8613a24` during final
+sync; the guard stopped our push, then integration commit `1cdc63f` merged that
+approved work cleanly, preserving its application and shared documentation changes.
+The task did not merge or modify the open PR itself. Its existing `0038`
+confirmation migration was applied only to the isolated test database.
 Unpublished work on another computer cannot be detected by this check.
-No schema, migration, dependency, company setting or external gate changed.
+The product filter itself adds no schema, migration, dependency, company setting
+or external gate change.
 The original root and hosted databases were untouched. Existing migrations were
 applied only to this task's fresh fictional database; no supplier/provider/model,
 checkout, deployment or production action ran.
@@ -90,14 +94,15 @@ Pinned Node 22.23.2 and pnpm 11.25.0 were used. Command logs/reports are in root
 | --- | --- |
 | Frozen offline install and fictional local setup | Passed with copied per-worktree dependencies; no root secrets or package changes. |
 | Five existing focused history/date/export suites | Passed after the shared contract extension. |
+| Pre-integration complete pipeline | All six commands passed: 132 invocations, 120 executed suites, twelve Windows skips and 38 existing migrations. |
 | [Product regression suite](../tests/purchase-order-history-products.mjs) | Passed with real producers/SQLite, manual/non-stock/proposal/registry sources, both actual route wrappers, loopback HTTP, native files and the checked download lifecycle. |
 | `pnpm typecheck` | Passed, including a final run after the accessible label/help refinement. |
-| `pnpm test` | 132 invocations: 120 executed successfully, twelve explicit Windows skips. |
-| `pnpm db:check` | All 38 existing ordered migrations match schema and apply to fresh SQLite. |
+| `pnpm test` | Combined source: 135 invocations, 123 executed successfully, twelve explicit Windows skips. |
+| `pnpm db:check` | All 39 ordered migrations match schema and apply to fresh SQLite. |
 | `pnpm build` | Final application Worker/client build passed. |
-| `pnpm db:migrate:local` | All 38 existing migrations applied to this task's fresh isolated database; final run found none outstanding. |
+| `pnpm db:migrate:local` | The task's fresh 38-migration database accepted incoming `0038`; the combined final run confirmed all 39 applied. No product-filter migration. |
 | `pnpm test:local` | Ordinary local HTTP smoke passed with preview off. |
-| Signed-in local Edge | Nine downloads passed. From page two, main PDF/Excel contained all 32 matching POs and all 59 lines; beta and canceled subsets, literal SKU text and refreshed results also passed. |
+| Signed-in local Edge | Both walkthroughs, before and after integration, passed nine downloads each. From page two, main PDF/Excel contained all 32 matching POs and all 59 lines; beta and canceled subsets, literal SKU text and refreshed results also passed. |
 | Actual data/lifecycle | No page overlap under tied timestamps/multiple line matches; current-SKU, saved description/product ID, catalog isolation, combined criteria, detail/back, no matches, Clear/retry, cancellation on input/apply/page/Clear/navigation/company, new matching/nonmatching records and revoked access passed. |
 | Preservation | Every application table stayed unchanged across the read/export/cancellation sequence. Intentional seed/new-match/role writes were checked separately. Preview configuration restored byte-for-byte. |
 | Independent files | PDF.js/OOXML tests passed on 28 POs/55 lines. Separate PyMuPDF/openpyxl processes checked those artifacts and actual browser files: 32 POs, 59 exact PO/line pairs, 61 PDF pages, revisions/statuses, fingerprint, date/product provenance, scope, bounds and literal cells. Unmatched lines remained present. |
@@ -107,7 +112,8 @@ Pinned Node 22.23.2 and pnpm 11.25.0 were used. Command logs/reports are in root
 The browser uses real saved-PO producers with an injected fixture clock and
 native SQLite/D1 adapter, then reads/exports through the actual signed-in app.
 Reports, screenshots and downloaded files remain in this worktree's
-`.sites-runtime/product-history-browser-first/`; built-Worker evidence is in
+`.sites-runtime/product-history-browser-first/` and, after integrating supplier
+confirmation, `.sites-runtime/product-history-browser-integrated/`; built-Worker evidence is in
 `.sites-runtime/production-product-history-assets/`. Private fixtures are fictional
 and uncommitted. Rendered PDF and controls were visually inspected.
 
@@ -126,6 +132,6 @@ is needed; retain the separately merged incoming-stock and spending-limit work.
 
 Next bounded C4 document item: define and test the immutable private issued-
 document storage contract (company/revision ownership, hash/template identity
-and retention) using local dependencies. Recheck existing work and the supplier-
-confirmation migration queue before schema-bearing integration. This outcome
+and retention) using local dependencies. Recheck existing work and the shared
+migration queue before schema-bearing integration. This outcome
 does not close C4/C5/M8 or authorize a hosted release or supplier execution.

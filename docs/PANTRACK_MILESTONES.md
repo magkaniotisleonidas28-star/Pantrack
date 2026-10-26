@@ -562,8 +562,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   current saved descriptions/SKUs/product IDs before paging and complete export,
   retaining whole orders and criterion/scope provenance. Stable page boundaries,
   actual native files, combined criteria and access/change/cancellation guards
-  passed locally, with 120 executed suites plus twelve Windows skips and the
-  full pipeline. No schema change. Next define/test the immutable private issued-
+  passed locally after integrating supplier confirmation, with 123 executed suites
+  plus twelve Windows skips and the full pipeline. No product-filter schema change.
+  Next define/test the immutable private issued-
   document contract, coordinating the migration queue before storage integration.
   Issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
