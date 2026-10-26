@@ -5,6 +5,7 @@ import {cloverSourceGuard, type CloverReviewPolicy} from './d1-replenishment-clo
 import {canonicalJson, frozenCopy, supplierSource} from './supplier-simulation-contract';
 import {D1PurchasingSuppliers} from './d1-purchasing-suppliers';
 import {SupplierRegistryError} from './purchasing-supplier-contract';
+import {D1PurchaseOrderHistory} from './d1-purchase-order-history';
 import {cancelPoSchema, createPoSchema, editPoSchema, reviewPoSchema, poFail, poId, type PurchaseOrderLine,
   type PurchaseOrderSnapshot, type PurchaseOrderView, type CreatePoInput, type EditPoInput} from './purchase-order-contract';
 
@@ -256,14 +257,8 @@ export class D1PurchaseOrderDrafts {
     if (!row) poFail('missing','PO draft not found.');
     return this.view(row,actor);
   }
-  async list(companyId: string, offset = 0) {
-    const actor = await this.actor(companyId);
-    if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1_000_000) poFail('invalid_request','Invalid history offset.');
-    const rows = await this.db.prepare(`SELECT h.id,h.number,h.supplier_id,json_extract(r.snapshot_json,'$.supplier.name') AS supplier_name,h.status,h.revision,h.created_at
-      FROM purchase_order_drafts h JOIN purchase_order_draft_revisions r ON r.company_id=h.company_id AND r.order_id=h.id AND r.revision=h.revision
-      WHERE h.company_id=? AND ${MEMBER} ORDER BY h.created_at DESC,h.id DESC LIMIT 21 OFFSET ?`)
-      .bind(companyId,companyId,actor,offset).all<{id:string;number:string;supplier_id:string;supplier_name:string;status:string;revision:number;created_at:string}>();
-    return frozenCopy({orders:rows.results.slice(0,20),hasMore:rows.results.length > 20});
+  async list(companyId:string,offset=0,filters:unknown={}){
+    return new D1PurchaseOrderHistory(this.db,this.options).list({companyId,offset,filters});
   }
   async choices(companyId: string) {
     const actor = await this.actor(companyId);

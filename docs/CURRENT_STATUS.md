@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-24
+Updated: 2026-10-25
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,78 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Latest local C4 history filters — 2026-10-25
+
+The [saved-PO history filters](C4_PO_HISTORY_FILTERS_LOCAL_EVIDENCE.md) add
+search, status and supplier criteria to the existing manager list. They apply
+before pagination and bind current company membership to each read, including
+empty pages. Apply/Clear reset paging, and delayed responses cannot overwrite a
+newer search or another company. Existing detail/review/download behavior passed.
+
+All six local checks passed: 106 executed suites plus twelve Windows skips,
+typecheck, build, all 35 migration checks, fresh local apply and HTTP smoke.
+The signed-in browser walkthrough covered 33 POs, pagination, literal characters,
+retry, no matches, real permission refusal, and desktop/mobile/keyboard behavior.
+Every application table stayed unchanged by the read/detail/export sequence.
+No new schema or migration was needed.
+
+Before this slice, the four completed export/integration commits were pushed
+to GitHub at `336c447`; [Windows and Ubuntu CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/40249939780)
+both passed. No open PR or overlapping shared history-file work was found.
+Next bounded C4 document task: a server-authorized export snapshot of the full
+filtered history across pages. C4/C5/M8 remain open; the hosted release is paused.
+
+## Latest local C4 manager downloads — 2026-10-25
+
+The [signed-in download controls](C4_SAVED_DRAFT_DOWNLOADS_LOCAL_EVIDENCE.md)
+now connect PDF/Excel to the manager's current saved draft. They reuse the
+existing API/formatters, check current company access/revision before generation
+and again before file handoff, and cancel when editing, leaving or switching
+companies. Busy/cancel/retry/reload states and the locally served licensed font
+are verified in the real local app. Six downloaded files passed independent
+inspection; desktop/mobile and real revocation/stale/canceled paths passed.
+
+The other contributor's merged G5 work and our two local export commits were
+combined without conflicts. All six local checks passed on that combined source:
+105 executed suites plus 12 Windows skips, typecheck, build, all 35 migration
+checks, fresh local apply and HTTP smoke. Local production-bundle assets and
+anonymous export refusal passed too. The prior G5 result retains its own scope.
+
+Current saved-draft downloads are complete locally. Their history search/status/
+supplier follow-up is now recorded above. C4/C5/M8 remain open and the online release stays
+deferred; no provider/purchasing gate or schema changed.
+
+## Latest local C4 saved-draft documents — 2026-10-25
+
+The [saved-draft document adapter](C4_SAVED_DRAFT_DOCUMENTS_LOCAL_EVIDENCE.md)
+now generates PDF/XLSX from the existing authorized export response, including
+manual/non-stock items, saved supplier packs and reviewed revisions. It reuses
+the existing PDF layout and Excel escaping engines. Ten actual local browser
+downloads passed independent inspection, with exact quantities, missing/zero
+prices, revision/draft labels and a readable 50-item PDF. The full suite passed:
+103 executed suites plus ten explicit Windows skips.
+
+This completes the saved-document adapter locally. Its signed-in controls,
+authorized fetch, selection/error states and font asset are now recorded above.
+C4/C5/M8 remain open, and
+the online release remains deferred. No API/schema or purchasing gate changed.
+
+## Latest local C4 saved-draft export snapshot — 2026-10-24
+
+The [saved-draft export foundation](C4_SAVED_DRAFT_EXPORT_LOCAL_EVIDENCE.md)
+adds a read-only JSON endpoint for an explicitly selected current PO revision.
+Server-side owner/manager membership, company, revision and cancellation checks
+are bound to one database read. Saved manual/non-stock/proposal/registry values,
+missing prices and exact quantities are preserved without database/provider
+writes. Full local checks passed: 102 executed suites plus ten Windows skips,
+typecheck, build, all 35 migration checks, fresh local apply and HTTP smoke.
+A separate real-framework check passed with the preview gate temporarily enabled.
+
+This completes the permission/revision foundation locally; it adds no migration
+or signed-in download buttons. Its PDF/XLSX adapter is now recorded above;
+manager-screen wiring is also verified locally above. C4/C5/M8 remain
+open, and the online release remains deferred.
 
 ## Latest local C4 draft Excel — 2026-10-24
 
@@ -23,9 +95,9 @@ skips, actual Edge downloads and independent ZIP/XML/openpyxl checks passed.
 Repeated exports preserve fictional source/DB snapshots and make no provider calls.
 
 This is local preparation only. C4/C5/M8 remain open, and the online release
-stays deferred. Next bounded C4 outcome: a server-authorized, revision-bound
-export snapshot for saved PO drafts, including manual lines and financial access,
-before connecting both formats to the signed-in manager workflow.
+stays deferred. The server-authorized, revision-bound saved-draft export
+foundation is now recorded above; document generation and signed-in manager
+controls remain separate outcomes.
 
 ## Latest local C4 draft PDF — 2026-10-24
 

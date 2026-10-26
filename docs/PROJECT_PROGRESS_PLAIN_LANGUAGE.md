@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-24 for release preparation and local PDF/Excel exports. The historical verification table
+Updated: 2026-10-25 for release preparation and local saved-draft PDF/Excel. The historical verification table
 below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -30,8 +30,25 @@ app remains separate work.
 The [Excel download](C4_DRAFT_XLSX_LOCAL_EVIDENCE.md) is now built and tested too.
 It includes a summary and a sortable/filterable item list, preserves exact values
 as text, and keeps missing prices clearly unavailable. Editing the spreadsheet
-does not change Pantrack. Next, prepare the permission and saved-revision checks
-needed to connect both downloads to saved drafts in the signed-in app.
+does not change Pantrack.
+
+The [saved-draft export checks](C4_SAVED_DRAFT_EXPORT_LOCAL_EVIDENCE.md) now pass
+locally. Only a manager or owner from the correct company can read the export,
+and it must match the current saved revision. Changed or canceled drafts are
+blocked; manual items, quantities and missing prices keep their saved values.
+The [saved-draft PDF/Excel adapter](C4_SAVED_DRAFT_DOCUMENTS_LOCAL_EVIDENCE.md)
+now uses those saved values with the existing document engines. Browser downloads
+and independent file readers passed, including manual items, missing prices and
+long quantities. The [manager download buttons](C4_SAVED_DRAFT_DOWNLOADS_LOCAL_EVIDENCE.md)
+are now connected and tested locally. They use the current saved revision,
+stop if access or the draft changes, and let the manager cancel, retry or reload.
+PDF/Excel downloading from a saved draft is complete on this computer.
+The [saved-order search and filters](C4_PO_HISTORY_FILTERS_LOCAL_EVIDENCE.md)
+are now built and tested locally too. Managers can search PO numbers/suppliers,
+filter draft/reviewed/canceled status, and page through matching results. No new
+database structure was needed. Next, prepare safe exports of a complete filtered
+history across pages. The online
+release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
 records of its completion checks. Some tests passed, but the complete AI safety

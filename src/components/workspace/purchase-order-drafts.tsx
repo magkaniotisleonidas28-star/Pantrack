@@ -12,6 +12,8 @@ import {draftStockDisplay} from '@/lib/supplier-order-draft';
 import {emptyEditor,editorFrom,newLine,cents,dollars,statusLabel,snapshotChanges,type DraftEditor,type EditorLine} from './purchase-order-editor-model';
 import './purchase-order-drafts.css';
 import CartPreview from './cart-preview';
+import PurchaseOrderDownloads from './purchase-order-downloads';
+import {purchaseOrderHistoryFilters,purchaseOrderHistorySearch,type PurchaseOrderHistoryFilters} from '@/lib/purchase-order-history-contract';
 
 type Choices=Awaited<ReturnType<D1PurchaseOrderDrafts['choices']>>;
 type List=Awaited<ReturnType<D1PurchaseOrderDrafts['list']>>;
@@ -19,14 +21,15 @@ type Suppliers=Awaited<ReturnType<D1PurchasingSuppliers['list']>>;
 type Mappings=Awaited<ReturnType<D1PurchasingSuppliers['mappings']>>;
 type Props={companyId:string;active:boolean;refreshKey?:number;onEnabledChange:(value:boolean)=>void;onDirtyChange:(value:boolean)=>void};
 class RequestError extends Error {constructor(message:string,public status:number){super(message);}}
-async function request<T={order:PurchaseOrderView}>(companyId:string,query='',body?:Record<string,unknown>):Promise<T>{
+async function request<T={order:PurchaseOrderView}>(companyId:string,query='',body?:Record<string,unknown>,signal?:AbortSignal):Promise<T>{
   const response=await fetch(`/api/purchase-orders?companyId=${encodeURIComponent(companyId)}${query}`,body?
-    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'});
+    {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store',signal});
   const data=await response.json() as T&{error?:string};if(!response.ok)throw new RequestError(data.error??'Could not load purchase orders.',response.status);return data;
 }
 const date=(at:string)=>new Date(at).toLocaleString();
 const money=(v:string|null)=>v===null?'Unavailable':`$${dollars(v)}`;
 const FieldErrors=createContext<Record<string,string>>({});
+const emptyHistoryFilters:PurchaseOrderHistoryFilters={q:'',supplier:''};
 function Input(props:React.ComponentProps<typeof BaseInput>){const errors=useContext(FieldErrors),error=props.name?errors[props.name]:undefined;
   return <BaseInput {...props} aria-invalid={error?true:undefined} aria-describedby={error?`po-error-${props.name}`:props['aria-describedby']}/>;}
 
@@ -41,13 +44,18 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   const [invalid,setInvalid]=useState<Record<string,string>>({}),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false);
   const [latest,setLatest]=useState<PurchaseOrderView|null>(null),[history,setHistory]=useState<{order:PurchaseOrderView;changes:string[]}|null>(null),[historyBusy,setHistoryBusy]=useState(false);
   const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false),historyRequest=useRef(0);
+  const downloadCancel=useRef<(()=>void)|null>(null);
+  const [filters,setFilters]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters),[filterDraft,setFilterDraft]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters);
+  const [historyLoading,setHistoryLoading]=useState(true),[historyError,setHistoryError]=useState('');
+  const historyListRequest=useRef(0),historyListAbort=useRef<AbortController|null>(null);
+  const historyVisible=enabled&&active&&!selected&&!editor,hasFilters=!!(filters.q||filters.supplier||filters.status);
   const dirty=!!editor&&JSON.stringify(editor)!==baseline||uncertain;
   useEffect(()=>{onDirtyChange(dirty);},[dirty,onDirtyChange]);
   useEffect(()=>{if(!dirty)return;const protect=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',protect);return()=>window.removeEventListener('beforeunload',protect);},[dirty]);
   useEffect(()=>{let live=true;void request<Choices>(companyId,'&view=choices').then(data=>{if(live){setChoices(data);setEnabled(true);onEnabledChange(true);}})
     .catch(e=>{if(live){setEnabled(false);onEnabledChange(false);if(!(e instanceof RequestError&&e.status===404))setError(e.message);}})
     .finally(()=>{if(live)setLoading(false);});return()=>{live=false;};},[companyId,onEnabledChange]);
-  useEffect(()=>{if(enabled&&active)void loadList(offset);},[enabled,active,offset]);
+  useEffect(()=>{if(historyVisible)void loadList(offset);return()=>{historyListRequest.current++;historyListAbort.current?.abort();};},[historyVisible,offset,filters]);
   useEffect(()=>{if(enabled&&active){void loadSuppliers(0);void request<Choices>(companyId,'&view=choices').then(setChoices).catch(e=>setError(e.message));}},[enabled,active,refreshKey]);
   const supplierId=editor?.source==='registry'?editor.supplierId:'';
   useEffect(()=>{if(!supplierId){setProfile(null);return;}if(selected){setProfile(selected.snapshot.registry?.profile??null);return;}
@@ -56,21 +64,34 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   useEffect(()=>{let live=true;setMappings({mappings:[],hasMore:false});setMappingPage(0);
     if(supplierId)void supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=0`)
       .then(d=>{if(live)setMappings(d);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[supplierId,refreshKey,companyId]);
-  async function loadList(page:number){try{setList(await request<List>(companyId,`&offset=${page}`));}catch(e){setError((e as Error).message);}}
+  async function loadList(page:number){
+    const sequence=++historyListRequest.current;historyListAbort.current?.abort();const abort=new AbortController();historyListAbort.current=abort;
+    setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});
+    try{const data=await request<List>(companyId,purchaseOrderHistorySearch(filters,page),undefined,abort.signal);if(sequence===historyListRequest.current)setList(data);}
+    catch(e){if(sequence===historyListRequest.current&&!abort.signal.aborted)setHistoryError((e as Error).message);}
+    finally{if(sequence===historyListRequest.current)setHistoryLoading(false);}
+  }
+  function applyHistoryFilters(event:React.FormEvent<HTMLFormElement>){event.preventDefault();
+    const parsed=purchaseOrderHistoryFilters.safeParse(filterDraft);if(!parsed.success){setHistoryError('Check the search and supplier fields.');return;}
+    prepareHistoryRead();setFilterDraft(parsed.data);setFilters(parsed.data);setOffset(0);
+  }
+  function prepareHistoryRead(){historyListRequest.current++;historyListAbort.current?.abort();setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});}
+  function clearHistoryFilters(){prepareHistoryRead();setFilterDraft({...emptyHistoryFilters});setFilters({...emptyHistoryFilters});setOffset(0);}
+  function changeHistoryPage(page:number){prepareHistoryRead();setOffset(page);}
   async function loadSuppliers(page:number){try{const data=await supplierRequest<Suppliers>(companyId,`&offset=${page}`);setSuppliers(old=>page?{...data,suppliers:[...old.suppliers,...data.suppliers.filter(s=>!old.suppliers.some(o=>o.id===s.id))]}:data);setSupplierPage(page);}catch(e){setError((e as Error).message);}}
   async function moreMappings(){try{const page=mappingPage+20,data=await supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=${page}`);setMappings(old=>({...data,mappings:[...old.mappings,...data.mappings.filter(m=>!old.mappings.some(o=>o.mapping.id===m.mapping.id))]}));setMappingPage(page);}catch(e){setError((e as Error).message);}}
   function clearFeedback(){setError('');setNotice('');setInvalid({});setConflict(false);setLatest(null);setHistory(null);setHistoryBusy(false);historyRequest.current++;setAck(false);setReason('');}
   function mayLeave(){return !busy&&!uncertain&&(!dirty||window.confirm('Discard your unsaved draft changes?'));}
-  function openEditor(value:DraftEditor){setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}
-  async function open(id:string){if(!mayLeave())return;setBusy(true);clearFeedback();try{const {order}=await request(companyId,`&orderId=${encodeURIComponent(id)}`);setSelected(order);setEditor(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
-  function back(){if(!mayLeave())return;setSelected(null);setEditor(null);clearFeedback();void loadList(offset);}
+  function openEditor(value:DraftEditor){downloadCancel.current?.();setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}
+  async function open(id:string){if(!mayLeave())return;downloadCancel.current?.();setBusy(true);clearFeedback();try{const {order}=await request(companyId,`&orderId=${encodeURIComponent(id)}`);setSelected(order);setEditor(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+  function back(){if(!mayLeave())return;downloadCancel.current?.();prepareHistoryRead();setSelected(null);setEditor(null);clearFeedback();}
   function patch(values:Partial<DraftEditor>){setEditor(old=>old?{...old,...values}:old);setInvalid({});setAck(false);}
   function patchLine(key:string,values:Partial<EditorLine>){setEditor(old=>old?{...old,lines:old.lines.map(l=>l.key===key?{...l,...values}:l)}:old);setInvalid({});}
   function mappingFor(line:EditorLine){return mappings.mappings.find(m=>m.mapping.id===line.mappingId&&m.mapping.version===line.mappingVersion)?.mapping??
     selected?.snapshot.registry?.mappings.find(m=>m.mapping.id===line.mappingId&&m.mapping.version===line.mappingVersion)?.mapping;}
   async function save(body:Record<string,unknown>){
-    if(lock.current)return;lock.current=true;setBusy(true);setError('');setNotice('');pending.current=body;
-    try{const {order}=await request(companyId,'',body);setSelected(order);setEditor(null);setUncertain(false);pending.current=null;setConflict(false);setLatest(null);setHistory(null);historyRequest.current++;setAck(false);setReason('');setOffset(0);void loadList(0);
+    if(lock.current)return;downloadCancel.current?.();lock.current=true;setBusy(true);setError('');setNotice('');pending.current=body;
+    try{const {order}=await request(companyId,'',body);setSelected(order);setEditor(null);setUncertain(false);pending.current=null;setConflict(false);setLatest(null);setHistory(null);historyRequest.current++;setAck(false);setReason('');setOffset(0);
       setNotice(body.action==='review'?'Draft reviewed. No purchase is approved or sent.':body.action==='cancel'?'Draft canceled. Its history is preserved.':body.action==='edit'?'Changes saved. This revision needs review.':'Draft saved and ready for review.');
     }catch(e){setError((e as Error).message);const unknown=!(e instanceof RequestError)||e.status>=500;setUncertain(unknown);setConflict(e instanceof RequestError&&e.status===409);if(!unknown)pending.current=null;}
     finally{lock.current=false;setBusy(false);}
@@ -111,7 +132,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     }catch(e){if(seq===historyRequest.current)setError((e as Error).message);}finally{if(seq===historyRequest.current)setHistoryBusy(false);}
   }
   async function checkLatest(){if(!selected)return;setBusy(true);try{setLatest((await request(companyId,`&orderId=${encodeURIComponent(selected.snapshot.id)}`)).order);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
-  function useLatest(){if(!latest||!mayLeave())return;setSelected(latest);setEditor(null);clearFeedback();}
+  function useLatest(){if(!latest||!mayLeave())return;downloadCancel.current?.();setSelected(latest);setEditor(null);clearFeedback();}
   const blocked=busy||uncertain;
   const fieldError=(name:string)=>invalid[name]?<small id={`po-error-${name}`} role="alert" className="po-field-error">{invalid[name]}</small>:null;
   const snapshot=selected?.snapshot;
@@ -137,11 +158,21 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
       {latest&&<div><p>Latest: revision {latest.revision} · {statusLabel(latest.status)}</p><ul>{snapshotChanges(selected.snapshot,latest.snapshot).map(c=><li key={c}>{c}</li>)}</ul>
         <Button variant="outline" disabled={blocked} onClick={useLatest}>Load latest saved version</Button><small>This replaces unsaved fields after confirmation.</small></div>}</div>}
     {!editor&&!selected&&<>
-      {list.orders.length===0?<div className="po-empty"><h2>No purchase-order drafts yet</h2><p>Choose a supplier and add the items you want a manager to review.</p><Button disabled={blocked} onClick={()=>openEditor(emptyEditor())}>Create a draft</Button></div>:
+      <form className="po-history-filters" aria-label="Filter purchase-order history" onSubmit={applyHistoryFilters}>
+        <label>Search saved drafts<Input name="history-search" maxLength={200} placeholder="PO number or supplier" value={filterDraft.q} disabled={blocked} onChange={e=>setFilterDraft(old=>({...old,q:e.target.value}))}/></label>
+        <label>Status<select value={filterDraft.status??''} disabled={blocked} onChange={e=>setFilterDraft(old=>({...old,status:(e.target.value||undefined) as PurchaseOrderHistoryFilters['status']}))}>
+          <option value="">All statuses</option><option value="draft">Draft</option><option value="reviewed">Reviewed</option><option value="canceled">Canceled</option></select></label>
+        <label>Supplier<Input name="history-supplier" maxLength={200} placeholder="Supplier name or ID" value={filterDraft.supplier} disabled={blocked} onChange={e=>setFilterDraft(old=>({...old,supplier:e.target.value}))}/></label>
+        <div className="po-history-filter-actions"><Button type="submit" variant="outline" disabled={blocked}>Apply filters</Button><Button type="button" variant="ghost" disabled={blocked} onClick={clearHistoryFilters}>Clear filters</Button></div>
+      </form>
+      {historyLoading?<p role="status">Loading purchase-order history…</p>:historyError?<div className="po-recovery"><p role="alert">{historyError}</p><Button variant="outline" disabled={blocked} onClick={()=>void loadList(offset)}>Retry results</Button></div>:
+        list.orders.length===0?(hasFilters?<div className="po-empty"><h2>No matching purchase-order drafts</h2><p>Try a different search or clear the filters.</p></div>:
+          <div className="po-empty"><h2>No purchase-order drafts yet</h2><p>Choose a supplier and add the items you want a manager to review.</p><Button disabled={blocked} onClick={()=>openEditor(emptyEditor())}>Create a draft</Button></div>):
         <div className="po-list"><div className="po-list-header"><span>Supplier / draft</span><span>Status</span><span>Created</span><span className="sr-only">Open</span></div>
           {list.orders.map(o=><div className="po-list-row" key={o.id}><div><strong>{o.supplier_name}</strong><small>{o.number} · revision {o.revision}</small></div>
             <span>{statusLabel(o.status as PurchaseOrderView['status'])}</span><time dateTime={o.created_at}>{date(o.created_at)}</time><Button variant="ghost" disabled={blocked} onClick={()=>void open(o.id)}>Open<span className="sr-only"> {o.number}</span></Button></div>)}</div>}
-      <nav className="po-pagination" aria-label="Draft pages"><Button variant="outline" disabled={offset===0||blocked} onClick={()=>setOffset(Math.max(0,offset-20))}>Previous</Button><Button variant="outline" disabled={!list.hasMore||blocked} onClick={()=>setOffset(offset+20)}>Next</Button></nav>
+      {!historyLoading&&!historyError&&list.orders.length>0&&<p role="status" className="po-muted">Showing {offset+1}–{offset+list.orders.length}{hasFilters?' matching drafts':''}.</p>}
+      <nav className="po-pagination" aria-label="Draft pages"><Button variant="outline" disabled={offset===0||blocked||historyLoading||!!historyError} onClick={()=>changeHistoryPage(Math.max(0,offset-20))}>Previous</Button><Button variant="outline" disabled={!list.hasMore||blocked||historyLoading||!!historyError} onClick={()=>changeHistoryPage(offset+20)}>Next</Button></nav>
     </>}
     {(editor||selected)&&<div className="po-workspace"><div className="po-main">
       {editor?<form id="po-editor" onSubmit={submit} onInvalidCapture={e=>{const input=e.target as HTMLInputElement;setInvalid(old=>({...old,[input.name]:input.validationMessage}));}}>
@@ -192,6 +223,8 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
           {selected&&<label>Reason for these changes<Input name="reason" required minLength={4} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)}/><small>Saved with this revision so other managers can understand the correction.</small>{fieldError('reason')}</label>}
         </fieldset>
       </form>:snapshot&&<>
+        {selected&&selected.status!=='canceled'&&<PurchaseOrderDownloads key={JSON.stringify([companyId,snapshot.id,selected.revision])}
+          companyId={companyId} orderId={snapshot.id} revision={selected.revision} disabled={blocked} cancelRef={downloadCancel} onReload={()=>void open(snapshot.id)}/>}
         <section className="po-section"><h2>Supplier and delivery</h2><p><strong>{snapshot.supplier.name}</strong><br/>{snapshot.supplier.email??'Ordering email unavailable'}</p><p>Account: {snapshot.supplier.accountId} · Location: {snapshot.supplier.locationId}</p><p className="po-prewrap">{snapshot.supplier.deliveryAddress}</p></section>
         <section className="po-section"><h2>Order lines</h2><SavedLines snapshot={snapshot}/></section>
         <section className="po-section"><h2>Delivery instructions</h2><p className="po-prewrap">{snapshot.notes||'No delivery instructions added.'}</p></section>
