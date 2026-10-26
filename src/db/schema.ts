@@ -219,6 +219,7 @@ export const inventoryOrderIncoming=sqliteTable('inventory_order_incoming',{
  dimension:text('dimension').notNull(),
  quantityMinor:text('quantity_minor').notNull(),
  receivedMinor:text('received_minor').notNull(),
+ releasedMinor:text('released_minor').notNull().default('0'),
  eventId:text('event_id').notNull(),
  actor:text('actor').notNull(),
  createdAt:text('created_at').notNull(),
@@ -226,6 +227,27 @@ export const inventoryOrderIncoming=sqliteTable('inventory_order_incoming',{
  primaryKey({columns:[t.companyId,t.confirmationId,t.lineId]}),
  index('inventory_order_incoming_product').on(t.companyId,t.productId),
  foreignKey({columns:[t.companyId,t.productId,t.configId],foreignColumns:[inventoryConfigVersions.companyId,inventoryConfigVersions.productId,inventoryConfigVersions.id]}),
+]);
+// Approved delivery receipts, one row per order line per receipt. Inserting a row grows the line's
+// received/released totals; the ledger and the line totals always agree.
+export const inventoryOrderReceipts=sqliteTable('inventory_order_receipts',{
+ companyId:text('company_id').notNull(),
+ receiptId:text('receipt_id').notNull(),
+ confirmationId:text('confirmation_id').notNull(),
+ lineId:text('line_id').notNull(),
+ productId:text('product_id').notNull(),
+ acceptedMinor:text('accepted_minor').notNull(),
+ releasedMinor:text('released_minor').notNull(),
+ excessMinor:text('excess_minor').notNull(),
+ stockAdded:integer('stock_added').notNull(),
+ deliveredAt:text('delivered_at').notNull(),
+ eventId:text('event_id').notNull(),
+ actor:text('actor').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.receiptId,t.lineId]}),
+ index('inventory_order_receipts_line').on(t.companyId,t.confirmationId,t.lineId),
+ foreignKey({columns:[t.companyId,t.confirmationId,t.lineId],foreignColumns:[inventoryOrderIncoming.companyId,inventoryOrderIncoming.confirmationId,inventoryOrderIncoming.lineId]}),
 ]);
 // Any insert aborts the batch: guarded port statements insert here only when a precondition fails.
 export const inventoryPortGuards=sqliteTable('inventory_port_guards',{reason:text('reason').notNull()});

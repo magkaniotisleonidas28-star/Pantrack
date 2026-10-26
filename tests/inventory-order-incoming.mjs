@@ -105,11 +105,15 @@ for(const fault of ['balance','exact-only','legacy','caller','count']){
     "UPDATE inventory_balances_exact SET dimension='volume' WHERE company_id='a' AND product_id='beans'",
     "DELETE FROM inventory_order_incoming","UPDATE inventory_order_incoming SET quantity_minor='1'","UPDATE inventory_order_incoming SET received_minor='5'",
     "UPDATE inventory_order_incoming SET received_minor='-1'","INSERT INTO inventory_port_guards(reason) VALUES ('x')",
-    `INSERT INTO inventory_order_incoming VALUES('a','raw','l1','beans','${f.balance('beans').config_id}','count','01','0','e','${actor}','${now}')`,
-    `INSERT INTO inventory_order_incoming VALUES('a','raw','l1','beans','${f.balance('beans').config_id}','volume','1','0','e','${actor}','${now}')`,
-    `INSERT INTO inventory_order_incoming VALUES('a','raw','l1','beans','${f.balance('beans').config_id}','count','1','1','e','${actor}','${now}')`])
+    `INSERT INTO inventory_order_incoming VALUES('a','raw','l1','beans','${f.balance('beans').config_id}','count','01','0','e','${actor}','${now}','0')`,
+    `INSERT INTO inventory_order_incoming VALUES('a','raw','l1','beans','${f.balance('beans').config_id}','volume','1','0','e','${actor}','${now}','0')`,
+    `INSERT INTO inventory_order_incoming VALUES('a','raw','l1','beans','${f.balance('beans').config_id}','count','1','1','e','${actor}','${now}','0')`,
+    `INSERT INTO inventory_order_incoming VALUES('a','raw','l1','beans','${f.balance('beans').config_id}','count','1','0','e','${actor}','${now}','1')`])
     assert.throws(()=>f.sql.exec(sql),/Incoming cannot drop|immutable|Inventory changed|Invalid order-linked/,sql);
-  f.sql.exec("UPDATE inventory_order_incoming SET received_minor='1'");assert.equal(await f.service.orderIncomingOwed('a','beans'),3n,'Receiving may grow received');
+  // Received grows only through an approved receipt row (migration 0039), never a direct update.
+  assert.throws(()=>f.sql.exec("UPDATE inventory_order_incoming SET received_minor='1'"),/immutable except through approved receipts/);
+  f.sql.exec(`INSERT INTO inventory_order_receipts VALUES('a','r1','conf-1','l1','beans','1','0','0',1,'${now}','order-receipt:r1:beans','${actor}','${now}')`);
+  assert.equal(await f.service.orderIncomingOwed('a','beans'),3n,'Receiving may grow received');
   f.sql.exec("UPDATE inventory_balances_exact SET incoming_minor='3' WHERE company_id='a' AND product_id='beans'");
   assert.throws(()=>f.sql.exec("UPDATE inventory_balances_exact SET incoming_minor='2' WHERE company_id='a' AND product_id='beans'"),/Incoming cannot drop/);
 }

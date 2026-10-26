@@ -47,7 +47,15 @@ export type InventoryMovementInput = {
 /** A → C order-linked incoming port. Quantities are exact stock-unit minors frozen at authorization. */
 export type OrderIncomingLine = {lineId:string; productId:string; configId:string; dimension:UnitDimension; quantityMinor:string};
 export type OrderIncomingInput = {companyId:string; confirmationId:string; actor:string; lines:readonly OrderIncomingLine[]};
-export type OrderIncomingRow = OrderIncomingLine & {receivedMinor:string; eventId:string; actor:string; createdAt:string};
+export type OrderIncomingRow = OrderIncomingLine & {receivedMinor:string; releasedMinor:string; eventId:string; actor:string; createdAt:string};
+/**
+ * A → C receipt posting for one approved delivery. Per order line: accepted moves from incoming into
+ * stock, released will never arrive (leaves incoming only), and excess is stock beyond what the order
+ * owed (on-hand only, allowed when the line is completed). All amounts are exact stock-unit minors.
+ */
+export type OrderReceiptLine = {lineId:string; acceptedMinor:string; releasedMinor:string; excessMinor:string};
+export type OrderReceiptInput = {companyId:string; confirmationId:string; receiptId:string; actor:string; deliveredAt:string; lines:readonly OrderReceiptLine[]};
+export type OrderReceiptRow = OrderReceiptLine & {receiptId:string; productId:string; stockAdded:boolean; deliveredAt:string; eventId:string; actor:string; createdAt:string};
 export type InventoryCountInput = {
   companyId: string;
   productId: string;
