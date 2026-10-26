@@ -597,7 +597,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   [Part 3](C4_ORDER_CLOSURE_LOCAL_EVIDENCE.md) closes an order when its last delivery
   is approved, or early with a manager's reason. Closing settles the in-progress
   spending hold, while daily and monthly limits keep the cap (migration `0041`, local
-  only).
+  only). [Weekly drafts](C4_WEEKLY_DRAFTS_PLAN_20261026.md) start with
+  [suggestions per supplier](C4_SUPPLIER_SUGGESTIONS_LOCAL_EVIDENCE.md): A's
+  calculation in each supplier-list mapping's own pack, read-only (no migration).
   C4 is not complete and purchasing stays disabled.
   The owner-selected [cart preparation preview](C4_CART_PREVIEW_LOCAL_EVIDENCE.md)
   now proves reviewed-draft-to-fictional-cart mechanics locally, including 16

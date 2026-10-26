@@ -6,7 +6,7 @@ import {buildReviewProposal, type ReviewProposalInput, type ReviewProposalSnapsh
 
 type Fixture<T> = Readonly<T & {companyId: string; source: 'fictional_fixture'}>;
 export type ReviewSalesFixture = Fixture<Extract<SalesReadiness, {source: 'fictional_fixture'}>>;
-export type ReviewSupplierFixture = Fixture<ReviewProposalInput['supplier']>;
+export type ReviewSupplierFixture = Readonly<ReviewProposalInput['supplier'] & {companyId: string}>;
 export type ReviewPriceFixture = Fixture<NonNullable<ReviewProposalInput['priceEstimate']>>;
 
 export type ReviewBaseRequest = Readonly<{
@@ -15,12 +15,15 @@ export type ReviewBaseRequest = Readonly<{
   actor: SettingsActor;
   supplier: ReviewSupplierFixture;
   priceEstimate: ReviewPriceFixture | null;
+  /** A supplier-list pack (stock units per pack). Pack-count policies are converted to it exactly. */
+  supplierPack?: ExactQuantity;
 }>;
 export type ReviewSourceRequest = ReviewBaseRequest & Readonly<{sales: ReviewSalesFixture}>;
 
 export type ReviewSourceResult =
   | Readonly<{kind: 'snapshot'; snapshot: ReviewProposalSnapshot}>
-  | Readonly<{kind: 'unavailable'; reason: 'settings_missing' | 'exact_inventory_missing' | 'settings_stale' | 'invalid_balance' | 'pack_unclassified' | 'source_changed'}>;
+  | Readonly<{kind: 'unavailable'; reason: 'settings_missing' | 'exact_inventory_missing' | 'settings_stale' | 'invalid_balance' | 'pack_unclassified' | 'source_changed'
+    | 'pack_policy_unconvertible'}>;
 
 type BalanceRow = {
   config_id: string;
@@ -39,7 +42,7 @@ type Clock = {now(): Date};
 const ZERO = BigInt(0);
 
 export function validateReviewBase(request: ReviewBaseRequest): void {
-  if (!request.supplier || request.supplier.source !== 'fictional_fixture' ||
+  if (!request.supplier || (request.supplier.source !== 'fictional_fixture' && request.supplier.source !== 'manual_registry') ||
       request.supplier.companyId !== request.companyId) {
     throw new Error('Review fixtures must belong to the requested company.');
   }
@@ -86,6 +89,21 @@ function quantity(dimension: UnitDimension, minor: string): ExactQuantity {
   const value = {dimension, minor};
   readCanonical(value);
   return value;
+}
+
+/**
+ * Pack-count policies are set in the item's purchase pack. In another pack they convert through exact
+ * quantities: the minimum rounds up, the maximum rounds down. An order multiple other than 1 has no
+ * exact equivalent, so it needs review.
+ */
+function supplierPolicy(policy: ReviewProposalInput['policy'], itemPack: bigint, supplierPack: bigint): ReviewProposalInput['policy'] | null {
+  if (itemPack === supplierPack) return policy;
+  if (policy.orderMultiplePacks !== '1') return null;
+  const minimum = BigInt(policy.minimumPacks) * itemPack;
+  return {
+    minimumPacks: ((minimum + supplierPack - BigInt(1)) / supplierPack).toString(), orderMultiplePacks: '1',
+    maximumPacks: policy.maximumPacks === null ? null : (BigInt(policy.maximumPacks) * itemPack / supplierPack).toString(),
+  };
 }
 
 function countTime(value: string | null): string | null {
@@ -143,9 +161,16 @@ export class D1ReplenishmentReview {
     try {
       const onHand = quantity(row.dimension, row.on_hand_minor);
       const incoming = quantity(row.dimension, row.incoming_minor);
-      const pack = quantity(row.dimension, row.purchase_quantity_minor);
+      const itemPack = quantity(row.dimension, row.purchase_quantity_minor);
       if (readCanonical(onHand) < ZERO || readCanonical(incoming) < ZERO) return {kind: 'unavailable', reason: 'invalid_balance'};
-      if (readCanonical(pack) <= ZERO) return {kind: 'unavailable', reason: 'pack_unclassified'};
+      if (readCanonical(itemPack) <= ZERO) return {kind: 'unavailable', reason: 'pack_unclassified'};
+      const pack = request.supplierPack ?? itemPack;
+      if (pack.dimension !== row.dimension || readCanonical(pack) <= ZERO) return {kind: 'unavailable', reason: 'pack_unclassified'};
+      const policy = supplierPolicy({
+        minimumPacks: settings.settings.minimumPacks, orderMultiplePacks: settings.settings.orderMultiplePacks,
+        maximumPacks: settings.settings.maximumPacks,
+      }, readCanonical(itemPack), readCanonical(pack));
+      if (!policy) return {kind: 'unavailable', reason: 'pack_policy_unconvertible'};
       const shelfLimit = settings.settings.shelfDays === null ? null : quantity(
         row.dimension, (readCanonical(settings.settings.dailyUse) * BigInt(settings.settings.shelfDays)).toString(),
       );
@@ -168,10 +193,7 @@ export class D1ReplenishmentReview {
           perPackMinor: request.priceEstimate.perPackMinor,
         },
         quantities: {target: settings.settings.target, onHand, incoming, pack, capacity: settings.settings.capacity, shelfLimit},
-        policy: {
-          minimumPacks: settings.settings.minimumPacks, orderMultiplePacks: settings.settings.orderMultiplePacks,
-          maximumPacks: settings.settings.maximumPacks,
-        },
+        policy,
       });
     } catch {
       return {kind: 'unavailable', reason: 'invalid_balance'};

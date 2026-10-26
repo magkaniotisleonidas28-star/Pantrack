@@ -112,7 +112,7 @@ export class D1ReplenishmentProposalOrigins {
   async create(request: CreateProposalOriginInput): Promise<ProposalOrigin> {
     identifier(request.companyId); identifier(request.productId); identifier(request.id); identifier(request.createId);
     actorFor(request.actor, request.companyId, true);
-    try { validateReviewFixtures(request); }
+    try { validateReviewFixtures(request); if (request.supplier.source !== 'fictional_fixture' || request.supplierPack) throw new Error('transient only'); }
     catch { throw new ProposalOriginError('invalid_request', 'Review fixtures must be valid and belong to this company.'); }
     const prior = await this.byCreate(request.companyId, request.createId);
     if (prior) {
@@ -131,7 +131,8 @@ export class D1ReplenishmentProposalOrigins {
     if (typeof policy?.syncEnabled !== 'boolean' || !Number.isSafeInteger(policy.maxLagMs) || policy.maxLagMs < 1) {
       throw new ProposalOriginError('invalid_request', 'Clover review policy is invalid.');
     }
-    try { validateReviewBase(request); }
+    // Supplier-list reviews stay transient: durable proposals keep the fictional supplier and the item's own pack.
+    try { validateReviewBase(request); if (request.supplier.source !== 'fictional_fixture' || request.supplierPack) throw new Error('transient only'); }
     catch { throw new ProposalOriginError('invalid_request', 'Review fixtures must be valid and belong to this company.'); }
     const prior = await this.byCreate(request.companyId, request.createId);
     if (prior) {

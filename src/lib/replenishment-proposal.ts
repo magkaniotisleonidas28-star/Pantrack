@@ -28,8 +28,9 @@ export type ReviewProposalInput = Readonly<{
   expiresAt: string | null;
   expiryStatus: 'checked' | 'not_checked';
   salesReadiness: SalesReadiness;
+  // 'manual_registry' marks a transient review counted in a supplier-list mapping's pack; it is never persisted as a proposal.
   supplier: Readonly<{
-    source: 'fictional_fixture'; mappingId: string; mappingVersion: number;
+    source: 'fictional_fixture' | 'manual_registry'; mappingId: string; mappingVersion: number;
     supplierId: string; accountId: string; locationId: string; sku: string;
   }>;
   priceEstimate: PriceEstimate | null;
@@ -168,7 +169,7 @@ export function buildReviewProposal(input: ReviewProposalInput): ReviewProposalS
     if (sales.checkpointAt !== null) timestamp(sales.checkpointAt);
     if (sales.lastSuccessAt !== null) timestamp(sales.lastSuccessAt);
   } else if (sales.source !== 'fictional_fixture') throw new Error('Sales readiness source is invalid.');
-  if (input.supplier.source !== 'fictional_fixture') throw new Error('Supplier fixture is invalid.');
+  if (input.supplier.source !== 'fictional_fixture' && input.supplier.source !== 'manual_registry') throw new Error('Supplier fixture is invalid.');
 
   const copied = {
     target: copyQuantity(input.quantities.target),
