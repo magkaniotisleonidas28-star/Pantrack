@@ -1,0 +1,9 @@
+.supplier-confirmation{margin:24px 0;max-width:80ch}
+.supplier-confirmation h3{font-weight:600;margin-bottom:8px}
+.supplier-confirmation p{margin:12px 0;line-height:1.6}
+.supplier-confirmation fieldset{border:0;padding:0;margin:0;min-width:0}
+.supplier-confirmation label{display:grid;gap:6px;font-size:.875rem}
+.supplier-confirmation-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;align-items:end;margin:12px 0}
+.supplier-confirmation [data-changed]{font-weight:600}
+.supplier-confirmation .cart-preview-table input{min-width:5rem}
+@media (max-width:640px){.supplier-confirmation .cart-preview-table{display:block;overflow-x:auto}}

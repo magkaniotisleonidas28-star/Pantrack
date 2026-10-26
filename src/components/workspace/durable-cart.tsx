@@ -5,6 +5,8 @@ import type {PurchaseOrderView} from '@/lib/purchase-order-contract';
 import type {BrowserConfig} from '@/lib/po-cart-browser-contract';
 import type {ManagerCartView} from '@/lib/po-cart-manager-contract';
 import {intentKey,readIntent,managerStatus,sendCartIntent,ManagerCartError,type PendingCartIntent} from './durable-cart-client';
+import SupplierConfirmation from './supplier-confirmation';
+import type {ConfirmationState} from '@/lib/po-cart-confirmation-contract';
 import './cart-preview.css';
 
 const labels={queued:'Waiting for a local worker',preparing:'Preparing cart',review_needed:'Review needed',ready:'Cart verified',canceled:'Preparation canceled'};
@@ -17,7 +19,7 @@ const usd=(minor:string|number)=>new Intl.NumberFormat('en-US',{style:'currency'
 export default function DurableCart({companyId,order,initial}:{companyId:string;order:PurchaseOrderView;initial:ManagerCartView}){
   const [view,setView]=useState(initial),[pending,setPending]=useState<PendingCartIntent|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
   const [ack,setAck]=useState(false),[browser,setBrowser]=useState<BrowserConfig>({layout:'rows',scenario:'normal'}),[storageReady,setStorageReady]=useState(false),[recoveryError,setRecoveryError]=useState('');
-  const [decisionNote,setDecisionNote]=useState('');
+  const [decisionNote,setDecisionNote]=useState(''),[confirmation,setConfirmation]=useState<ConfirmationState|null>(null);
   const lock=useRef(false),live=useRef(true),sequence=useRef(0);
   const key=intentKey(initial.actorId,companyId,order.snapshot.id),a=view.authorization,j=view.job,human=j?.session;
   useEffect(()=>{live.current=true;try{setPending(readIntent(sessionStorage,key));setStorageReady(true);}catch{setRecoveryError('Private request recovery is unavailable in this tab. Enable browser session storage before preparing.');}
@@ -63,8 +65,8 @@ export default function DurableCart({companyId,order,initial}:{companyId:string;
       <label>Practice scenario<select value={browser.scenario} disabled={blocked} onChange={e=>setBrowser({...browser,scenario:e.target.value as BrowserConfig['scenario']})}>
         <option value="normal">Available items</option><option value="unavailable">Out of stock</option><option value="price_changed">Changed price</option><option value="wrong_pack">Wrong pack size</option><option value="ambiguous">Ambiguous SKU</option><option value="lost_response">Lost response after adding</option><option value="login_expired">Expired sign-in</option><option value="malicious">Untrusted page instructions</option>
       </select></label></div><Button disabled={blocked} onClick={prepare}>Prepare fictional cart</Button></>}
-    {j&&<><div className="cart-preview-status" role="status" aria-live="polite"><strong>{j.state!=='canceled'&&(!j.valid||j.state==='ready'&&!ready)?'Review needed':labels[j.state]}</strong>
-      <span>{j.state==='canceled'?'Automation is stopped. Existing cart contents remain.':j.holdReason?holds[j.holdReason]??'Preparation stopped for review.':
+    {j&&<><div className="cart-preview-status" role="status" aria-live="polite"><strong>{confirmation?'Supplier confirmed':j.state!=='canceled'&&(!j.valid||j.state==='ready'&&!ready)?'Review needed':labels[j.state]}</strong>
+      <span>{confirmation?'The supplier confirmation is recorded below. Preparation is complete.':j.state==='canceled'?'Automation is stopped. Existing cart contents remain.':j.holdReason?holds[j.holdReason]??'Preparation stopped for review.':
         !j.valid?j.reason:j.state==='queued'?'Waiting for the separate local browser process. If this persists, check the local demo launcher.':
         ready?'The complete cart passed final verification. You can inspect the practice cart.':'Each addition is checked against the authorized list.'}</span>
       {j.leaseExpired&&<span>The worker lease expired. Recovery must preserve any attempted additions.</span>}</div>
@@ -77,9 +79,9 @@ export default function DurableCart({companyId,order,initial}:{companyId:string;
         {['requested','opening','open'].includes(human.state)&&<Button variant="outline" disabled={blocked} onClick={()=>browserAction('closeBrowser')}>Close practice browser</Button>}</div>}
       {human&&!human.active&&<p role="status">{human.state==='closed'?'Practice browser closed.':human.state==='expired'?'Practice browser access expired. Expiry does not allow preparation to resume.':'Practice browser could not close with a verified cart. Review is required.'}</p>}
       <div className="po-actions">{j.eligibility.signIn&&<Button variant="outline" disabled={blocked} onClick={()=>requestBrowser('sign_in')}>Open practice sign-in</Button>}
-        {j.eligibility.inspect&&<Button variant="outline" disabled={blocked} onClick={()=>requestBrowser('inspect')}>Inspect practice cart</Button>}
+        {j.eligibility.inspect&&!confirmation&&<Button variant="outline" disabled={blocked} onClick={()=>requestBrowser('inspect')}>Inspect practice cart</Button>}
         {j.eligibility.resume&&<Button disabled={blocked} onClick={()=>browserAction('resume')}>Resume preparation</Button>}</div>
-      {!!j.attempted&&<p className="po-muted">An attempted addition prevents automatic resume. Inspect and close the practice browser to check whether this preparation can be resolved.</p>}
+      {!!j.attempted&&!confirmation&&<p className="po-muted">An attempted addition prevents automatic resume. Inspect and close the practice browser to check whether this preparation can be resolved.</p>}
       {j.reconciliation?.decision&&<p role="status">{j.reconciliation.decision.action==='acceptVerifiedCart'?'A manager accepted the independently verified complete cart.':'The abandoned preparation was closed. Its spending reservation and incoming quantities were released.'}</p>}
       {j.state!=='ready'&&j.reconciliation?.evidence&&j.reconciliation.decision?.sessionId!==j.reconciliation.evidence.sessionId&&<div className="cart-reconciliation" role="group" aria-labelledby="cart-resolution-title">
         <h3 id="cart-resolution-title">Resolve this preparation</h3>
@@ -95,8 +97,9 @@ export default function DurableCart({companyId,order,initial}:{companyId:string;
         </>}
       </div>}
     </div>}
-    {!!j?.attempted&&a?.reservation?.state==='reserved'&&<p className="cart-exposure">An addition was attempted. Cancellation cannot undo cart changes; spending and incoming commitments remain held until verified abandonment or a later order-resolution step.</p>}
-    <div className="po-actions">{a&&a.status!=='canceled'&&j?.state!=='canceled'&&<Button variant="outline" disabled={blocked} onClick={cancel}>{j?'Cancel preparation':'Cancel authorization'}</Button>}
+    {j?.state==='ready'&&<SupplierConfirmation companyId={companyId} jobId={j.id} canRecord={ready} onState={setConfirmation}/>}
+    {!!j?.attempted&&a?.reservation?.state==='reserved'&&!confirmation&&<p className="cart-exposure">An addition was attempted. Cancellation cannot undo cart changes; spending and incoming commitments remain held until verified abandonment or a later order-resolution step.</p>}
+    <div className="po-actions">{a&&a.status!=='canceled'&&j?.state!=='canceled'&&!confirmation&&<Button variant="outline" disabled={blocked} onClick={cancel}>{j?'Cancel preparation':'Cancel authorization'}</Button>}
       <Button variant="ghost" disabled={busy} onClick={()=>void refresh()}>Refresh preparation status</Button></div>
     {pending&&<div className="cart-pending" role="status"><p>A saved {pending.body.action==='enqueue'?'Prepare':pending.body.action} request needs confirmation. Retry sends the same request identity.</p><Button variant="outline" disabled={busy||!storageReady} onClick={()=>void submit(pending)}>Retry saved request</Button></div>}
     {error&&<p role="alert" className="po-field-error">{error}</p>}
