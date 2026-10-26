@@ -11,7 +11,8 @@ await build({stdin:{contents:"export * from './src/lib/d1-po-cart-spending-limit
   outfile:'.sites-runtime/po-cart-spending-limits-migration-tests.mjs'});
 const {D1PoCartSpendingLimits}=await import('../.sites-runtime/po-cart-spending-limits-migration-tests.mjs');
 const m=entries.find(e=>e.tag==='0035_owner_spending_limits');assert.ok(m,'Missing owner spending limit migration');
-const statements=unstable_splitSqlQuery(readFileSync(`drizzle/${m.tag}.sql`,'utf8'));
+const repair=entries.find(e=>e.tag==='0036_owner_spending_limits_d1_patterns');assert.ok(repair&&repair.idx===m.idx+1,'Missing D1 pattern repair');
+const statements=[m,repair].flatMap(e=>unstable_splitSqlQuery(readFileSync(`drizzle/${e.tag}.sql`,'utf8')));
 for(const s of statements){
   assert.ok((s.match(/CREATE TRIGGER/g)??[]).length<=1,'Each trigger must be a separate Wrangler statement');
   if(/CREATE TRIGGER/.test(s))assert.match(s.trim(),/END;?$/,'Wrangler kept each trigger body whole');
@@ -55,4 +56,4 @@ for(const populated of [false,true]){
     assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[]);assert.equal(sql.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
   }finally{sql.close();}
 }
-console.log('PASS: Wrangler-split 0035 fresh/populated upgrades keep every table and test policy, retained permission, legacy-shaped new authorizations, then owner limits count retained exposure.');
+console.log('PASS: Wrangler-split 0035+0036 fresh/populated upgrades keep every table and test policy, retained permission, legacy-shaped new authorizations, then owner limits count retained exposure.');
