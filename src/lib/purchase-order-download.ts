@@ -2,59 +2,67 @@ import {capturePurchaseOrderExport,purchaseOrderExportRequest,type PurchaseOrder
 
 export type PurchaseOrderDocumentFormat='pdf'|'xlsx';
 export type PurchaseOrderDownloadState={phase:'idle'|'loading'|'success'|'error'|'held';message:string;format?:PurchaseOrderDocumentFormat;reload?:boolean};
-type Dependencies={
+export type PurchaseOrderDownloadDependencies<Snapshot=PurchaseOrderExportSnapshot>={
   fetch:(url:string,options:RequestInit)=>Promise<Response>;
-  generate:(format:PurchaseOrderDocumentFormat,snapshot:PurchaseOrderExportSnapshot,signal:AbortSignal)=>Promise<Uint8Array>;
+  generate:(format:PurchaseOrderDocumentFormat,snapshot:Snapshot,signal:AbortSignal)=>Promise<Uint8Array>;
   download:(bytes:Uint8Array,filename:string,mime:string)=>void;
 };
 const idle:PurchaseOrderDownloadState={phase:'idle',message:''};
-class DownloadRefusal extends Error{constructor(message:string,readonly held=false,readonly reload=false){super(message);}}
+export class DownloadRefusal extends Error{constructor(message:string,readonly held=false,readonly reload=false){super(message);}}
+export type PurchaseOrderDownloadFlow<Input,Snapshot>={
+  loading:string;changed:string;
+  read:(input:Input,fetch:PurchaseOrderDownloadDependencies<Snapshot>['fetch'],signal:AbortSignal,previous?:Snapshot)=>Promise<Snapshot>;
+  filename:(snapshot:Snapshot,format:PurchaseOrderDocumentFormat)=>string;success:(snapshot:Snapshot,format:PurchaseOrderDocumentFormat)=>string;
+};
+const singleFlow:PurchaseOrderDownloadFlow<PurchaseOrderExportRequest,PurchaseOrderExportSnapshot>={
+  loading:'from the saved revision',changed:'The saved details changed. Reload the draft before downloading.',
+  read:async(input,fetch,signal)=>{
+    const selection=purchaseOrderExportRequest.parse(input);
+    const url='/api/purchase-order-exports?'+new URLSearchParams({companyId:selection.companyId,orderId:selection.orderId,revision:String(selection.revision)});
+    const response=await fetch(url,{method:'GET',credentials:'same-origin',cache:'no-store',redirect:'error',signal});
+    if(!response.ok){
+      if(response.status===401)throw new DownloadRefusal('Your session expired. Sign in again before downloading.',true);
+      if(response.status===403)throw new DownloadRefusal('Owner or manager access to this company is required.',true);
+      if(response.status===409)throw new DownloadRefusal('The draft changed or was canceled. Reload the saved draft before downloading.',true,true);
+      if(response.status===404)throw new DownloadRefusal('This saved draft is unavailable. Reload it before downloading.',true,true);
+      throw new DownloadRefusal('The saved draft could not be checked. Try again or reload it.',false,true);
+    }
+    const body:unknown=await response.json();let snapshot:PurchaseOrderExportSnapshot;
+    try{snapshot=capturePurchaseOrderExport((body as {export?:unknown})?.export);}
+    catch{throw new DownloadRefusal('The saved details cannot be exported. Reload the draft and review them.',true,true);}
+    if(snapshot.draft.companyId!==selection.companyId||snapshot.draft.id!==selection.orderId||snapshot.revision!==selection.revision){
+      throw new DownloadRefusal('The returned draft does not match this selection. Reload the saved draft.',true,true);
+    }
+    return snapshot;
+  },
+  filename:(snapshot,format)=>{const number=snapshot.draft.number.replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,100)||'draft';return `pantrack-${number}-r${snapshot.revision}-draft.${format}`;},
+  success:(snapshot,format)=>`${format==='pdf'?'PDF':'Excel'} download started for saved revision ${snapshot.revision}. No order was placed.`,
+};
 
 /** Owns one download lifecycle. Cancellation invalidates every pending continuation. */
-export class PurchaseOrderDownloader{
+export class CheckedPurchaseOrderDownloader<Input,Snapshot>{
   private pending:AbortController|null=null;
   private disposed=false;
-  constructor(private readonly dependencies:Dependencies,private readonly publish:(state:PurchaseOrderDownloadState)=>void){}
+  constructor(private readonly dependencies:PurchaseOrderDownloadDependencies<Snapshot>,private readonly publish:(state:PurchaseOrderDownloadState)=>void,
+    private readonly flow:PurchaseOrderDownloadFlow<Input,Snapshot>){}
   cancel():void{this.pending?.abort();this.pending=null;if(!this.disposed)this.publish(idle);}
   dispose():void{this.disposed=true;this.cancel();}
-  async start(input:PurchaseOrderExportRequest,format:PurchaseOrderDocumentFormat):Promise<void>{
+  async start(input:Input,format:PurchaseOrderDocumentFormat):Promise<void>{
     if(this.pending||this.disposed)return;
     const abort=new AbortController();this.pending=abort;
     const current=()=>!this.disposed&&this.pending===abort&&!abort.signal.aborted;
     let stage:'check'|'generate'|'download'='check';
-    this.publish({phase:'loading',format,message:`Preparing ${format==='pdf'?'PDF':'Excel'} from the saved revision…`});
+    this.publish({phase:'loading',format,message:`Preparing ${format==='pdf'?'PDF':'Excel'} ${this.flow.loading}…`});
     try{
-      const selection=purchaseOrderExportRequest.parse(input);
-      const url='/api/purchase-order-exports?'+new URLSearchParams({companyId:selection.companyId,orderId:selection.orderId,revision:String(selection.revision)});
-      const read=async()=>{
-        const response=await this.dependencies.fetch(url,{method:'GET',credentials:'same-origin',cache:'no-store',redirect:'error',signal:abort.signal});
-        if(!current())return null;
-        if(!response.ok){
-          if(response.status===401)throw new DownloadRefusal('Your session expired. Sign in again before downloading.',true);
-          if(response.status===403)throw new DownloadRefusal('Owner or manager access to this company is required.',true);
-          if(response.status===409)throw new DownloadRefusal('The draft changed or was canceled. Reload the saved draft before downloading.',true,true);
-          if(response.status===404)throw new DownloadRefusal('This saved draft is unavailable. Reload it before downloading.',true,true);
-          throw new DownloadRefusal('The saved draft could not be checked. Try again or reload it.',false,true);
-        }
-        const body:unknown=await response.json();if(!current())return null;
-        let snapshot:PurchaseOrderExportSnapshot;
-        try{snapshot=capturePurchaseOrderExport((body as {export?:unknown})?.export);}
-        catch{throw new DownloadRefusal('The saved details cannot be exported. Reload the draft and review them.',true,true);}
-        if(snapshot.draft.companyId!==selection.companyId||snapshot.draft.id!==selection.orderId||snapshot.revision!==selection.revision){
-          throw new DownloadRefusal('The returned draft does not match this selection. Reload the saved draft.',true,true);
-        }
-        return snapshot;
-      };
-      const snapshot=await read();if(!snapshot||!current())return;
+      const snapshot=await this.flow.read(input,this.dependencies.fetch,abort.signal);if(!current())return;
       stage='generate';const bytes=await this.dependencies.generate(format,snapshot,abort.signal);if(!current())return;
       // A slow library/font load must not bypass a later revocation, edit or cancellation.
-      stage='check';const verified=await read();if(!verified||!current())return;
-      if(JSON.stringify(verified)!==JSON.stringify(snapshot))throw new DownloadRefusal('The saved details changed. Reload the draft before downloading.',true,true);
+      stage='check';const verified=await this.flow.read(input,this.dependencies.fetch,abort.signal,snapshot);if(!current())return;
+      if(JSON.stringify(verified)!==JSON.stringify(snapshot))throw new DownloadRefusal(this.flow.changed,true,true);
       stage='download';
-      const number=snapshot.draft.number.replace(/[^a-zA-Z0-9_-]/g,'-').slice(0,100)||'draft';
-      this.dependencies.download(bytes,`pantrack-${number}-r${snapshot.revision}-draft.${format}`,
+      this.dependencies.download(bytes,this.flow.filename(snapshot,format),
         format==='pdf'?'application/pdf':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      if(current())this.publish({phase:'success',format,message:`${format==='pdf'?'PDF':'Excel'} download started for saved revision ${snapshot.revision}. No order was placed.`});
+      if(current())this.publish({phase:'success',format,message:this.flow.success(snapshot,format)});
     }catch(error){
       if(!current())return;
       let message=error instanceof DownloadRefusal?error.message:stage==='download'?'The file could not be downloaded. Try again.':
@@ -69,8 +77,11 @@ export class PurchaseOrderDownloader{
     }finally{if(this.pending===abort)this.pending=null;}
   }
 }
+export class PurchaseOrderDownloader extends CheckedPurchaseOrderDownloader<PurchaseOrderExportRequest,PurchaseOrderExportSnapshot>{
+  constructor(dependencies:PurchaseOrderDownloadDependencies,publish:(state:PurchaseOrderDownloadState)=>void){super(dependencies,publish,singleFlow);}
+}
 
-export const browserPurchaseOrderDownloads:Dependencies={
+export const browserPurchaseOrderDownloads:PurchaseOrderDownloadDependencies={
   fetch:(url,options)=>fetch(url,options),
   generate:async(format,snapshot,signal)=>{
     const documents=await import('./purchase-order-documents');

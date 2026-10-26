@@ -6,7 +6,7 @@ type DraftPdfRow=Readonly<{text:string;size?:number;tone?:'muted'|'warning'}>;
 export type DraftPdfDocument = Readonly<{
   label:string; title:string; subject:string; creator:string; pageReference?:string;
   context:readonly string[];
-  items:readonly Readonly<{title:string;rows:readonly DraftPdfRow[]}>[];
+  items:readonly Readonly<{title:string;rows:readonly DraftPdfRow[];reference?:string}>[];
   warnings:readonly string[]; closing:string;
 }>;
 
@@ -52,7 +52,7 @@ export async function serializeDraftDocumentPdf(value:DraftPdfDocument,fontBytes
   }
   function paragraph(value:string,size=10,color=ink):void{
     for(const line of wrap(value,size)){
-      if(y<78){newPage();if(continuation){page.drawText(continuation,{x:margin,y,size:10,font,color:muted});y-=20;}}
+      if(y<78){newPage();if(continuation){for(const label of wrap(continuation,10)){page.drawText(label,{x:margin,y,size:10,font,color:muted});y-=14;}y-=6;}}
       page.drawText(line,{x:margin,y,size,font,color});y-=size+4;
     }
   }
@@ -61,7 +61,7 @@ export async function serializeDraftDocumentPdf(value:DraftPdfDocument,fontBytes
   for(const [index,item] of document.items.entries()){
     const blockHeight=14+wrap(item.title,12).length*16+item.rows.reduce((sum,row)=>sum+wrap(row.text,row.size??10).length*((row.size??10)+4),0);
     if(blockHeight<=height-208&&y-blockHeight<78)newPage();
-    continuation=`Item ${index+1} (continued)`;heading(item.title);
+    continuation=item.reference??`Item ${index+1} (continued)`;heading(item.title);
     item.rows.forEach(row=>paragraph(row.text,row.size??10,row.tone==='warning'?warning:row.tone==='muted'?muted:ink));
   }
   continuation=null;heading('Review before any separate ordering');

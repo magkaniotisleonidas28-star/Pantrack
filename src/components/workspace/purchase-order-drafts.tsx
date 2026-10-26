@@ -13,6 +13,7 @@ import {emptyEditor,editorFrom,newLine,cents,dollars,statusLabel,snapshotChanges
 import './purchase-order-drafts.css';
 import CartPreview from './cart-preview';
 import PurchaseOrderDownloads from './purchase-order-downloads';
+import PurchaseOrderHistoryDownloads from './purchase-order-history-downloads';
 import {purchaseOrderHistoryFilters,purchaseOrderHistorySearch,type PurchaseOrderHistoryFilters} from '@/lib/purchase-order-history-contract';
 
 type Choices=Awaited<ReturnType<D1PurchaseOrderDrafts['choices']>>;
@@ -45,6 +46,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   const [latest,setLatest]=useState<PurchaseOrderView|null>(null),[history,setHistory]=useState<{order:PurchaseOrderView;changes:string[]}|null>(null),[historyBusy,setHistoryBusy]=useState(false);
   const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false),historyRequest=useRef(0);
   const downloadCancel=useRef<(()=>void)|null>(null);
+  const historyExportCancel=useRef<(()=>void)|null>(null);
   const [filters,setFilters]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters),[filterDraft,setFilterDraft]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters);
   const [historyLoading,setHistoryLoading]=useState(true),[historyError,setHistoryError]=useState('');
   const historyListRequest=useRef(0),historyListAbort=useRef<AbortController|null>(null);
@@ -65,6 +67,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     if(supplierId)void supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=0`)
       .then(d=>{if(live)setMappings(d);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[supplierId,refreshKey,companyId]);
   async function loadList(page:number){
+    historyExportCancel.current?.();
     const sequence=++historyListRequest.current;historyListAbort.current?.abort();const abort=new AbortController();historyListAbort.current=abort;
     setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});
     try{const data=await request<List>(companyId,purchaseOrderHistorySearch(filters,page),undefined,abort.signal);if(sequence===historyListRequest.current)setList(data);}
@@ -75,15 +78,16 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     const parsed=purchaseOrderHistoryFilters.safeParse(filterDraft);if(!parsed.success){setHistoryError('Check the search and supplier fields.');return;}
     prepareHistoryRead();setFilterDraft(parsed.data);setFilters(parsed.data);setOffset(0);
   }
-  function prepareHistoryRead(){historyListRequest.current++;historyListAbort.current?.abort();setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});}
+  function prepareHistoryRead(){historyExportCancel.current?.();historyListRequest.current++;historyListAbort.current?.abort();setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});}
+  function patchHistoryFilters(values:Partial<PurchaseOrderHistoryFilters>){historyExportCancel.current?.();setFilterDraft(old=>({...old,...values}));}
   function clearHistoryFilters(){prepareHistoryRead();setFilterDraft({...emptyHistoryFilters});setFilters({...emptyHistoryFilters});setOffset(0);}
   function changeHistoryPage(page:number){prepareHistoryRead();setOffset(page);}
   async function loadSuppliers(page:number){try{const data=await supplierRequest<Suppliers>(companyId,`&offset=${page}`);setSuppliers(old=>page?{...data,suppliers:[...old.suppliers,...data.suppliers.filter(s=>!old.suppliers.some(o=>o.id===s.id))]}:data);setSupplierPage(page);}catch(e){setError((e as Error).message);}}
   async function moreMappings(){try{const page=mappingPage+20,data=await supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=${page}`);setMappings(old=>({...data,mappings:[...old.mappings,...data.mappings.filter(m=>!old.mappings.some(o=>o.mapping.id===m.mapping.id))]}));setMappingPage(page);}catch(e){setError((e as Error).message);}}
   function clearFeedback(){setError('');setNotice('');setInvalid({});setConflict(false);setLatest(null);setHistory(null);setHistoryBusy(false);historyRequest.current++;setAck(false);setReason('');}
   function mayLeave(){return !busy&&!uncertain&&(!dirty||window.confirm('Discard your unsaved draft changes?'));}
-  function openEditor(value:DraftEditor){downloadCancel.current?.();setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}
-  async function open(id:string){if(!mayLeave())return;downloadCancel.current?.();setBusy(true);clearFeedback();try{const {order}=await request(companyId,`&orderId=${encodeURIComponent(id)}`);setSelected(order);setEditor(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+  function openEditor(value:DraftEditor){historyExportCancel.current?.();downloadCancel.current?.();setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}
+  async function open(id:string){if(!mayLeave())return;historyExportCancel.current?.();downloadCancel.current?.();setBusy(true);clearFeedback();try{const {order}=await request(companyId,`&orderId=${encodeURIComponent(id)}`);setSelected(order);setEditor(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
   function back(){if(!mayLeave())return;downloadCancel.current?.();prepareHistoryRead();setSelected(null);setEditor(null);clearFeedback();}
   function patch(values:Partial<DraftEditor>){setEditor(old=>old?{...old,...values}:old);setInvalid({});setAck(false);}
   function patchLine(key:string,values:Partial<EditorLine>){setEditor(old=>old?{...old,lines:old.lines.map(l=>l.key===key?{...l,...values}:l)}:old);setInvalid({});}
@@ -159,12 +163,15 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
         <Button variant="outline" disabled={blocked} onClick={useLatest}>Load latest saved version</Button><small>This replaces unsaved fields after confirmation.</small></div>}</div>}
     {!editor&&!selected&&<>
       <form className="po-history-filters" aria-label="Filter purchase-order history" onSubmit={applyHistoryFilters}>
-        <label>Search saved drafts<Input name="history-search" maxLength={200} placeholder="PO number or supplier" value={filterDraft.q} disabled={blocked} onChange={e=>setFilterDraft(old=>({...old,q:e.target.value}))}/></label>
-        <label>Status<select value={filterDraft.status??''} disabled={blocked} onChange={e=>setFilterDraft(old=>({...old,status:(e.target.value||undefined) as PurchaseOrderHistoryFilters['status']}))}>
+        <label>Search saved drafts<Input name="history-search" maxLength={200} placeholder="PO number or supplier" value={filterDraft.q} disabled={blocked} onChange={e=>patchHistoryFilters({q:e.target.value})}/></label>
+        <label>Status<select value={filterDraft.status??''} disabled={blocked} onChange={e=>patchHistoryFilters({status:(e.target.value||undefined) as PurchaseOrderHistoryFilters['status']})}>
           <option value="">All statuses</option><option value="draft">Draft</option><option value="reviewed">Reviewed</option><option value="canceled">Canceled</option></select></label>
-        <label>Supplier<Input name="history-supplier" maxLength={200} placeholder="Supplier name or ID" value={filterDraft.supplier} disabled={blocked} onChange={e=>setFilterDraft(old=>({...old,supplier:e.target.value}))}/></label>
+        <label>Supplier<Input name="history-supplier" maxLength={200} placeholder="Supplier name or ID" value={filterDraft.supplier} disabled={blocked} onChange={e=>patchHistoryFilters({supplier:e.target.value})}/></label>
         <div className="po-history-filter-actions"><Button type="submit" variant="outline" disabled={blocked}>Apply filters</Button><Button type="button" variant="ghost" disabled={blocked} onClick={clearHistoryFilters}>Clear filters</Button></div>
       </form>
+      <PurchaseOrderHistoryDownloads key={JSON.stringify([companyId,filters])} companyId={companyId} filters={filters}
+        disabled={blocked||historyLoading||!!historyError||list.orders.length===0} pendingFilters={JSON.stringify(filterDraft)!==JSON.stringify(filters)}
+        cancelRef={historyExportCancel} onRefresh={()=>{prepareHistoryRead();void loadList(offset);}}/>
       {historyLoading?<p role="status">Loading purchase-order history…</p>:historyError?<div className="po-recovery"><p role="alert">{historyError}</p><Button variant="outline" disabled={blocked} onClick={()=>void loadList(offset)}>Retry results</Button></div>:
         list.orders.length===0?(hasFilters?<div className="po-empty"><h2>No matching purchase-order drafts</h2><p>Try a different search or clear the filters.</p></div>:
           <div className="po-empty"><h2>No purchase-order drafts yet</h2><p>Choose a supplier and add the items you want a manager to review.</p><Button disabled={blocked} onClick={()=>openEditor(emptyEditor())}>Create a draft</Button></div>):
