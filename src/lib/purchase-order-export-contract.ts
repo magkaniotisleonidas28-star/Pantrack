@@ -38,10 +38,12 @@ export const PURCHASE_ORDER_EXPORT_LIMITATIONS = [
   'Prices are estimates. The known subtotal excludes unavailable estimates and unconfirmed fees and delivery.',
   'Exporting records no supplier submission, purchase approval, reservation or inventory change.',
 ] as const;
-const exportSchema = z.object({contract:z.literal('pantrack.purchase-order-export.v1'),
-  label:z.literal(PURCHASE_ORDER_EXPORT_LABEL),revision:version,status:z.enum(['draft','reviewed']),
+const recordSchema=z.object({revision:version,status:z.enum(['draft','reviewed','canceled']),
   draft:documentSchema.strict(),supplierReference:z.object({id:text,version,accountId:text,locationId:text}).strict().optional(),
-  review:z.object({contentRevision:version,actor:text,at:z.string().datetime()}).strict().optional(),
+  review:z.object({contentRevision:version,actor:text,at:z.string().datetime()}).strict().optional()});
+const historyRecordSchema=recordSchema.extend({createdAt:z.string().datetime()}).strict();
+const exportSchema = recordSchema.extend({contract:z.literal('pantrack.purchase-order-export.v1'),
+  label:z.literal(PURCHASE_ORDER_EXPORT_LABEL),status:z.enum(['draft','reviewed']),
   limitations:z.tuple([z.literal(PURCHASE_ORDER_EXPORT_LIMITATIONS[0]),
     z.literal(PURCHASE_ORDER_EXPORT_LIMITATIONS[1]),z.literal(PURCHASE_ORDER_EXPORT_LIMITATIONS[2])])}).strict();
 const rowSchema = z.object({company_id:text,id:text,number:text,supplier_id:text,
@@ -81,19 +83,28 @@ function validateDocument(draft:z.infer<typeof documentSchema>):void {
 export function capturePurchaseOrderExport(value:unknown) {
   const parsed=exportSchema.safeParse(value);
   if(!parsed.success)return broken();
-  const snapshot=parsed.data,{draft,supplierReference:reference}=snapshot;
+  validateRecord(parsed.data);return frozenCopy(parsed.data);
+}
+function validateRecord(snapshot:z.infer<typeof recordSchema>):void{
+  const {draft,supplierReference:reference}=snapshot;
   validateDocument(draft);
   if(draft.source==='registry'?(draft.contract!=='pantrack.purchase-order-draft.v2'||!reference||reference.id!==draft.supplier.id):reference!==undefined)return broken();
   if(snapshot.status==='reviewed'?(!snapshot.review||snapshot.review.contentRevision!==snapshot.revision-1):snapshot.review!==undefined)return broken();
-  return frozenCopy(snapshot);
 }
 export type PurchaseOrderExportSnapshot = ReturnType<typeof capturePurchaseOrderExport>;
 
-export function buildPurchaseOrderExport(value:unknown, selection:PurchaseOrderExportRequest):PurchaseOrderExportSnapshot {
+/** History may describe canceled records; it never makes them eligible for individual draft export. */
+export function capturePurchaseOrderHistoryRecord(value:unknown){
+  const parsed=historyRecordSchema.safeParse(value);if(!parsed.success)return broken();
+  validateRecord(parsed.data);return frozenCopy(parsed.data);
+}
+export type PurchaseOrderHistoryRecord=ReturnType<typeof capturePurchaseOrderHistoryRecord>;
+
+function savedRecord(value:unknown,selection:PurchaseOrderExportRequest,allowCanceled:boolean){
   const result = rowSchema.safeParse(value);
   if(!result.success)return broken();
   const row=result.data;
-  if(row.current_revision!==selection.revision||row.current_status==='canceled') {
+  if(row.current_revision!==selection.revision||!allowCanceled&&row.current_status==='canceled') {
     poFail('conflict','The draft changed or was canceled. Reload it before exporting.');
   }
   let decoded:unknown;
@@ -103,15 +114,24 @@ export function buildPurchaseOrderExport(value:unknown, selection:PurchaseOrderE
   const draft=parsed.data;
   if(row.company_id!==selection.companyId||row.id!==selection.orderId||draft.companyId!==selection.companyId||
     draft.id!==row.id||draft.number!==row.number||draft.supplier.id!==row.supplier_id||row.revision_status!==row.current_status||
-    (row.current_status==='reviewed'?row.event_kind!=='review'||row.current_revision<2:!['create','edit'].includes(row.event_kind)))return broken();
+    (row.current_status==='reviewed'?row.event_kind!=='review'||row.current_revision<2:
+      row.current_status==='canceled'?row.event_kind!=='cancel'||row.current_revision<2:!['create','edit'].includes(row.event_kind)))return broken();
   if(draft.source==='registry'&&(!draft.registry?.group||draft.registry.profile.companyId!==draft.companyId||draft.registry.profile.id!==draft.supplier.id||
     draft.contract!=='pantrack.purchase-order-draft.v2'))return broken();
   if(draft.source!=='registry'&&draft.registry!==undefined)return broken();
   const {registry,...document}=draft;
-  return capturePurchaseOrderExport({contract:'pantrack.purchase-order-export.v1',label:PURCHASE_ORDER_EXPORT_LABEL,
-    revision:row.current_revision,status:row.current_status,draft:document,
+  return {revision:row.current_revision,status:row.current_status,draft:document,
     ...(registry?{supplierReference:{id:registry.profile.id,version:registry.profile.version,
       accountId:registry.group!.accountId,locationId:registry.group!.locationId}}:{}),
-    ...(row.current_status==='reviewed'?{review:{contentRevision:row.current_revision-1,actor:row.event_actor,at:row.event_at}}:{}),
-    limitations:PURCHASE_ORDER_EXPORT_LIMITATIONS});
+    ...(row.current_status==='reviewed'?{review:{contentRevision:row.current_revision-1,actor:row.event_actor,at:row.event_at}}:{})};
+}
+export function buildPurchaseOrderExport(value:unknown,selection:PurchaseOrderExportRequest):PurchaseOrderExportSnapshot{
+  return capturePurchaseOrderExport({...savedRecord(value,selection,false),contract:'pantrack.purchase-order-export.v1',
+    label:PURCHASE_ORDER_EXPORT_LABEL,limitations:PURCHASE_ORDER_EXPORT_LIMITATIONS});
+}
+export function buildPurchaseOrderHistoryRecord(value:unknown,companyId:string):PurchaseOrderHistoryRecord{
+  const row=rowSchema.safeParse(value),header=z.object({header_created_at:z.string().datetime()}).safeParse(value);
+  if(!row.success||!header.success)return broken();
+  return capturePurchaseOrderHistoryRecord({...savedRecord(value,{companyId,orderId:row.data.id,revision:row.data.current_revision},true),
+    createdAt:header.data.header_created_at});
 }

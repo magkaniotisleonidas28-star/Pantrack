@@ -2,6 +2,7 @@ import {z} from 'zod';
 import {poFail} from './purchase-order-contract';
 import {purchaseOrderHistoryRequest} from './purchase-order-history-contract';
 import {frozenCopy} from './supplier-simulation-contract';
+import {purchaseOrderHistoryWhere} from './purchase-order-history-sql';
 
 const summary=z.object({id:z.string(),number:z.string(),supplier_id:z.string(),supplier_name:z.string(),
   status:z.enum(['draft','reviewed','canceled']),revision:z.number().int().positive(),created_at:z.string()});
@@ -15,12 +16,7 @@ export class D1PurchaseOrderHistory{
     if(!parsed.success)poFail('invalid_request','Check the history search, status, supplier and page.');
     const {companyId,offset,filters}=parsed.data,actor=await this.options.identity();
     if(!actor)poFail('forbidden','Manager or owner membership is required.');
-    const clauses:string[]=[],args:(string|number)[]=[companyId,actor,companyId];
-    // INSTR gives literal substring matching: %, _ and SQL-looking text remain ordinary text.
-    if(filters.q){clauses.push("(instr(lower(h.number),lower(?))>0 OR instr(lower(json_extract(r.snapshot_json,'$.supplier.name')),lower(?))>0)");args.push(filters.q,filters.q);}
-    if(filters.supplier){clauses.push("(instr(lower(h.supplier_id),lower(?))>0 OR instr(lower(json_extract(r.snapshot_json,'$.supplier.name')),lower(?))>0)");args.push(filters.supplier,filters.supplier);}
-    if(filters.status){clauses.push('h.status=?');args.push(filters.status);}
-    args.push(offset);
+    const where=purchaseOrderHistoryWhere(filters),args:(string|number)[]=[companyId,actor,companyId,...where.args,offset];
     const result=await this.db.prepare(`WITH allowed AS (
       SELECT user_id FROM memberships WHERE company_id=? AND user_id=? AND role IN ('owner','manager')
     ), page AS (
@@ -28,7 +24,7 @@ export class D1PurchaseOrderHistory{
         h.status,h.revision,h.created_at
       FROM purchase_order_drafts h JOIN purchase_order_draft_revisions r
         ON r.company_id=h.company_id AND r.order_id=h.id AND r.revision=h.revision
-      CROSS JOIN allowed WHERE h.company_id=? ${clauses.length?'AND '+clauses.join(' AND '):''}
+      CROSS JOIN allowed WHERE h.company_id=? ${where.sql}
       ORDER BY h.created_at DESC,h.id DESC LIMIT 21 OFFSET ?
     ) SELECT page.* FROM allowed LEFT JOIN page ON 1=1 ORDER BY page.created_at DESC,page.id DESC`)
       .bind(...args).all<{[K in keyof Summary]:Summary[K]|null}>();

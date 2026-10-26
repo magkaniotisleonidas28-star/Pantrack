@@ -1,4 +1,4 @@
-import {capturePurchaseOrderExport} from './purchase-order-export-contract';
+import {capturePurchaseOrderExport,type PurchaseOrderHistoryRecord} from './purchase-order-export-contract';
 import {draftEstimateDisplay,draftStockDisplay} from './supplier-order-draft';
 import type {DraftPdfDocument} from './draft-document-pdf';
 import type {DraftXlsxDocument} from './draft-document-xlsx';
@@ -6,9 +6,10 @@ import type {DraftXlsxDocument} from './draft-document-xlsx';
 const estimate=(minor:string|null|undefined)=>minor===undefined?'Not saved':draftEstimateDisplay(minor===null?null:{currency:'USD',minor});
 const notStock='Not applicable (non-stock item)';
 
-/** A document projection of an already authorized saved response, with no source reads. */
-function documents(value:unknown):{pdf:DraftPdfDocument;xlsx:DraftXlsxDocument}{
-  const saved=capturePurchaseOrderExport(value),d=saved.draft,s=d.supplier,reference=saved.supplierReference;
+type DocumentRecord=Omit<PurchaseOrderHistoryRecord,'createdAt'>&{contract:string;label:string;limitations:readonly string[]};
+/** Layout projection only. Callers validate their own single-draft or history contract first. */
+export function projectPurchaseOrderDocuments(saved:DocumentRecord):{pdf:DraftPdfDocument;xlsx:DraftXlsxDocument}{
+  const d=saved.draft,s=d.supplier,reference=saved.supplierReference;
   const quantityMeaning='Requested draft quantities only; supplier-observed, confirmed and received quantities are not recorded by this export.';
   const summary:[string,string][]=[
     ['Company',d.companyId],['PO number',d.number],['PO ID',d.id],['Saved revision',String(saved.revision)],
@@ -81,13 +82,13 @@ function documents(value:unknown):{pdf:DraftPdfDocument;xlsx:DraftXlsxDocument}{
 }
 
 export async function serializePurchaseOrderPdf(value:unknown,fontBytes:Uint8Array):Promise<Uint8Array>{
-  const document=documents(value).pdf,fontCopy=new Uint8Array(fontBytes);
+  const document=projectPurchaseOrderDocuments(capturePurchaseOrderExport(value)).pdf,fontCopy=new Uint8Array(fontBytes);
   const {serializeDraftDocumentPdf}=await import('./draft-document-pdf');
   return serializeDraftDocumentPdf(document,fontCopy);
 }
 
 export async function serializePurchaseOrderXlsx(value:unknown):Promise<Uint8Array>{
-  const document=documents(value).xlsx;
+  const document=projectPurchaseOrderDocuments(capturePurchaseOrderExport(value)).xlsx;
   const {serializeDraftDocumentXlsx}=await import('./draft-document-xlsx');
   return serializeDraftDocumentXlsx(document);
 }

@@ -546,7 +546,14 @@ For every numbered item, the assigned person follows the same delivery loop:
   now adds company-bound saved PO/supplier/status searches before pagination,
   with request cancellation and tested empty/error/retry/mobile states. The full
   local pipeline and signed-in browser passed. Filtering changes no schema or business rows.
-  Filtered bulk exports and issued artifacts remain separate, as do cart execution and receiving;
+  The [complete filtered exports](C4_FILTERED_HISTORY_EXPORTS_LOCAL_EVIDENCE.md)
+  now reuse these criteria and document engines for every matching current saved
+  draft across pages. Atomic company/role snapshots, exact size refusals, canceled
+  history labels, second-read change/access guards and actual PDF/Excel downloads
+  passed locally after integration of both owner-limit PRs. No new schema;
+  116 executed suites plus twelve Windows skips and the full local pipeline passed.
+  Creation-date range filters are the next bounded C4 history slice.
+  Issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable

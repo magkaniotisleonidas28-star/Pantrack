@@ -11,6 +11,29 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 filtered history exports — 2026-10-25
+
+The [complete filtered-history exports](C4_FILTERED_HISTORY_EXPORTS_LOCAL_EVIDENCE.md)
+now download PDF or native Excel for every matching current saved draft across
+pages. They reuse the existing criteria, validators and document/download engines.
+Company owner/manager access and the matching snapshot are checked before
+generation and again before download. Canceled records stay clearly labeled as
+history; oversize results are refused in full, with no partial file.
+
+Both newly merged owner spending-limit PRs were integrated without application
+file conflicts. All six local checks passed on the combined source: 116 executed
+suites plus twelve Windows skips, typecheck, build, all 37 migration checks,
+isolated local apply and HTTP smoke. The signed-in browser proved all 33 matches
+from page two, filtered/canceled files, cancel/retry/refresh, access/change holds,
+101-record refusal and desktop/mobile/keyboard behavior. Independent readers
+verified the actual downloads. Export reads preserved every application table.
+
+This feature adds no migration. Incoming owner-limit migrations `0035`/`0036`
+were checked only in the isolated test database; the root and hosted databases
+were untouched. Next bounded C4 task: creation-date range filters shared by the
+history list and complete exports. Issued artifacts, product filters and receiving
+remain separate. C4/C5/M8 remain open; the hosted release stays paused.
+
 ## Latest local C4 history filters — 2026-10-25
 
 The [saved-PO history filters](C4_PO_HISTORY_FILTERS_LOCAL_EVIDENCE.md) add
@@ -29,8 +52,9 @@ No new schema or migration was needed.
 Before this slice, the four completed export/integration commits were pushed
 to GitHub at `336c447`; [Windows and Ubuntu CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/40249939780)
 both passed. No open PR or overlapping shared history-file work was found.
-Next bounded C4 document task: a server-authorized export snapshot of the full
-filtered history across pages. C4/C5/M8 remain open; the hosted release is paused.
+The subsequent [complete filtered export](C4_FILTERED_HISTORY_EXPORTS_LOCAL_EVIDENCE.md)
+now uses an authorized all-matches snapshot. C4/C5/M8 remain open; the hosted
+release is paused.
 
 ## Latest local C4 manager downloads — 2026-10-25
 

@@ -3,7 +3,7 @@ import {frozenCopy} from './supplier-simulation-contract';
 export type DraftXlsxDocument=Readonly<{
   label:string;printLabel:string;creator:string;subject:string;
   columns:readonly (readonly [string,number])[];lines:readonly (readonly string[])[];
-  summary:readonly (readonly [string,string])[];
+  summary:readonly (readonly string[])[];summaryName?:'Draft'|'Orders';summaryColumns?:readonly (readonly [string,number])[];
 }>;
 
 /** Shared workbook layout and literal-cell escaping; libraries load only on demand. */
@@ -25,7 +25,8 @@ export async function serializeDraftDocumentXlsx(value:DraftXlsxDocument):Promis
   const workbook=new ExcelJS.Workbook();
   workbook.creator=document.creator;workbook.title=document.label;workbook.subject=document.subject;
   function sheet(name:string,fields:readonly (readonly [string,number])[],rows:string[][]):void{
-    const worksheet=workbook.addWorksheet(name,{views:[{state:'frozen',xSplit:name==='Lines'?2:0,ySplit:5}],
+    const tabular=name==='Lines'||name==='Orders';
+    const worksheet=workbook.addWorksheet(name,{views:[{state:'frozen',xSplit:tabular?2:0,ySplit:5}],
       pageSetup:{orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0},
       headerFooter:{oddHeader:`&L${document.printLabel}`,oddFooter:'&LEstimates only / no order recorded&RPage &P of &N'}});
     worksheet.columns=fields.map(([,width])=>({width}));
@@ -48,8 +49,8 @@ export async function serializeDraftDocumentXlsx(value:DraftXlsxDocument):Promis
         if(index%2===0)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF4F6F1'}};
       });
     });
-    if(name==='Lines')worksheet.autoFilter=`A5:${worksheet.getCell(worksheet.rowCount,fields.length).address}`;
+    if(tabular)worksheet.autoFilter=`A5:${worksheet.getCell(worksheet.rowCount,fields.length).address}`;
   }
-  sheet('Draft',[['Field',26],['Value',100]],summary);sheet('Lines',document.columns,lines);
+  sheet(document.summaryName??'Draft',document.summaryColumns??[['Field',26],['Value',100]],summary);sheet('Lines',document.columns,lines);
   return new Uint8Array(await workbook.xlsx.writeBuffer());
 }
