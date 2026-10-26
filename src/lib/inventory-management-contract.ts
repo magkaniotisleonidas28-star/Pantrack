@@ -44,6 +44,10 @@ export type InventoryMovementInput = {
   wasteReason?: WasteReason;
 };
 
+/** A → C order-linked incoming port. Quantities are exact stock-unit minors frozen at authorization. */
+export type OrderIncomingLine = {lineId:string; productId:string; configId:string; dimension:UnitDimension; quantityMinor:string};
+export type OrderIncomingInput = {companyId:string; confirmationId:string; actor:string; lines:readonly OrderIncomingLine[]};
+export type OrderIncomingRow = OrderIncomingLine & {receivedMinor:string; eventId:string; actor:string; createdAt:string};
 export type InventoryCountInput = {
   companyId: string;
   productId: string;
