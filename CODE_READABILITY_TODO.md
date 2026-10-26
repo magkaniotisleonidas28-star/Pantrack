@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S06 domain services are Completed; S07 is next**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S07 sales/register/Clover services are Completed; S08 is next**.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **3 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 16 Pending**.
+- Cleanup sections: **4 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 15 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -91,7 +91,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S04 | D1 access and immutable database history | 84 | Blocked: schema/journal/receiving; safe files verified |
 | S05 | Authentication, tenant authorization and memberships | 9 | Blocked: shared wrapper handoff; present files verified |
 | S06 | Inventory, recipes, waste and replenishment services | 26 | Completed |
-| S07 | Sales ingestion, register bridge and Clover | 16 | Pending |
+| S07 | Sales ingestion, register bridge and Clover | 16 | Completed |
 | S08 | Supplier registry, draft foundations and gated purchasing | 9 | Pending |
 | S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Pending |
 | S10 | Durable cart authorization, jobs and spending limits | 3 | Pending |
@@ -277,23 +277,29 @@ Commits: inventory/receipt services `8ccc6d7`; waste/retry flows `5c1e8c0`; repl
 
 ## S07 — Sales ingestion, register bridge and Clover
 
-Status: Pending. Depends on: S06.
+Status: Completed. Depends on: S06.
 
 **Files:** `sales-ingestion.ts`, `d1-sales-*`, `import-sales.ts`, `register-*.ts`, `clover*.ts`, `pos-adapter.ts`, `pos-provider-status.ts` as assigned.
 
-- [ ] S07.1 — Make normalize/receive/claim/process/reconcile stages explicit through whitespace, descriptive locals and concise invariant comments.
-- [ ] S07.2 — Clarify the bounded two-query keyset scan, timestamp ties, per-ID deduplication, deleted-order evidence and checkpoint refusal.
-- [ ] S07.3 — Review provider/token/webhook paths without changing fetch timing, filters, endpoint parameters, timeouts, refresh recovery or error contracts.
-- [ ] S07.4 — Preserve exactly-once inventory outcomes, immutable revisions, held unknown mappings/modifiers, ambiguous states, cursor limits and disabled hosted sync. No provider or OAuth call.
+- [x] S07.1 — Make normalize/receive/claim/process/reconcile stages explicit through whitespace, descriptive locals and concise invariant comments.
+- [x] S07.2 — Clarify the bounded two-query keyset scan, timestamp ties, per-ID deduplication, deleted-order evidence and checkpoint refusal.
+- [x] S07.3 — Review provider/token/webhook paths without changing fetch timing, filters, endpoint parameters, timeouts, refresh recovery or error contracts.
+- [x] S07.4 — Preserve exactly-once inventory outcomes, immutable revisions, held unknown mappings/modifiers, ambiguous states, cursor limits and disabled hosted sync. No provider or OAuth call.
 
 **Focused command:** `pnpm test b4-sales-inventory inventory-sales register-bridge clover-connection clover-b6-local clover-pagination sales-ingestion-contract sales-inventory-outcome-recovery sales-recovery-runtime sales-unresolved-readiness`.
 
 **Verification:** Run the listed tests, full suite, scoped lint, typecheck and build. Keep fake fetch and the real migrated domain services; no live Clover/bridge submissions.
 
-- [ ] S07.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S07.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S07.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S07.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** Fifteen source files formatted; `clover-sales-outcomes.ts` reviewed unchanged. Fifty-eight whitespace-only declaration/method boundaries improve navigation through the event contracts, in-memory/D1 stores, service, corrections, CSV/bridge and Clover adapters. Existing comments explain ledger-first recovery, fenced leases, retained unknown outcomes, minimal provider payloads and boundary-timestamp pagination. These state machines/modules are kept intact; no helper extraction or new comment changes their structure.
+
+All sixteen modules match pre-section `7739d8e` syntax/types/literals/comments/emitted runtime. Ordered schema/JSON fields, SQL/bindings/effects, UTF-8 bounds, idempotency/lineage keys, cursor/tie/dedup/page-limit/checkpoint behavior, fetch timing, token rotation/recovery, fenced lease release, challenge replacement and transport errors are unchanged. Sync stays disabled; no Clover, OAuth, bridge or other live provider call was made by this cleanup.
+
+The exact ten focused suites above passed before and after. Full `pnpm test` passed all 139 suites. Scoped ESLint has no diagnostics; format/equivalence checks, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. Exact commands/exits/durations/log hashes/source digest: inventory `sectionReviews.S07`; logs: `.sites-runtime/readability/S07/`. Evidence is local/macOS with fake fetch and migrated in-memory D1, not new Clover sandbox/pilot acceptance. No schema, API or UI behavior change required another apply/smoke.
+
+Commits: core sales/recovery `4291b10`; POS/Clover/tracker `style(readability): clarify POS and Clover adapters`. No S07 hold remains; earlier receiving holds remain open. Rollback: those two source/docs commits only. Next: S08 supplier registry, immutable drafts and gated purchasing.
 
 ## S08 — Supplier registry, draft foundations and gated purchasing
 
@@ -601,6 +607,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S04 | Two D1 helpers formatted; 40 SQL/40 snapshots reviewed unchanged, including 226 trigger definitions | Four planned baseline/final suites and scoped lint/format/typecheck/db/build/diff pass; wrong initial suite selection retained separately | Local section commit; receiving schema/journal/new migration holds explicit; independent S05 next |
 | 2026-10-26 / S05 | Eight identity modules formatted; 32 declaration boundaries; D1 revocation rationale added | Both focused suites/all BUG-01 regressions and full 139 suites pass; format/typecheck/db/build/diff pass; scoped lint retains one inherited warning | Local section commit; authorization wrapper handoff remains Blocked; independent S06 next |
 | 2026-10-26 / S06 | 26 domain modules formatted; 77 declaration/method boundaries; two ordered-batch rationale comments | Twelve focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains one inherited warning | Three local commits grouped by inventory, waste and replenishment; no S06 hold; S07 next |
+| 2026-10-26 / S07 | Fifteen sales/POS/Clover modules formatted; one SQL helper reviewed unchanged; 58 declaration/method boundaries | Ten focused baseline/final suites and full 139 suites pass; equivalent syntax/types/runtime; scoped lint/format/typecheck/db/build/diff pass | Two local commits grouped by core and adapters; no S07 hold; S08 next |
 
 ## Final report requirements
 

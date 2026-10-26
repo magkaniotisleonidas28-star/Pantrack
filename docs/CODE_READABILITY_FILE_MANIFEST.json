@@ -6278,65 +6278,93 @@
     {
       "path": "src/lib/clover-orders.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "dc842ebd41a7806e21d4f94cc7b637f795ea0027911afa78ab8616d26e10eb6a",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "24bbf522a65a564b683ea85fbcd9437fcf10e49ec0776a0af3684c02cf5379bb"
     },
     {
       "path": "src/lib/clover-pos-adapter.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "eab31ae648f01a2e826d6a93a226ab39e5f5822d322c0147bccfe62f02d44433",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "621c90ad75b3cd4544f5e73965d8f14ce6758fe088ad9be5d39219e2a0701e99"
     },
     {
       "path": "src/lib/clover-sales-outcomes.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "523d9be2515bce3b959ba45f82c33e47bf96a5e3f35282305e1e4b7527670ac0",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 reviewed unchanged; existing SQL helper was already formatted. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "523d9be2515bce3b959ba45f82c33e47bf96a5e3f35282305e1e4b7527670ac0"
     },
     {
       "path": "src/lib/clover-sync.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "1357b1d23a95d8de4d59f7e9c61619041d5f201fa6c88f0c7073e444630d6171",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "7b7f358d94a7ebbac72af33757d634204390bbed971a0d1a1087520c4894e9fb"
     },
     {
       "path": "src/lib/clover-webhook-challenge.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f89ca01985c7429d460051e0e94497c8a09a2a7fff69de12595faff00c6774e8",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "b4c22490a9b0d757b2903ec569011a658335836a78a0df54fb51daebe29c4de7"
     },
     {
       "path": "src/lib/clover-webhook.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "af4ebfa0ccab4f8873f0c01a4090db0c48d31acd14e9fb03a46c8d1256be665f",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "4ad52733e363853692f3cbf0324c1b461ed3879f0ccafb13ca740ad8375704c9"
     },
     {
       "path": "src/lib/clover.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8983c45be7f5350696bce92636eea60da54ebf3efe5fa4151559d9d229aea7a2",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "b8a09065586fdd625b4749959754de3395df9badc6c7f039936dba754915ceb7"
     },
     {
       "path": "src/lib/company-access.ts",
@@ -6600,29 +6628,41 @@
     {
       "path": "src/lib/d1-sales-corrections.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7d9d3129b0f66e594c627acacfe764eb2b36cccb164f20eefe085fba8b68fccf",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "e4a78c75cbd098876459285acceadeb57efd531b74c3a67efc0559f49ef9dd53"
     },
     {
       "path": "src/lib/d1-sales-event-store.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "fc4e129cc33aeabb649b813b701ff4bfaa940e7eca5f1fcc1091f5f2123557a6",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "f8f14a215f719f68208317df62973ee689e3c4de189014b7268404bc29eede46"
     },
     {
       "path": "src/lib/d1-sales-runtime.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "763db5d61ad40083efbbedc109014cccbb5b6f1a5714e8316cfa9f9130c04db5",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "f71d384913e31228f356393ced11e1f1288c996d13633f62c05c1b97165d131c"
     },
     {
       "path": "src/lib/d1-stock-pack.ts",
@@ -6702,11 +6742,15 @@
     {
       "path": "src/lib/import-sales.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "595b7a9b87429d093573c9a7e7a1baa39470118566a495de30cf58f7895561b0",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "86a760c1c3e9870dd5f493539530daa0498c86b727b29593f71ce84a101c0c25"
     },
     {
       "path": "src/lib/inventory-consumption-contract.ts",
@@ -6999,20 +7043,28 @@
     {
       "path": "src/lib/pos-adapter.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "763aa10a2d107332ee4bec6cc2a9bbded63d7343c7b2eefd9824279d0fadb73b",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "ac68068b624482caae196a1a5e72c45b5eb1c9c94418c96069441cdb459fc78d"
     },
     {
       "path": "src/lib/pos-provider-status.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "0632d5ef9abd11a0a07d33ab6513eb7ee68df4da452bd147bc311fc16a5f2f51",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "53bbbe578429a6db6a35e83c9ccf0ccba34f42a6bcd7ac9a5d799a67c15561aa"
     },
     {
       "path": "src/lib/purchase-order-contract.ts",
@@ -7210,20 +7262,28 @@
     {
       "path": "src/lib/register-csv.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a8e371619ecac73140d0d9ee6d94875963ffada88a4b5cfbf24ae81a62a44ec7",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "9a59ecc246df91eb5dff90435ff1097a21e8c1f3adbd72c961f281120ab4f57a"
     },
     {
       "path": "src/lib/register-providers.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ccf15741db350920bd11d997a2a4e3d398a9e45b956e7c707962ca74beb0b4f0",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "461aa4a65cbc31ae3e8a0e560ec84db2338bede14eea849a5848b936de5fe27a"
     },
     {
       "path": "src/lib/replenishment-lifecycle.ts",
@@ -7267,11 +7327,15 @@
     {
       "path": "src/lib/sales-ingestion.ts",
       "section": "S07",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3d483e909f1fedb80e6ac79c5bc42a2ffb3a0dd9661837923add860344c729f4",
-      "results": []
+      "results": [
+        "S07 preparation: source/callers and event/store/inventory recovery, pagination, credential and adapter boundaries reviewed before source edits. No module extraction or behavior change is included; final verification remains In Progress.",
+        "S07 formatted and declarations/methods separated; no syntax/type/literal/runtime changes. Ten focused baseline/final suites, full 139 suites, scoped lint, format/typecheck/db/build/diff pass. See sectionReviews.S07."
+      ],
+      "cleanupSha256": "b31531e73ded85d00847139a5596b6ef51fb222dd70fabdb353da8a68386e9ef"
     },
     {
       "path": "src/lib/stock-pack-quantities.ts",
@@ -9306,6 +9370,87 @@
       "sourceDigest": "a6343f8599b596543e2db8ce862b7da084c2dd84e3dc859f5aad1392f0342128",
       "review": "All 26 modules equivalent to pre-section source after excluding exactly two new comments explaining changes()-dependent batch order. Seventy-seven whitespace-only declaration/method boundaries separated. Full source and callers reviewed before edits; existing helpers retained, no extraction of transaction/closure bodies. All SQL/templates, binding/effect order, replay identities, quantity/legacy projections, cutoffs, readiness and disabled supplier effects unchanged. Scoped lint exits 0 with the one inherited unused changes helper warning. All 139 suites pass.",
       "compatibility": "Existing A-owned incoming/receipt ports retain behavior and frozen units; receiving-counts branch does not modify these source files. No new delivery contract/schema was imported; prior holds remain."
+    },
+    "S07": {
+      "outcome": "Completed",
+      "safeFilesCompleted": 16,
+      "modifiedFiles": 15,
+      "reviewedUnchanged": [
+        "src/lib/clover-sales-outcomes.ts"
+      ],
+      "heldFiles": [],
+      "preSectionCommit": "7739d8e",
+      "codeCommits": [
+        "4291b10",
+        "style(readability): clarify POS and Clover adapters"
+      ],
+      "baseline": {
+        "command": "pnpm test b4-sales-inventory inventory-sales register-bridge clover-connection clover-b6-local clover-pagination sales-ingestion-contract sales-inventory-outcome-recovery sales-recovery-runtime sales-unresolved-readiness",
+        "exit": 0,
+        "suites": 10,
+        "log": ".sites-runtime/readability/S07/baseline.log"
+      },
+      "final": [
+        {
+          "command": "pnpm test b4-sales-inventory inventory-sales register-bridge clover-connection clover-b6-local clover-pagination sales-ingestion-contract sales-inventory-outcome-recovery sales-recovery-runtime sales-unresolved-readiness",
+          "exit": 0,
+          "seconds": 3.9,
+          "log": ".sites-runtime/readability/S07/final/0-test.log",
+          "logSha256": "10bfc9e56afe04bd54f126bb2c1143baf20278f02c72034beea43c30d27ef729"
+        },
+        {
+          "command": "pnpm format:check --section S07",
+          "exit": 0,
+          "seconds": 1.3,
+          "log": ".sites-runtime/readability/S07/final/1-format-check.log",
+          "logSha256": "e5577af0708cbe7a033ab10373d398ea4d131e39252a927fb56e4aa23a8ab313"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/lib/clover-orders.ts src/lib/clover-pos-adapter.ts src/lib/clover-sales-outcomes.ts src/lib/clover-sync.ts src/lib/clover-webhook-challenge.ts src/lib/clover-webhook.ts src/lib/clover.ts src/lib/d1-sales-corrections.ts src/lib/d1-sales-event-store.ts src/lib/d1-sales-runtime.ts src/lib/import-sales.ts src/lib/pos-adapter.ts src/lib/pos-provider-status.ts src/lib/register-csv.ts src/lib/register-providers.ts src/lib/sales-ingestion.ts",
+          "exit": 0,
+          "seconds": 1.1,
+          "log": ".sites-runtime/readability/S07/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 2.4,
+          "log": ".sites-runtime/readability/S07/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.6,
+          "log": ".sites-runtime/readability/S07/final/4-test.log",
+          "logSha256": "c27525839915c569fa3f39b1c182bcaedf7e6770cf32729531c1540209948dda"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S07/final/5-db-check.log",
+          "logSha256": "f01ef567a48182dcaab70093286d767ef95de5c671bfd231ecd09cd5cfad390b"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.2,
+          "log": ".sites-runtime/readability/S07/final/6-build.log",
+          "logSha256": "f01e4db8f32d45774a5fe003d99dd5be01e6c875b8ebd2a16f2e086ff2e22d42"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S07/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "9602b677a18f8d6a76b815bd6e3454f9e135bd8ddd72b9b2a2c8587dbe9a6921",
+      "review": "All 16 modules equivalent to pre-section 7739d8e, including types, exports, literals/comments, raw SQL/template values and emitted runtime. Fifty-eight whitespace-only declaration/method boundaries separated. No source extraction or new comment. Pagination cursor/ties/dedup/MAX_PAGES/checkpoint refusal, provider fetch timing/refresh leases, challenge replacement, exactly-once inventory/recovery and unknown-state holds preserved. Scoped lint clean; all 139 suites pass.",
+      "compatibility": "No new API/schema behavior or provider configuration; sync remains disabled. Local/macOS fake-provider and migrated in-memory D1 evidence only."
     }
   }
 }
