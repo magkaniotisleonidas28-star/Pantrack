@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S04 safe D1/history work is verified; receiving holds remain in S03/S04**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S05 present identity modules are verified; S06 is next**.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **2 of 22 Completed; 2 Blocked (S03/S04 receiving handoffs; safe files verified); 18 Pending**.
+- Cleanup sections: **2 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 17 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -89,7 +89,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S02 | Shared primitives, bounded requests and public errors | 3 | Completed |
 | S03 | Shared data models, exact quantities and contracts | 24 + 1 upstream | Blocked: receiving addition; present files verified |
 | S04 | D1 access and immutable database history | 84 | Blocked: schema/journal/receiving; safe files verified |
-| S05 | Authentication, tenant authorization and memberships | 9 | Pending |
+| S05 | Authentication, tenant authorization and memberships | 9 | Blocked: shared wrapper handoff; present files verified |
 | S06 | Inventory, recipes, waste and replenishment services | 26 | Pending |
 | S07 | Sales ingestion, register bridge and Clover | 16 | Pending |
 | S08 | Supplier registry, draft foundations and gated purchasing | 9 | Pending |
@@ -227,23 +227,27 @@ Commit: `style(readability): clarify D1 bindings and preserve database history`.
 
 ## S05 — Authentication, tenant authorization and memberships
 
-Status: Pending. Depends on: S04.
+Status: Blocked only for the receiving-owned shared wrapper; eight present identity modules verified. Depends on: S04 safe D1 access (verified); no absent delivery schema is used here.
 
 **Files:** `src/lib/auth*.ts`, `authorization.ts`, `chatgpt-auth.ts`, `company-access.ts`, `memberships.ts`, `password-policy.ts`, `reauthentication.ts` as assigned in the inventory.
 
-- [ ] S05.1 — Expand session, membership and permission checks into readable blocks; use descriptive local names where scope-safe.
-- [ ] S05.2 — Explain D1 revocation authority, the checks before/after provider verification, recovery epochs, lease claims and committed-response audit handling.
-- [ ] S05.3 — Preserve permission truth tables, CSRF checks, token/cookie/encryption behavior, recovery fences, exception types, sanitized messages, response statuses and attempt-before-effect ordering.
-- [ ] S05.4 — Coordinate the currently modified `authorization.ts` before editing. Do not overwrite the receiving family addition.
+- [!] S05.1 — Session/membership cleanup is Completed; permission-wrapper formatting remains Blocked until its receiving handoff. Existing exports and local names are retained where renaming would weaken the simple equivalence proof.
+- [!] S05.2 — Identity/recovery explanations are Completed, including a D1 revocation rationale comment. The existing committed-response audit wrapper was read and remains unchanged; its formatting/documentation update is held with S05.4.
+- [x] S05.3 — Preserve permission truth tables, CSRF checks, token/cookie/encryption behavior, recovery fences, exception types, sanitized messages, response statuses and attempt-before-effect ordering.
+- [!] S05.4 — Coordinate the currently modified `authorization.ts` before editing. Do not overwrite the receiving family addition.
 
 **Focused command:** `pnpm test m2-security local-auth`.
 
 **Verification:** Run every BUG-01 recovery regression and anonymous/wrong-company/forbidden-role cases, full tests, scoped lint, typecheck and build. No provider contact or verification cache.
 
-- [ ] S05.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S05.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S05.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S05.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** Eight present identity modules formatted; 32 whitespace-only declaration boundaries separated. The new comment in `auth.ts` explains why provider success cannot override D1 revocation. All eight modules match pre-section syntax/types/literals/comments/emitted runtime after excluding that reviewed comment. The shared `authorization.ts` wrapper remains byte-identical and held. No verification cache, security policy, token/cookie/encryption, CSRF, tenant/role, recovery cutoff, lease, transaction, SQL/binding order, response or integration change was introduced.
+
+Baseline and final `pnpm test m2-security local-auth` passed both suites, including all BUG-01 exchange/session-insert barriers, concurrent reset claims, provider logout failure, rejected/unknown/timeout/lost response, predecessor deletion, abandoned/late recovery and expiry/rollback regressions. Full `pnpm test` passed all 139 suites. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. Scoped ESLint exited 0 with one inherited unused `_` warning in token-stripping destructuring; no rule was suppressed and that token-removal behavior is unchanged. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S05`; logs: `.sites-runtime/readability/S05/`. Evidence is local/macOS with mocked Supabase; no provider acceptance is claimed. The owner checkout remained clean at `46f98d7`.
+
+Commit: `style(readability): expand identity and membership flows`. Remaining: shared wrapper cleanup requires the receiving branch integration/handoff. S06 can independently format present inventory services against unchanged access contracts. Rollback: revert this section source/docs only; no migration or external action exists.
 
 ## S06 — Inventory, recipes, waste and replenishment services
 
@@ -585,14 +589,11 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | Date / section | Files and improvements | Checks and outcome | Commit / holds / next |
 | --- | --- | --- | --- |
 | 2026-10-26 / S00 | Architecture survey; 882-file ownership/hash inventory plus 13 reserved receiving additions; 22 ordered cleanup sections | Planning-only coverage, hash, suite-reference, JSON, link and whitespace checks pass; 0 application edits; concurrent receiving-test change recorded | Documentation-only planning checkpoint; all 22 changed receiving paths held for integration/handoff; next: S01 baseline/tooling |
-
 | 2026-10-26 / S01 | Tooling/config/adapters: 24 existing edits, 14 unchanged, 7 cleanup additions; pinned dev formatter and guarded per-section command | Full pipeline passes except unchanged inherited lint (71 errors/80 warnings); 138 suites; focused/syntax/hash/link checks pass | Local section commit; main advanced independently to 59d3d90, integration checkpoint next; receiving implementation held |
-
 | 2026-10-26 / S02 | Three shared helper modules; consistent spacing/wrapping and two stream/UTF-8 comments | 3 focused suites before/after; guard/format, scoped lint, typecheck/build/diff all pass | Local section commit; next S03; no S02 hold |
-
 | 2026-10-26 / S03 | 25 present models/contracts formatted; 163 declaration boundaries; type-parenthesis guard refinement reproduced and tested | 11 baseline/12 final focused suites; all 139 suites; scoped lint, guard/format, typecheck/db/build/diff pass; 299 ordered exports unchanged | Local section commit; absent receiving contract explicitly Blocked; S04 independent D1/history review next |
-
 | 2026-10-26 / S04 | Two D1 helpers formatted; 40 SQL/40 snapshots reviewed unchanged, including 226 trigger definitions | Four planned baseline/final suites and scoped lint/format/typecheck/db/build/diff pass; wrong initial suite selection retained separately | Local section commit; receiving schema/journal/new migration holds explicit; independent S05 next |
+| 2026-10-26 / S05 | Eight identity modules formatted; 32 declaration boundaries; D1 revocation rationale added | Both focused suites/all BUG-01 regressions and full 139 suites pass; format/typecheck/db/build/diff pass; scoped lint retains one inherited warning | Local section commit; authorization wrapper handoff remains Blocked; independent S06 next |
 
 ## Final report requirements
 

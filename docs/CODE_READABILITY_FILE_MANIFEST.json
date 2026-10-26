@@ -6172,29 +6172,38 @@
     {
       "path": "src/lib/auth-availability.ts",
       "section": "S05",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2bb2adf4ec79f2ca9b471de251bb2d7f99143360bf96a7830389c33b749d65f5",
-      "results": []
+      "results": [
+        "S05 auth/session/membership formatting and declaration separation verified; auth.ts adds one D1-revocation rationale comment. Existing provider verification/recovery/permission contracts preserved. Focused/full 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited warning in chatgpt-auth.ts. See sectionReviews.S05."
+      ],
+      "cleanupSha256": "bb27d858a4ac3e2d37356961b64abb0a80b48c814f6c58a2a3cdc60b960cb626"
     },
     {
       "path": "src/lib/auth-session-fence.ts",
       "section": "S05",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "33fa9ef8c8cf5121f8d3d2218eaa5407ce93fa6290bc25a78d698dafc854aab5",
-      "results": []
+      "results": [
+        "S05 auth/session/membership formatting and declaration separation verified; auth.ts adds one D1-revocation rationale comment. Existing provider verification/recovery/permission contracts preserved. Focused/full 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited warning in chatgpt-auth.ts. See sectionReviews.S05."
+      ],
+      "cleanupSha256": "2f086627c7123dbdba6d3897d210c8364486a054fb6515ae7942dff496fc3f67"
     },
     {
       "path": "src/lib/auth.ts",
       "section": "S05",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ff0f2d8778b9b213028733a729295d651d0e71af86524bd4cc2e63474b639024",
-      "results": []
+      "results": [
+        "S05 auth/session/membership formatting and declaration separation verified; auth.ts adds one D1-revocation rationale comment. Existing provider verification/recovery/permission contracts preserved. Focused/full 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited warning in chatgpt-auth.ts. See sectionReviews.S05."
+      ],
+      "cleanupSha256": "b39fe3e18896d4d24785807b42def8c51e7c853cef2d570a89512b5131668181"
     },
     {
       "path": "src/lib/authorization.ts",
@@ -6253,11 +6262,14 @@
     {
       "path": "src/lib/chatgpt-auth.ts",
       "section": "S05",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "20a4be4b5e5bcb526da5b2796f459b2b397568716fb37194cf6a00ce9b38c5e5",
-      "results": []
+      "results": [
+        "S05 auth/session/membership formatting and declaration separation verified; auth.ts adds one D1-revocation rationale comment. Existing provider verification/recovery/permission contracts preserved. Focused/full 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited warning in chatgpt-auth.ts. See sectionReviews.S05."
+      ],
+      "cleanupSha256": "4b1a21975a343ceba1d6155fd3ed80fb4ba6afcd0e9605020061dcb739d05207"
     },
     {
       "path": "src/lib/clover-orders.ts",
@@ -6325,11 +6337,14 @@
     {
       "path": "src/lib/company-access.ts",
       "section": "S05",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5a0c2b1315fd19cf966c24dbb5def00434d65e51360ec8e284cf3d47d47e5f90",
-      "results": []
+      "results": [
+        "S05 auth/session/membership formatting and declaration separation verified; auth.ts adds one D1-revocation rationale comment. Existing provider verification/recovery/permission contracts preserved. Focused/full 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited warning in chatgpt-auth.ts. See sectionReviews.S05."
+      ],
+      "cleanupSha256": "b30bea56a8600ef4aad9d6367c9f02ea992f4a36c2d572dbe1af31ef4a4b5a40"
     },
     {
       "path": "src/lib/d1-inventory-consumption.ts",
@@ -6712,11 +6727,14 @@
     {
       "path": "src/lib/memberships.ts",
       "section": "S05",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "99a209e6734182ea09f19a73b5d2cc795b3c35f2c1b2bb988cc67999cdd4e9a4",
-      "results": []
+      "results": [
+        "S05 auth/session/membership formatting and declaration separation verified; auth.ts adds one D1-revocation rationale comment. Existing provider verification/recovery/permission contracts preserved. Focused/full 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited warning in chatgpt-auth.ts. See sectionReviews.S05."
+      ],
+      "cleanupSha256": "7d6ef4c338550533007d91c4442b33c8ea2dcf0eccb5e3cb4cd0315932b4fd70"
     },
     {
       "path": "src/lib/menu-waste-contract.ts",
@@ -6763,11 +6781,14 @@
     {
       "path": "src/lib/password-policy.ts",
       "section": "S05",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "1247f19a33282796ef4026a1ed105d893fbd66d69a5abe79b1a394eef507a6df",
-      "results": []
+      "results": [
+        "S05 auth/session/membership formatting and declaration separation verified; auth.ts adds one D1-revocation rationale comment. Existing provider verification/recovery/permission contracts preserved. Focused/full 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited warning in chatgpt-auth.ts. See sectionReviews.S05."
+      ],
+      "cleanupSha256": "abc783fc7e3641faadd62d4cd267c8dbf19b06efbe5c9e100dd0e04eb18e6cc5"
     },
     {
       "path": "src/lib/po-cart-authorization-contract.ts",
@@ -7084,11 +7105,14 @@
     {
       "path": "src/lib/reauthentication.ts",
       "section": "S05",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2f3dffbebc29b5590f9fcb549a612781c8163491ab1010e76dca96b7edbff7d7",
-      "results": []
+      "results": [
+        "S05 auth/session/membership formatting and declaration separation verified; auth.ts adds one D1-revocation rationale comment. Existing provider verification/recovery/permission contracts preserved. Focused/full 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited warning in chatgpt-auth.ts. See sectionReviews.S05."
+      ],
+      "cleanupSha256": "2d7c2dff81f509c552eed2d68248f952d0f565b173ee99bd206aac1626facc21"
     },
     {
       "path": "src/lib/recipe-choices.ts",
@@ -9026,6 +9050,80 @@
       "sourceDigest": "1e76269c9e94738b11b82f9f307cd60f57d7dbfd376292e40bf7ee28fc8ffa7d",
       "review": "Two binding helpers equivalent to pre-section source. Forty SQL files (226 trigger definitions), forty metadata snapshots and the present held schema/journal retain baseline bytes. No migration or database behavior change.",
       "unblocker": "Receiving-counts integration/handoff before schema/journal/new migration review; S05 safe identity modules do not depend on the absent delivery tables."
+    },
+    "S05": {
+      "outcome": "Blocked",
+      "safeFilesCompleted": 8,
+      "heldFiles": [
+        "src/lib/authorization.ts"
+      ],
+      "baseline": {
+        "command": "pnpm test m2-security local-auth",
+        "exit": 0,
+        "suites": 2,
+        "log": ".sites-runtime/readability/S05/baseline.log"
+      },
+      "final": [
+        {
+          "command": "pnpm test m2-security local-auth",
+          "exit": 0,
+          "seconds": 0.7,
+          "log": ".sites-runtime/readability/S05/final/0-test.log",
+          "logSha256": "c97bad48c1ee8ea2b86e0eb200047a00ab4feeaa47948b93a2a27893f976c450"
+        },
+        {
+          "command": "pnpm format:check --section S05",
+          "exit": 0,
+          "seconds": 0.7,
+          "log": ".sites-runtime/readability/S05/final/1-format-check.log",
+          "logSha256": "c1bec001f2ba9fb16cdec7eaca2a8c89e2e2db60fbc37f6298b814bca24c2fa6"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/lib/auth-availability.ts src/lib/auth-session-fence.ts src/lib/auth.ts src/lib/chatgpt-auth.ts src/lib/company-access.ts src/lib/memberships.ts src/lib/password-policy.ts src/lib/reauthentication.ts",
+          "exit": 0,
+          "seconds": 1.0,
+          "log": ".sites-runtime/readability/S05/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "8db17ecc3727a3d2b4996e9eb1d9d40c15f10390e9e8f3d8c73223d4bea539cc"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 3.7,
+          "log": ".sites-runtime/readability/S05/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.8,
+          "log": ".sites-runtime/readability/S05/final/4-test.log",
+          "logSha256": "755f0351345eda488c928d7da74c7909add093de975675392d809095983999e1"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S05/final/5-db-check.log",
+          "logSha256": "4faf449c0e1e8fe894da45f1ac795ced95e3748af7cc644de69479e46cd6f529"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.0,
+          "log": ".sites-runtime/readability/S05/final/6-build.log",
+          "logSha256": "52c81a9e6a7716d4cf0d355106142568fe612a420ac1cdabc2243c56bfc007a4"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S05/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "3a211fb3851e4fd560ee6425d59ff3af11d44a570ff257cc6a829712c8834460",
+      "review": "Eight modules equivalent to pre-section source, except one reviewed D1-revocation rationale comment; 32 whitespace-only declaration boundaries separated. Auth wrapper retains baseline bytes. All BUG-01 recovery regressions pass; per-request verification, D1 checks before/after verification, recovery fences, encryption/cookies, tenant/role and audit ordering unchanged. Scoped lint exits 0 with one inherited unused destructuring warning.",
+      "unblocker": "Receiving owner integration/handoff before shared route wrapper formatting; S06 inventory services are independent of that unchanged wrapper addition."
     }
   }
 }
