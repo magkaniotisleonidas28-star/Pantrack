@@ -1,22 +1,43 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S21** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: **Safely achievable cleanup and final review finished; overall cleanup remains Blocked.** All 64 file holds and inherited lint issues remain explicit.
 
 ## Task-management state and overall progress
 
-- Planning goal: complete phases 1–2 and present this plan before application code edits.
+- Original planning goal: complete phases 1–2 and present this plan before application code edits.
+- Execution outcome: all safely achievable sections reviewed in order; final checks recorded; unsafe work remains Blocked.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **9 of 22 Completed; 12 Blocked (recorded handoffs/holds); 0 In Progress; 1 Pending**.
+- Cleanup sections: **10 of 22 Completed; 12 Blocked (recorded handoffs/holds); 0 In Progress; 0 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
 - Inventory: **882 initial committed files**, all assigned once, plus **6 upstream archive additions**; **13 receiving-branch additions** separately reserved (untracked at survey start or added during concurrent development).
 - Structural scan: 525 JS/TS modules parsed, 2,728 import/re-export/dynamic-import edges inspected, 1,336 resolved local edges. Type-only edges are included; this is not a runtime call-graph proof.
 - Readability scan: 550 JS/TS/CSS/Python/shell code files measured; 492 contain a line longer than 120 characters. This is a triage measure, not a defect count.
-- Detailed per-module behavioral review remains Pending in its own section. The architecture survey does not claim every function has already been deeply audited.
+- Final coverage: **845 Completed file dispositions; 64 Blocked paths (51 present, 13 absent receiving additions); two planning records**, accounting for all 898 tracked files and all 909 manifest entries.
+- Cleanup changed 449 non-planning files and reviewed 396 safe files unchanged. Every present held file retains baseline bytes. This is a readability/preservation review, not a new deep security audit of every function.
 
 [Per-file ownership/status/hash inventory](docs/CODE_READABILITY_FILE_MANIFEST.json) is the coverage ledger. It includes review-only files; an untouched file still requires a recorded review disposition. The two new planning artifacts are tracked in S00 rather than retroactively inserted into the baseline.
+
+## Final outcome and remaining work
+
+The [codebase map](docs/CODEBASE_MAP.md) and [formatting guide](docs/CODE_READABILITY_GUIDE.md) provide the navigation and conventions. The S22 record below contains exact commands/results and rollback; the manifest contains per-file outcomes, hashes, section commits, receipts, and full held-path lists.
+
+- **Passed locally:** all 139 suites (Mac, zero platform skips), typecheck, 40-migration database check, build, isolated migration apply and HTTP smoke; all 19 supported section format selections, relative links, source equivalence, preserved hashes/modes, and complete diff checks.
+- **Inherited failure:** full lint retains exactly 71 errors and 84 warnings, matching the integrated baseline. No suppression or behavior repair was added for cleanup.
+- **Preservation:** 436 existing source/configuration files retain syntax/types/literals/emitted-runtime structure, with five explicit explanatory comments accounted for; runtime dependencies, UI styling, schemas, contracts and gates are unchanged. Existing package/lock differences are limited to the pinned dev formatter and two formatting scripts.
+- **Isolation:** work is local on `workstream-c/code-readability-plan-20261026` in the worktree above. Owner receiving head `46f98d7` remains clean and unchanged; no push, PR, merge, deployment or live/paid/real-browser operational run occurred. C4/M8 and A8/M7 remain open.
+
+| Hold family | Paths | Unblocker |
+| --- | --- | --- |
+| Receiving work | 21 | Separate integration/handoff of the owner’s feature. |
+| JSX emitted children | 19 | Manual child-preserving candidate, guard/focused checks, and required UI verification. |
+| CSS/HTML visuals | 13 | Scoped candidate and desktop/mobile visual comparison. |
+| Exact source-spelling tests | 7 | Compatible formatting that preserves the existing assertions/replacements. |
+| BigInt formatter checker | 4 | Separately verified checker repair and independent debug-check success. |
+
+These 64 paths are not marked cleaned. Large atomic batches, independent audit implementations, race scenarios and some older names remain where refactoring would need a separate behavioral proof. The whole cleanup is **Blocked**, even though the final review and every safely achievable task are finished.
 
 ## Architecture and dependency map
 
@@ -106,7 +127,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Blocked: formatter/receiving holds; safe files verified |
 | S20 | Operational CLIs, lifecycle diagnostics, shell and Python audits | 88 | Blocked: source-pin/receiving holds; safe files verified |
 | S21 | Documentation, architecture navigation and managed instructions | 218 + 1 upstream | Blocked: receiving docs; safe navigation review complete |
-| S22 | Final consistency, preservation review and handoff | whole project | Pending |
+| S22 | Final consistency, preservation review and handoff | whole project | Completed: final review; overall cleanup Blocked |
 
 ## S00 — Architecture survey and complete plan
 
@@ -689,22 +710,55 @@ Four receiving-owned documentation files remain held for integration/handoff, in
 
 ## S22 — Final consistency, preservation review and handoff
 
-Status: Pending. Depends on: All prior sections completed or explicitly documented as Blocked.
+Status: Completed (final review; overall cleanup remains Blocked). Depends on: All prior sections completed or explicitly documented as Blocked.
 
 **Files:** Entire tracked project, the cleanup inventory, this checklist and all section verification records.
 
-- [ ] S22.1 — Reconcile the file manifest against current `git ls-files`; account for additions, owner handoffs, unchanged reviews and every outstanding hold.
-- [ ] S22.2 — Review naming/import/style consistency across owned modules and duplicated responsibilities that remain; document risky improvements rather than expanding into feature work.
-- [ ] S22.3 — Review the complete diff for UI/API/schema/security/business-effect changes, secrets, accidental generated artifacts and misleading acceptance claims.
-- [ ] S22.4 — Verify each section has a reviewable commit and accurate before/after evidence. Compile final files/improvements/checks/remaining-work/rollback summary.
-- [ ] S22.5 — Keep any unsafe or unverifiable cleanup Pending/Blocked, identify the exact unblocker, and report it honestly. Do not declare the whole cleanup complete while unresolved required work remains.
+- [x] S22.1 — Reconcile the file manifest against current `git ls-files`; account for additions, owner handoffs, unchanged reviews and every outstanding hold.
+- [x] S22.2 — Review naming/import/style consistency across owned modules and duplicated responsibilities that remain; document risky improvements rather than expanding into feature work.
+- [x] S22.3 — Review the complete diff for UI/API/schema/security/business-effect changes, secrets, accidental generated artifacts and misleading acceptance claims.
+- [x] S22.4 — Verify each section has a reviewable commit and accurate before/after evidence. Compile final files/improvements/checks/remaining-work/rollback summary.
+- [x] S22.5 — Keep any unsafe or unverifiable cleanup Pending/Blocked, identify the exact unblocker, and report it honestly. Do not declare the whole cleanup complete while unresolved required work remains.
 
 **Verification:** Run `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm db:check`, `pnpm build`, isolated `pnpm db:migrate:local`, isolated `pnpm test:local`, final diff/link/manifest/hash checks and the selected format-equivalence checks. Report inherited failures and real platform coverage; no live/paid/full-gate execution.
 
-- [ ] S22.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S22.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S22.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S22.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** The safely achievable cleanup and final review are finished. **The entire cleanup remains Blocked**, with 64 file holds and inherited lint failures; it is not declared fully complete.
+
+Coverage is exact: **898 tracked files = 845 Completed file dispositions + 51 present held files + two planning records**. Thirteen absent receiving additions remain separately reserved, giving 909 manifest entries. Every Completed cleanup hash and every present held baseline hash matches. All indexed modes are preserved; no baseline path was removed or renamed. The 80 used SQL migrations/snapshots, accepted decisions, historical/managed documents, vendor UI/assets/licenses, fonts, evidence fixtures and source-pinned files retain their recorded bytes. Current `origin/main` remains the integrated `59d3d90`; local `main` remains the initial `bb8f339`. The owner checkout is still clean on receiving head `46f98d7`. No remote fetch or shared-branch rewrite was needed.
+
+The full diff against integrated source accounts for 447 unchanged tracked files, 433 compiler-equivalent code/configuration files and three additional equivalent modules with exactly five reviewed explanatory comments. The remaining existing changes are three documentation/index files and the two package/lock tooling files. Ten additions comprise the seven S01 tool/guide/receipt files, the S21 codebase map and two planning records. In total 449 non-planning files changed and 396 safe files were reviewed unchanged. No import/effect/property order, public types, literal/SQL/template text, JSX runtime structure, API/authorization/recovery/batch/lease/quantity/budget behavior or enabled integration policy was intentionally changed. Long transactional functions, independent fakes/auditors and some older names remain rather than risking an extraction or deduplication that changes their contracts. The codebase map makes those boundaries navigable.
+
+The package review permits only exact dev-only Prettier 3.9.10 and two formatting scripts. Removing those additions produces the identical old package object and byte-identical remaining lockfile. Existing runtime dependency versions and resolutions are unchanged. The guard, full domain suites and independent readers remain intact. Prior refusal/failed-check evidence in S13/S15/S19/S20 is retained alongside the eventual passing safe-source checks; no assertion, tolerance, platform skip or historical proof hash was weakened to accept formatting.
+
+**Final frozen-source commands (local macOS):**
+
+| Command | Exit | Duration |
+| --- | --- | --- |
+| `pnpm lint` | 1 | 8.1 s |
+| `python3 .sites-runtime/readability/compare-lint.py .sites-runtime/readability/S22/final/0-lint.log` | 0 | 0.0 s |
+| `pnpm typecheck` | 0 | 1.7 s |
+| `pnpm test` | 0 | 150.5 s |
+| `pnpm db:check` | 0 | 0.5 s |
+| `pnpm build` | 0 | 6.1 s |
+| `pnpm local:setup` | 0 | 0.2 s |
+| `pnpm db:migrate:local` | 0 | 0.8 s |
+| `pnpm test:local` | 0 | 3.7 s |
+| `python3 .sites-runtime/readability/S22/check-format.py` | 0 | 22.9 s |
+| `python3 .sites-runtime/readability/check-doc-links.py .sites-runtime/readability/S22/final-links.json` | 0 | 0.1 s |
+| `git diff --check` | 0 | 0.0 s |
+
+The formatting driver ran **19 individual `pnpm format:check --section ...` selections**, each exit 0: S01–S13 and S15–S20. S14 vendor files and S21 documentation use their separate unchanged/link reviews; Blocked files are excluded explicitly. Full tests actually executed all 139 suites with zero platform skips on this Mac. `db:check` verified all 40 migrations against fresh SQLite. Local apply/HTTP smoke used only this worktree's canonical isolated state; the smoke leaves fictional test data there. The HTTP checks proved local home/identity/tenant boundaries, not a live service. Full lint exited 1 with **exactly 71 inherited errors and 84 inherited warnings**; the file/rule/message multiset matches the integrated baseline. The complete cleanup diff also passes `git diff --check 59d3d90`.
+
+Frozen-source link review: 209 Markdown documents, 1,249 relative references, zero missing targets. After adding two final navigation links to this outcome record, the handoff link check passed all 1,251 references with zero missing targets. The full compiler/comment/JSON comparison, package/lock review, all per-file hashes/modes, prior section commit ancestry and recorded receipt hashes passed. The frozen source stayed unchanged throughout the checks; only these outcome records are updated afterward. Exact command logs/hashes/source digest, 19 individual format results and integrity/hold/owner/ref receipts are in inventory `sectionReviews.S22`; raw local logs remain under `.sites-runtime/readability/S22/`.
+
+**Remaining work/unblockers:** 21 receiving paths need integration/handoff; 19 JSX candidates need a manual candidate preserving exact emitted children plus the required UI verification; 13 CSS/HTML files need a separately scoped candidate and desktop/mobile visual comparison; seven source-pinned files need an approach preserving the existing source assertions/replacements; four BigInt files need a separately verified formatter-checker repair before cleanup. The full path lists and section records are in the manifest. Existing lint issues require behavior-aware follow-up in their owning modules. No unfinished cleanup is silently marked done.
+
+Evidence is local/macOS only. Ubuntu/Windows CI, real browsers/visual comparisons, Supabase/Clover/Stripe/supplier/model calls, historical process/profile/lock operations, consumed attempts, power settings, purchasing/sync enablement, deploys, remote migrations and OpenSpec archive/sync are not part of this work. C4/M8 and A8/M7 remain open; historical causes remain unresolved. The owner runtime/database/evidence was not fingerprinted or accessed; preservation here is source-byte/worktree isolation plus read-only owner Git checks.
+
+All edits are on `workstream-c/code-readability-plan-20261026`; nothing is pushed or merged. Rollback restores cleanup source/documentation commits in reverse, preserving upstream archive merge `f42c790`/source `59d3d90` and all runtime/evidence/state. No schema repair is needed; reverting source does not erase the isolated HTTP fixture database. The next unblocked follow-up is selecting one recorded hold family for a compatible proof; receiving integration still requires its separate handoff. This final documentation commit completes the review, not the held work.
 
 ## Cleanup execution log
 
@@ -732,6 +786,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S19 | 144 test modules formatted; 340 boundaries; two fixtures unchanged; all 5,640 static assertion sites preserved | Baseline/final 139 suites (Mac, zero skips); guard/format/type/db/build/diff pass; scoped lint 29 inherited warnings match baseline; full equivalence and fixture hashes pass | Seven local commits; four formatter and three receiving holds remain Blocked; S20 next |
 | 2026-10-26 / S20 | 73 JavaScript scripts formatted; 141 boundaries; nine safe Python auditors reviewed unchanged | Eleven focused baseline/final and all 139 suites; format/type/db/build/diff; ten scoped inherited lint warnings match; full compiler equivalence and ten unchanged Python AST/token/mode checks pass | Five local commits; six source pins and one receiving hold remain Blocked; no real operational run; S21 next |
 | 2026-10-26 / S21 | Added codebase map; linked root/docs indexes; contributor whitespace-only reflow; 216 other original documents/artifacts unchanged | Baseline/final link review: zero missing targets (1,133 → 1,249 references); preservation, guard suite and diff check pass | One local documentation commit; four receiving documentation holds remain Blocked; S22 final review next |
+| 2026-10-26 / S22 | Final coverage, whole-diff/runtime/comment/package review, preserved hashes/modes and owner Git isolation verified; 845 safe file dispositions | All 139 suites, type/db/build/local apply/HTTP, 19 format selections, links/hash/diff pass; lint retains exact inherited 71 errors/84 warnings | Final local review commit; overall cleanup remains Blocked by 64 file holds and inherited lint; no push/merge/external acceptance |
 
 ## Final report requirements
 

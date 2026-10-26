@@ -14544,6 +14544,453 @@
           "path": ".sites-runtime/readability/S21/documentation-review.json",
           "sha256": "26ab97080eb354503a71193a25e420d2cc20374af5bdbf6bd431517394c53212"
         }
+      ],
+      "commits": [
+        "c1251d0dc135f79c1b4f6ac2e98cf5ee60435707"
+      ]
+    },
+    "S22": {
+      "outcome": "Completed (final review; overall cleanup remains Blocked)",
+      "safeFilesCompleted": 0,
+      "heldFiles": [],
+      "preSectionCommit": "c1251d0",
+      "codeCommits": [
+        "docs(readability): record final verification and outstanding cleanup holds"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm lint",
+          "exit": 1,
+          "seconds": 8,
+          "log": ".sites-runtime/readability/S01/integration/0-lint.log",
+          "logSha256": "13d5ed6261a7f03651c9c13b62d9819a51979e4dda70cc729d7213496b1c8148"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.1,
+          "log": ".sites-runtime/readability/S01/integration/3-test.log",
+          "logSha256": "8530147f73884ad770c152af960b35811c11e03a94a61f5f5042c7c9ac6f563c"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm lint",
+          "exit": 1,
+          "seconds": 8.1,
+          "log": ".sites-runtime/readability/S22/final/0-lint.log",
+          "logSha256": "4ceab0496c1f44cfc54eb94788a3c43aaa783ff4ed95679a451cd36e1492fe98"
+        },
+        {
+          "command": "python3 .sites-runtime/readability/compare-lint.py .sites-runtime/readability/S22/final/0-lint.log",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S22/final/1-lint-comparison.log",
+          "logSha256": "5785bab6dbe1b5b94242943adbb878c61c82b1ac1c3c9ff2e6c8a24660df051e"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 1.7,
+          "log": ".sites-runtime/readability/S22/final/2-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 150.5,
+          "log": ".sites-runtime/readability/S22/final/3-test.log",
+          "logSha256": "29de635857c3e563e67c0b757ce894ccbc0cf25201f760bb051077914cc156b1"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.5,
+          "log": ".sites-runtime/readability/S22/final/4-db-check.log",
+          "logSha256": "b17c3f1c30dc2e36481d47662b38ec37bae7092e82657468ee571475161158ee"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.1,
+          "log": ".sites-runtime/readability/S22/final/5-build.log",
+          "logSha256": "b28ef5c9c2b6f145bb4f6111302828abf7703c373b46ac47b648b297bda5cff4"
+        },
+        {
+          "command": "pnpm local:setup",
+          "exit": 0,
+          "seconds": 0.2,
+          "log": ".sites-runtime/readability/S22/final/6-local-setup.log",
+          "logSha256": "12310241a36c6913163cf8e42aeae88fb74f8ae3b7a1a14bf7d49d208433acda"
+        },
+        {
+          "command": "pnpm db:migrate:local",
+          "exit": 0,
+          "seconds": 0.8,
+          "log": ".sites-runtime/readability/S22/final/7-db-migrate-local.log",
+          "logSha256": "b8c342c16ecde72207b1ad2a289f887502b035db05ebcb1d2cc844d9ea651fdf"
+        },
+        {
+          "command": "pnpm test:local",
+          "exit": 0,
+          "seconds": 3.7,
+          "log": ".sites-runtime/readability/S22/final/8-test-local.log",
+          "logSha256": "47dc3f36955b62e916f94bf001fa6fa44b4eefc66ba4268deae09133b6bdc978"
+        },
+        {
+          "command": "python3 .sites-runtime/readability/S22/check-format.py",
+          "exit": 0,
+          "seconds": 22.9,
+          "log": ".sites-runtime/readability/S22/final/9-.sites-runtime-readability-S22-check-format.py.log",
+          "logSha256": "132889c81cf1b523d45114d9db3262bb6783d4f11824841e372219aff36436a7"
+        },
+        {
+          "command": "python3 .sites-runtime/readability/check-doc-links.py .sites-runtime/readability/S22/final-links.json",
+          "exit": 0,
+          "seconds": 0.1,
+          "log": ".sites-runtime/readability/S22/final/10-.sites-runtime-readability-check-doc-links.py.log",
+          "logSha256": "f63f8fa19a34b3e003fbbf15e1ecd90e067efdf456d3460e3cd9f562a8830960"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S22/final/11-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "baa42e83061e40cb03d88d63b6334022dede827cd5f990de8f6ad0a0f2ab0001",
+      "review": "Coverage reconciled: 898 tracked files = 845 Completed + 51 present held + two planning records; 13 absent receiving additions make 909 manifest entries. All Completed hashes, all present held baseline bytes, 80 used migrations/snapshots, historical/managed/vendor/assets/fixtures and indexed modes verified. No baseline file removed or renamed. Global comparison to integrated source 59d3d90: 447 byte-identical, 433 compiler-equivalent, three additional comment-only equivalent modules (five exact explanatory comments), three documentation/index changes, two development-tooling package/lock changes and ten additions (including two planning outputs). The exact existing package fields/runtime dependencies and all remaining lock bytes match baseline after removing only the pinned dev formatter additions. All other manual-review items resolved through recorded S21 preservation and the comment/compiler check. Full local pipeline and nineteen supported format selections passed except full lint, whose 71 errors/84 warnings match the integrated baseline exactly. Actual full suite count 139, no Mac platform skips. Every prior section has reviewable commits and retained hashed logs/receipts. No claim of exhaustive security hand audit, visual/provider/pilot/production acceptance or historical runtime fingerprinting.",
+      "limitations": [
+        "Overall cleanup remains Blocked: 21 receiving handoffs, 19 JSX child-preservation candidates, 13 CSS/HTML visual holds, seven exact source-spelling contracts and four BigInt independent-debug-check failures. All 64 files remain explicit; 51 present files keep baseline bytes and 13 receiving additions remain absent.",
+        "Full lint still fails with the exact inherited 71 errors/84 warnings. They were not suppressed or repaired through a behavior change.",
+        "Mac local fake-provider/migrated SQLite/controller/independent-reader evidence only; Ubuntu/Windows CI and desktop/mobile visual checks did not run.",
+        "Owner checkout, private runtime evidence, databases, processes/profiles, locks and consumed invocations were outside cleanup. Only read-only owner Git identity/clean status was checked; no new private runtime fingerprint audit or historical cause resolution is claimed.",
+        "No merge/push/PR, deploy, paid/live integration, sync/purchasing enablement, real browser/maintenance/full gate, power change or OpenSpec archive/sync occurred."
+      ],
+      "wholeProjectCoverage": {
+        "trackedFiles": 898,
+        "manifestEntries": 909,
+        "completedFiles": 845,
+        "presentHeldFiles": 51,
+        "absentReceivingFiles": 13,
+        "planningRecords": 2,
+        "allCompletedHashesVerified": true,
+        "allHeldBaselineBytesVerified": true,
+        "allIndexedModesPreserved": true,
+        "compilerEquivalentFiles": 433,
+        "additionalCommentOnlyEquivalentFiles": 3,
+        "approvedNewComments": 5,
+        "onlyDependencyChange": "Exact dev-only prettier 3.9.10; existing package fields, runtime dependencies and entire remaining lockfile byte-identical",
+        "noBaselineDeletions": true
+      },
+      "holdGroups": {
+        "Receiving integration/handoff": {
+          "count": 21,
+          "files": [
+            "docs/C4_DELIVERY_RECEIVING_LOCAL_EVIDENCE.md",
+            "docs/C4_RECEIVING_PLAN_20261026.md",
+            "docs/CURRENT_STATUS.md",
+            "docs/PANTRACK_MILESTONES.md",
+            "drizzle/0040_po_cart_deliveries.sql",
+            "drizzle/meta/0040_snapshot.json",
+            "drizzle/meta/_journal.json",
+            "scripts/po-cart-delivery-ui-check.mjs",
+            "src/app/api/po-cart-deliveries/route.ts",
+            "src/components/workspace/deliveries.css",
+            "src/components/workspace/delivery-count.tsx",
+            "src/components/workspace/durable-cart.tsx",
+            "src/components/workspace/employee-workspace.tsx",
+            "src/components/workspace/supplier-deliveries.tsx",
+            "src/db/schema.ts",
+            "src/lib/authorization.ts",
+            "src/lib/d1-po-cart-deliveries.ts",
+            "src/lib/po-cart-delivery-contract.ts",
+            "tests/po-cart-deliveries-api.mjs",
+            "tests/po-cart-deliveries-migration.mjs",
+            "tests/po-cart-deliveries.mjs"
+          ],
+          "unblocker": "Integrate or hand off the separately owned receiving feature before editing its paths."
+        },
+        "CSS/HTML visual validation": {
+          "count": 13,
+          "files": [
+            "previews/c4-order-draft/index.html",
+            "previews/c4-order-draft/styles.css",
+            "sites/coming-soon/public/404.html",
+            "sites/coming-soon/public/index.html",
+            "sites/coming-soon/public/styles.css",
+            "src/app/globals.css",
+            "src/components/workspace/cart-preview.css",
+            "src/components/workspace/inventory-layout.css",
+            "src/components/workspace/purchase-order-drafts.css",
+            "src/components/workspace/spending-limits.css",
+            "src/components/workspace/supplier-confirmation.css",
+            "src/components/workspace/task-form.css",
+            "src/components/workspace/workspace-surfaces.css"
+          ],
+          "unblocker": "Prepare a scoped formatting candidate and obtain the required desktop/mobile visual comparison."
+        },
+        "Exact source-spelling regression contract": {
+          "count": 7,
+          "files": [
+            "scripts/po-cart-ai-gate.mjs",
+            "scripts/po-cart-manager-launcher-check.mjs",
+            "scripts/po-cart-manager-preview.mjs",
+            "scripts/po-cart-second-addition-check.mjs",
+            "scripts/po-cart-second-addition-display-on-check.mjs",
+            "scripts/po-cart-worker/full-gate-audit.py",
+            "src/components/workspace/workspace.tsx"
+          ],
+          "unblocker": "Find a formatting approach compatible with existing exact source assertions/replacements; do not weaken them."
+        },
+        "JSX child-structure preservation": {
+          "count": 19,
+          "files": [
+            "src/components/workspace/a8-review-preview.tsx",
+            "src/components/workspace/a8-saved-reviews.tsx",
+            "src/components/workspace/clover-connection.tsx",
+            "src/components/workspace/exact-inventory-panel.tsx",
+            "src/components/workspace/inventory-panel.tsx",
+            "src/components/workspace/members-panel.tsx",
+            "src/components/workspace/menu-waste-recorder.tsx",
+            "src/components/workspace/payment-methods.tsx",
+            "src/components/workspace/pos-connection-status.tsx",
+            "src/components/workspace/purchase-order-drafts.tsx",
+            "src/components/workspace/purchasing-suppliers.tsx",
+            "src/components/workspace/recipe-list.tsx",
+            "src/components/workspace/recipe-modifiers.tsx",
+            "src/components/workspace/sales-exceptions.tsx",
+            "src/components/workspace/setup-register.tsx",
+            "src/components/workspace/spending-limits.tsx",
+            "src/components/workspace/stock-entry.tsx",
+            "src/components/workspace/supplier-confirmation.tsx",
+            "src/components/workspace/vendor-automation.tsx"
+          ],
+          "unblocker": "Prepare a manual candidate retaining exact emitted JSX children, then pass guard/focused tests and required UI verification."
+        },
+        "BigInt independent formatter-checker failure": {
+          "count": 4,
+          "files": [
+            "tests/inventory-order-incoming.mjs",
+            "tests/inventory-order-receipts.mjs",
+            "tests/po-cart-single-instance-maintenance.mjs",
+            "tests/sales-ingestion-contract.mjs"
+          ],
+          "unblocker": "Separately verify a formatter-checker repair, then rerun its independent debug check without weakening application tests."
+        }
+      },
+      "receipts": [
+        {
+          "path": ".sites-runtime/readability/S22/references.json",
+          "sha256": "5a5d1c3ec8032df221bcfcd7b63b9da8317c4a7c49226d6c53d9f4fde14566e9"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/source-equivalence.json",
+          "sha256": "d902a982176cb6cde6f1b76698dbe39249097d84c17fa4120876573d670800ee"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/source-equivalence.log",
+          "sha256": "41e3d2c0cdceeb4d7991eb0a7debf82f01020e182b89e1d6738fac91df1bbdb1"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/comment-additions.json",
+          "sha256": "d092749a9d946c937ee88aa0ebba494179cf3af0e74b63a7007ce927307c47a8"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/integrity.json",
+          "sha256": "12ebe5fbe66bb850aa27581b146a8d953a98864924cf6fc1569de752cb4c2a29"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/integrity.log",
+          "sha256": "8df931116b136142d70be3239b35b578d1d93304a50c226def392e137e237d8e"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/hold-groups.json",
+          "sha256": "afa2e49d7c76639ae42b09f85c8fa5b292398c3128aca6de9f78e5634a061751"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/section-record-review.json",
+          "sha256": "045c0a9bb8cf64205381c15176be876187ec8bf2a79198f72c721d9459e9145b"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/owner-preservation.json",
+          "sha256": "8ee19684ed972906881b76e1d9589946c0f074fb726915c75ef075b67460f8b6"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/format-results-hashed.json",
+          "sha256": "7452b725bcf106908380d7de5988eafcc2d3973dd1a045ec6da3876897be8884"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/final-links.json",
+          "sha256": "f94a0e2577b3fc6c3d9b9129233bbf944a6aa88740a33a182b8f5e08041d3636"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/handoff-links.json",
+          "sha256": "8653ee7e18bb4d4dc478c573cf2e92db2aa98736e0805c1fe0de44d7e7c58d12"
+        },
+        {
+          "path": ".sites-runtime/readability/S22/handoff-integrity.log",
+          "sha256": "8df931116b136142d70be3239b35b578d1d93304a50c226def392e137e237d8e"
+        }
+      ],
+      "individualFormatChecks": [
+        {
+          "command": "pnpm format:check --section S01",
+          "exit": 0,
+          "seconds": 1.0,
+          "log": ".sites-runtime/readability/S22/formats/S01.log",
+          "logSha256": "35cf384b1d1ddcad50c6e7e5cec776f3dfa73dc7de87a3237de27dd10ccc41f3"
+        },
+        {
+          "command": "pnpm format:check --section S02",
+          "exit": 0,
+          "seconds": 0.5,
+          "log": ".sites-runtime/readability/S22/formats/S02.log",
+          "logSha256": "13868c67a90b304ea50eb6de330d6bb73d1b37219921f902dee3aeda3d02af26"
+        },
+        {
+          "command": "pnpm format:check --section S03",
+          "exit": 0,
+          "seconds": 1.2,
+          "log": ".sites-runtime/readability/S22/formats/S03.log",
+          "logSha256": "0b23e4fcc64d01b3fcd0b78af7fda32260c98c61ea9b7c1bfbc32e06dd373ba2"
+        },
+        {
+          "command": "pnpm format:check --section S04",
+          "exit": 0,
+          "seconds": 0.5,
+          "log": ".sites-runtime/readability/S22/formats/S04.log",
+          "logSha256": "5af932fd9ab7fc76e6b6e7ee8c0a9ddcfd3cfd1014e05b15db82499ae68ac9a2"
+        },
+        {
+          "command": "pnpm format:check --section S05",
+          "exit": 0,
+          "seconds": 0.7,
+          "log": ".sites-runtime/readability/S22/formats/S05.log",
+          "logSha256": "c1bec001f2ba9fb16cdec7eaca2a8c89e2e2db60fbc37f6298b814bca24c2fa6"
+        },
+        {
+          "command": "pnpm format:check --section S06",
+          "exit": 0,
+          "seconds": 1.7,
+          "log": ".sites-runtime/readability/S22/formats/S06.log",
+          "logSha256": "64103fae9a700f6d02a74836101fe6052d653e09f31116b9f90811e231e09bd6"
+        },
+        {
+          "command": "pnpm format:check --section S07",
+          "exit": 0,
+          "seconds": 1.4,
+          "log": ".sites-runtime/readability/S22/formats/S07.log",
+          "logSha256": "e5577af0708cbe7a033ab10373d398ea4d131e39252a927fb56e4aa23a8ab313"
+        },
+        {
+          "command": "pnpm format:check --section S08",
+          "exit": 0,
+          "seconds": 1.2,
+          "log": ".sites-runtime/readability/S22/formats/S08.log",
+          "logSha256": "849010081569ee09f354ff712934a4be2adaecbccb95f7927f814174e363cffd"
+        },
+        {
+          "command": "pnpm format:check --section S09",
+          "exit": 0,
+          "seconds": 1.0,
+          "log": ".sites-runtime/readability/S22/formats/S09.log",
+          "logSha256": "a4761cb5069074b50ebb3b0692fdf2dae741588c2ad5a3a303fd6ffe582bc344"
+        },
+        {
+          "command": "pnpm format:check --section S10",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S22/formats/S10.log",
+          "logSha256": "7a1b821209203f73b52727f59fbc4c47eef77776614212c2d753738f05928403"
+        },
+        {
+          "command": "pnpm format:check --section S11",
+          "exit": 0,
+          "seconds": 1.5,
+          "log": ".sites-runtime/readability/S22/formats/S11.log",
+          "logSha256": "92f85fc1b37fad04164fa903c6e5eb0b18740b8dff14b43819836c6d8fac320c"
+        },
+        {
+          "command": "pnpm format:check --section S12",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S22/formats/S12.log",
+          "logSha256": "15580fcbb539967b22e83af5f6ae56b69fb00ef0685a1e5c2dc2587bec31061e"
+        },
+        {
+          "command": "pnpm format:check --section S13",
+          "exit": 0,
+          "seconds": 1.3,
+          "log": ".sites-runtime/readability/S22/formats/S13.log",
+          "logSha256": "68cb019dfff1a75ce590a910fb35f516486eed12cd9bee359fc1dab265e1e561"
+        },
+        {
+          "command": "pnpm format:check --section S15",
+          "exit": 0,
+          "seconds": 0.7,
+          "log": ".sites-runtime/readability/S22/formats/S15.log",
+          "logSha256": "f499c8487cea9890b85f63a0125717745228a8face11077a4e87ad7a04a89bed"
+        },
+        {
+          "command": "pnpm format:check --section S16",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S22/formats/S16.log",
+          "logSha256": "bf894d5a651240763dd93ccf7eca51a5e15df90e33590a50b8400970d3b3db1d"
+        },
+        {
+          "command": "pnpm format:check --section S17",
+          "exit": 0,
+          "seconds": 0.8,
+          "log": ".sites-runtime/readability/S22/formats/S17.log",
+          "logSha256": "06e0da4b68167794ae5c4c39aaca353eb6ef12e35dbe9d75bd6a1854ff34f0bf"
+        },
+        {
+          "command": "pnpm format:check --section S18",
+          "exit": 0,
+          "seconds": 0.7,
+          "log": ".sites-runtime/readability/S22/formats/S18.log",
+          "logSha256": "6c299733c40eb9272e9c605aa1588fb37378d4774295063c0e6642eb67602f5f"
+        },
+        {
+          "command": "pnpm format:check --section S19",
+          "exit": 0,
+          "seconds": 4.4,
+          "log": ".sites-runtime/readability/S22/formats/S19.log",
+          "logSha256": "d41555e5a08d8e86c80fca0c5031a7ba294ecf188025fabda0c7fb9bc5925ba5"
+        },
+        {
+          "command": "pnpm format:check --section S20",
+          "exit": 0,
+          "seconds": 2.0,
+          "log": ".sites-runtime/readability/S22/formats/S20.log",
+          "logSha256": "37a950b935abdd3ec5df40777160a226141221942659b7a40fb5a39d2b4b0abd"
+        }
+      ],
+      "nonPlanningFilesChanged": 449,
+      "safeFilesReviewedUnchanged": 396,
+      "overallCleanupStatus": "Blocked",
+      "sourceBinding": "Frozen against integrated source 59d3d90; source/config checks exclude only the two declared mutable planning/outcome records. Preliminary whole-tree comparison includes pre-outcome hashes for the two planning outputs; these are excluded from frozen code/configuration identity and checked separately as documentation.",
+      "postOutcomeChecks": [
+        {
+          "command": "python3 .sites-runtime/readability/check-doc-links.py .sites-runtime/readability/S22/handoff-links.json",
+          "exit": 0,
+          "documents": 209,
+          "relativeReferences": 1251,
+          "missingTargets": 0
+        },
+        {
+          "command": "node .sites-runtime/readability/S22/verify-integrity.mjs",
+          "exit": 0,
+          "note": "Repeated after only the two outcome records changed; code and all preserved/Completed hashes remain unchanged."
+        },
+        {
+          "command": "git diff --check 59d3d90",
+          "exit": 0,
+          "note": "Complete cleanup diff, including outcome records."
+        }
       ]
     }
   }
