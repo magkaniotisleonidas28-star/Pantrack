@@ -1,7 +1,7 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration precedes S02.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S02 is next**.
 
 ## Task-management state and overall progress
 
@@ -11,7 +11,7 @@ Current outcome: planning and **S01 tooling/configuration are Completed**; upstr
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
-- Inventory: **882 committed files**, all assigned once; **13 receiving-branch additions** separately reserved (untracked at survey start or added during concurrent development).
+- Inventory: **882 initial committed files**, all assigned once, plus **6 upstream archive additions**; **13 receiving-branch additions** separately reserved (untracked at survey start or added during concurrent development).
 - Structural scan: 525 JS/TS modules parsed, 2,728 import/re-export/dynamic-import edges inspected, 1,336 resolved local edges. Type-only edges are included; this is not a runtime call-graph proof.
 - Readability scan: 550 JS/TS/CSS/Python/shell code files measured; 492 contain a line longer than 120 characters. This is a triage measure, not a defect count.
 - Detailed per-module behavioral review remains Pending in its own section. The architecture survey does not claim every function has already been deeply audited.
@@ -87,13 +87,13 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S00 | Architecture survey, preservation checkpoint and complete plan | 2 new planning artifacts | Completed |
 | S01 | Project configuration, tooling and baseline checks | 38 + 7 cleanup additions | Completed |
 | S02 | Shared primitives, bounded requests and public errors | 3 | Pending |
-| S03 | Shared data models, exact quantities and contracts | 24 | Pending |
+| S03 | Shared data models, exact quantities and contracts | 24 + 1 upstream | Pending |
 | S04 | D1 access and immutable database history | 84 | Pending |
 | S05 | Authentication, tenant authorization and memberships | 9 | Pending |
 | S06 | Inventory, recipes, waste and replenishment services | 26 | Pending |
 | S07 | Sales ingestion, register bridge and Clover | 16 | Pending |
 | S08 | Supplier registry, draft foundations and gated purchasing | 9 | Pending |
-| S09 | Purchase-order history, export models and document downloads | 11 | Pending |
+| S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Pending |
 | S10 | Durable cart authorization, jobs and spending limits | 3 | Pending |
 | S11 | Browser-session services and worker implementation | 28 | Pending |
 | S12 | Supplier confirmation, incoming stock and receiving | 1 | Pending |
@@ -103,9 +103,9 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S16 | Inventory, recipes, waste and POS workspace components | 14 | Pending |
 | S17 | Purchasing, cart, spending and document workspace components | 17 | Pending |
 | S18 | Owned styles, static site, standalone previews and assets | 32 | Pending |
-| S19 | Test harnesses, domain suites and fixtures | 148 | Pending |
+| S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Pending |
 | S20 | Operational CLIs, lifecycle diagnostics, shell and Python audits | 88 | Pending |
-| S21 | Documentation, architecture navigation and managed instructions | 218 | Pending |
+| S21 | Documentation, architecture navigation and managed instructions | 218 + 1 upstream | Pending |
 | S22 | Final consistency, preservation review and handoff | whole project | Pending |
 
 ## S00 — Architecture survey and complete plan
@@ -585,3 +585,9 @@ The final cleanup report must distinguish completed formatting/organization work
 ### S01 start — 2026-10-26
 
 Main and the planning baseline remain `bb8f339`. The receiving branch is committed and clean at `46f98d7`; its only package change adds `cart:delivery:check`. S01 will preserve that handoff and every runtime version/configuration. Formatter availability: no Prettier/Black/Ruff binary or installed Prettier package found. Evaluating one exact, development-only Prettier pin rather than an ad hoc source rewriter. Baseline checks run before formatting; inherited lint findings will remain separate from regressions.
+
+### Upstream integration checkpoint — 2026-10-26
+
+After S01 commit `dc47f5c`, upstream main `59d3d90` merged without conflict. Its six new files are assigned to S03 (archive contract), S09 (archive service/source adapter), S19 (archive helper/suite), and S21 (historical local evidence, unchanged review only). Three upstream status/navigation documents are recorded against that reference. This imports the accepted feature without changing it; receiving remains independently held. Combined-source typecheck, five focused suites, all 139 suites, 40-migration schema/fresh SQLite check, build, local setup/apply/HTTP smoke, and diff check passed against frozen source. Full lint failed with 71 errors/84 warnings: four unused-variable/import warnings came from the unchanged upstream archive modules/test. Logs are under `.sites-runtime/readability/S01/integration/`; command exits, durations, log hashes and source digest are recorded in the inventory integration entry. No section beyond S01 has started cleanup.
+
+Integration source merge: `f42c790` (upstream ref `59d3d90`). The source is intentionally frozen at that integrated checkpoint for sequential cleanup; later upstream activity will be reconciled at S22 without overwriting active work.

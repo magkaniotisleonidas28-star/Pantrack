@@ -682,6 +682,20 @@
       "results": []
     },
     {
+      "path": "docs/C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md",
+      "section": "S21",
+      "status": "Pending",
+      "policy": "historical-evidence-review-only",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "upstreamAdded": true,
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "6f409558562d518b7f6293f0a7845c31116c05602ae971f958c334f00848a24a",
+      "results": [
+        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section."
+      ]
+    },
+    {
       "path": "docs/C4_DRAFT_PDF_LOCAL_EVIDENCE.md",
       "section": "S21",
       "status": "Pending",
@@ -1259,7 +1273,11 @@
       "policy": "receiving-handoff-required",
       "baselineTracked": true,
       "baselineSha256": "89c3afd6fae341011afa2a750b74b4645cdec21d500ef7ee072d4eb77f82050a",
-      "results": []
+      "results": [
+        "Upstream archive integration at 59d3d90 changed this file; no cleanup edit. Receiving handoff holds remain where present."
+      ],
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "d2fdbfc91b0019549d29c57714dae032e2aef0d77936410acfdc4c17fc3ff0a8"
     },
     {
       "path": "docs/FORM_UI_LOCAL_EVIDENCE.md",
@@ -1583,7 +1601,11 @@
       "policy": "receiving-handoff-required",
       "baselineTracked": true,
       "baselineSha256": "036bbe5947ef424991ae179ca52b9bc84e3af6b3d1aa7fc9b02206eb54e5d840",
-      "results": []
+      "results": [
+        "Upstream archive integration at 59d3d90 changed this file; no cleanup edit. Receiving handoff holds remain where present."
+      ],
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "5d3380a9009882f3b86e251bf4f3bf849facac797c417c3febc927cfa5acfc81"
     },
     {
       "path": "docs/PO_AI_CART_INTEGRATION_ROADMAP.md",
@@ -1601,7 +1623,11 @@
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "8ebffd2783ba625cd52b0e1da43db94f7d8332320298e3d24d0072a24dd485ff",
-      "results": []
+      "results": [
+        "Upstream archive integration at 59d3d90 changed this file; no cleanup edit. Receiving handoff holds remain where present."
+      ],
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "d56dbe057a6f21f8830d39a2d248909339b313fb6c03a310870561f4fdf78975"
     },
     {
       "path": "docs/PURCHASE_ORDER_ROLLOUT.md",
@@ -6599,6 +6625,49 @@
       "results": []
     },
     {
+      "path": "src/lib/purchase-order-document-archive-contract.ts",
+      "section": "S03",
+      "status": "Pending",
+      "policy": "review-before-cleanup",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "upstreamAdded": true,
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "4309ef5e421bfee808cfa339576ec338643c74e263aa2a6bd9e7585a46395391",
+      "results": [
+        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section."
+      ]
+    },
+    {
+      "path": "src/lib/purchase-order-document-archive-sources.ts",
+      "section": "S09",
+      "status": "Pending",
+      "policy": "review-before-cleanup",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "upstreamAdded": true,
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "b4a0a3a4334eaf3ceb0ad6da9a3e50b41eb65558c119ec0ece861d1e910fd0e3",
+      "results": [
+        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section."
+      ]
+    },
+    {
+      "path": "src/lib/purchase-order-document-archive.ts",
+      "section": "S09",
+      "status": "Pending",
+      "policy": "review-before-cleanup",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "upstreamAdded": true,
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "0779521b46c0e2450da7de500ffcd0f7b1ab8a6a6f3af2d643926c2e3525dd25",
+      "results": [
+        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section.",
+        "Integration lint baseline: two inherited unused-variable/import warnings in this file; do not change semantics or suppress rules to hide them."
+      ]
+    },
+    {
       "path": "src/lib/purchase-order-documents.ts",
       "section": "S09",
       "status": "Pending",
@@ -7042,6 +7111,20 @@
       "baselineTracked": true,
       "baselineSha256": "c7bca6529640da81c8a857a4a9436f24764fcf6fe971cac57c30afb070bb6786",
       "results": []
+    },
+    {
+      "path": "tests/helpers/document-archive.mjs",
+      "section": "S19",
+      "status": "Pending",
+      "policy": "review-before-cleanup",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "upstreamAdded": true,
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "5eb0b7c59e199be1984c6e1c020962f69d5b1265ca6e75fdd7738786f594c822",
+      "results": [
+        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section."
+      ]
     },
     {
       "path": "tests/helpers/po-cart-authorizations.mjs",
@@ -7872,6 +7955,21 @@
       "results": []
     },
     {
+      "path": "tests/purchase-order-document-archive.mjs",
+      "section": "S19",
+      "status": "Pending",
+      "policy": "review-before-cleanup",
+      "baselineTracked": false,
+      "baselineSha256": null,
+      "upstreamAdded": true,
+      "reviewBaselineCommit": "59d3d90",
+      "reviewBaselineSha256": "87c97fa42157a723ac63288f4aadd2ce010369d3ed422335c5ec362497531fa6",
+      "results": [
+        "Integrated unchanged from origin/main archive slice; review belongs to its assigned future section.",
+        "Integration lint baseline: two inherited unused-variable/import warnings in this file; do not change semantics or suppress rules to hide them."
+      ]
+    },
+    {
       "path": "tests/purchase-order-documents.mjs",
       "section": "S19",
       "status": "Pending",
@@ -8296,6 +8394,99 @@
         "Readability-only formatting/tooling delta reviewed; see docs/readability/S01-verification.json. Inherited lint findings retained separately."
       ],
       "cleanupSha256": "e7eec7a52746af7710bd84e8aacf7ae35d5e13037f0c8f840403f72d4c5dbf7c"
+    }
+  ],
+  "integrations": [
+    {
+      "commit": "59d3d90",
+      "mergeCommit": "f42c790ef04889fc4c2d70cb4bbd6bb2645055e9",
+      "filesChanged": [
+        "docs/C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md",
+        "docs/CURRENT_STATUS.md",
+        "docs/PANTRACK_MILESTONES.md",
+        "docs/PROJECT_PROGRESS_PLAIN_LANGUAGE.md",
+        "src/lib/purchase-order-document-archive-contract.ts",
+        "src/lib/purchase-order-document-archive-sources.ts",
+        "src/lib/purchase-order-document-archive.ts",
+        "tests/helpers/document-archive.mjs",
+        "tests/purchase-order-document-archive.mjs"
+      ],
+      "newFiles": 6,
+      "cleanupEdits": false,
+      "verification": [
+        {
+          "command": "pnpm lint",
+          "exit": 1,
+          "seconds": 8.0,
+          "log": ".sites-runtime/readability/S01/integration/0-lint.log",
+          "logSha256": "13d5ed6261a7f03651c9c13b62d9819a51979e4dda70cc729d7213496b1c8148"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 1.9,
+          "log": ".sites-runtime/readability/S01/integration/1-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test code-readability local-auth local-d1-database ci-tool-pins ci-migrations",
+          "exit": 0,
+          "seconds": 2.5,
+          "log": ".sites-runtime/readability/S01/integration/2-test.log",
+          "logSha256": "0ddcace187ff7a0c092656399ec8037b1d1376328372dc66d983513957d8e25f"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.1,
+          "log": ".sites-runtime/readability/S01/integration/3-test.log",
+          "logSha256": "8530147f73884ad770c152af960b35811c11e03a94a61f5f5042c7c9ac6f563c"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S01/integration/4-db-check.log",
+          "logSha256": "832e0cf34a62ce3b762bb3425d019729e33f0ee2b25c601e59685c6638719cd4"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 5.9,
+          "log": ".sites-runtime/readability/S01/integration/5-build.log",
+          "logSha256": "61d729da609717060cbde5ca23bbf2e7fc80fd02db5a1f48ff08df6c05fd6ce6"
+        },
+        {
+          "command": "pnpm local:setup",
+          "exit": 0,
+          "seconds": 0.2,
+          "log": ".sites-runtime/readability/S01/integration/6-local-setup.log",
+          "logSha256": "12310241a36c6913163cf8e42aeae88fb74f8ae3b7a1a14bf7d49d208433acda"
+        },
+        {
+          "command": "pnpm db:migrate:local",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S01/integration/7-db-migrate-local.log",
+          "logSha256": "9ed7b4bf5b2ea02f8827dfab32fdb84c47153e97d42f98d57ec2c17d707d4d3c"
+        },
+        {
+          "command": "pnpm test:local",
+          "exit": 0,
+          "seconds": 3.7,
+          "log": ".sites-runtime/readability/S01/integration/8-test-local.log",
+          "logSha256": "47dc3f36955b62e916f94bf001fa6fa44b4eefc66ba4268deae09133b6bdc978"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S01/integration/9-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "f5bb2610bd604826e5ee0c83858492a910467c08c0775c4298a397e70538735b",
+      "outcome": "139 suites and complete isolated local pipeline pass; full lint retains 71 errors and 84 warnings (four warnings added by upstream archive source; no cleanup regression)."
     }
   ]
 }
