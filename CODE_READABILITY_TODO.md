@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S16** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S17** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **9 of 22 Completed; 7 Blocked (recorded handoffs/holds); 0 In Progress; 6 Pending**.
+- Cleanup sections: **9 of 22 Completed; 8 Blocked (recorded handoffs/holds); 0 In Progress; 5 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -101,7 +101,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S14 | Shared UI primitives and vendor boundaries | 62 | Completed |
 | S15 | Application entrypoints, identity pages and workspace shell | 15 | Blocked: receiving/JSX/source pins; safe files verified |
 | S16 | Inventory, recipes, waste and POS workspace components | 14 | Blocked: ten JSX holds; safe files verified |
-| S17 | Purchasing, cart, spending and document workspace components | 17 | Pending |
+| S17 | Purchasing, cart, spending and document workspace components | 17 | Blocked: receiving/JSX/source pins; safe files verified |
 | S18 | Owned styles, static site, standalone previews and assets | 32 | Pending |
 | S19 | Test harnesses, domain suites and fixtures | 148 + 2 upstream | Pending |
 | S20 | Operational CLIs, lifecycle diagnostics, shell and Python audits | 88 | Pending |
@@ -546,23 +546,33 @@ Commits group recipe/layout and register/waste flows. Rollback: those two source
 
 ## S17 — Purchasing, cart, spending and document workspace components
 
-Status: Pending. Depends on: S16; S08–S12.
+Status: Blocked for receiving, JSX children and source pins; eight safe files verified. Depends on: S16; S08–S12.
 
 **Files:** Remaining purchasing workspace components and client/editor models: purchase-order drafts/downloads/history, supplier registry, durable cart, spending limits, supplier confirmation, manager/A8 reviews, vendor automation, payment methods and product catalog.
 
-- [ ] S17.1 — Expand large components and dense client request/state helpers; group existing edit/review/export/prepare/confirm/reconcile actions.
-- [ ] S17.2 — Clarify request identity, pending/disposed continuation guards, cancellation, revision changes and refresh behavior.
-- [ ] S17.3 — Document how draft editor models and transport clients protect unsaved data, role changes and expected versions.
-- [ ] S17.4 — Preserve prompts, buttons/labels, prices/totals, CSS/DOM, stable keys, hook order and dependency arrays, document provenance and all human purchasing controls. Await receiving UI handoff if introduced.
+**Preflight holds:** Eight existing modules remain unchanged after strict JSX-child refusal; spending limits is also source-text pinned. Three receiving-owned UI files remain held separately. Eight safe modules continue; exact per-file reasons are in the inventory and `.sites-runtime/readability/S17/candidate-review.json`.
+
+- [!] S17.1 — Eight safe components/models/clients expanded. Eight JSX-changing/source-pinned modules and three receiving-owned files remain Blocked unchanged.
+- [x] S17.2 — Clarify request identity, pending/disposed continuation guards, cancellation, revision changes and refresh behavior.
+- [x] S17.3 — Document how draft editor models and transport clients protect unsaved data, role changes and expected versions.
+- [!] S17.4 — Safe source prompts/labels, totals, DOM/classes/keys/hooks, provenance and purchasing controls verified unchanged. Strict JSX/source-pin and receiving UI handoffs remain Blocked.
 
 **Focused command:** `pnpm test purchase-order-downloads purchase-order-history-downloads purchase-order-history-products purchase-order-history-dates spending-limits-screen po-cart-manager-client po-cart-confirmations`.
 
 **Verification:** Run focused lifecycle/client/screen suites, scoped lint, typecheck/build and full tests for extracted helpers. Preserve cancellation/revocation/unsaved-data tests and visual equivalence; no checkout or supplier access.
 
-- [ ] S17.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S17.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S17.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S17.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** Eight safe modules fully read and formatted: cart preview, manager operations, catalog, saved/history download controls, durable-cart intent client, purchasing client/money helpers and the draft editor model. Twenty-one whitespace-only declaration/method boundaries separate schemas/types/requests/editor projections/handlers. Similar money helpers retain their distinct accepted inputs and messages; no generic abstraction or component extraction was introduced.
+
+All eight match pre-section `7ac5be2` complete types/syntax/comments/literals/emitted runtime and JSX children. DOM/text/classes/ARIA/props/keys, hooks/effect dependencies/event order, actor/company/order storage scope, permanent request UUIDs and matching acknowledgments, strict parsing, unknown outcomes, snapshot/registry revisions, exact money, cancellation/disposal/controller refs, formats/provenance and human purchasing controls are unchanged. Submission/checkout remains disabled.
+
+**Eleven explicit holds:** eight existing candidates change React text-child boundaries: A8 review/saved reviews, payment methods, PO drafts, purchasing suppliers, spending limits, supplier confirmation and vendor automation. Spending limits also has existing source-text pins in `spending-limits-screen.mjs`. All remain byte-identical. The receiving-owned durable-cart component stays byte-identical; two delivery additions remain absent. No cleanup or deep manual audit is claimed for held implementations. Per-file refusals/equivalence receipts: `.sites-runtime/readability/S17/`.
+
+All seven focused suites above passed before and after; full `pnpm test` passed all 139 suites, including the draft editor reconstruction/difference/exact-cents assertions in `purchase-order-review`. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. **Scoped lint exited 1 with one error/two warnings**, matching the integrated baseline by file/rule/message for the safe selection. No suppression or hook/state behavior change. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S17`. No visible instruction/runtime changed in safe sources, so no browser/pixel walkthrough ran; local/macOS fake-provider evidence only.
+
+Commits group editor/transports, download lifetimes and preview/catalog/operations. Rollback: those three source/docs commits only. S18 can independently review styles/static/vendor assets without changing the held UI contracts; all eleven holds remain open.
 
 ## S18 — Owned styles, static site, standalone previews and assets
 
@@ -683,6 +693,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S14 | 62 vendor files reviewed unchanged; 348 exports and import/hook/consumer inventory; nine directly used primitive modules | All baseline hashes preserved; guard suite, scoped lint under unchanged vendor exceptions, typecheck/build/diff pass | Documentation-only local review commit; no vendor rewrite or S14 hold; S15 next |
 | 2026-10-26 / S15 | Eleven safe page/auth/portal/form/theme/navigation files formatted; one re-export unchanged; five declaration boundaries | Three baseline/four final focused and all 139 suites; equivalence/format/typecheck/db/build/local setup/apply/HTTP/diff pass; scoped inherited lint 6 errors/3 warnings; incomplete source-pin run retained | Two local commits; receiving employee shell, members-panel JSX and workspace source pins remain Blocked; independent S16 next |
 | 2026-10-26 / S16 | Four safe inventory-layout/recipe/register/waste components formatted; two declaration boundaries; ten JSX candidates held unchanged | Seven focused baseline/final and all 139 suites; equivalence/format/typecheck/db/build/diff pass; scoped inherited lint one error/three warnings matched | Two local commits; ten JSX-child holds remain Blocked; independent S17 next |
+| 2026-10-26 / S17 | Eight safe purchasing/cart/catalog/download/client/editor modules formatted; 21 declaration/method boundaries | Seven focused baseline/final and all 139 suites; equivalence/format/typecheck/db/build/diff pass; scoped inherited lint one error/two warnings matched | Three local commits; eight JSX/source-pin and three receiving UI holds remain Blocked; independent S18 next |
 
 ## Final report requirements
 

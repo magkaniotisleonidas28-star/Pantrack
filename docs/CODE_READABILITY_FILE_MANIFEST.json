@@ -7484,20 +7484,24 @@
     {
       "path": "src/components/workspace/a8-review-preview.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a425ab9d5ce9deac331f7195abe7b8a611083fab9164dff52f092e45de0c4f15",
-      "results": []
+      "results": [
+        "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/a8-review-preview.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
+      ]
     },
     {
       "path": "src/components/workspace/a8-saved-reviews.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "df537f5d60a15da4436382493c235c4f23f101ae7e8a6c5eba6803bd07e615ff",
-      "results": []
+      "results": [
+        "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/a8-saved-reviews.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
+      ]
     },
     {
       "path": "src/components/workspace/cart-preview.css",
@@ -7511,11 +7515,15 @@
     {
       "path": "src/components/workspace/cart-preview.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "07939305bd9c5dcf47c0cd3091a427a1dc651510fecf2429cc71fea7da9b8518",
-      "results": []
+      "results": [
+        "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
+        "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
+      ],
+      "cleanupSha256": "f9ca2e842ebbdcc8fb12d65fbd303205b803b57da600c7d7f3267463ee0b5f34"
     },
     {
       "path": "src/components/workspace/clover-connection.tsx",
@@ -7562,11 +7570,15 @@
     {
       "path": "src/components/workspace/durable-cart-client.ts",
       "section": "S17",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3fe2d0135a209f7a84c44c51becc23ce49e37bf8c5cd598a01f38cb15110bb0e",
-      "results": []
+      "results": [
+        "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
+        "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
+      ],
+      "cleanupSha256": "bcf0927b815c01579b57ae21dbf64c52ca7edb042ec46f78c328fc549a4984ae"
     },
     {
       "path": "src/components/workspace/durable-cart.tsx",
@@ -7633,11 +7645,15 @@
     {
       "path": "src/components/workspace/manager-operations.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "9469ededbc5407ca480609620bb11c0c88d626358c29e24740ed877a63cc4deb",
-      "results": []
+      "results": [
+        "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
+        "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
+      ],
+      "cleanupSha256": "4190c0bcab41f5e7a1264642a7f12be5ffe32adf290820b9a05bf5b97692564a"
     },
     {
       "path": "src/components/workspace/members-panel.tsx",
@@ -7665,11 +7681,13 @@
     {
       "path": "src/components/workspace/payment-methods.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "353453585dac5f6b8dd274ab488a10388c27c49d42be72d74fb2c1bff08e35b9",
-      "results": []
+      "results": [
+        "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/payment-methods.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
+      ]
     },
     {
       "path": "src/components/workspace/pos-connection-status.tsx",
@@ -7685,20 +7703,28 @@
     {
       "path": "src/components/workspace/product-catalog.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3c4f97bc70cae88f38efb44c08f86eac4cadd2bbb6d6f95d26f23fa1216650c3",
-      "results": []
+      "results": [
+        "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
+        "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
+      ],
+      "cleanupSha256": "987c02ad4f47b3bfa5323c1a4ea2ee37d298fae08757d4ba6ff0ad520c99336c"
     },
     {
       "path": "src/components/workspace/purchase-order-downloads.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "49498216003e698b099e056b6e10ef30264301a69e61725703e29cf1d035e9a5",
-      "results": []
+      "results": [
+        "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
+        "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
+      ],
+      "cleanupSha256": "c62536011c11859fc3a2a11dce61aba2b7aa8350583861f2e98e7d3234d15316"
     },
     {
       "path": "src/components/workspace/purchase-order-drafts.css",
@@ -7712,47 +7738,63 @@
     {
       "path": "src/components/workspace/purchase-order-drafts.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "e74db3cc0d1ffcca620975595f1efca2f8848fe521b0dec2dd887222661713d8",
-      "results": []
+      "results": [
+        "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/purchase-order-drafts.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
+      ]
     },
     {
       "path": "src/components/workspace/purchase-order-editor-model.ts",
       "section": "S17",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "cb62877d066bbd85060412e163a6c226a9cb7b148313116c2034565ebaa47faa",
-      "results": []
+      "results": [
+        "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
+        "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
+      ],
+      "cleanupSha256": "1fb09844b71a648fba74a164d432ecc7a286b52d7a9f6f3a816cac1ec211d29d"
     },
     {
       "path": "src/components/workspace/purchase-order-history-downloads.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "bd51325a31a96a28a3530c91f0da93d2e92cbd13bd9c95c6e19823bc77bdc73e",
-      "results": []
+      "results": [
+        "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
+        "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
+      ],
+      "cleanupSha256": "0410730ffb1419b983bf25f8b0d6c008f9023fdfca33cd543d3f94da0e3d0313"
     },
     {
       "path": "src/components/workspace/purchasing-client.ts",
       "section": "S17",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "25f1736148c99da853fa4cee26b073fbac5f66e87aba790d7ab506b7054ca915",
-      "results": []
+      "results": [
+        "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
+        "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
+      ],
+      "cleanupSha256": "c5b7e187b0dcdf67c1fd4d14ad98465c397e97a5ef9245a54486058d021182d0"
     },
     {
       "path": "src/components/workspace/purchasing-suppliers.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "293546e4810e3d735146af3fa4d49cf593ba7395d391c3f809d237e34eec8750",
-      "results": []
+      "results": [
+        "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/purchasing-suppliers.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
+      ]
     },
     {
       "path": "src/components/workspace/recipe-builder.tsx",
@@ -7836,11 +7878,13 @@
     {
       "path": "src/components/workspace/spending-limits.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "07fb99d97819a37d4f31b6ab970c48c5d52df7e354a6a597757cf173969df819",
-      "results": []
+      "results": [
+        "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/spending-limits.tsx Also source-text pinned. Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
+      ]
     },
     {
       "path": "src/components/workspace/stock-entry.tsx",
@@ -7865,11 +7909,13 @@
     {
       "path": "src/components/workspace/supplier-confirmation.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "e94b63f2cb4eec058b7f139274bf9a7ed64567a10dbb6d584c3b4821b9337ce4",
-      "results": []
+      "results": [
+        "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/supplier-confirmation.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
+      ]
     },
     {
       "path": "src/components/workspace/supplier-deliveries.tsx",
@@ -7905,11 +7951,13 @@
     {
       "path": "src/components/workspace/vendor-automation.tsx",
       "section": "S17",
-      "status": "Pending",
+      "status": "Blocked",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "fe035859189a3905405a2a40f678e92ae4b94ac6481569c4da38a46dccaa41d1",
-      "results": []
+      "results": [
+        "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/vendor-automation.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
+      ]
     },
     {
       "path": "src/components/workspace/waste-recorder.tsx",
@@ -12450,6 +12498,118 @@
         {
           "path": ".sites-runtime/readability/S16/equivalence.log",
           "sha256": "46a42621e82dc6066562833621490a9e5fcadcba83718376e7e51dbb5b259141"
+        }
+      ],
+      "commits": [
+        "3a0719e",
+        "7ac5be2"
+      ]
+    },
+    "S17": {
+      "outcome": "Blocked for receiving, JSX children and source pins; eight safe files verified",
+      "safeFilesCompleted": 8,
+      "heldFiles": [
+        "src/components/workspace/a8-review-preview.tsx",
+        "src/components/workspace/a8-saved-reviews.tsx",
+        "src/components/workspace/delivery-count.tsx",
+        "src/components/workspace/durable-cart.tsx",
+        "src/components/workspace/payment-methods.tsx",
+        "src/components/workspace/purchase-order-drafts.tsx",
+        "src/components/workspace/purchasing-suppliers.tsx",
+        "src/components/workspace/spending-limits.tsx",
+        "src/components/workspace/supplier-confirmation.tsx",
+        "src/components/workspace/supplier-deliveries.tsx",
+        "src/components/workspace/vendor-automation.tsx"
+      ],
+      "preSectionCommit": "7ac5be2",
+      "codeCommits": [
+        "style(readability): clarify purchasing editor and transport clients",
+        "style(readability): expand saved draft and history download controls",
+        "style(readability): expand cart preview and catalog workflows"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm test purchase-order-downloads purchase-order-history-downloads purchase-order-history-products purchase-order-history-dates spending-limits-screen po-cart-manager-client po-cart-confirmations",
+          "exit": 0,
+          "suites": 7,
+          "log": ".sites-runtime/readability/S17/baseline.log",
+          "logSha256": "7bafdd4eddfb5c0d116fcc708e299efce008e6b119b248d676bd6b0f14f68708"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm test purchase-order-downloads purchase-order-history-downloads purchase-order-history-products purchase-order-history-dates spending-limits-screen po-cart-manager-client po-cart-confirmations",
+          "exit": 0,
+          "seconds": 20.5,
+          "log": ".sites-runtime/readability/S17/final/0-test.log",
+          "logSha256": "5b4ad75f039724309d1a2a356d19924eb6f6de67aeaca85591eb27b602ee0954"
+        },
+        {
+          "command": "pnpm format:check --section S17",
+          "exit": 0,
+          "seconds": 0.8,
+          "log": ".sites-runtime/readability/S17/final/1-format-check.log",
+          "logSha256": "06e0da4b68167794ae5c4c39aaca353eb6ef12e35dbe9d75bd6a1854ff34f0bf"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/components/workspace/cart-preview.tsx src/components/workspace/durable-cart-client.ts src/components/workspace/manager-operations.tsx src/components/workspace/product-catalog.tsx src/components/workspace/purchase-order-downloads.tsx src/components/workspace/purchase-order-editor-model.ts src/components/workspace/purchase-order-history-downloads.tsx src/components/workspace/purchasing-client.ts",
+          "exit": 1,
+          "seconds": 1.2,
+          "log": ".sites-runtime/readability/S17/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "5ce13897d1af9a219f2a301dad85c8a276fc7a88468e329a4f2706d2d88b80ee"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 2.8,
+          "log": ".sites-runtime/readability/S17/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.7,
+          "log": ".sites-runtime/readability/S17/final/4-test.log",
+          "logSha256": "f3ab458e0d511605c05136b75878374896bd9f7ba129f53cfa5250544d8e6978"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S17/final/5-db-check.log",
+          "logSha256": "18de1934c79edbc58dbfd86721a744ddb48c21ffe0faddb4ba9ab9746096783f"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.1,
+          "log": ".sites-runtime/readability/S17/final/6-build.log",
+          "logSha256": "f567a30cc484c6645232d34fbdabb5f1cae3504639324ad9e929c8b625a469ae"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S17/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "90cd4b88cac353eb3f7cda85e42c7cdb4e58a7ddf31c62fd78dd9c8b4a645ce2",
+      "review": "Eight safe modules fully read: cart preview, manager operations, catalog, saved/history download controls, durable intent client, purchasing transport/money helpers and draft editor model. Consistent formatting and 21 whitespace-only declaration/method boundaries. Original request/UUID/storage scope, strict parsing/receipt recovery, revision/registry mappings, string/BigInt money, cancellation/disposal refs, hook/state/event order, all native formats/provenance, UI DOM/text/classes/keys and purchasing controls unchanged. No extraction or consolidation of similar money helpers with different input/message contracts. Eight other candidates refused JSX-child changes (spending also source pinned); one existing receiving component stays byte-identical, two additions absent.",
+      "limitations": [
+        "Eight existing JSX-changing candidates remain Blocked, including source-pinned spending limits. No cleanup/deep manual audit of held UI implementations is claimed.",
+        "Receiving durable cart, delivery count and supplier deliveries remain held for owner integration/handoff; no feature source imported.",
+        "Scoped lint exits 1 with one inherited error/two warnings in the safe selection, matched by file/rule/message. No rule suppression or hook/state repair.",
+        "No actual visual/runtime instruction changed in safe modules, so no browser/pixel walkthrough ran. Local/macOS fake-provider/download/SQLite evidence only; no supplier, checkout, paid model, hosted or gate acceptance."
+      ],
+      "receipts": [
+        {
+          "path": ".sites-runtime/readability/S17/candidate-review.json",
+          "sha256": "4bb3be745f7ecd7b1e9a6a1d46ec970db27108cdf55366e0da86674115c9bf24"
+        },
+        {
+          "path": ".sites-runtime/readability/S17/equivalence.log",
+          "sha256": "156f3ada2750e5171448678c5b546061e0dc294d5506a0e063e4ae3019098fc1"
         }
       ]
     }
