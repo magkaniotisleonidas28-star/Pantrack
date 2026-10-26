@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S09 history/document/download services are Completed; S10 is next**.
+Current outcome: sequential cleanup through **S10** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **6 of 22 Completed; 3 Blocked (S03–S05 receiving handoffs; safe files verified); 13 Pending**.
+- Cleanup sections: **7 of 22 Completed; 3 Blocked (recorded handoffs/holds); 0 In Progress; 12 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -94,7 +94,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S07 | Sales ingestion, register bridge and Clover | 16 | Completed |
 | S08 | Supplier registry, draft foundations and gated purchasing | 9 | Completed |
 | S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Completed |
-| S10 | Durable cart authorization, jobs and spending limits | 3 | Pending |
+| S10 | Durable cart authorization, jobs and spending limits | 3 | Completed |
 | S11 | Browser-session services and worker implementation | 28 | Pending |
 | S12 | Supplier confirmation, incoming stock and receiving | 1 | Pending |
 | S13 | API routes and server integration boundaries | 36 | Pending |
@@ -357,23 +357,29 @@ Commits: history/export reads `b9e6c9b`; rendering/download flows `133a092`; arc
 
 ## S10 — Durable cart authorization, jobs and spending limits
 
-Status: Pending. Depends on: S09.
+Status: Completed. Depends on: S09.
 
 **Files:** `d1-po-cart-authorizations.ts`, `d1-po-cart-jobs.ts`, `d1-po-cart-spending-limits.ts`; their contract definitions were reviewed in S03.
 
-- [ ] S10.1 — Label and expand authorization/reservation/job/attempt/result phases and their company/account scopes.
-- [ ] S10.2 — Document lease fences, first-attempt receipts, ambiguous outcomes, replay identities, atomic reservation transitions and budget exposure.
-- [ ] S10.3 — Review helper boundaries conservatively: preserve transaction-time checks, binding and audit order, all conditional SQL and permanent idempotency receipts.
-- [ ] S10.4 — Keep public action/state names, credential scopes, unknown-outcome holds, exact caps and cancel/release semantics unchanged.
+- [x] S10.1 — Label and expand authorization/reservation/job/attempt/result phases and their company/account scopes.
+- [x] S10.2 — Document lease fences, first-attempt receipts, ambiguous outcomes, replay identities, atomic reservation transitions and budget exposure.
+- [x] S10.3 — Review helper boundaries conservatively: preserve transaction-time checks, binding and audit order, all conditional SQL and permanent idempotency receipts.
+- [x] S10.4 — Keep public action/state names, credential scopes, unknown-outcome holds, exact caps and cancel/release semantics unchanged.
 
 **Focused command:** `pnpm test po-cart-authorization po-cart-authorizations-api po-cart-persistence po-cart-jobs po-cart-jobs-api po-cart-job-sources po-cart-spending-limits po-cart-spending-limits-api po-cart-spending-limits-reconciled`.
 
 **Verification:** Run the listed races/replay/permission suites, full tests, scoped lint, typecheck, db:check and build. No new allowance or job execution.
 
-- [ ] S10.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S10.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S10.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S10.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All three modules read fully, formatted and separated at 71 whitespace-only declaration/method boundaries. Authorization/reservation, job claim/attempt/result/baseline/recovery and owner spending-policy flows are easier to scan. Existing rationale explains permanent receipts, transaction-time clocks, atomic reservations and retained uncertain exposure. Cohesive transaction helpers remain intact; no extraction or new abstraction was introduced.
+
+All three modules match pre-section `efd528e` syntax/types/exports/literals/comments/emitted runtime. Company/role/source rechecks, SQL and binding/audit order, exact caps/time-zone windows, first-attempt receipts, no renewed capability on replay, ownership/lease fences, unknown-outcome holds and cancel/release semantics are unchanged. No new allowance or job/browser execution was performed.
+
+The exact nine focused suites above passed before and after. Full `pnpm test` passed all 139 suites. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. **Scoped ESLint exited 1**, retaining the baseline jobs `prefer-const` error and authorization `_action` unused-value warning; file/rule/message comparison matches the integrated baseline. No new diagnostic or suppression. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S10`; logs: `.sites-runtime/readability/S10/`. This proves local/macOS fake-provider behavior only; no schema/API/UI behavior change required another apply/smoke.
+
+Commits: authorizations/spending `style(readability): clarify cart authorizations and spending limits`; jobs/tracker `style(readability): expand fenced cart job transitions`. No S10 source hold remains; inherited lint debt and earlier receiving holds remain open. Rollback: those two source/docs commits only. Next: S11 browser-session services and worker implementation.
 
 ## S11 — Browser-session services and worker implementation
 
@@ -624,6 +630,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S07 | Fifteen sales/POS/Clover modules formatted; one SQL helper reviewed unchanged; 58 declaration/method boundaries | Ten focused baseline/final suites and full 139 suites pass; equivalent syntax/types/runtime; scoped lint/format/typecheck/db/build/diff pass | Two local commits grouped by core and adapters; no S07 hold; S08 next |
 | 2026-10-26 / S08 | Nine supplier/draft/gated-purchasing modules formatted; 111 declaration/method boundaries | Eight focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains one inherited any error (exit 1) | Two local commits grouped by persistence and simulated/gated flows; no S08 source hold; S09 next |
 | 2026-10-26 / S09 | Thirteen history/document/download/archive modules formatted; 35 boundaries; three font/license hashes preserved | Twelve focused baseline/final suites with independent readers and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; two inherited scoped lint warnings | Three local commits grouped by reads, rendering/downloads and archive; no S09 hold; S10 next |
+| 2026-10-26 / S10 | Three cart authorization/job/spending modules formatted; 71 declaration/method boundaries | Nine focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains inherited prefer-const error and unused warning | Two local commits grouped by authorization/spending and jobs; no S10 source hold; S11 next |
 
 ## Final report requirements
 

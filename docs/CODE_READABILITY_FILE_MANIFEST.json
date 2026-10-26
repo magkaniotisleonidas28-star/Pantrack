@@ -6424,11 +6424,14 @@
     {
       "path": "src/lib/d1-po-cart-authorizations.ts",
       "section": "S10",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b53b540ab45a2e4e7e8c4bcd64c221db33f18158b6784ec8304b65b69738ae02",
-      "results": []
+      "results": [
+        "S10 formatting and 71 declaration/method boundaries reviewed against efd528e: syntax/types/literals/comments/emitted runtime equivalent. Nine focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the baseline prefer-const error and unused _action warning; see sectionReviews.S10."
+      ],
+      "cleanupSha256": "2193464cfc28ffdde257dff1d4cf549405cfdddc86580852d86b18f7578f1702"
     },
     {
       "path": "src/lib/d1-po-cart-browser-sessions.ts",
@@ -6460,11 +6463,14 @@
     {
       "path": "src/lib/d1-po-cart-jobs.ts",
       "section": "S10",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "a697fd82f1f59bea7fc5b1bd7ab0c8159ca7356311ce40d856e3df24555ea611",
-      "results": []
+      "results": [
+        "S10 formatting and 71 declaration/method boundaries reviewed against efd528e: syntax/types/literals/comments/emitted runtime equivalent. Nine focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the baseline prefer-const error and unused _action warning; see sectionReviews.S10."
+      ],
+      "cleanupSha256": "f3e23af849e76611a76bcf1cb815ef249eb6d197e641f62980db97f4dc04cee7"
     },
     {
       "path": "src/lib/d1-po-cart-preparation.ts",
@@ -6487,11 +6493,14 @@
     {
       "path": "src/lib/d1-po-cart-spending-limits.ts",
       "section": "S10",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ee0eed9475c5d20662e88847e37c96bf66460bc4c4f0904948a502a74f13b8f2",
-      "results": []
+      "results": [
+        "S10 formatting and 71 declaration/method boundaries reviewed against efd528e: syntax/types/literals/comments/emitted runtime equivalent. Nine focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains the baseline prefer-const error and unused _action warning; see sectionReviews.S10."
+      ],
+      "cleanupSha256": "d54a2f59e48e1d09cd77e9fc13236c06819c3d4c6e471c578715e7dc15cfa595"
     },
     {
       "path": "src/lib/d1-purchase-order-drafts.ts",
@@ -9750,6 +9759,94 @@
       "limitations": [
         "No visual/layout instruction changed; no browser or pixel-render walkthrough was run.",
         "Local/macOS fake-provider and file-backed fixture evidence only; no production archive journal, R2 binding, route, schema or live integration."
+      ],
+      "commits": [
+        "b9e6c9b",
+        "133a092",
+        "efd528e"
+      ]
+    },
+    "S10": {
+      "outcome": "Completed",
+      "safeFilesCompleted": 3,
+      "heldFiles": [],
+      "preSectionCommit": "efd528e",
+      "codeCommits": [
+        "style(readability): clarify cart authorizations and spending limits",
+        "style(readability): expand fenced cart job transitions"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm test po-cart-authorization po-cart-authorizations-api po-cart-persistence po-cart-jobs po-cart-jobs-api po-cart-job-sources po-cart-spending-limits po-cart-spending-limits-api po-cart-spending-limits-reconciled",
+          "exit": 0,
+          "suites": 9,
+          "log": ".sites-runtime/readability/S10/baseline.log",
+          "logSha256": "0a22fa13023c01532200c586e5355ab7e296bccf1bfa223ee26b604986aaffbc"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm test po-cart-authorization po-cart-authorizations-api po-cart-persistence po-cart-jobs po-cart-jobs-api po-cart-job-sources po-cart-spending-limits po-cart-spending-limits-api po-cart-spending-limits-reconciled",
+          "exit": 0,
+          "seconds": 2.7,
+          "log": ".sites-runtime/readability/S10/final/0-test.log",
+          "logSha256": "4c90047a6d0cf350afda0c99f57b10cbcd62784a6b179d622a1abdf1d5b7bf35"
+        },
+        {
+          "command": "pnpm format:check --section S10",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S10/final/1-format-check.log",
+          "logSha256": "7a1b821209203f73b52727f59fbc4c47eef77776614212c2d753738f05928403"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/lib/d1-po-cart-authorizations.ts src/lib/d1-po-cart-jobs.ts src/lib/d1-po-cart-spending-limits.ts",
+          "exit": 1,
+          "seconds": 1.0,
+          "log": ".sites-runtime/readability/S10/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "739def43dc0291353e660a25681b1c498067bf8c7a8a0b56aef27a08065fabd6"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 2.7,
+          "log": ".sites-runtime/readability/S10/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 150.8,
+          "log": ".sites-runtime/readability/S10/final/4-test.log",
+          "logSha256": "082fab9dfbed86255f9be6cbb31acbf44ac74cbaa6f8fd5755659623cde5c5c5"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S10/final/5-db-check.log",
+          "logSha256": "73a5c2b67e05ea5ad4be4d6528e76db0e6a4f745834212447ee4b012dfb8ae6c"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.0,
+          "log": ".sites-runtime/readability/S10/final/6-build.log",
+          "logSha256": "d28b5cf1b844f5e70c5cb2f0514b75109ea8df1fe967003aa43f308d1632f081"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S10/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "bda6fbb6556280c4fadf68a68a7e6bc35dde99afb31fd7d881657614ab29997c",
+      "review": "All three modules read fully before edits and match pre-section syntax, types, ordered comments/literals and emitted runtime. Authorization checks, transaction-time guards, audit/receipt/binding order, exact budget windows/exposure, first-attempt capability refusal on replay, worker scopes, lease fences, baseline/final comparisons and conservative recovery unchanged. Seventy-one whitespace-only declaration/method boundaries separated; no extraction or new abstraction. Scoped lint baseline error/warning matched by file/rule/message.",
+      "limitations": [
+        "Local/macOS migrated in-memory SQLite/fake D1/provider evidence only. No new allowance, worker/browser run, purchasing, sync or external gate acceptance.",
+        "Scoped lint exits 1 on inherited jobs prefer-const; inherited authorization _action warning remains. No rule suppression or declaration/type change."
       ]
     }
   }
