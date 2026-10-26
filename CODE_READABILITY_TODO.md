@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: sequential cleanup through **S10** is reviewed; see the index and section records for completed work and explicit holds.
+Current outcome: sequential cleanup through **S11** is reviewed; see the index and section records for completed work and explicit holds.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **7 of 22 Completed; 3 Blocked (recorded handoffs/holds); 0 In Progress; 12 Pending**.
+- Cleanup sections: **8 of 22 Completed; 3 Blocked (recorded handoffs/holds); 0 In Progress; 11 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -95,7 +95,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | S08 | Supplier registry, draft foundations and gated purchasing | 9 | Completed |
 | S09 | Purchase-order history, export models and document downloads | 11 + 2 upstream | Completed |
 | S10 | Durable cart authorization, jobs and spending limits | 3 | Completed |
-| S11 | Browser-session services and worker implementation | 28 | Pending |
+| S11 | Browser-session services and worker implementation | 28 | Completed |
 | S12 | Supplier confirmation, incoming stock and receiving | 1 | Pending |
 | S13 | API routes and server integration boundaries | 36 | Pending |
 | S14 | Shared UI primitives and vendor boundaries | 62 | Pending |
@@ -383,23 +383,29 @@ Commits: authorizations/spending `style(readability): clarify cart authorization
 
 ## S11 — Browser-session services and worker implementation
 
-Status: Pending. Depends on: S10.
+Status: Completed. Depends on: S10.
 
 **Files:** `d1-po-cart-browser-sessions.ts`, `d1-po-cart-preparation.ts`, `d1-po-cart-reconciliation.ts`, `po-cart-worker-transport.ts`, the assigned worker client/browser/AI/private-file modules, and `scripts/cart-preview/`.
 
-- [ ] S11.1 — Make claim/heartbeat/preflight/observe/reconcile/report/dispose stages navigable without reordering them.
-- [ ] S11.2 — Clarify client retries, local journals, proxy restrictions, captured ownership, private file permissions, credentials and mocked AI budget accounting.
-- [ ] S11.3 — Explain SDK/browser adapter boundaries and preserve lazy imports, environment minimality, timeouts, strict verification and denial defaults.
-- [ ] S11.4 — Do not move entrypoints, rename protocol symbols, change source-hash inputs, introduce settling/retry behavior, launch browsers or consume any diagnostic attempt. Byte-pinned code is held if equivalence cannot be proved.
+- [x] S11.1 — Make claim/heartbeat/preflight/observe/reconcile/report/dispose stages navigable without reordering them.
+- [x] S11.2 — Clarify client retries, local journals, proxy restrictions, captured ownership, private file permissions, credentials and mocked AI budget accounting.
+- [x] S11.3 — Explain SDK/browser adapter boundaries and preserve lazy imports, environment minimality, timeouts, strict verification and denial defaults.
+- [x] S11.4 — Do not move entrypoints, rename protocol symbols, change source-hash inputs, introduce settling/retry behavior, launch browsers or consume any diagnostic attempt. Byte-pinned code is held if equivalence cannot be proved.
 
-**Focused command:** `pnpm test po-cart-worker-api po-cart-worker-guards po-cart-worker-client po-cart-worker-processes po-cart-browser-api po-cart-browser-sessions po-cart-browser-session-api po-cart-browser-network po-cart-reconciliation po-cart-reconciliation-api po-cart-ai-reader cart-preview`.
+**Focused command:** `pnpm test po-cart-worker-api po-cart-worker-guards po-cart-worker-client po-cart-worker-processes po-cart-browser-api po-cart-browser-sessions po-cart-browser-session-api po-cart-browser-network po-cart-reconciliation po-cart-reconciliation-api po-cart-ai-reader cart-preview po-cart-browser-lifecycle po-cart-manager-supervisor po-cart-metadata-evidence po-cart-evaluation-preflight po-cart-second-addition-repair po-cart-connector-binding`.
 
 **Verification:** Run only existing isolated/injected suites, plus full tests, scoped lint, typecheck and build. Fake worker process tests may own temporary fixtures; real browser/maintenance CLIs are not authorized.
 
-- [ ] S11.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S11.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S11.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S11.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All 28 modules read fully and formatted; 124 whitespace-only declaration/method boundaries separated. D1 session/preflight/reconciliation, worker HTTP/journal/private-file/credential/fixture/supervisor, AI discovery/extraction/diagnostics/metadata and cart-preview acquisition/read/disposal flows are easier to scan. Existing comments explain transaction-time fences, unknown outcomes, non-reusable receipts, fixed model reservations, network denial and partial cleanup. These responsibilities remain in their existing modules; no risky extraction or new abstraction was introduced.
+
+All 28 modules match pre-section `448ba8f` syntax/types/exports/literals/comments/emitted runtime. SQL/binding/audit order, role/current-credential checks, lease fences, permanent UUID replay and uncertain journals, no repeated addition/inference, private modes/fsync/locks, cumulative budgets, exact prompts/schemas/callback order, fixture HTML/CSS, proxy/interception restrictions, connector receivers and bounded closure are unchanged. Source-hash selection/fixed bindings and consumption policy are preserved; historical proof hashes are not rewritten.
+
+Twelve original focused suites, four added diagnostics/preflight/supervisor/lifecycle suites and two added installed-connector/partial-teardown suites passed before edits. The final combined command passed all eighteen suites, including injected actual acquisition/failure/disposal and fake process crash/recovery. Full `pnpm test` passed all 139 suites. Format/equivalence, typecheck, `db:check` (40 unchanged migrations), build and diff check passed against frozen source. **Scoped ESLint exited 1 with 29 errors/4 warnings**, exactly matching the integrated baseline by file/rule/message; no suppression or new diagnostic. Exact commands/results/log hashes/source digest: inventory `sectionReviews.S11`; logs: `.sites-runtime/readability/S11/`.
+
+This is local/macOS evidence only. No real Chrome, supplier/provider/paid model, evaluator/maintenance/gate entrypoint, new allowance or owner runtime operation ran. Commits are grouped by D1 services, worker ownership/journals, AI/evidence and preview resources; exact hashes follow in the inventory at the next checkpoint. No S11 source hold remains. Rollback: these four source/docs commits only. Next: S12 supplier confirmation; its separate receiving implementation remains held.
 
 ## S12 — Supplier confirmation, incoming stock and receiving
 
@@ -631,6 +637,7 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S08 | Nine supplier/draft/gated-purchasing modules formatted; 111 declaration/method boundaries | Eight focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains one inherited any error (exit 1) | Two local commits grouped by persistence and simulated/gated flows; no S08 source hold; S09 next |
 | 2026-10-26 / S09 | Thirteen history/document/download/archive modules formatted; 35 boundaries; three font/license hashes preserved | Twelve focused baseline/final suites with independent readers and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; two inherited scoped lint warnings | Three local commits grouped by reads, rendering/downloads and archive; no S09 hold; S10 next |
 | 2026-10-26 / S10 | Three cart authorization/job/spending modules formatted; 71 declaration/method boundaries | Nine focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; scoped lint retains inherited prefer-const error and unused warning | Two local commits grouped by authorization/spending and jobs; no S10 source hold; S11 next |
+| 2026-10-26 / S11 | 28 browser/worker/AI/preview modules formatted; 124 declaration/method boundaries; literal fixture markup/prompts retained | Eighteen focused baseline/final suites and full 139 suites pass; equivalence/format/typecheck/db/build/diff pass; inherited scoped lint 29 errors/4 warnings matched | Four local commits grouped by services, worker ownership, AI/evidence and preview; no S11 hold; independent S12 confirmation next |
 
 ## Final report requirements
 

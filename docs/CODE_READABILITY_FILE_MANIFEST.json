@@ -3505,92 +3505,132 @@
     {
       "path": "scripts/cart-preview/ai-budget.mjs",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "fbffa3a40c0ed167a6511bb0161efcfc24fed5fba888b604abf267acc9008161",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "3ad187db031bd3b10cd4d4f27b657a6999251c2f00ec3747d52863cbd042aabb"
     },
     {
       "path": "scripts/cart-preview/ai-config.mjs",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5762a668e2fe0bd1415a76dbc1d0470dcc53e41651116ddd126f33c7b2dcc4c1",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "432a87224a5e19f071e451fa6ad61d5437b3fe83b27aaba2d72706bedea33420"
     },
     {
       "path": "scripts/cart-preview/ai-provider.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ddd903fe478fe035e0318b4e2372544e13799f709647645cf894aecb5e1aed35",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "c16e0a4560c9746456c51d1e55550d37c279b2c3b76a02372b6c7c5dbe6f85aa"
     },
     {
       "path": "scripts/cart-preview/browser-check.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4ed074222b792937109c869e0a44159e1d3ba18fa33edb6b8fef19a2e4808413",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "d97b9c2cb1ab06e76ca1a2e3478fa4385af73e62313bb14d407091b8fbcb2e87"
     },
     {
       "path": "scripts/cart-preview/browser-session.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3f2eaa3b82912209d653a767c076d157a8f2c53c1094b5706177be3554c03163",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "1a3a96358dc5ca0bf2bae2bfbe2b59e254212323735f882976c73671da2009aa"
     },
     {
       "path": "scripts/cart-preview/browser.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "9f6ab7a601a54cf495070b536cde8cc1daf933ec957474eca9e9f0591265f238",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "c139c441910b53b4abbfb31ad716263db7fd2d7f7e1a39b7017b4b4ee44a1358"
     },
     {
       "path": "scripts/cart-preview/evaluate.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f3ab74fa209953f78120f82250e751594f1035d018cdbdde6f9185ee4ddf7cdb",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "8f17cc473ca55b94fa0ec40f1fcc578b1761bc8977055bbc933dda5a57cf4fab"
     },
     {
       "path": "scripts/cart-preview/fixture.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "2647a4c6e2627c82f4f3b5a26db4b817161c3ecd177a4fd17cc1ad2e4da437b7",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "e40ed661a8a0fc378dcb8fb32f49276ab744b5c72a3426ce57046a56349a25eb"
     },
     {
       "path": "scripts/cart-preview/model.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f5083de69128ad7656e9ca78c9300cb5239003c4a21cfb2e03dd259232def3d9",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "ea51197f17785b7225df069c0e4fb8fc20dcf08f62bba886b891e564d940024b"
     },
     {
       "path": "scripts/cart-preview/store.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "ba32575ca838af64460b940d181006f125d58680b970152b57d77f29bc69ce25",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "c8bb15bce43bcb3b1ba487a21599862ef6da965a2463e6ff9c5b9bf607c6ae6f"
     },
     {
       "path": "scripts/cart-seed.mjs",
@@ -4063,38 +4103,54 @@
     {
       "path": "scripts/po-cart-worker/ai-evaluate.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "3562cfcdfca7c8897a03f1bde099e824b22939a704f36c6c73f1fc5dda39a3b9",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "f5458c8ef6d90ebc0577b64672684c41a5e7b850fa3601015f25f71acc41335a"
     },
     {
       "path": "scripts/po-cart-worker/ai-reader.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "d34b9c4bc5992f86cf7665bdd007deb47674f2699bb1fc6117b520aa18b77913",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "82c6cfebf15ff37ccd26126f4a285cdde76e1690d4badb265b350b4b00880266"
     },
     {
       "path": "scripts/po-cart-worker/browser-adapter.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "f1238b05ea2af6bb9ab2ae4cf18d49d2c0b10aed715e6ee5d08b3fcc66555dbd",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "da9b64dd1a68ce54599f60b475e4cbcc15fd74ea60b7083a7cf0b5a25a3396b9"
     },
     {
       "path": "scripts/po-cart-worker/browser-diagnostics.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "cb572685a7eb15cbbfa7ef8d61dc09cba3241dcab12c7401fe50b0a6a345a390",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "1ee46523192722b961755a0258e22d63c4bdb96e881a9d1b5ee7823f0a40e2bc"
     },
     {
       "path": "scripts/po-cart-worker/browser-lifecycle-validation-audit.py",
@@ -4108,11 +4164,15 @@
     {
       "path": "scripts/po-cart-worker/client.mjs",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "d07ac492117598bbe8f018b37f72e063b22843caa9cbc51bdf15f82ada6e3c0a",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "d4e868ed4be5677bf2443a4d70ef3c4a33a896c57ebf0819fe70d11e005484a9"
     },
     {
       "path": "scripts/po-cart-worker/credential-audit.mjs",
@@ -4126,11 +4186,15 @@
     {
       "path": "scripts/po-cart-worker/credentials.mjs",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b5a8b3604b1c48af7d408eca0f2ceefb5c5cd2b590ad256745442cdc87f659e6",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "df7cdaf7b0ad7509f5c85bdb50ae9ee307a8befcab0aab168f06a317a6efbbe4"
     },
     {
       "path": "scripts/po-cart-worker/display-on-investigation.mjs",
@@ -4153,11 +4217,15 @@
     {
       "path": "scripts/po-cart-worker/evaluation-diagnostics.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "0393e136f0ff9e42f80acaae81a30e0743547dc6ccaeb4ea7ef7badc4b2fd6c4",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "7d689b34ebd102ee119111545b3ed653a02b4815d0d9ff01a9fd1348833f92ee"
     },
     {
       "path": "scripts/po-cart-worker/evaluation-preflight.mjs",
@@ -4171,11 +4239,15 @@
     {
       "path": "scripts/po-cart-worker/fixture-store.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4741f5652eac48caa34d6c89a7ae7cbdceeef09d12ef98bc7ef8069f22bd38c0",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "153a002636da62301e70a34080cf1ed9364a3802a73bae44081a013424ee503a"
     },
     {
       "path": "scripts/po-cart-worker/full-gate-audit.py",
@@ -4198,11 +4270,15 @@
     {
       "path": "scripts/po-cart-worker/human-browser.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "4fc4d0d2b53ef3bb65baee4869cd65bc72bdbb73149417d12e6f5c3866cb43f2",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "19b9bf1839f0d23c9e93b230634e72c0b55e0aced38acaf2b7a04446e5b3ee89"
     },
     {
       "path": "scripts/po-cart-worker/launcher-check-lifecycle.mjs",
@@ -4243,11 +4319,15 @@
     {
       "path": "scripts/po-cart-worker/local-browser-fixture.mjs",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "721594338b358935098e9027431e11b6c92fd0fe92407f26d8445b882dbd60a7",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "c0c4b47eec028a53ec0c5d8b049a57dfc84667f203ca77e2b6e5269df9a7671a"
     },
     {
       "path": "scripts/po-cart-worker/maintenance-observation-audit.py",
@@ -4270,11 +4350,15 @@
     {
       "path": "scripts/po-cart-worker/manager-supervisor.mjs",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "5b5e38628597c7c153d07e3031306cc043b3273dac052267b46f86af5e59afa7",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "9cdab33558b3f97acc95561419971495377280ead55785d6d9e648bd32f3b853"
     },
     {
       "path": "scripts/po-cart-worker/metadata-allowance.mjs",
@@ -4288,20 +4372,28 @@
     {
       "path": "scripts/po-cart-worker/metadata-evidence.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "7e30eb4f20a166cc97df23d04389c396b0ca8bf5afa82c05cf56a71a5b1f377d",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "f8fe0f0b22f042064241f60abdd84bfdf5ea73e5f233b19e6707ff5de0509cf3"
     },
     {
       "path": "scripts/po-cart-worker/mock-ai-reader.mjs",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "9a3c9dd2b3ba05a58f328c428d3a903f21d9a2f0277b46eadc7d6f5eaca2421f",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "9b755e978282efa6cb56f282bc0466d24b43f0f39303d39999f61238e11cc0ae"
     },
     {
       "path": "scripts/po-cart-worker/observation-baseline-audit.py",
@@ -4351,11 +4443,15 @@
     {
       "path": "scripts/po-cart-worker/private-files.mjs",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "fcac666ff552abd4d4205a8aa93fea037ac891ec0e2534bc3dbe7bc66464e0ee",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "ac6562a37473b627fe810f940fa358834b527da45ca810863feff41af52a3cd4"
     },
     {
       "path": "scripts/po-cart-worker/profile-preservation-preflight.mjs",
@@ -6436,11 +6532,15 @@
     {
       "path": "src/lib/d1-po-cart-browser-sessions.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "69674b6dbcede045b05f42f76d42780907200f1326e8b83d8eab6a3dcfc1ad7f",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "6c4c752da5354aecf9e839a464167d0f50e082ac4664727e91148cd1c8f6f7d5"
     },
     {
       "path": "src/lib/d1-po-cart-confirmations.ts",
@@ -6475,20 +6575,28 @@
     {
       "path": "src/lib/d1-po-cart-preparation.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "b3b2b8837cf0b60595e6e8eba55ab79c2cada5d75c742aa48b890c57870510de",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "d9fe835b19ce4db66b31097f76778c96cd972dffa688c105c6617536b9f04d71"
     },
     {
       "path": "src/lib/d1-po-cart-reconciliation.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "126d8eabc7aac54a01cfc4fe147cb0cc095dee2e6ba9d995aa2e743d75cd1715",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "90e74328a1e928c64fa24c421d90f90c4fd529c0ec14b91cfc3ca26b02981d85"
     },
     {
       "path": "src/lib/d1-po-cart-spending-limits.ts",
@@ -7083,11 +7191,15 @@
     {
       "path": "src/lib/po-cart-worker-transport.ts",
       "section": "S11",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "63e7a89ecb3a4e85b392ca9cfa3916caa4ed49e57ecad9783155ede1134ed280",
-      "results": []
+      "results": [
+        "S11 preparation: full module and relevant injected resource/transport callers/tests reviewed. Preserve network allowlists, private-file/journal/credential/budget lifecycle, transaction-time guards, reader callbacks, metadata evidence and bounded teardown; no real entrypoint run.",
+        "S11 full source reviewed and formatted with 124 declaration/method boundaries; all 28 modules match 448ba8f syntax/types/comments/literals/emitted runtime. Eighteen focused suites before/after and full 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains baseline 29 errors/4 warnings; no suppression. See sectionReviews.S11."
+      ],
+      "cleanupSha256": "6fe15d84d5f8fbe3d347a3578ba40cb1a2f1deb2d3d12e81714d5913550f2276"
     },
     {
       "path": "src/lib/pos-adapter.ts",
@@ -9847,6 +9959,109 @@
       "limitations": [
         "Local/macOS migrated in-memory SQLite/fake D1/provider evidence only. No new allowance, worker/browser run, purchasing, sync or external gate acceptance.",
         "Scoped lint exits 1 on inherited jobs prefer-const; inherited authorization _action warning remains. No rule suppression or declaration/type change."
+      ],
+      "commits": [
+        "67f69c4",
+        "448ba8f"
+      ]
+    },
+    "S11": {
+      "outcome": "Completed",
+      "safeFilesCompleted": 28,
+      "heldFiles": [],
+      "preSectionCommit": "448ba8f",
+      "codeCommits": [
+        "style(readability): expand browser session and reconciliation services",
+        "style(readability): clarify worker journals and private fixture ownership",
+        "style(readability): clarify bounded AI reading and evidence",
+        "style(readability): expand cart preview resource flows"
+      ],
+      "baseline": [
+        {
+          "command": "pnpm test po-cart-worker-api po-cart-worker-guards po-cart-worker-client po-cart-worker-processes po-cart-browser-api po-cart-browser-sessions po-cart-browser-session-api po-cart-browser-network po-cart-reconciliation po-cart-reconciliation-api po-cart-ai-reader cart-preview",
+          "exit": 0,
+          "suites": 12,
+          "log": ".sites-runtime/readability/S11/baseline.log",
+          "logSha256": "9f881861fc02e1f03ae612ede721fc2b8bf90d1d4ad2eec49377e6df5ab746d4"
+        },
+        {
+          "command": "pnpm test po-cart-browser-lifecycle po-cart-manager-supervisor po-cart-metadata-evidence po-cart-evaluation-preflight",
+          "exit": 0,
+          "suites": 4,
+          "log": ".sites-runtime/readability/S11/baseline-additional.log",
+          "logSha256": "55dee0dd77c8b8e20b1f679cafb438568299b50b283d272f1f0ca57d2022db0a"
+        },
+        {
+          "command": "pnpm test po-cart-second-addition-repair po-cart-connector-binding",
+          "exit": 0,
+          "suites": 2,
+          "log": ".sites-runtime/readability/S11/baseline-resource.log",
+          "logSha256": "17bed583fe5fd8f0fdc0ba27cb7e37ee8cff7684ce92bb4067fb2d5cfcd1b62d"
+        }
+      ],
+      "final": [
+        {
+          "command": "pnpm test po-cart-worker-api po-cart-worker-guards po-cart-worker-client po-cart-worker-processes po-cart-browser-api po-cart-browser-sessions po-cart-browser-session-api po-cart-browser-network po-cart-reconciliation po-cart-reconciliation-api po-cart-ai-reader cart-preview po-cart-browser-lifecycle po-cart-manager-supervisor po-cart-metadata-evidence po-cart-evaluation-preflight po-cart-second-addition-repair po-cart-connector-binding",
+          "exit": 0,
+          "seconds": 39.7,
+          "log": ".sites-runtime/readability/S11/final/0-test.log",
+          "logSha256": "c07545f2ba50ff059411f3fe4e16d830fa6fd8daeae42f112c98e7391c34cc6e"
+        },
+        {
+          "command": "pnpm format:check --section S11",
+          "exit": 0,
+          "seconds": 1.5,
+          "log": ".sites-runtime/readability/S11/final/1-format-check.log",
+          "logSha256": "92f85fc1b37fad04164fa903c6e5eb0b18740b8dff14b43819836c6d8fac320c"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js scripts/cart-preview/ai-budget.mjs scripts/cart-preview/ai-config.mjs scripts/cart-preview/ai-provider.ts scripts/cart-preview/browser-check.ts scripts/cart-preview/browser-session.ts scripts/cart-preview/browser.ts scripts/cart-preview/evaluate.ts scripts/cart-preview/fixture.ts scripts/cart-preview/model.ts scripts/cart-preview/store.ts scripts/po-cart-worker/ai-evaluate.ts scripts/po-cart-worker/ai-reader.ts scripts/po-cart-worker/browser-adapter.ts scripts/po-cart-worker/browser-diagnostics.ts scripts/po-cart-worker/client.mjs scripts/po-cart-worker/credentials.mjs scripts/po-cart-worker/evaluation-diagnostics.ts scripts/po-cart-worker/fixture-store.ts scripts/po-cart-worker/human-browser.ts scripts/po-cart-worker/local-browser-fixture.mjs scripts/po-cart-worker/manager-supervisor.mjs scripts/po-cart-worker/metadata-evidence.ts scripts/po-cart-worker/mock-ai-reader.mjs scripts/po-cart-worker/private-files.mjs src/lib/d1-po-cart-browser-sessions.ts src/lib/d1-po-cart-preparation.ts src/lib/d1-po-cart-reconciliation.ts src/lib/po-cart-worker-transport.ts",
+          "exit": 1,
+          "seconds": 1.2,
+          "log": ".sites-runtime/readability/S11/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "6b45e957cfc5193e23fd619a8edd0cb03eb073ec48b4f5ac2d036265ea24bea0"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 2.4,
+          "log": ".sites-runtime/readability/S11/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm test",
+          "exit": 0,
+          "seconds": 151.9,
+          "log": ".sites-runtime/readability/S11/final/4-test.log",
+          "logSha256": "428167c7651a8c6ac9bdf236242fe5eeaafa739915a2e89fc24bc400a7fa8feb"
+        },
+        {
+          "command": "pnpm db:check",
+          "exit": 0,
+          "seconds": 0.6,
+          "log": ".sites-runtime/readability/S11/final/5-db-check.log",
+          "logSha256": "1beba511207a5629cdee30abfba80a5a42d7d1c8bcd8881878dd8ae20d502901"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 6.3,
+          "log": ".sites-runtime/readability/S11/final/6-build.log",
+          "logSha256": "a5f3accf4f4c9e334145971c7c9c61052298fe64a9abafa752341cb35f444d67"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S11/final/7-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "f4e6e954f1afa4fdf1d9d932ab9441ca7fb61132b0b5c28f1af78201bcb9f78b",
+      "review": "All 28 modules read before edits; formatting plus 124 whitespace-only declaration/method boundaries. Full type/syntax/comment/literal/emitted-runtime equivalence with pre-section source. Network/proxy/path/method restrictions, installed connector receivers/lazy imports, resource closure order/timeouts, private file modes/fsync, original operation IDs and uncertain journals, worker revocation/fences, bounded cumulative AI reservations, prompts/schemas/metadata callbacks, fixture HTML/CSS, source binding/allowance consumption and no-retry defaults preserved. Existing comments remain; no extraction or abstraction. Focused tests include actual injected resource acquisition/failure/disposal, independent evidence and denial gates.",
+      "limitations": [
+        "Scoped lint exits 1 with inherited 29 errors and 4 warnings; diagnostic file/rule/message set matches S01 integration baseline. No rule suppression or type/declaration change.",
+        "Local/macOS fake provider, SQLite, loopback and owned fixture process evidence only. No real browser/AI/maintenance/paid evaluator entrypoint, source acceptance refresh or integration/purchasing enablement. Historical evidence and owner runtime remain untouched."
       ]
     }
   }
