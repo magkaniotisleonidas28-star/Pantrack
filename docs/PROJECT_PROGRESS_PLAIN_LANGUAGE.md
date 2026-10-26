@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-26 for local history product/date filters and PDF/Excel. The historical verification table
+Updated: 2026-10-26 for the local permanent-document contract and PDF/Excel. The historical verification table
 below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -60,7 +60,12 @@ The [product/item filter](C4_HISTORY_PRODUCT_FILTERS_LOCAL_EVIDENCE.md) now find
 orders by saved descriptions, supplier SKUs or product IDs. It combines with
 the other filters and keeps every line of each matching order in PDF and Excel.
 Full local checks and actual downloads passed without a new database structure.
-Next, define the private, permanent document-copy contract before adding storage.
+The [private, permanent document-copy contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md)
+is now built and tested locally. It keeps an exact saved copy, checks who can read
+it, detects damaged files and handles an interrupted save without creating a
+duplicate. Tests include recovery in a new process. It is not connected to the
+app yet. Next, add the database record-keeping adapter after checking the other
+contributor's receiving/database work; private file storage and app controls follow.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
