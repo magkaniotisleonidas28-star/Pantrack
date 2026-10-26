@@ -1,13 +1,13 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S02 is next**.
+Current outcome: planning and **S01 tooling/configuration are Completed**; upstream integration is verified; **S02 shared helpers are Completed; S03 is next**.
 
 ## Task-management state and overall progress
 
 - Planning goal: complete phases 1–2 and present this plan before application code edits.
 - S00 planning: Completed. The complete order was presented before any application code edits.
-- Cleanup sections: **1 of 22 Completed; 21 Pending**.
+- Cleanup sections: **2 of 22 Completed; 20 Pending**.
 - Baseline: `bb8f339a71b8b25984bdebb1822cc0d46022c882` (current main observed on 2026-10-26).
 - Branch: `workstream-c/code-readability-plan-20261026`; isolated worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-20261026`.
 - Owner checkout remains on `workstream-c/c4-receiving-counts`; its feature work was committed independently during planning and is preserved.
@@ -86,7 +86,7 @@ On handoff, sync in a separate checkpoint, inspect actual changes, update baseli
 | --- | --- | ---: | --- |
 | S00 | Architecture survey, preservation checkpoint and complete plan | 2 new planning artifacts | Completed |
 | S01 | Project configuration, tooling and baseline checks | 38 + 7 cleanup additions | Completed |
-| S02 | Shared primitives, bounded requests and public errors | 3 | Pending |
+| S02 | Shared primitives, bounded requests and public errors | 3 | Completed |
 | S03 | Shared data models, exact quantities and contracts | 24 + 1 upstream | Pending |
 | S04 | D1 access and immutable database history | 84 | Pending |
 | S05 | Authentication, tenant authorization and memberships | 9 | Pending |
@@ -158,22 +158,22 @@ Byte-sensitive handoffs: `tests/po-cart-launcher-check-lifecycle.mjs` inspects l
 
 ## S02 — Shared primitives, bounded requests and public errors
 
-Status: Pending. Depends on: S01.
+Status: Completed. Depends on: S01.
 
 **Files:** `src/lib/utils.ts`, `src/lib/bounded-body.ts`, `src/lib/user-facing-error.ts`.
 
-- [ ] S02.1 — Make helper names, parameter types, spacing and control flow easy to scan without changing exports.
-- [ ] S02.2 — Document UTF-8 byte bounds, stream cancellation/release, and the distinction between intended public errors and unexpected internal faults.
-- [ ] S02.3 — Preserve `cn` behavior, error constructors/messages, size limits, stream order and the existing public-message boundary. Do not introduce a new global logging/error framework.
+- [x] S02.1 — Make helper names, parameter types, spacing and control flow easy to scan without changing exports.
+- [x] S02.2 — Document UTF-8 byte bounds, stream cancellation/release, and the distinction between intended public errors and unexpected internal faults.
+- [x] S02.3 — Preserve `cn` behavior, error constructors/messages, size limits, stream order and the existing public-message boundary. Do not introduce a new global logging/error framework.
 
 **Focused command:** `pnpm test register-bridge m2-security purchase-order-downloads`.
 
 **Verification:** Run the section’s tests plus scoped lint, typecheck and build. Formatting-only edits also require syntax/literal/directive equivalence.
 
-- [ ] S02.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
-- [ ] S02.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
+- [x] S02.V — Record the focused baseline and final verification with exact results; inspect the full section diff and its downstream consumers.
+- [x] S02.R — Perform the dedicated readability/functionality review, update both trackers, and create a reviewable section commit before advancing.
 
-**Section review record:** Files: none yet. Improvements: not started. Verification: not run. Commit: none. Unresolved issues: active-work and protected-file rules above apply; add section-specific findings here.
+**Section review record:** All three owned files formatted; no unchanged files or unresolved S02 holds. Bounded-body comments explain raw-byte counting before UTF-8 assembly and guaranteed stream-lock release. Public error constructors/messages/fallbacks, `cn` merge order, byte limits and read/cancel/release ordering are unchanged. All three modules passed independent pre-section syntax/type/literal/emitted-runtime comparison after excluding the two reviewed comment additions. Baseline and final `pnpm test register-bridge m2-security purchase-order-downloads` passed (3 suites, including tenant/role/recovery/error sanitization and byte-bounded ASCII/multibyte cases). Scoped ESLint, `pnpm format:check --section S02`, `pnpm typecheck`, `pnpm build` and `git diff --check` passed against frozen source. Commands/exits/durations/log hashes/source digest are in inventory `sectionReviews.S02`; logs: `.sites-runtime/readability/S02/`. No schema/HTTP behavior/UI change or new migration; local mocked evidence only. Commit: `style(readability): clarify shared request and error helpers`. Rollback: revert this section source/docs only. Next: S03 contracts/quantities.
 
 ## S03 — Shared data models, exact quantities and contracts
 
@@ -577,6 +577,8 @@ Status: Pending. Depends on: All prior sections completed or explicitly document
 | 2026-10-26 / S00 | Architecture survey; 882-file ownership/hash inventory plus 13 reserved receiving additions; 22 ordered cleanup sections | Planning-only coverage, hash, suite-reference, JSON, link and whitespace checks pass; 0 application edits; concurrent receiving-test change recorded | Documentation-only planning checkpoint; all 22 changed receiving paths held for integration/handoff; next: S01 baseline/tooling |
 
 | 2026-10-26 / S01 | Tooling/config/adapters: 24 existing edits, 14 unchanged, 7 cleanup additions; pinned dev formatter and guarded per-section command | Full pipeline passes except unchanged inherited lint (71 errors/80 warnings); 138 suites; focused/syntax/hash/link checks pass | Local section commit; main advanced independently to 59d3d90, integration checkpoint next; receiving implementation held |
+
+| 2026-10-26 / S02 | Three shared helper modules; consistent spacing/wrapping and two stream/UTF-8 comments | 3 focused suites before/after; guard/format, scoped lint, typecheck/build/diff all pass | Local section commit; next S03; no S02 hold |
 
 ## Final report requirements
 

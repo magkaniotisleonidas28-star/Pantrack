@@ -5970,11 +5970,14 @@
     {
       "path": "src/lib/bounded-body.ts",
       "section": "S02",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "70f193f483f995cfb8cd6428feb290d9f2430c49c9118728b2e64e11efefba92",
-      "results": []
+      "results": [
+        "S02 formatted and reviewed; bounded-body adds two comments explaining raw-byte bounds and finally cleanup. Three focused suites, scoped lint, typecheck/build, format guard and diff checks pass. See sectionReviews.S02."
+      ],
+      "cleanupSha256": "6b4a6e362c5a33d25eeed54f3b7f14636055c96ffd9d0b0d526ce0c195efc8de"
     },
     {
       "path": "src/lib/c4-fake-supplier-consumer.ts",
@@ -6877,20 +6880,26 @@
     {
       "path": "src/lib/user-facing-error.ts",
       "section": "S02",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "76f0f2e1fc68677134da7e077b2a65f52132d99a3416cc9ab4b6e674a3fc62c6",
-      "results": []
+      "results": [
+        "S02 formatted and reviewed; bounded-body adds two comments explaining raw-byte bounds and finally cleanup. Three focused suites, scoped lint, typecheck/build, format guard and diff checks pass. See sectionReviews.S02."
+      ],
+      "cleanupSha256": "9c90c4396c59431a9f93700b672774f4903c7d0f0d7dee4a3ca41c00669f6e46"
     },
     {
       "path": "src/lib/utils.ts",
       "section": "S02",
-      "status": "Pending",
+      "status": "Completed",
       "policy": "review-before-cleanup",
       "baselineTracked": true,
       "baselineSha256": "53f3d3d070f0a9082934da25b875f9499855c2b0693868dd28be8c23d8730f68",
-      "results": []
+      "results": [
+        "S02 formatted and reviewed; bounded-body adds two comments explaining raw-byte bounds and finally cleanup. Three focused suites, scoped lint, typecheck/build, format guard and diff checks pass. See sectionReviews.S02."
+      ],
+      "cleanupSha256": "d6cf1d2c25e92eba18c73f11c9676f0a7099020f1010396b94fa4c0356e7fc9a"
     },
     {
       "path": "src/lib/vendor-adapter.ts",
@@ -8488,5 +8497,63 @@
       "sourceDigest": "f5bb2610bd604826e5ee0c83858492a910467c08c0775c4298a397e70538735b",
       "outcome": "139 suites and complete isolated local pipeline pass; full lint retains 71 errors and 84 warnings (four warnings added by upstream archive source; no cleanup regression)."
     }
-  ]
+  ],
+  "sectionReviews": {
+    "S02": {
+      "outcome": "Completed",
+      "baseline": {
+        "command": "pnpm test register-bridge m2-security purchase-order-downloads",
+        "exit": 0,
+        "log": ".sites-runtime/readability/S02/baseline.log",
+        "suites": 3
+      },
+      "final": [
+        {
+          "command": "pnpm test register-bridge m2-security purchase-order-downloads",
+          "exit": 0,
+          "seconds": 1.5,
+          "log": ".sites-runtime/readability/S02/final/0-test.log",
+          "logSha256": "26da8069030858b33d8d3ee2514fb708872db457878fd844642ce5d1a6875c10"
+        },
+        {
+          "command": "pnpm format:check --section S02",
+          "exit": 0,
+          "seconds": 0.5,
+          "log": ".sites-runtime/readability/S02/final/1-format-check.log",
+          "logSha256": "13868c67a90b304ea50eb6de330d6bb73d1b37219921f902dee3aeda3d02af26"
+        },
+        {
+          "command": "node node_modules/eslint/bin/eslint.js src/lib/bounded-body.ts src/lib/user-facing-error.ts src/lib/utils.ts",
+          "exit": 0,
+          "seconds": 0.9,
+          "log": ".sites-runtime/readability/S02/final/2-node_modules-eslint-bin-eslint.js.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "command": "pnpm typecheck",
+          "exit": 0,
+          "seconds": 4.7,
+          "log": ".sites-runtime/readability/S02/final/3-typecheck.log",
+          "logSha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+        },
+        {
+          "command": "pnpm build",
+          "exit": 0,
+          "seconds": 5.7,
+          "log": ".sites-runtime/readability/S02/final/4-build.log",
+          "logSha256": "b71f908b0fb5f675609044a897aeed9aac6a8367c0d37ef2fb959f4062e2abb8"
+        },
+        {
+          "command": "git diff --check",
+          "exit": 0,
+          "seconds": 0.0,
+          "log": ".sites-runtime/readability/S02/final/5-diff.log",
+          "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "sourceDigest": "ba93f24a5f6e210875298a655aba0285c28041ea4ed4480958bd2d8bc863b770",
+      "review": "All three modules equivalent to pre-section source after excluding exactly two new explanatory stream/UTF-8 comments. No API/error/byte/stream/authorization change. Full lint inherited separately; scoped lint clean.",
+      "rollback": "Revert this section source/documentation commit only."
+    }
+  }
 }

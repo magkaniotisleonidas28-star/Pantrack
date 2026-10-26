@@ -7,14 +7,16 @@ export class BodyTooLargeError extends Error {
 
 /** Reads at most `limit` bytes and never retains an over-limit request body. */
 export async function readBoundedUtf8(request: Request, limit: number) {
-  if (!Number.isSafeInteger(limit) || limit < 0) throw new Error('Body limit must be a non-negative safe integer.');
+  if (!Number.isSafeInteger(limit) || limit < 0)
+    throw new Error('Body limit must be a non-negative safe integer.');
   if (!request.body) return '';
   const reader = request.body.getReader();
+  // Count raw bytes; UTF-8 characters can span chunks and are decoded after assembly.
   const chunks: Uint8Array[] = [];
   let received = 0;
   try {
     while (true) {
-      const {done, value} = await reader.read();
+      const { done, value } = await reader.read();
       if (done) break;
       received += value.byteLength;
       if (received > limit) {
@@ -24,6 +26,7 @@ export async function readBoundedUtf8(request: Request, limit: number) {
       chunks.push(value);
     }
   } finally {
+    // Failed reads or cancellation must still release the request stream lock.
     reader.releaseLock();
   }
   const bytes = new Uint8Array(received);
@@ -32,5 +35,5 @@ export async function readBoundedUtf8(request: Request, limit: number) {
     bytes.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder('utf-8', {fatal: true}).decode(bytes);
+  return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
 }
