@@ -26,7 +26,7 @@ INSERT INTO po_cart_budget_policies(company_id,version,per_order_minor,outstandi
 const current=async()=>(await api('/api/po-cart-spending-limits?companyId='+companyId)).data;
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH??chromium.executablePath()});
 try{
-  for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
+  for(const viewport of [{width:390,height:844},{width:1440,height:1000}]){
     const context=await confineManagerContext(await browser.newContext({viewport})),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.goto(origin+'/signin-with-chatgpt?return_to='+encodeURIComponent('/?company='+companyId));
     if(viewport.width<700){await page.getByRole('button',{name:'Open workspace navigation'}).click();}
