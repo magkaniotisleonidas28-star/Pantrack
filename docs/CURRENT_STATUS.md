@@ -11,6 +11,27 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 manager downloads — 2026-10-25
+
+The [signed-in download controls](C4_SAVED_DRAFT_DOWNLOADS_LOCAL_EVIDENCE.md)
+now connect PDF/Excel to the manager's current saved draft. They reuse the
+existing API/formatters, check current company access/revision before generation
+and again before file handoff, and cancel when editing, leaving or switching
+companies. Busy/cancel/retry/reload states and the locally served licensed font
+are verified in the real local app. Six downloaded files passed independent
+inspection; desktop/mobile and real revocation/stale/canceled paths passed.
+
+The other contributor's merged G5 work and our two local export commits were
+combined without conflicts. All six local checks passed on that combined source:
+105 executed suites plus 12 Windows skips, typecheck, build, all 35 migration
+checks, fresh local apply and HTTP smoke. Local production-bundle assets and
+anonymous export refusal passed too. The prior G5 result retains its own scope.
+
+Current saved-draft downloads are complete locally. Next bounded C4 document
+task: company-scoped history search/status/supplier filters, extending the
+existing paginated list. C4/C5/M8 remain open and the online release stays
+deferred; no provider/purchasing gate or schema changed.
+
 ## Latest local C4 saved-draft documents — 2026-10-25
 
 The [saved-draft document adapter](C4_SAVED_DRAFT_DOCUMENTS_LOCAL_EVIDENCE.md)
@@ -21,9 +42,9 @@ downloads passed independent inspection, with exact quantities, missing/zero
 prices, revision/draft labels and a readable 50-item PDF. The full suite passed:
 103 executed suites plus ten explicit Windows skips.
 
-This completes the saved-document adapter locally. Signed-in manager download
-controls are the next bounded C4 task; they still need the authorized fetch,
-selection-change/error states and local font asset. C4/C5/M8 remain open, and
+This completes the saved-document adapter locally. Its signed-in controls,
+authorized fetch, selection/error states and font asset are now recorded above.
+C4/C5/M8 remain open, and
 the online release remains deferred. No API/schema or purchasing gate changed.
 
 ## Latest local C4 saved-draft export snapshot — 2026-10-24
@@ -39,7 +60,7 @@ A separate real-framework check passed with the preview gate temporarily enabled
 
 This completes the permission/revision foundation locally; it adds no migration
 or signed-in download buttons. Its PDF/XLSX adapter is now recorded above;
-manager-screen wiring remains the next task. C4/C5/M8 remain
+manager-screen wiring is also verified locally above. C4/C5/M8 remain
 open, and the online release remains deferred.
 
 ## Latest local C4 draft Excel — 2026-10-24

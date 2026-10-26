@@ -539,8 +539,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   no schema change. The [saved-document adapter](C4_SAVED_DRAFT_DOCUMENTS_LOCAL_EVIDENCE.md)
   now reuses the PDF/XLSX engines for saved manual/non-stock/proposal/registry
   drafts, preserving revisions and exact values with no writes. Local browser
-  downloads and independent readers passed. Signed-in PDF/XLSX controls remain
-  the next document task, with cart execution and receiving separate;
+  downloads and independent readers passed. The [signed-in controls](C4_SAVED_DRAFT_DOWNLOADS_LOCAL_EVIDENCE.md)
+  now pass in the real local manager app: both authorization reads, selection
+  cancellation, retry/reload, exact files, local font and mobile/keyboard checks.
+  Current saved-draft downloads are complete locally. History filtering/bulk
+  exports and issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable

@@ -39,8 +39,12 @@ blocked; manual items, quantities and missing prices keep their saved values.
 The [saved-draft PDF/Excel adapter](C4_SAVED_DRAFT_DOCUMENTS_LOCAL_EVIDENCE.md)
 now uses those saved values with the existing document engines. Browser downloads
 and independent file readers passed, including manual items, missing prices and
-long quantities. Next, connect the download controls to the selected saved draft
-in the signed-in manager screen. Those controls are not connected yet.
+long quantities. The [manager download buttons](C4_SAVED_DRAFT_DOWNLOADS_LOCAL_EVIDENCE.md)
+are now connected and tested locally. They use the current saved revision,
+stop if access or the draft changes, and let the manager cancel, retry or reload.
+PDF/Excel downloading from a saved draft is complete on this computer. Next,
+add search and filters to the existing saved purchase-order history. The online
+release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
 records of its completion checks. Some tests passed, but the complete AI safety

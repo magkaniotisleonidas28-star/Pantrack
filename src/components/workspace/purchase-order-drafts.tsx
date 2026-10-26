@@ -12,6 +12,7 @@ import {draftStockDisplay} from '@/lib/supplier-order-draft';
 import {emptyEditor,editorFrom,newLine,cents,dollars,statusLabel,snapshotChanges,type DraftEditor,type EditorLine} from './purchase-order-editor-model';
 import './purchase-order-drafts.css';
 import CartPreview from './cart-preview';
+import PurchaseOrderDownloads from './purchase-order-downloads';
 
 type Choices=Awaited<ReturnType<D1PurchaseOrderDrafts['choices']>>;
 type List=Awaited<ReturnType<D1PurchaseOrderDrafts['list']>>;
@@ -41,6 +42,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   const [invalid,setInvalid]=useState<Record<string,string>>({}),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false);
   const [latest,setLatest]=useState<PurchaseOrderView|null>(null),[history,setHistory]=useState<{order:PurchaseOrderView;changes:string[]}|null>(null),[historyBusy,setHistoryBusy]=useState(false);
   const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false),historyRequest=useRef(0);
+  const downloadCancel=useRef<(()=>void)|null>(null);
   const dirty=!!editor&&JSON.stringify(editor)!==baseline||uncertain;
   useEffect(()=>{onDirtyChange(dirty);},[dirty,onDirtyChange]);
   useEffect(()=>{if(!dirty)return;const protect=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',protect);return()=>window.removeEventListener('beforeunload',protect);},[dirty]);
@@ -61,15 +63,15 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   async function moreMappings(){try{const page=mappingPage+20,data=await supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=${page}`);setMappings(old=>({...data,mappings:[...old.mappings,...data.mappings.filter(m=>!old.mappings.some(o=>o.mapping.id===m.mapping.id))]}));setMappingPage(page);}catch(e){setError((e as Error).message);}}
   function clearFeedback(){setError('');setNotice('');setInvalid({});setConflict(false);setLatest(null);setHistory(null);setHistoryBusy(false);historyRequest.current++;setAck(false);setReason('');}
   function mayLeave(){return !busy&&!uncertain&&(!dirty||window.confirm('Discard your unsaved draft changes?'));}
-  function openEditor(value:DraftEditor){setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}
-  async function open(id:string){if(!mayLeave())return;setBusy(true);clearFeedback();try{const {order}=await request(companyId,`&orderId=${encodeURIComponent(id)}`);setSelected(order);setEditor(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
-  function back(){if(!mayLeave())return;setSelected(null);setEditor(null);clearFeedback();void loadList(offset);}
+  function openEditor(value:DraftEditor){downloadCancel.current?.();setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}
+  async function open(id:string){if(!mayLeave())return;downloadCancel.current?.();setBusy(true);clearFeedback();try{const {order}=await request(companyId,`&orderId=${encodeURIComponent(id)}`);setSelected(order);setEditor(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+  function back(){if(!mayLeave())return;downloadCancel.current?.();setSelected(null);setEditor(null);clearFeedback();void loadList(offset);}
   function patch(values:Partial<DraftEditor>){setEditor(old=>old?{...old,...values}:old);setInvalid({});setAck(false);}
   function patchLine(key:string,values:Partial<EditorLine>){setEditor(old=>old?{...old,lines:old.lines.map(l=>l.key===key?{...l,...values}:l)}:old);setInvalid({});}
   function mappingFor(line:EditorLine){return mappings.mappings.find(m=>m.mapping.id===line.mappingId&&m.mapping.version===line.mappingVersion)?.mapping??
     selected?.snapshot.registry?.mappings.find(m=>m.mapping.id===line.mappingId&&m.mapping.version===line.mappingVersion)?.mapping;}
   async function save(body:Record<string,unknown>){
-    if(lock.current)return;lock.current=true;setBusy(true);setError('');setNotice('');pending.current=body;
+    if(lock.current)return;downloadCancel.current?.();lock.current=true;setBusy(true);setError('');setNotice('');pending.current=body;
     try{const {order}=await request(companyId,'',body);setSelected(order);setEditor(null);setUncertain(false);pending.current=null;setConflict(false);setLatest(null);setHistory(null);historyRequest.current++;setAck(false);setReason('');setOffset(0);void loadList(0);
       setNotice(body.action==='review'?'Draft reviewed. No purchase is approved or sent.':body.action==='cancel'?'Draft canceled. Its history is preserved.':body.action==='edit'?'Changes saved. This revision needs review.':'Draft saved and ready for review.');
     }catch(e){setError((e as Error).message);const unknown=!(e instanceof RequestError)||e.status>=500;setUncertain(unknown);setConflict(e instanceof RequestError&&e.status===409);if(!unknown)pending.current=null;}
@@ -111,7 +113,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     }catch(e){if(seq===historyRequest.current)setError((e as Error).message);}finally{if(seq===historyRequest.current)setHistoryBusy(false);}
   }
   async function checkLatest(){if(!selected)return;setBusy(true);try{setLatest((await request(companyId,`&orderId=${encodeURIComponent(selected.snapshot.id)}`)).order);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
-  function useLatest(){if(!latest||!mayLeave())return;setSelected(latest);setEditor(null);clearFeedback();}
+  function useLatest(){if(!latest||!mayLeave())return;downloadCancel.current?.();setSelected(latest);setEditor(null);clearFeedback();}
   const blocked=busy||uncertain;
   const fieldError=(name:string)=>invalid[name]?<small id={`po-error-${name}`} role="alert" className="po-field-error">{invalid[name]}</small>:null;
   const snapshot=selected?.snapshot;
@@ -192,6 +194,8 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
           {selected&&<label>Reason for these changes<Input name="reason" required minLength={4} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)}/><small>Saved with this revision so other managers can understand the correction.</small>{fieldError('reason')}</label>}
         </fieldset>
       </form>:snapshot&&<>
+        {selected&&selected.status!=='canceled'&&<PurchaseOrderDownloads key={JSON.stringify([companyId,snapshot.id,selected.revision])}
+          companyId={companyId} orderId={snapshot.id} revision={selected.revision} disabled={blocked} cancelRef={downloadCancel} onReload={()=>void open(snapshot.id)}/>}
         <section className="po-section"><h2>Supplier and delivery</h2><p><strong>{snapshot.supplier.name}</strong><br/>{snapshot.supplier.email??'Ordering email unavailable'}</p><p>Account: {snapshot.supplier.accountId} · Location: {snapshot.supplier.locationId}</p><p className="po-prewrap">{snapshot.supplier.deliveryAddress}</p></section>
         <section className="po-section"><h2>Order lines</h2><SavedLines snapshot={snapshot}/></section>
         <section className="po-section"><h2>Delivery instructions</h2><p className="po-prewrap">{snapshot.notes||'No delivery instructions added.'}</p></section>
