@@ -1,7 +1,8 @@
 import {z} from 'zod';
 import {poId} from './purchase-order-contract';
 import {capturePurchaseOrderHistoryRecord,type PurchaseOrderHistoryRecord} from './purchase-order-export-contract';
-import {purchaseOrderHistoryFilters} from './purchase-order-history-contract';
+import {purchaseOrderHistoryFilters,purchaseOrderHistoryFilterQuery,PURCHASE_ORDER_HISTORY_FILTER_KEYS} from './purchase-order-history-contract';
+import {historyDateBounds} from './purchase-order-history-dates';
 import {canonicalJson,frozenCopy} from './supplier-simulation-contract';
 
 export const HISTORY_EXPORT_MAX_ORDERS=100,HISTORY_EXPORT_MAX_LINES=1000,HISTORY_EXPORT_MAX_BYTES=2_000_000;
@@ -36,11 +37,13 @@ function captureCore(value:unknown){
   let records:PurchaseOrderHistoryRecord[];
   try{records=parsed.data.records.map(capturePurchaseOrderHistoryRecord);}catch{historyExportFail('source_invalid','A saved draft cannot be exported. Refresh the results and review its details.');}
   const core={...parsed.data,records};
+  const dates=historyDateBounds(core.filters);
   // Match SQLite lower()/instr(): fold ASCII only and treat wildcard characters literally.
   const lower=(text:string)=>text.replace(/[A-Z]/g,char=>char.toLowerCase());
   const includes=(text:string,query:string)=>lower(text).includes(lower(query));
   if(core.orderCount!==records.length||core.lineCount!==records.reduce((sum,record)=>sum+record.draft.lines.length,0)||
-    records.some(({draft,status})=>draft.companyId!==core.companyId||
+    records.some(({draft,status,createdAt})=>draft.companyId!==core.companyId||
+      dates.start&&Date.parse(createdAt)<Date.parse(dates.start)||dates.before&&Date.parse(createdAt)>=Date.parse(dates.before)||
       core.filters.status&&status!==core.filters.status||
       core.filters.q&&!includes(draft.number,core.filters.q)&&!includes(draft.supplier.name,core.filters.q)||
       core.filters.supplier&&!includes(draft.supplier.id,core.filters.supplier)&&!includes(draft.supplier.name,core.filters.supplier))||
@@ -69,8 +72,8 @@ export async function buildPurchaseOrderHistoryExport(companyId:string,filters:z
   return frozenCopy({...core,fingerprint:await historyExportFingerprint(core)});
 }
 export function purchaseOrderHistoryExportQuery(params:URLSearchParams){
-  const keys=[...params.keys()];if(keys.length!==new Set(keys).size||keys.some(key=>!['companyId','q','supplier','status','expected'].includes(key)))historyExportFail('invalid_request','Choose history filters without a page or offset.');
-  const parsed=purchaseOrderHistoryExportRequest.safeParse({companyId:params.get('companyId'),filters:{q:params.get('q')??'',supplier:params.get('supplier')??'',
-    ...(params.has('status')?{status:params.get('status')}:{})},...(params.has('expected')?{expected:params.get('expected')}:{})});
+  const keys=[...params.keys()];if(keys.length!==new Set(keys).size||keys.some(key=>!['companyId',...PURCHASE_ORDER_HISTORY_FILTER_KEYS,'expected'].includes(key)))historyExportFail('invalid_request','Choose history filters without a page or offset.');
+  const parsed=purchaseOrderHistoryExportRequest.safeParse({companyId:params.get('companyId'),filters:purchaseOrderHistoryFilterQuery(params),
+    ...(params.has('expected')?{expected:params.get('expected')}:{})});
   if(!parsed.success)historyExportFail('invalid_request','Check the history export filters.');return parsed.data;
 }

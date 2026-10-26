@@ -5,7 +5,7 @@ import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {D1PurchaseOrderDrafts} from '@/lib/d1-purchase-order-drafts';
 import {PurchaseOrderError} from '@/lib/purchase-order-contract';
 import {a8ReviewPolicy} from '@/lib/a8-review-source';
-import {purchaseOrderHistoryQuery} from '@/lib/purchase-order-history-contract';
+import {purchaseOrderHistoryQuery,PURCHASE_ORDER_HISTORY_FILTER_KEYS} from '@/lib/purchase-order-history-contract';
 
 function enabled() {return (env as unknown as {PANTRACK_PO_DRAFT_PREVIEW?:string}).PANTRACK_PO_DRAFT_PREVIEW === 'enabled';}
 function service() {return new D1PurchaseOrderDrafts(database(),{
@@ -25,7 +25,7 @@ async function handleGET(req: Request) {
   const params = new URL(req.url).searchParams, companyId = params.get('companyId') ?? '';
   try {
     const store = service();
-    const hasFilters=['q','supplier','status'].some(key=>params.has(key));
+    const hasFilters=PURCHASE_ORDER_HISTORY_FILTER_KEYS.some(key=>params.has(key));
     if(hasFilters&&(params.has('orderId')||params.has('revision')||params.has('view'))){
       return Response.json({error:'Use history filters with the purchase-order list.'},{status:400});
     }

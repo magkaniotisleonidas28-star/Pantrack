@@ -15,6 +15,7 @@ import CartPreview from './cart-preview';
 import PurchaseOrderDownloads from './purchase-order-downloads';
 import PurchaseOrderHistoryDownloads from './purchase-order-history-downloads';
 import {purchaseOrderHistoryFilters,purchaseOrderHistorySearch,type PurchaseOrderHistoryFilters} from '@/lib/purchase-order-history-contract';
+import {HISTORY_DATE_MIN,HISTORY_DATE_MAX,type HistoryDateTimeZone} from '@/lib/purchase-order-history-dates';
 
 type Choices=Awaited<ReturnType<D1PurchaseOrderDrafts['choices']>>;
 type List=Awaited<ReturnType<D1PurchaseOrderDrafts['list']>>;
@@ -27,7 +28,7 @@ async function request<T={order:PurchaseOrderView}>(companyId:string,query='',bo
     {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store',signal});
   const data=await response.json() as T&{error?:string};if(!response.ok)throw new RequestError(data.error??'Could not load purchase orders.',response.status);return data;
 }
-const date=(at:string)=>new Date(at).toLocaleString();
+const date=(at:string,timeZone?:HistoryDateTimeZone)=>new Date(at).toLocaleString(undefined,timeZone?{timeZone,timeZoneName:'short'}:undefined);
 const money=(v:string|null)=>v===null?'Unavailable':`$${dollars(v)}`;
 const FieldErrors=createContext<Record<string,string>>({});
 const emptyHistoryFilters:PurchaseOrderHistoryFilters={q:'',supplier:''};
@@ -48,9 +49,10 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   const downloadCancel=useRef<(()=>void)|null>(null);
   const historyExportCancel=useRef<(()=>void)|null>(null);
   const [filters,setFilters]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters),[filterDraft,setFilterDraft]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters);
+  const [dateTimeZone,setDateTimeZone]=useState<HistoryDateTimeZone>('America/New_York'),[filterError,setFilterError]=useState('');
   const [historyLoading,setHistoryLoading]=useState(true),[historyError,setHistoryError]=useState('');
   const historyListRequest=useRef(0),historyListAbort=useRef<AbortController|null>(null);
-  const historyVisible=enabled&&active&&!selected&&!editor,hasFilters=!!(filters.q||filters.supplier||filters.status);
+  const historyVisible=enabled&&active&&!selected&&!editor,hasFilters=!!(filters.q||filters.supplier||filters.status||filters.from||filters.to);
   const dirty=!!editor&&JSON.stringify(editor)!==baseline||uncertain;
   useEffect(()=>{onDirtyChange(dirty);},[dirty,onDirtyChange]);
   useEffect(()=>{if(!dirty)return;const protect=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};window.addEventListener('beforeunload',protect);return()=>window.removeEventListener('beforeunload',protect);},[dirty]);
@@ -75,11 +77,15 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     finally{if(sequence===historyListRequest.current)setHistoryLoading(false);}
   }
   function applyHistoryFilters(event:React.FormEvent<HTMLFormElement>){event.preventDefault();
-    const parsed=purchaseOrderHistoryFilters.safeParse(filterDraft);if(!parsed.success){setHistoryError('Check the search and supplier fields.');return;}
+    const parsed=purchaseOrderHistoryFilters.safeParse(filterDraft);if(!parsed.success){setFilterError(parsed.error.issues[0]?.message??'Check the history filters.');return;}
     prepareHistoryRead();setFilterDraft(parsed.data);setFilters(parsed.data);setOffset(0);
   }
-  function prepareHistoryRead(){historyExportCancel.current?.();historyListRequest.current++;historyListAbort.current?.abort();setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});}
-  function patchHistoryFilters(values:Partial<PurchaseOrderHistoryFilters>){historyExportCancel.current?.();setFilterDraft(old=>({...old,...values}));}
+  function prepareHistoryRead(){historyExportCancel.current?.();historyListRequest.current++;historyListAbort.current?.abort();setHistoryLoading(true);setHistoryError('');setFilterError('');setList({orders:[],hasMore:false});}
+  function patchHistoryFilters(values:Partial<PurchaseOrderHistoryFilters>){historyExportCancel.current?.();setFilterError('');setFilterDraft(old=>({...old,...values}));}
+  function patchHistoryDate(field:'from'|'to',value:string){historyExportCancel.current?.();setFilterError('');setFilterDraft(old=>{
+    const next={...old,[field]:value||undefined};return {...next,timeZone:next.from||next.to?dateTimeZone:undefined};
+  });}
+  function changeDateTimeZone(zone:HistoryDateTimeZone){setDateTimeZone(zone);patchHistoryFilters({timeZone:filterDraft.from||filterDraft.to?zone:undefined});}
   function clearHistoryFilters(){prepareHistoryRead();setFilterDraft({...emptyHistoryFilters});setFilters({...emptyHistoryFilters});setOffset(0);}
   function changeHistoryPage(page:number){prepareHistoryRead();setOffset(page);}
   async function loadSuppliers(page:number){try{const data=await supplierRequest<Suppliers>(companyId,`&offset=${page}`);setSuppliers(old=>page?{...data,suppliers:[...old.suppliers,...data.suppliers.filter(s=>!old.suppliers.some(o=>o.id===s.id))]}:data);setSupplierPage(page);}catch(e){setError((e as Error).message);}}
@@ -162,11 +168,17 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
       {latest&&<div><p>Latest: revision {latest.revision} · {statusLabel(latest.status)}</p><ul>{snapshotChanges(selected.snapshot,latest.snapshot).map(c=><li key={c}>{c}</li>)}</ul>
         <Button variant="outline" disabled={blocked} onClick={useLatest}>Load latest saved version</Button><small>This replaces unsaved fields after confirmation.</small></div>}</div>}
     {!editor&&!selected&&<>
-      <form className="po-history-filters" aria-label="Filter purchase-order history" onSubmit={applyHistoryFilters}>
+      <form className="po-history-filters" aria-label="Filter purchase-order history" onSubmit={applyHistoryFilters} noValidate>
         <label>Search saved drafts<Input name="history-search" maxLength={200} placeholder="PO number or supplier" value={filterDraft.q} disabled={blocked} onChange={e=>patchHistoryFilters({q:e.target.value})}/></label>
         <label>Status<select value={filterDraft.status??''} disabled={blocked} onChange={e=>patchHistoryFilters({status:(e.target.value||undefined) as PurchaseOrderHistoryFilters['status']})}>
           <option value="">All statuses</option><option value="draft">Draft</option><option value="reviewed">Reviewed</option><option value="canceled">Canceled</option></select></label>
         <label>Supplier<Input name="history-supplier" maxLength={200} placeholder="Supplier name or ID" value={filterDraft.supplier} disabled={blocked} onChange={e=>patchHistoryFilters({supplier:e.target.value})}/></label>
+        <label>From<Input name="history-from" type="date" min={HISTORY_DATE_MIN} max={HISTORY_DATE_MAX} value={filterDraft.from??''} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>patchHistoryDate('from',e.target.value)}/></label>
+        <label>To<Input name="history-to" type="date" min={HISTORY_DATE_MIN} max={HISTORY_DATE_MAX} value={filterDraft.to??''} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>patchHistoryDate('to',e.target.value)}/></label>
+        <label>Date time zone<select value={dateTimeZone} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>changeDateTimeZone(e.target.value as HistoryDateTimeZone)}>
+          <option value="America/New_York">New York (America/New_York)</option><option value="UTC">UTC</option></select></label>
+        <small id="po-history-date-help" className="po-history-date-help">Filter by the original creation date. From and To include the whole day in {dateTimeZone}, including daylight-saving changes. Leave either date blank for an open range.</small>
+        {filterError&&<p role="alert" className="error po-history-date-help">{filterError}</p>}
         <div className="po-history-filter-actions"><Button type="submit" variant="outline" disabled={blocked}>Apply filters</Button><Button type="button" variant="ghost" disabled={blocked} onClick={clearHistoryFilters}>Clear filters</Button></div>
       </form>
       <PurchaseOrderHistoryDownloads key={JSON.stringify([companyId,filters])} companyId={companyId} filters={filters}
@@ -177,7 +189,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
           <div className="po-empty"><h2>No purchase-order drafts yet</h2><p>Choose a supplier and add the items you want a manager to review.</p><Button disabled={blocked} onClick={()=>openEditor(emptyEditor())}>Create a draft</Button></div>):
         <div className="po-list"><div className="po-list-header"><span>Supplier / draft</span><span>Status</span><span>Created</span><span className="sr-only">Open</span></div>
           {list.orders.map(o=><div className="po-list-row" key={o.id}><div><strong>{o.supplier_name}</strong><small>{o.number} · revision {o.revision}</small></div>
-            <span>{statusLabel(o.status as PurchaseOrderView['status'])}</span><time dateTime={o.created_at}>{date(o.created_at)}</time><Button variant="ghost" disabled={blocked} onClick={()=>void open(o.id)}>Open<span className="sr-only"> {o.number}</span></Button></div>)}</div>}
+            <span>{statusLabel(o.status as PurchaseOrderView['status'])}</span><time dateTime={o.created_at}>{date(o.created_at,filters.timeZone)}</time><Button variant="ghost" disabled={blocked} onClick={()=>void open(o.id)}>Open<span className="sr-only"> {o.number}</span></Button></div>)}</div>}
       {!historyLoading&&!historyError&&list.orders.length>0&&<p role="status" className="po-muted">Showing {offset+1}–{offset+list.orders.length}{hasFilters?' matching drafts':''}.</p>}
       <nav className="po-pagination" aria-label="Draft pages"><Button variant="outline" disabled={offset===0||blocked||historyLoading||!!historyError} onClick={()=>changeHistoryPage(Math.max(0,offset-20))}>Previous</Button><Button variant="outline" disabled={!list.hasMore||blocked||historyLoading||!!historyError} onClick={()=>changeHistoryPage(offset+20)}>Next</Button></nav>
     </>}

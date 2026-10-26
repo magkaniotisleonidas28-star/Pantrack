@@ -1,11 +1,12 @@
 import {DownloadRefusal,browserPurchaseOrderDownloads,type PurchaseOrderDownloadDependencies,type PurchaseOrderDownloadFlow} from './purchase-order-download';
 import {purchaseOrderHistoryExportRequest,verifyPurchaseOrderHistoryExport,type PurchaseOrderHistoryExportRequest,type PurchaseOrderHistoryExportSnapshot} from './purchase-order-history-export-contract';
+import {purchaseOrderHistoryFilterParams} from './purchase-order-history-contract';
 
 export const purchaseOrderHistoryDownloadFlow:PurchaseOrderDownloadFlow<PurchaseOrderHistoryExportRequest,PurchaseOrderHistoryExportSnapshot>={
   loading:'for all matching saved drafts',changed:'The matching history changed. Refresh the results before exporting again.',
   read:async(input,fetch,signal,previous)=>{
     const selection=purchaseOrderHistoryExportRequest.parse(input),f=selection.filters;
-    const params=new URLSearchParams({companyId:selection.companyId});if(f.q)params.set('q',f.q);if(f.supplier)params.set('supplier',f.supplier);if(f.status)params.set('status',f.status);
+    const params=new URLSearchParams({companyId:selection.companyId});purchaseOrderHistoryFilterParams(f).forEach((value,key)=>params.set(key,value));
     if(previous)params.set('expected',previous.fingerprint);
     const response=await fetch('/api/purchase-order-history-exports?'+params,{method:'GET',credentials:'same-origin',cache:'no-store',redirect:'error',signal});
     if(!response.ok){
