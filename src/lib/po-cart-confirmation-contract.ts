@@ -20,13 +20,20 @@ export const recordConfirmationSchema=z.object({
   note:z.string().trim().max(1000),
 }).strict();
 export const confirmationQuerySchema=z.object({companyId:id,jobId:id}).strict();
+// Owner review of an over-cap confirmation: approve the confirmed total (password confirmed), or note why it stays held.
+export const approveOverCapSchema=z.object({action:z.literal('approve_over_cap'),companyId:id,confirmationId:id,operationId:z.string().uuid(),note:z.string().trim().max(1000)}).strict();
+export const holdOverCapSchema=z.object({action:z.literal('hold_note'),companyId:id,confirmationId:id,operationId:z.string().uuid(),
+  note:z.string().trim().min(1,'Say what should happen with this order.').max(1000)}).strict();
 export type RecordConfirmation=z.infer<typeof recordConfirmationSchema>;
 export type ConfirmedLine=Readonly<{lineId:string;kind:'stock'|'non_stock';sku:string;description:string;unitLabel:string;
   authorizedPacks:string;packs:string;estimateUnitMinor:string;unitMinor:string;lineMinor:string;packsChanged:boolean;priceChanged:boolean}>;
 export type ConfirmationState='confirmed'|'needs_owner_review';
 export type ConfirmationReceipt=Readonly<{operationId:string;confirmationId:string;jobId:string;state:ConfirmationState;at:string}>;
+export type ReviewReceipt=Readonly<{operationId:string;confirmationId:string;kind:'approved'|'note';at:string}>;
+/** A limit the approved total would exceed, and by how much (counted as the owner chose on 2026-10-26). */
+export type LimitWarning=Readonly<{limit:'per_order'|'per_day'|'per_month'|'in_progress';limitMinor:number;overByMinor:number}>;
 export class PoCartConfirmationError extends Error {
-  constructor(public readonly code:'invalid_request'|'forbidden'|'missing'|'conflict'|'storage_failure',message:string){
+  constructor(public readonly code:'invalid_request'|'forbidden'|'missing'|'conflict'|'storage_failure'|'reauthentication_required',message:string){
     super(message);this.name='PoCartConfirmationError';
   }
 }
@@ -37,6 +44,14 @@ export function confirmationFail(code:PoCartConfirmationError['code'],message:st
  * order-linked incoming at the frozen pack conversion; extra (substituted or added) items cost
  * money but add no stock until mapped and reviewed.
  */
+/** Order-linked incoming for a recorded confirmation: stock lines with confirmed packs, at the frozen conversion. */
+export function confirmedIncoming(preflight:PreparationPreflight,lines:readonly ConfirmedLine[]):OrderIncomingLine[]{
+  return lines.flatMap(c=>{const l=preflight.lines.find(x=>x.lineId===c.lineId);
+    if(!l||l.kind!=='stock'||BigInt(c.packs)===BigInt(0))return [];
+    if(!l.productId||!l.configId||!l.stockUnitsPerPack)confirmationFail('conflict','A stock line is missing its frozen inventory conversion.');
+    return [{lineId:l.lineId,productId:l.productId,configId:l.configId,dimension:l.stockUnitsPerPack.dimension,
+      quantityMinor:String(BigInt(l.stockUnitsPerPack.minor)*BigInt(c.packs))}];});
+}
 export function computeConfirmation(preflight:PreparationPreflight,input:RecordConfirmation){
   const given=new Map(input.lines.map(l=>[l.lineId,l]));
   if(given.size!==input.lines.length||given.size!==preflight.lines.length||preflight.lines.some(l=>!given.has(l.lineId)))

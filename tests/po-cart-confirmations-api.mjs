@@ -12,7 +12,7 @@ await build({entryPoints:['src/app/api/po-cart-confirmations/route.ts'],bundle:t
     b.onLoad({filter:/.*/,namespace:'confirm-http'},args=>({contents:
       args.path==='cloudflare:workers'?'export const env=globalThis.__confirmApi.env;':
       args.path==='@/db/raw'?'export const database=()=>globalThis.__confirmApi.db;':
-      args.path==='@/lib/chatgpt-auth'?'export const getChatGPTUser=async()=>globalThis.__confirmApi.user?{userId:globalThis.__confirmApi.user}:null;':
+      args.path==='@/lib/chatgpt-auth'?'export const getChatGPTUser=async()=>globalThis.__confirmApi.user?{userId:globalThis.__confirmApi.user,reauthenticatedAt:globalThis.__confirmApi.verifiedAt}:null;':
       'export const a8ReviewPolicy=()=>({syncEnabled:false,maxLagMs:600000});',loader:'js'}));
   }}]});
 const api=await import('../.sites-runtime/po-cart-confirmations-api.mjs');
@@ -45,4 +45,20 @@ assert.deepEqual(await r1.json(),await r2.json(),'Concurrent identical saves ret
 assert.match(r1.headers.get('cache-control'),/no-store/);
 const after=await (await get('a',j.id)).json();assert.equal(after.confirmation.state,'confirmed');assert.equal(after.incoming.length,1);
 await denied(409,()=>post({...body,operationId:randomUUID(),supplierReference:'SUP-HTTP-2'}));
+// Owner review actions: owner only, password confirmation required, strict input, and nothing to review within the cap.
+const confirmationId=after.confirmation.id,review=(action,extra={})=>({action,companyId:'a',confirmationId,operationId:randomUUID(),note:'Fictional',...extra});
+const reviews=()=>JSON.stringify(f.sql.prepare('SELECT * FROM po_cart_confirmation_reviews').all());
+async function untouched(status,run,message){const before=reviews(),res=await run(),data=await res.json();assert.equal(res.status,status,JSON.stringify(data));
+  if(message)assert.equal(data.error,message);assert.equal(reviews(),before);return data;}
+await untouched(403,()=>post(review('approve_over_cap')),'Only the company owner can review an over-cap confirmation.');
+await untouched(403,()=>post(review('hold_note')),'Only the company owner can review an over-cap confirmation.');
+s.user='owner';s.verifiedAt=undefined;
+assert.equal((await untouched(403,()=>post(review('approve_over_cap')))).code,'reauthentication_required');
+s.verifiedAt=Date.now()-60_000;// The route has no injected clock, so the password confirmation is a minute ago in real time.
+await untouched(409,()=>post(review('approve_over_cap')),'This confirmation is within its cap and needs no owner review.');
+await untouched(400,()=>post(review('hold_note',{note:' '})),'Say what should happen with this order.');
+await untouched(400,()=>post(review('reject')),'Choose record, approve_over_cap or hold_note.');
+await untouched(400,()=>post(review('approve_over_cap',{amount:'1'})));
+s.user='manager';
+console.log('PASS: owner review over HTTP: managers refused by the service, password confirmation required, strict input and no review within the cap.');
 console.log('PASS: confirmation HTTP identity/company/role, default-off loopback, actual CSRF/origin, strict intent, concurrent replay and private responses.');

@@ -137,7 +137,7 @@ Recording deliveries (receiving) is a later, separate task.
 _As built (2026-10-26):_ [Part 1](C4_ORDER_INCOMING_PORT_LOCAL_EVIDENCE.md) and
 [Part 2](C4_SUPPLIER_CONFIRMATION_LOCAL_EVIDENCE.md) are done.
 
-- **Over-cap approval moves to a later Part 3.** It needs spending accounting for the
+- **Over-cap approval is Part 3,** now [built locally](C4_OVER_CAP_APPROVAL_LOCAL_EVIDENCE.md) after [decision 0006](decisions/0006-m10-payment-and-limits.md). Originally: It needs spending accounting for the
   increase, which depends on the postponed M10 decisions. Over-cap confirmations are
   recorded and held, with no stock effect.
 - **A recorded confirmation also ends the supplier account's cart ownership,**

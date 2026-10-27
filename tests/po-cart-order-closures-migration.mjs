@@ -52,6 +52,8 @@ for(const populated of [false,true]){
     assert.equal(sql.prepare("SELECT count(*) n FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%'").get().n,tables.length+1);
     if(populated){
       // An order received in full before the upgrade is complete but still holds its budget; a manager closes it after.
+      // Today's services also read later tables, so apply the migrations after 0041 first.
+      for(const e of entries.filter(e=>e.idx>m.idx))sql.exec(readFileSync(`drizzle/${e.tag}.sql`,'utf8'));
       now='2026-10-11T09:00:00.000Z';const deliveries=new D1PoCartDeliveries(db,options);
       const view=await deliveries.manager({companyId:'a',view:'manager',jobId:job.id});
       assert.deepEqual([view.complete,view.closure,view.hold],[true,null,'reserved']);
