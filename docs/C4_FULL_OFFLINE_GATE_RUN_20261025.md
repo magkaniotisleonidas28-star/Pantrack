@@ -93,8 +93,69 @@ baseline and all runtime state are retained.
 
 ## Next
 
-The full offline gate has no further step. Remaining C4 work goes back to the
-roadmap's separate outcomes. These include the other contributor's
-server-authorized, revision-bound PDF/XLSX export snapshot and the signed-in
-manager integration; this workstream does not overlap them. Choosing the next
-C4 item is an owner decision.
+The full offline gate had no further step, and remaining C4 work went back to the
+roadmap's separate outcomes.
+
+On 2026-10-27 the owner asked to run the real-model test. The paid allowance
+requires a passing gate on the **current** source, and later work (receiving,
+weekly drafts, over-cap approval) changed it, so G5's report no longer validates.
+
+## Rebinding for G6
+
+The rebinding is source-only, under the same rules as
+[G5's](C4_FULL_OFFLINE_GATE_RUN_20261024.md#rebinding-for-g5):
+
+- `consumedGateRoots` and `CONSUMED` add `…-20261025`;
+- the gate and audit bind `…-20261027`;
+- the gate-root pins in both suites are updated.
+
+`gatePolicy` (`metadata-repair-real-matrix-v1`), the 21 steps, every threshold, the
+lock rule and the paid-allowance code are unchanged. G5's final audits all passed,
+so its recorded profiles and worker locks count under the existing rule.
+
+**Read-only live check:** `baseline_holds()` passed against the current state, with
+every file-write path blocked in the process:
+
+- baseline `8ee75de7…` holds, with preflight idle;
+- the 46 historical locks are exact;
+- **12 gate locks** (four each from G3–G5) are accounted;
+- the 176,277 changed entries are all inside the **719 profiles** that G2–G5
+  recorded.
+
+The new root is absent.
+
+**Checks:**
+
+| Command | Result |
+| --- | --- |
+| `pnpm test po-cart-full-gate-audit po-cart-full-offline-gate po-cart-observation-baseline` | Passed (3 suites) |
+| `pnpm typecheck`, `pnpm test`, `pnpm build` | Passed; **155 suites**; build complete |
+
+`db:check`, `db:migrate:local` and `test:local` are not claimed here; the gate's
+six-command preparation runs them on the frozen source.
+
+## Next: G6, then the separately authorized paid matrix
+
+1. **After this rebinding merges,** on the merged and then frozen source:
+   - run the six-command preparation into the new root;
+   - record `freeze.json`;
+   - run `full-gate-audit.py capture`;
+   - dry-run `finish` against the capture;
+   - run the `before` check.
+
+   **No merges** may happen from then until the paid matrix finishes, because any
+   source change invalidates both the gate and the allowance.
+2. **The owner invokes the gate once, on AC power:**
+   `caffeinate -di pnpm cart:browser-worker:gate:ai`. All inference stays mocked.
+3. **Only if G6 passes all 21 steps and the owner explicitly authorizes the paid
+   run:**
+   - create the single-use Metadata allowance from G6's report;
+   - re-verify the model, settings and pricing against the
+     [official model page](https://developers.openai.com/api/docs/models/gpt-5.4-mini)
+     within five minutes;
+   - run `pnpm cart:browser-worker:evaluate` once: at most 72 requests, within the
+     $5 cumulative ceiling, with about $4.08 conservatively remaining.
+
+Rollback reverts this commit. Every consumed root, the observation baseline and all
+runtime state are untouched. This gate does not close C4/M8. Real-model, hosted,
+supplier, pilot and production evidence remain separate.

@@ -9,7 +9,7 @@ if(process.platform==='win32'){console.log('SKIP po-cart-full-gate-audit on Wind
 const auditPath=resolve('scripts/po-cart-worker/full-gate-audit.py');
 // The real gate root legitimately exists during gate preparation and its own
 // test step; this suite must leave it and both consumed roots exactly as it found them.
-const gateRoots=['20261014','20261021','20261022','20261024','20261025'].map(day=>'.sites-runtime/po-cart-workers/full-offline-acceptance-task-'+day);
+const gateRoots=['20261014','20261021','20261022','20261024','20261025','20261027'].map(day=>'.sites-runtime/po-cart-workers/full-offline-acceptance-task-'+day);
 const gateListing=()=>gateRoots.map(root=>existsSync(root)?readdirSync(root).sort().map(name=>[name,statSync(root+'/'+name).mtimeMs]):null);
 const gateBefore=gateListing();
 const sandbox=realpathSync(mkdtempSync(join(tmpdir(),'pantrack-full-gate-audit-')));
@@ -193,8 +193,8 @@ try{
  // The fixed scope covers every local database and the October 14 protected bases.
  const source=readFileSync(auditPath,'utf8');
  assert.match(source,/DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
- assert.match(source,/root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\)/);
- assert.match(source,/CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\)\]/);
+ assert.match(source,/root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\)/);
+ assert.match(source,/CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\)\]/);
  assert.doesNotMatch(source,/sqlite3\.connect\(/);
  // Only fixed operations run, never optimized.
  const invalid=spawnSync('python3',[auditPath,'--root','x'],{encoding:'utf8',cwd:sandbox});
