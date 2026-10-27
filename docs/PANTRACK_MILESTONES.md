@@ -959,7 +959,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   - the Baldor browser-access inquiry is withdrawn, and whether Baldor's terms
     allow automated access stays open.
 
-  Over-cap owner approval is now unblocked; acceptance evidence is still pending.
+  [Over-cap owner approval](C4_OVER_CAP_APPROVAL_LOCAL_EVIDENCE.md) is built locally:
+  password-confirmed, it raises the held amount to the confirmed total (migration
+  `0044`, local only). Acceptance evidence is still pending.
 - [ ] **C8 — Coordinate M11 and execute C's slice.** Prepare the runbook and
   evidence report; supervise verified cart preparation, manager checkout,
   supplier confirmation, delivery reconciliation,
