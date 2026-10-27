@@ -1,7 +1,7 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: **S23 integration with main `5f9df85` is complete locally.** All 158 suites and the normal local pipeline pass; lint matches main at 90 errors/92 warnings. Publication/remote CI remain unperformed; original cleanup history below is retained.
+Current outcome: **S23 integration with main `5f9df85` is committed locally as merge `b4208a7`.** All 158 suites and the normal local pipeline pass; lint matches main at 90 errors/92 warnings. Publication/remote CI remain unperformed; original cleanup history below is retained.
 
 ## S23 — Current-main integration (2026-10-27)
 
@@ -15,7 +15,7 @@ Worktree: `/Users/peterpsimadas/Desktop/Pantrack-readability-integration-2026102
 - [x] Resolve 18 conflicts from main, retaining only compiler-equivalent formatting and the existing dev tooling additions.
 - [x] Refresh inventory/navigation; account for all upstream additions without claiming they were cleaned.
 - [x] Run focused/full frozen-source checks, independent whole-tree preservation review and current-main lint comparison.
-- [x] Prepare the verified integration for local commit and record the final handoff.
+- [x] Commit the verified integration (`b4208a7`) and record the final handoff.
 
 **Current integration evidence:** 158 full suites (Mac, zero skips), 18 focused suites, typecheck, all 45 migrations/schema checks, build, isolated apply/HTTP and 19 supported format selections pass. Full lint retains exactly main's 90 errors/92 warnings. All code differences are equivalent to main with the five original explanatory comments accounted for. All deferred/held sources, schema/migrations/styles/history and file modes are preserved. Owner main and the original cleanup checkout remain clean and unchanged. No push, PR or merge into main occurred.
 

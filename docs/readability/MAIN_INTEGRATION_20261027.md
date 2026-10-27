@@ -1,6 +1,6 @@
 # Readability integration with current main — 2026-10-27
 
-Status: Completed locally; publication and remote CI are not performed. Workstream: C2 maintainability / merge-owner integration.
+Status: Committed locally in merge `b4208a7`; publication and remote CI are not performed. Workstream: C2 maintainability / merge-owner integration.
 
 ## Task contract
 
@@ -21,7 +21,7 @@ committed merge, and an explicit list of remaining cleanup/CI work.
 - [x] Resolve all 18 conflicts using current main and guarded formatting.
 - [x] Refresh inventory and navigation; preserve original receipts as history.
 - [x] Run focused/full frozen-source verification and preservation review.
-- [x] Prepare the verified merge for the local integration commit and handoff without publishing.
+- [x] Commit the verified local integration and hand off without publishing.
 
 ## Baseline and resolution evidence
 

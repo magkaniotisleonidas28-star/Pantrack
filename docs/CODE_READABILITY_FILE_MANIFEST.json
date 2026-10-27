@@ -2435,7 +2435,7 @@
       "results": [
         "Integration task contract/outcome reviewed; focused/full local checks and preservation evidence recorded. No publication or main merge."
       ],
-      "cleanupSha256": "39a2a2ca9e146d146a58268fca7654a1d34976020d64ee8c48b6a094dc8eedd0"
+      "cleanupSha256": "bfb642b7fadc6c365f4546a021092680fb1305440d38d8c122c103e321f27292"
     },
     {
       "path": "docs/readability/S01-verification.json",
@@ -16097,7 +16097,7 @@
     }
   },
   "integrationTask": {
-    "status": "Completed locally; not published",
+    "status": "Committed locally; not published",
     "branch": "workstream-c/readability-main-integration-20261027",
     "worktree": "/Users/peterpsimadas/Desktop/Pantrack-readability-integration-20261027",
     "mainCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
@@ -16212,7 +16212,7 @@
       "tests/po-cart-full-offline-gate.mjs"
     ],
     "pendingCleanupScopeNote": "New main files and receiving source remain Pending for readability cleanup; this task verifies integration only.",
-    "stage": "Verified merge ready for local commit",
+    "stage": "Local integration complete; publication/remote CI remain separate",
     "baseline": [
       {
         "command": "pnpm lint",
@@ -16551,7 +16551,8 @@
         "broken": [],
         "scope": "Repository-relative targets outside fenced examples; external/absolute URLs are not fetched. Fragment-only links are reviewed separately."
       }
-    }
+    },
+    "mergeCommit": "b4208a7a2161d20484d8979b69556a6d7f2e92cb"
   },
   "currentTrackedFileCount": 969,
   "currentManifestEntryCount": 967,
