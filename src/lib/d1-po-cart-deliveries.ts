@@ -14,7 +14,7 @@ type Closure={kind:ClosureKind;release_json:string;stock_receipt:number;note:str
 type Released={lineId:string;releasePacks:string};
 
 /**
- * Receiving for confirmed (within-cap) fictional supplier orders. Any company member counts a
+ * Receiving for confirmed fictional supplier orders (within the cap, or over it and owner-approved). Any company member counts a
  * delivery blind: staff see item names and pack descriptions only, never expected amounts or
  * prices. An owner or manager then approves it, posting A's receipt port in the same batch, or
  * sends it back for a recount. One pending count per order; counts and decisions are permanent.
@@ -40,7 +40,8 @@ export class D1PoCartDeliveries {
   private confirmations(companyId:string,where:string,...args:string[]){
     return this.db.prepare(`SELECT c.id,c.job_id,c.authorization_id,c.supplier_reference,c.expected_delivery,c.lines_json,c.extras_json,c.created_at,j.inputs_json
       FROM po_cart_confirmations c JOIN po_cart_jobs j ON j.company_id=c.company_id AND j.id=c.job_id
-      WHERE c.company_id=? AND c.state='confirmed' ${where} ORDER BY c.created_at,c.id`).bind(companyId,...args).all<Confirmation>();
+      WHERE c.company_id=? AND (c.state='confirmed' OR (c.state='needs_owner_review' AND EXISTS (SELECT 1 FROM po_cart_confirmation_reviews v
+        WHERE v.company_id=c.company_id AND v.confirmation_id=c.id AND v.kind='approved'))) ${where} ORDER BY c.created_at,c.id`).bind(companyId,...args).all<Confirmation>();
   }
   /** Lines with what is accepted, released and still owed, from approved decisions and any closure. */
   private async state(companyId:string,c:Confirmation){

@@ -7,3 +7,9 @@
 .supplier-confirmation [data-changed]{font-weight:600}
 .supplier-confirmation .cart-preview-table input{min-width:5rem}
 @media (max-width:640px){.supplier-confirmation .cart-preview-table{display:block;overflow-x:auto}}
+
+.over-cap-review{border-top:1px solid var(--border,#d4d4d4);margin-top:16px;padding-top:8px}
+.over-cap-review h4{font-weight:600;margin:8px 0}
+.over-cap-review label{margin:12px 0}
+.over-cap-warning{border-left:3px solid currentColor;padding-left:12px}
+.over-cap-warning ul,.over-cap-notes{padding-left:1.25rem;line-height:1.6}

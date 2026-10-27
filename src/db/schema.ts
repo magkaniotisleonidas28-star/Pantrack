@@ -1100,3 +1100,12 @@ export const poDraftOccurrences=sqliteTable('po_draft_occurrences',{
 export const poDraftTickLeases=sqliteTable('po_draft_tick_leases',{
  companyId:text('company_id').notNull().primaryKey(),holder:text('holder').notNull(),leaseUntil:text('lease_until').notNull(),
 });
+
+// Owner decisions on over-cap supplier confirmations: one password-confirmed approval, or held-with-a-note entries.
+export const poCartConfirmationReviews=sqliteTable('po_cart_confirmation_reviews',{
+ companyId:text('company_id').notNull(),id:text('id').notNull(),confirmationId:text('confirmation_id').notNull(),kind:text('kind').notNull(),
+ approvedTotalMinor:integer('approved_total_minor'),note:text('note').notNull(),actor:text('actor').notNull(),createdAt:text('created_at').notNull(),
+ reauthenticatedAt:text('reauthenticated_at'),operationId:text('operation_id').notNull(),fingerprint:text('fingerprint').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),uniqueIndex('po_cart_confirmation_review_operation').on(t.companyId,t.operationId),
+ uniqueIndex('po_cart_confirmation_one_approval').on(t.companyId,t.confirmationId).where(sql`${t.kind}='approved'`),
+ foreignKey({columns:[t.companyId,t.confirmationId],foreignColumns:[poCartConfirmations.companyId,poCartConfirmations.id]})]);
