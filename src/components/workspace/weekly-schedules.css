@@ -1,0 +1,22 @@
+[data-weekly-schedules] .weekly-schedule-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+[data-weekly-schedules] .weekly-schedule-head h2{font-weight:600;margin:0 0 4px}
+[data-weekly-schedules] .weekly-schedule-head p{margin:4px 0}
+[data-weekly-schedules] .weekly-status{border:1px solid var(--border,#d4d4d4);border-radius:999px;padding:2px 10px;font-size:.8rem;white-space:nowrap}
+[data-weekly-schedules] .weekly-status[data-paused]{font-weight:600}
+[data-weekly-schedules] td[data-result=held],[data-weekly-schedules] td[data-result=failed]{font-weight:600}
+[data-weekly-schedules] small{display:block;color:var(--muted-foreground);font-size:.8rem}
+.po-weekly-label{font-weight:600;margin:0 0 12px}
+[data-weekly-schedules] .weekly-weeks :is(th,td){text-align:left;vertical-align:top}
+[data-weekly-schedules] .weekly-weeks td:first-child{white-space:nowrap}
+[data-weekly-schedules] .weekly-weeks td:last-child{overflow-wrap:anywhere}
+@media (max-width:640px){
+  [data-weekly-schedules] .po-fields{grid-template-columns:minmax(0,1fr)}
+  [data-weekly-schedules] .weekly-schedule-head{flex-direction:column}
+  /* Each week becomes a small labelled card instead of a squeezed table row. */
+  [data-weekly-schedules] .weekly-weeks,[data-weekly-schedules] .weekly-weeks tbody{display:block;width:100%}
+  [data-weekly-schedules] .weekly-weeks thead{display:none}
+  [data-weekly-schedules] .weekly-weeks tr{display:block;padding:8px 0;border-bottom:1px solid var(--border,#d4d4d4)}
+  [data-weekly-schedules] .weekly-weeks td{display:grid;grid-template-columns:6rem minmax(0,1fr);gap:8px;padding:2px 0;border:0;white-space:normal}
+  [data-weekly-schedules] .weekly-weeks td::before{content:attr(data-label);color:var(--muted-foreground);font-size:.8rem}
+}
+html .sidebar-workspace[data-workspace-theme] .po-preview[data-weekly-schedules] fieldset{border:0;padding:0;margin:0;min-width:0}

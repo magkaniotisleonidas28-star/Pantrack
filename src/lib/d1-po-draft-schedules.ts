@@ -58,19 +58,40 @@ export class D1PoDraftSchedules {
     }
     return (await this.replay(companyId,operationId,fingerprint))??fail('storage_failure','Save outcome is uncertain. Retry the same operation identity.');
   }
+  /** Active supplier-list groups (supplier, account, delivery location) and the people who can be responsible. */
+  private async choices(companyId:string,actor:string){
+    const suppliers=(await this.db.prepare(`SELECT v.data_json FROM purchasing_supplier_versions v JOIN purchasing_suppliers h ON h.company_id=v.company_id AND h.id=v.id
+      AND v.version=h.version WHERE h.company_id=? AND h.status='active' ORDER BY h.name,h.id LIMIT 200`).bind(companyId).all<{data_json:string}>()).results
+      .map(r=>JSON.parse(r.data_json) as {id:string;profile:{name:string;accounts:{id:string;reference:string;status:string}[];
+        locations:{id:string;accountId:string;reference:string;status:string}[]}});
+    const people=(await this.db.prepare(`SELECT user_id,role FROM memberships WHERE company_id=? AND role IN ('owner','manager') ORDER BY role DESC,user_id LIMIT 200`)
+      .bind(companyId).all<{user_id:string;role:'owner'|'manager'}>()).results;
+    if(!people.some(p=>p.user_id===actor))fail('forbidden','Membership changed during the read.');
+    return {people:people.map(p=>({userId:p.user_id,role:p.role})),suppliers:suppliers.map(v=>({id:v.id,name:v.profile.name,
+      groups:v.profile.locations.filter(l=>l.status==='active').flatMap(l=>{const a=v.profile.accounts.find(x=>x.id===l.accountId&&x.status==='active');
+        return a?[{accountId:a.id,accountReference:a.reference,locationId:l.id,locationReference:l.reference}]:[];})})).filter(v=>v.groups.length)};
+  }
   async list(companyId:string){
-    await this.actor(companyId);
+    const actor=await this.actor(companyId);
     const schedules=(await this.db.prepare(`${LATEST} ORDER BY s.id`).bind(companyId).all<ScheduleRow>()).results;
     const weeks=(await this.db.prepare(`SELECT o.*,d.number AS order_number,d.status AS order_status FROM po_draft_occurrences o
       LEFT JOIN purchase_order_drafts d ON d.company_id=o.company_id AND d.id=o.order_id WHERE o.company_id=? ORDER BY o.week_key DESC LIMIT 200`).bind(companyId)
       .all<OccurrenceRow&{order_number:string|null;order_status:string|null}>()).results;
     const zone=await timeZone(this.db,companyId),now=Date.parse(this.now());
-    return frozenCopy({timeZone:zone,schedules:schedules.map(s=>{
+    return frozenCopy({timeZone:zone,choices:await this.choices(companyId,actor),schedules:schedules.map(s=>{
       const due=zone?latestDue(now,s.weekday,s.local_time,zone):null;
       return {...view(s),nextRun:zone&&s.status==='active'?latestDue(now+7*86_400_000,s.weekday,s.local_time,zone).dueAt:null,lastDue:due?.dueAt??null,
         weeks:weeks.filter(w=>w.schedule_id===s.id).slice(0,8).map(w=>({weekKey:w.week_key,dueAt:w.due_at,state:w.state,reason:w.reason,attempts:w.attempts,
           orderId:w.order_id,orderNumber:w.order_number,orderStatus:w.order_status,updatedAt:w.updated_at}))};
     })});
+  }
+  /** The schedule and week that created a draft, if any. */
+  async origin(companyId:string,orderId:string){
+    await this.actor(companyId);
+    if(!orderId||orderId.length>200)fail('invalid_request','Choose a draft.');
+    const row=await this.db.prepare(`SELECT schedule_id,week_key FROM po_draft_occurrences WHERE company_id=? AND order_id=? AND state='drafted' LIMIT 1`)
+      .bind(companyId,orderId).first<{schedule_id:string;week_key:string}>();
+    return frozenCopy({weeklySchedule:row?{scheduleId:row.schedule_id,weekKey:row.week_key}:null});
   }
   async save(value:unknown){
     const input=this.parse(saveScheduleSchema,value),actor=await this.actor(input.companyId),fingerprint=canonicalJson({actor,input});

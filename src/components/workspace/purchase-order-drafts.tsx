@@ -16,6 +16,7 @@ import PurchaseOrderDownloads from './purchase-order-downloads';
 import PurchaseOrderHistoryDownloads from './purchase-order-history-downloads';
 import {purchaseOrderHistoryFilters,purchaseOrderHistorySearch,type PurchaseOrderHistoryFilters} from '@/lib/purchase-order-history-contract';
 import {HISTORY_DATE_MIN,HISTORY_DATE_MAX,type HistoryDateTimeZone} from '@/lib/purchase-order-history-dates';
+import {WeeklyDraftLabel} from './weekly-schedules';
 
 type Choices=Awaited<ReturnType<D1PurchaseOrderDrafts['choices']>>;
 type List=Awaited<ReturnType<D1PurchaseOrderDrafts['list']>>;
@@ -246,6 +247,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
       </form>:snapshot&&<>
         {selected&&selected.status!=='canceled'&&<PurchaseOrderDownloads key={JSON.stringify([companyId,snapshot.id,selected.revision])}
           companyId={companyId} orderId={snapshot.id} revision={selected.revision} disabled={blocked} cancelRef={downloadCancel} onReload={()=>void open(snapshot.id)}/>}
+        {selected&&<WeeklyDraftLabel companyId={companyId} orderId={selected.snapshot.id}/>}
         <section className="po-section"><h2>Supplier and delivery</h2><p><strong>{snapshot.supplier.name}</strong><br/>{snapshot.supplier.email??'Ordering email unavailable'}</p><p>Account: {snapshot.supplier.accountId} · Location: {snapshot.supplier.locationId}</p><p className="po-prewrap">{snapshot.supplier.deliveryAddress}</p></section>
         <section className="po-section"><h2>Order lines</h2><SavedLines snapshot={snapshot}/></section>
         <section className="po-section"><h2>Delivery instructions</h2><p className="po-prewrap">{snapshot.notes||'No delivery instructions added.'}</p></section>

@@ -7,10 +7,11 @@ import ManagerOperations from './manager-operations';
 import PurchaseOrderDrafts from './purchase-order-drafts';
 import PurchasingSuppliers from './purchasing-suppliers';
 import SpendingLimitsPanel from './spending-limits';
+import WeeklySchedules from './weekly-schedules';
 import InventoryPanel from './inventory-panel';
 import ProductCatalog from './product-catalog';
 import PaymentMethods from './payment-methods';
-import {CreditCard,Gauge,Menu,ChevronRight,Moon,Sun,Trash2} from 'lucide-react';
+import {CalendarClock,CreditCard,Gauge,Menu,ChevronRight,Moon,Sun,Trash2} from 'lucide-react';
 import {Sheet,SheetTrigger,SheetContent,SheetTitle,SheetDescription} from '@/components/ui/sheet';
 import {useEffect,useRef,useState} from 'react';
 import {Package,ShoppingBag,BookOpen,History,Truck,Search,Plus,Minus,ArrowRight,Download,Check,Leaf,AlertCircle} from 'lucide-react';
@@ -31,6 +32,7 @@ const [inventoryDirty,setInventoryDirty]=useState(false);
 const [poEnabled,setPoEnabled]=useState(false),[poDirty,setPoDirty]=useState(false);
 const [registryEnabled,setRegistryEnabled]=useState(false),[registryDirty,setRegistryDirty]=useState(false),[registryRefresh,setRegistryRefresh]=useState(0);
 const [limitsEnabled,setLimitsEnabled]=useState(false),[limitsDirty,setLimitsDirty]=useState(false);
+const [weeklyEnabled,setWeeklyEnabled]=useState(false),[weeklyDirty,setWeeklyDirty]=useState(false);
 const [wasteDirty,setWasteDirty]=useState(false),[inventoryRefresh,setInventoryRefresh]=useState(0);
 const [navigationOpen,setNavigationOpen]=useState(false);
 const [wasteEnabled,setWasteEnabled]=useState(false),[wasteLaunch,setWasteLaunch]=useState(0),[wasteSection,setWasteSection]=useState<WasteSection>('record'),[stockFocus,setStockFocus]=useState<string>();
@@ -50,6 +52,7 @@ const navigation=[
   {value:'history',label:'Order history',icon:History},
   ...(poEnabled?[{value:'purchasing',label:'Purchase-order drafts',icon:ShoppingBag}]:[]),
   ...(registryEnabled?[{value:'purchasing-suppliers',label:'Purchasing suppliers',icon:Truck}]:[]),
+  ...(weeklyEnabled?[{value:'weekly-drafts',label:'Weekly drafts',icon:CalendarClock}]:[]),
   {value:'suppliers',label:'Suppliers & automation',icon:Truck},
   ...(role==='owner'&&limitsEnabled?[{value:'spending-limits',label:'Spending limits',icon:Gauge}]:[]),
   ...(role==='owner'?[{value:'payments',label:'Payment methods',icon:CreditCard},{value:'setup',label:'Setup & register',icon:Check}]:[]),
@@ -63,7 +66,7 @@ function renderNavigation(mobile=false){return <nav aria-label="Workspace sectio
   {tab===value&&subsections.length>0&&<div className="sidebar-subsections">{subsections.map(item=><button type="button" key={item.id} aria-current={activeSubsection===item.id?'page':undefined} onClick={()=>chooseSubsection(item.id)}>{item.label}</button>)}</div>}
 </div>)}</nav>;}
 const [removing,setRemoving]=useState<Order|null>(null);
-useEffect(()=>{onDirtyChange(inventoryDirty||wasteDirty||poDirty||registryDirty||limitsDirty||Object.values(qty).some(n=>n>0));},[qty,wasteDirty,poDirty,registryDirty,limitsDirty,inventoryDirty,onDirtyChange]);
+useEffect(()=>{onDirtyChange(inventoryDirty||wasteDirty||poDirty||registryDirty||limitsDirty||weeklyDirty||Object.values(qty).some(n=>n>0));},[qty,wasteDirty,poDirty,registryDirty,limitsDirty,weeklyDirty,inventoryDirty,onDirtyChange]);
 async function load(){setLoading(true);setError('');try{const d=await request(companyId);setProducts(d.products);setOrders(d.orders);}catch(e){setError((e as Error).message);}finally{setLoading(false);}}
 useEffect(()=>{void load();if(new URLSearchParams(location.search).has('payment_setup'))setTab('payments');if(new URLSearchParams(location.search).has('clover'))setTab('setup');},[]);
 function quantity(id:string,n:number){if(!Number.isInteger(n)||n<0||n>999)return;setQty(q=>({...q,[id]:n}));key.current='';}
@@ -105,6 +108,7 @@ return <div className="app sidebar-workspace" data-workspace-theme={theme}>
 <MenuWasteRecorder companyId={companyId} email={email} role={role} page={tab==='waste'} section={wasteSection} launchCount={wasteLaunch} refreshKey={inventoryRefresh} onEnabledChange={setWasteEnabled} onDirtyChange={setWasteDirty} onSaved={()=>setInventoryRefresh(n=>n+1)} onSection={section=>{setWasteSection(section);setTab('waste');}} onSetup={id=>{setStockFocus(id);setInventorySection('stock');setInventoryRefresh(n=>n+1);setTab('inventory');}}/>
 <PurchaseOrderDrafts key={companyId} companyId={companyId} active={tab==='purchasing'} refreshKey={registryRefresh} onEnabledChange={setPoEnabled} onDirtyChange={setPoDirty}/>
 <PurchasingSuppliers key={companyId+'suppliers'} companyId={companyId} active={tab==='purchasing-suppliers'} onEnabledChange={setRegistryEnabled} onDirtyChange={setRegistryDirty} onSaved={()=>setRegistryRefresh(n=>n+1)}/>
+<WeeklySchedules key={companyId+'weekly'} companyId={companyId} active={tab==='weekly-drafts'} onEnabledChange={setWeeklyEnabled} onDirtyChange={setWeeklyDirty}/>
 {role==='owner'&&<SpendingLimitsPanel key={companyId+'limits'} companyId={companyId} active={tab==='spending-limits'} onEnabledChange={setLimitsEnabled} onDirtyChange={setLimitsDirty}/>}
 {tab==='order'&&<section className="order-section"><div className="page-heading"><div><h1>A fresh start, fully stocked.</h1><p>Your regular products. All your suppliers. One order list.</p></div><div className="step-label"><span>1</span> Select products <i>—</i> 2 Review</div></div>
 <div className="order-layout"><section className="product-panel"><div className="catalog-tools"><div className="search"><Search size={18}/><Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search products, suppliers, or SKUs" aria-label="Search products"/></div><div className="filters">{['All products','Dairy','Coffee & pantry','Packaging'].map(c=><button className={category===c?'active':''} key={c} onClick={()=>setCategory(c)}>{c}</button>)}</div></div>
