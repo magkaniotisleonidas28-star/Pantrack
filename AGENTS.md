@@ -39,6 +39,8 @@ this file concise; detailed workflow and prompt templates live in
   before verification.
 - In PowerShell, pass file globs through `rg --glob` against a directory; do not
   pass unexpanded wildcard paths to `rg`.
+  Before executing, inspect every positional path for `*` or `?` and move those
+  patterns into `--glob` arguments.
 - Use absolute paths for evidence outside the current worktree; main-checkout
   runtime paths must not resolve relative to a feature worktree.
 - Use complete current lines as patch context; reread the target block after

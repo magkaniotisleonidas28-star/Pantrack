@@ -55,6 +55,7 @@ try {
   const catalog = await fetch(`${origin}/api/workspace?companyId=${companyId}`, { headers: { cookie } });
   assert.equal(catalog.status, 200, 'New local company catalog');
   assert.equal((await fetch(`${origin}/api/purchase-orders?companyId=${companyId}`, {headers:{cookie}})).status,404,'PO drafts default off');
+  assert.equal((await fetch(`${origin}/api/purchase-order-documents?companyId=${companyId}&view=list&kind=history`, {headers:{cookie}})).status,404,'Permanent document copies default off');
   assert.equal((await fetch(`${origin}/api/purchasing-suppliers?companyId=${companyId}`, {headers:{cookie}})).status,404,'Supplier registry default off');
   assert.equal((await fetch(`${origin}/api/workspace?companyId=${crypto.randomUUID()}`, { headers: { cookie } })).status, 403, 'Wrong-company access');
   assert.equal((await fetch(`${origin}/api/companies`,{method:'POST',headers:{cookie,origin:'https://evil.example','content-type':'application/json'},body:JSON.stringify({action:'create',id:crypto.randomUUID(),name:'CSRF rejected'})})).status,403,'HTTP CSRF rejection');

@@ -11,12 +11,13 @@ await new Promise((ok,fail)=>{
   probe.listen(5179,'127.0.0.1',()=>probe.close(ok));
 });
 const root='.sites-runtime/po-review-config';mkdirSync(root,{recursive:true,mode:0o700});
-const vars={APP_ORIGIN:'http://127.0.0.1:5179',PANTRACK_PO_DRAFT_PREVIEW:'enabled',PANTRACK_EXACT_INVENTORY_PREVIEW:'enabled',PANTRACK_CLOVER_SYNC_ENABLED:'disabled'};
+const vars={APP_ORIGIN:'http://127.0.0.1:5179',PANTRACK_PO_DRAFT_PREVIEW:'enabled',PANTRACK_DOCUMENT_ARCHIVE_PREVIEW:'enabled',PANTRACK_EXACT_INVENTORY_PREVIEW:'enabled',PANTRACK_CLOVER_SYNC_ENABLED:'disabled'};
 // No shared .dev.vars/auth/provider secrets are copied into the fictional preview.
 writeFileSync(root+'/.dev.vars',Object.entries(vars).map(([name,value])=>`${name}=${JSON.stringify(value)}`).join('\n')+'\n',{mode:0o600});
 const configPath=root+'/wrangler.jsonc';
 writeFileSync(configPath,JSON.stringify({name:'pantrack-po-review-local',compatibility_date:'2026-05-15',compatibility_flags:['nodejs_compat'],
-  main:resolve('node_modules/vinext/dist/server/fetch-handler.js'),d1_databases:[{binding:'DB',database_name:'pantrack-local',database_id:'00000000-0000-4000-8000-000000000000',migrations_dir:resolve('drizzle')}],vars},null,2)+'\n');
+  main:resolve('node_modules/vinext/dist/server/fetch-handler.js'),d1_databases:[{binding:'DB',database_name:'pantrack-local',database_id:'00000000-0000-4000-8000-000000000000',migrations_dir:resolve('drizzle')}],
+  r2_buckets:[{binding:'DOCUMENT_ARCHIVE',bucket_name:'pantrack-fictional-documents'}],assets:{directory:resolve('public'),binding:'ASSETS'},vars},null,2)+'\n');
 const result=spawnSync(process.execPath,['node_modules/wrangler/bin/wrangler.js','d1','migrations','apply','DB','--local',
   '--config',configPath,'--persist-to','.sites-runtime/po-review-state'],{stdio:'inherit'});
 if(result.error)throw result.error;if(result.status!==0)process.exit(result.status??1);

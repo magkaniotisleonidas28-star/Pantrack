@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-26 for local private document storage and PDF/Excel. The historical verification table
+Updated: 2026-10-27 for permanent saved PDF/Excel copies in the local app. The historical verification table
 below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -72,8 +72,13 @@ history, and its migration/lifecycle checks pass locally. The
 built and tested locally too. It saves a copy once, checks its exact contents,
 and can recover an interrupted save without creating another copy. Damaged or
 missing files are held for review. This step adds no database structure and
-does not change the online app or its database. Next is connecting the app's
-save/download controls to this storage and testing them locally.
+does not change the online app or its database. The
+[permanent-copy controls](C4_DOCUMENT_ARCHIVE_APP_LOCAL_EVIDENCE.md) are now
+connected and tested in the local app too. Managers can save PDF/Excel copies
+from an order or matching history and download the original file later, even
+after the order changes or is canceled. Interrupted saves can be checked again
+without creating a duplicate. Next is a review screen for saves or files held
+because their outcome is uncertain or their contents cannot be verified.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private

@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-26
+Updated: 2026-10-27
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -28,6 +28,32 @@ The owner made the four postponed M10 decisions
 Owner approval of over-cap supplier confirmations is now unblocked. No checkbox
 advances.
 
+## Latest local C4 permanent document copies in the app — 2026-10-27
+
+The [archive app controls](C4_DOCUMENT_ARCHIVE_APP_LOCAL_EVIDENCE.md) now let
+current company owners/managers save PDF/Excel copies from a saved draft or
+complete filtered history, list issued copies and download their exact original
+bytes after later edits or cancellation. Stable tab-scoped requests recover lost
+responses/reloads without duplicate writes. Stop-waiting preserves an uncertain
+save, and damaged/missing files are visibly held for review.
+
+The guarded API reuses the existing journal, source readers, renderers and R2
+adapter. Current access, source identity, immutable metadata, bounded bytes and
+hashes are checked before a file is handed to the browser. Native D1/R2 tests,
+the signed-in local Worker walkthrough and independent PDF/Excel file readers
+pass. All six local checks passed with 145 executed suites plus twelve Windows
+skips and all 45 existing migrations. Final history-error/recovery refinements
+passed the three affected suites, typecheck, build and ordinary HTTP smoke again.
+The rebuilt Worker passed all four document cases with a confined fake identity
+provider; nine native files passed independent readers. See the handoff for exact
+evidence boundaries.
+
+No new schema, migration, dependency or hosted binding is added. Only the isolated
+fictional PO preview enables these controls; ordinary/hosted configurations stay
+off. Root and hosted databases are untouched. Next document slice: read-only
+review of held saves and missing/corrupt copies. C4/C5/M8 remain open, purchasing
+disabled and hosted release paused.
+
 ## Latest local C4 private R2 document storage — 2026-10-26
 
 The [private R2 object adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md) now
@@ -48,8 +74,9 @@ over-cap approval changes were already merged and synced before this slice.
 No schema, migration, application route/UI or deployed binding is added. The root
 and hosted databases remain untouched. This is local storage evidence, not a
 hosted bucket/privacy or app-download acceptance claim. Next document slice:
-authorized app save/read controls, using local bindings first. C4/C5/M8 remain
-open, purchasing disabled and hosted release paused.
+authorized app save/read controls, now implemented in the subsequent
+[local app slice](C4_DOCUMENT_ARCHIVE_APP_LOCAL_EVIDENCE.md). C4/C5/M8 remain open,
+purchasing disabled and hosted release paused.
 
 ## Latest local C4 D1 archive journal — 2026-10-26
 

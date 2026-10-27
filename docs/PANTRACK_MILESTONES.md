@@ -577,8 +577,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   now passes local Worker concurrency and native D1/R2 lifecycle tests, including
   exact checksummed files, bounded reads, current access, tamper/missing holds and
   cross-process lost-write recovery without another put/render. No schema or
-  deployed binding is added. Next connect authorized app save/read controls with
-  local bindings; hosted bucket/privacy acceptance remains separate.
+  deployed binding is added. The [local app archive controls](C4_DOCUMENT_ARCHIVE_APP_LOCAL_EVIDENCE.md)
+  now connect authorized server save/list/read to the draft and filtered-history
+  screens with local D1/R2 bindings. Persistent exact-request retries, current
+  access at handoff, exact old bytes after edit/cancel and native PDF/Excel app
+  downloads pass. No new schema or hosted setup. Next add read-only review of
+  held saves and missing/corrupt copies; hosted bucket/privacy acceptance remains
+  separate.
   Application-issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget

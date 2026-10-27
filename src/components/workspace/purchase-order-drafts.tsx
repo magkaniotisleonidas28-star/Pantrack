@@ -13,6 +13,7 @@ import {emptyEditor,editorFrom,newLine,cents,dollars,statusLabel,snapshotChanges
 import './purchase-order-drafts.css';
 import CartPreview from './cart-preview';
 import PurchaseOrderDownloads from './purchase-order-downloads';
+import PurchaseOrderArchives from './purchase-order-archives';
 import PurchaseOrderHistoryDownloads from './purchase-order-history-downloads';
 import {purchaseOrderHistoryFilters,purchaseOrderHistorySearch,type PurchaseOrderHistoryFilters} from '@/lib/purchase-order-history-contract';
 import {HISTORY_DATE_MIN,HISTORY_DATE_MAX,type HistoryDateTimeZone} from '@/lib/purchase-order-history-dates';
@@ -49,6 +50,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false),historyRequest=useRef(0);
   const downloadCancel=useRef<(()=>void)|null>(null);
   const historyExportCancel=useRef<(()=>void)|null>(null);
+  const archiveCancel=useRef<(()=>void)|null>(null),historyArchiveCancel=useRef<(()=>void)|null>(null);
   const [filters,setFilters]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters),[filterDraft,setFilterDraft]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters);
   const [dateTimeZone,setDateTimeZone]=useState<HistoryDateTimeZone>('America/New_York'),[filterError,setFilterError]=useState('');
   const [historyLoading,setHistoryLoading]=useState(true),[historyError,setHistoryError]=useState('');
@@ -70,7 +72,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     if(supplierId)void supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=0`)
       .then(d=>{if(live)setMappings(d);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[supplierId,refreshKey,companyId]);
   async function loadList(page:number){
-    historyExportCancel.current?.();
+    historyExportCancel.current?.();historyArchiveCancel.current?.();
     const sequence=++historyListRequest.current;historyListAbort.current?.abort();const abort=new AbortController();historyListAbort.current=abort;
     setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});
     try{const data=await request<List>(companyId,purchaseOrderHistorySearch(filters,page),undefined,abort.signal);if(sequence===historyListRequest.current)setList(data);}
@@ -81,9 +83,9 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     const parsed=purchaseOrderHistoryFilters.safeParse(filterDraft);if(!parsed.success){setFilterError(parsed.error.issues[0]?.message??'Check the history filters.');return;}
     prepareHistoryRead();setFilterDraft(parsed.data);setFilters(parsed.data);setOffset(0);
   }
-  function prepareHistoryRead(){historyExportCancel.current?.();historyListRequest.current++;historyListAbort.current?.abort();setHistoryLoading(true);setHistoryError('');setFilterError('');setList({orders:[],hasMore:false});}
-  function patchHistoryFilters(values:Partial<PurchaseOrderHistoryFilters>){historyExportCancel.current?.();setFilterError('');setFilterDraft(old=>({...old,...values}));}
-  function patchHistoryDate(field:'from'|'to',value:string){historyExportCancel.current?.();setFilterError('');setFilterDraft(old=>{
+  function prepareHistoryRead(){historyExportCancel.current?.();historyArchiveCancel.current?.();historyListRequest.current++;historyListAbort.current?.abort();setHistoryLoading(true);setHistoryError('');setFilterError('');setList({orders:[],hasMore:false});}
+  function patchHistoryFilters(values:Partial<PurchaseOrderHistoryFilters>){historyExportCancel.current?.();historyArchiveCancel.current?.();setFilterError('');setFilterDraft(old=>({...old,...values}));}
+  function patchHistoryDate(field:'from'|'to',value:string){historyExportCancel.current?.();historyArchiveCancel.current?.();setFilterError('');setFilterDraft(old=>{
     const next={...old,[field]:value||undefined};return {...next,timeZone:next.from||next.to?dateTimeZone:undefined};
   });}
   function changeDateTimeZone(zone:HistoryDateTimeZone){setDateTimeZone(zone);patchHistoryFilters({timeZone:filterDraft.from||filterDraft.to?zone:undefined});}
@@ -93,15 +95,15 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   async function moreMappings(){try{const page=mappingPage+20,data=await supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=${page}`);setMappings(old=>({...data,mappings:[...old.mappings,...data.mappings.filter(m=>!old.mappings.some(o=>o.mapping.id===m.mapping.id))]}));setMappingPage(page);}catch(e){setError((e as Error).message);}}
   function clearFeedback(){setError('');setNotice('');setInvalid({});setConflict(false);setLatest(null);setHistory(null);setHistoryBusy(false);historyRequest.current++;setAck(false);setReason('');}
   function mayLeave(){return !busy&&!uncertain&&(!dirty||window.confirm('Discard your unsaved draft changes?'));}
-  function openEditor(value:DraftEditor){historyExportCancel.current?.();downloadCancel.current?.();setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}
-  async function open(id:string){if(!mayLeave())return;historyExportCancel.current?.();downloadCancel.current?.();setBusy(true);clearFeedback();try{const {order}=await request(companyId,`&orderId=${encodeURIComponent(id)}`);setSelected(order);setEditor(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
-  function back(){if(!mayLeave())return;downloadCancel.current?.();prepareHistoryRead();setSelected(null);setEditor(null);clearFeedback();}
+  function openEditor(value:DraftEditor){historyExportCancel.current?.();historyArchiveCancel.current?.();downloadCancel.current?.();archiveCancel.current?.();setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}
+  async function open(id:string){if(!mayLeave())return;historyExportCancel.current?.();historyArchiveCancel.current?.();downloadCancel.current?.();archiveCancel.current?.();setBusy(true);clearFeedback();try{const {order}=await request(companyId,`&orderId=${encodeURIComponent(id)}`);setSelected(order);setEditor(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+  function back(){if(!mayLeave())return;downloadCancel.current?.();archiveCancel.current?.();prepareHistoryRead();setSelected(null);setEditor(null);clearFeedback();}
   function patch(values:Partial<DraftEditor>){setEditor(old=>old?{...old,...values}:old);setInvalid({});setAck(false);}
   function patchLine(key:string,values:Partial<EditorLine>){setEditor(old=>old?{...old,lines:old.lines.map(l=>l.key===key?{...l,...values}:l)}:old);setInvalid({});}
   function mappingFor(line:EditorLine){return mappings.mappings.find(m=>m.mapping.id===line.mappingId&&m.mapping.version===line.mappingVersion)?.mapping??
     selected?.snapshot.registry?.mappings.find(m=>m.mapping.id===line.mappingId&&m.mapping.version===line.mappingVersion)?.mapping;}
   async function save(body:Record<string,unknown>){
-    if(lock.current)return;downloadCancel.current?.();lock.current=true;setBusy(true);setError('');setNotice('');pending.current=body;
+    if(lock.current)return;downloadCancel.current?.();archiveCancel.current?.();lock.current=true;setBusy(true);setError('');setNotice('');pending.current=body;
     try{const {order}=await request(companyId,'',body);setSelected(order);setEditor(null);setUncertain(false);pending.current=null;setConflict(false);setLatest(null);setHistory(null);historyRequest.current++;setAck(false);setReason('');setOffset(0);
       setNotice(body.action==='review'?'Draft reviewed. No purchase is approved or sent.':body.action==='cancel'?'Draft canceled. Its history is preserved.':body.action==='edit'?'Changes saved. This revision needs review.':'Draft saved and ready for review.');
     }catch(e){setError((e as Error).message);const unknown=!(e instanceof RequestError)||e.status>=500;setUncertain(unknown);setConflict(e instanceof RequestError&&e.status===409);if(!unknown)pending.current=null;}
@@ -143,7 +145,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
     }catch(e){if(seq===historyRequest.current)setError((e as Error).message);}finally{if(seq===historyRequest.current)setHistoryBusy(false);}
   }
   async function checkLatest(){if(!selected)return;setBusy(true);try{setLatest((await request(companyId,`&orderId=${encodeURIComponent(selected.snapshot.id)}`)).order);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
-  function useLatest(){if(!latest||!mayLeave())return;downloadCancel.current?.();setSelected(latest);setEditor(null);clearFeedback();}
+  function useLatest(){if(!latest||!mayLeave())return;downloadCancel.current?.();archiveCancel.current?.();setSelected(latest);setEditor(null);clearFeedback();}
   const blocked=busy||uncertain;
   const fieldError=(name:string)=>invalid[name]?<small id={`po-error-${name}`} role="alert" className="po-field-error">{invalid[name]}</small>:null;
   const snapshot=selected?.snapshot;
@@ -187,6 +189,8 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
       <PurchaseOrderHistoryDownloads key={JSON.stringify([companyId,filters])} companyId={companyId} filters={filters}
         disabled={blocked||historyLoading||!!historyError||list.orders.length===0} pendingFilters={JSON.stringify(filterDraft)!==JSON.stringify(filters)}
         cancelRef={historyExportCancel} onRefresh={()=>{prepareHistoryRead();void loadList(offset);}}/>
+      <PurchaseOrderArchives selection={{companyId,source:{kind:'history',filters}}} disabled={blocked||historyLoading||!!historyError||JSON.stringify(filterDraft)!==JSON.stringify(filters)}
+        allowSave={list.orders.length>0} cancelRef={historyArchiveCancel} onReload={()=>{prepareHistoryRead();void loadList(offset);}}/>
       {historyLoading?<p role="status">Loading purchase-order history…</p>:historyError?<div className="po-recovery"><p role="alert">{historyError}</p><Button variant="outline" disabled={blocked} onClick={()=>void loadList(offset)}>Retry results</Button></div>:
         list.orders.length===0?(hasFilters?<div className="po-empty"><h2>No matching purchase-order drafts</h2><p>Try a different search or clear the filters.</p></div>:
           <div className="po-empty"><h2>No purchase-order drafts yet</h2><p>Choose a supplier and add the items you want a manager to review.</p><Button disabled={blocked} onClick={()=>openEditor(emptyEditor())}>Create a draft</Button></div>):
@@ -247,6 +251,8 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
       </form>:snapshot&&<>
         {selected&&selected.status!=='canceled'&&<PurchaseOrderDownloads key={JSON.stringify([companyId,snapshot.id,selected.revision])}
           companyId={companyId} orderId={snapshot.id} revision={selected.revision} disabled={blocked} cancelRef={downloadCancel} onReload={()=>void open(snapshot.id)}/>}
+        {selected&&<PurchaseOrderArchives key={JSON.stringify([companyId,snapshot.id])} selection={{companyId,source:{kind:'draft',orderId:snapshot.id,revision:selected.revision}}}
+          disabled={blocked} allowSave={selected.status!=='canceled'} cancelRef={archiveCancel} onReload={()=>void open(snapshot.id)}/>}
         {selected&&<WeeklyDraftLabel companyId={companyId} orderId={selected.snapshot.id}/>}
         <section className="po-section"><h2>Supplier and delivery</h2><p><strong>{snapshot.supplier.name}</strong><br/>{snapshot.supplier.email??'Ordering email unavailable'}</p><p>Account: {snapshot.supplier.accountId} · Location: {snapshot.supplier.locationId}</p><p className="po-prewrap">{snapshot.supplier.deliveryAddress}</p></section>
         <section className="po-section"><h2>Order lines</h2><SavedLines snapshot={snapshot}/></section>
