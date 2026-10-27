@@ -31,7 +31,8 @@ const fail=code=>e=>e.code===code;
 const save=(extra={})=>({action:'save',companyId:'a',scheduleId:'weekly-six',expectedVersion:0,operationId:randomUUID(),supplierId:'six',accountId:'account',locationId:'location',
   weekday:1,localTime:'09:00',marginPercent:10,responsibleUserId:'manager',reason:'Monday order',...extra});
 const status=(action,expectedVersion,extra={})=>({action,companyId:'a',scheduleId:'weekly-six',expectedVersion,operationId:randomUUID(),reason:'Fictional',...extra});
-const drafts=()=>f.sql.prepare('SELECT id,status,snapshot_json FROM purchase_order_drafts ORDER BY created_at,id').all();
+// Canceled drafts (a manual test draft) stay out of the scheduled-draft counts below.
+const drafts=()=>f.sql.prepare("SELECT id,status,snapshot_json FROM purchase_order_drafts WHERE status!='canceled' ORDER BY created_at,id").all();
 const week=(key,id='weekly-six')=>f.sql.prepare('SELECT * FROM po_draft_occurrences WHERE schedule_id=? AND week_key=?').get(id,key);
 const records=()=>f.sql.prepare('SELECT schedule_id,week_key,state,attempts FROM po_draft_occurrences ORDER BY schedule_id,week_key').all().map(r=>Object.values(r).join(' '));
 const review=async orderId=>{const po=new D1PurchaseOrderDrafts(f.db,options),d=await po.get('a',orderId);
@@ -67,6 +68,13 @@ await assert.rejects(schedules().save(save({expectedVersion:1,supplierId:'twelve
 await assert.rejects(schedules().save(save({scheduleId:'another'})),fail('conflict'),'One schedule per group');
 const listed=await schedules().list('a');
 assert.equal(listed.schedules[0].nextRun,'2026-11-02T14:00:00.000Z');assert.equal(listed.timeZone,'America/New_York');
+// Choices for the screen: active supplier groups, and owners and managers (never staff) as responsible people.
+assert.deepEqual(listed.choices.suppliers.map(s=>[s.id,s.groups.map(g=>[g.accountReference,g.locationReference])]),
+  [['six',[['A-001','Café north'],['A-002','Café south']]],['twelve',[['A-001','Café north'],['A-002','Café south']]]]);
+assert.deepEqual(listed.choices.people,[{userId:'owner',role:'owner'},{userId:'manager',role:'manager'}]);
+// Losing the role while the list is read returns nothing.
+{const prepare=f.db.prepare.bind(f.db);f.db.prepare=q=>{if(q.includes('FROM po_draft_occurrences o')){f.db.prepare=prepare;f.sql.exec("UPDATE memberships SET role='employee' WHERE company_id='a' AND user_id='manager'");}return prepare(q);};
+  await assert.rejects(schedules().list('a'),fail('forbidden'));f.db.prepare=prepare;f.sql.exec("UPDATE memberships SET role='manager' WHERE company_id='a' AND user_id='manager'");}
 
 // No catch-up for a time before the schedule existed.
 setNow('2026-11-01T12:00:00.000Z');assert.deepEqual((await scheduler().tick('a')).weeks,[]);assert.deepEqual(records(),[]);
@@ -80,7 +88,16 @@ assert.equal(week('2026-11-02').order_id,d1.id);
 assert.deepEqual(s1.lines.map(l=>[l.mappingId,l.packs]),[['beans-30','3'],['milk-6','12']]);
 assert.equal(s1.capMinor,'15510','12×$5 + 3×$27 = $141.00, plus 10%');
 assert.match(s1.notes,/^Created by the weekly schedule for the week of 2026-11-02\. Review before preparing a cart\./);
-assert.equal(d1.status,'draft');assert.equal((await new D1PurchaseOrderDrafts(f.db,options).get('a',d1.id)).events[0].actor,'manager');
+assert.equal(d1.status,'draft');const opened=await new D1PurchaseOrderDrafts(f.db,options).get('a',d1.id);
+assert.equal(opened.events[0].actor,'manager');assert.deepEqual((await schedules().origin('a',d1.id)).weeklySchedule,{scheduleId:'weekly-six',weekKey:'2026-11-02'},'A draft says which weekly schedule created it');
+assert.equal(listed.schedules[0].weeks.length,0);
+const manual=await new D1PurchaseOrderDrafts(f.db,options).create({action:'create',companyId:'a',operationId:randomUUID(),source:'registry',supplierRef:{id:'twelve',version:1,accountId:'account',locationId:'location'},
+  capMinor:'2000',notes:'Manual',lines:[{kind:'stock',mappingId:'cups-12',mappingVersion:1,packs:'1'}]});
+assert.equal((await schedules().origin('a',manual.snapshot.id)).weeklySchedule,null,'Manual drafts carry no weekly label');
+actor='employee';await assert.rejects(schedules().origin('a',d1.id),fail('forbidden'));actor='b-manager';await assert.rejects(schedules().origin('a',d1.id),fail('forbidden'));actor='manager';
+await new D1PurchaseOrderDrafts(f.db,options).cancel({action:'cancel',companyId:'a',orderId:manual.snapshot.id,operationId:randomUUID(),expectedRevision:manual.revision,reason:'Fictional test draft'});
+const weekList=(await schedules().list('a')).schedules[0].weeks;
+assert.deepEqual(weekList.map(w=>[w.weekKey,w.state,w.orderNumber,w.orderStatus]),[['2026-11-02','drafted',s1.number,'draft']]);
 // Repeated, concurrent and late checks never draft the same week twice.
 const again=await scheduler('tick-2').tick('a');assert.deepEqual([again.ran,again.weeks],[true,[]],'The lease was released, so another check runs and finds nothing');
 const [x,y]=await Promise.all([scheduler('tick-3').tick('a'),scheduler('tick-4').tick('a')]);
