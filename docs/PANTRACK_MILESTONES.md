@@ -573,7 +573,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   after receiving's schema queue cleared. Actual SQL guards current access,
   complete source membership and database-time expiry; local lifecycle, runtime
   restart and fresh/populated compatibility tests pass using the migration.
-  Next implement private create-only R2 storage, then app save/read integration.
+  The [private create-only R2 adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md)
+  now passes local Worker concurrency and native D1/R2 lifecycle tests, including
+  exact checksummed files, bounded reads, current access, tamper/missing holds and
+  cross-process lost-write recovery without another put/render. No schema or
+  deployed binding is added. Next connect authorized app save/read controls with
+  local bindings; hosted bucket/privacy acceptance remains separate.
   Application-issued artifacts remain separate, as do cart execution and receiving;
   supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget

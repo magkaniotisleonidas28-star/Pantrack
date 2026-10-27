@@ -2,6 +2,8 @@ import {z} from 'zod';
 import {poId} from './purchase-order-contract';
 import {frozenCopy,canonicalJson} from './supplier-simulation-contract';
 import {historyExportFingerprint} from './purchase-order-history-export-contract';
+import {documentByteDigest} from './document-byte-digest';
+export {documentByteDigest} from './document-byte-digest';
 import {captureArchiveSource,type CapturedArchiveSource} from './purchase-order-document-archive-sources';
 import {DOCUMENT_ARCHIVE_MAX_BYTES,DOCUMENT_ARCHIVE_LEASE_MS,documentArchiveRequest,archiveFail,archiveTemplate,archiveObjectKey,
   captureArchiveArtifact,captureArchiveManifest,DocumentArchiveError,type DocumentArchiveErrorCode,type DocumentArchiveRequest,
@@ -12,9 +14,6 @@ type Dependencies={identity:()=>Promise<string|null>;clock?:{now():Date};journal
   render:(source:CapturedArchiveSource,format:DocumentArchiveRequest['format'],template:DocumentArchiveManifest['template'])=>Promise<Uint8Array>};
 const normalized=(value:unknown)=>JSON.parse(JSON.stringify(value));
 const equal=(a:unknown,b:unknown)=>canonicalJson(normalized(a))===canonicalJson(normalized(b));
-export async function documentByteDigest(bytes:Uint8Array){
-  const value=new Uint8Array(bytes);return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',value)),n=>n.toString(16).padStart(2,'0')).join('');
-}
 function errorCode(error:unknown,phase:string):DocumentArchiveErrorCode{
   if(error instanceof DocumentArchiveError)return error.code;
   if(phase==='source'){

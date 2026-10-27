@@ -28,6 +28,29 @@ The owner made the four postponed M10 decisions
 Owner approval of over-cap supplier confirmations is now unblocked. No checkbox
 advances.
 
+## Latest local C4 private R2 document storage — 2026-10-26
+
+The [private R2 object adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md) now
+connects the existing immutable archive contract and D1 journal to local R2.
+Conditional creation prevents replacement, checksummed writes capture exact
+bytes, and bounded/cancelable reads preserve audit-before-refusal behavior.
+Actual local Worker races create once; native D1/R2 tests cover both document
+sources/formats, current authorization, tamper/missing holds and recovery in a
+separate process after a saved file loses its response, without another write.
+
+All six combined local checks passed: 143 executed suites plus twelve Windows
+skips, typecheck, all 45 migration/schema checks, build, isolated migration apply
+and HTTP sign-in/company-isolation smoke. All 387 relative links in the changed
+handoff/status/roadmap/progress documents resolve, and whitespace checks pass.
+
+Other contributors' weekly suggestions/schedules/screens, payment decisions and
+over-cap approval changes were already merged and synced before this slice.
+No schema, migration, application route/UI or deployed binding is added. The root
+and hosted databases remain untouched. This is local storage evidence, not a
+hosted bucket/privacy or app-download acceptance claim. Next document slice:
+authorized app save/read controls, using local bindings first. C4/C5/M8 remain
+open, purchasing disabled and hosted release paused.
+
 ## Latest local C4 D1 archive journal — 2026-10-26
 
 The [D1 archive journal](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md) now has its
@@ -46,8 +69,9 @@ All six combined local checks passed: 135 executed suites plus twelve Windows
 skips, all 43 migration/schema checks, build, isolated apply and HTTP smoke.
 The migration checker now validates schema-declared CHECK constraints too.
 The root and hosted databases remain untouched, and the journal has no app
-route/UI or R2 binding yet. Next document slice: private create-only R2 storage,
-then authorized app save/read integration. C4/C5/M8 stay open and release paused.
+route/UI or deployed R2 binding yet. The subsequent
+[private R2 adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md) now passes locally;
+authorized app save/read integration follows. C4/C5/M8 stay open and release paused.
 
 ## Latest local C4 document archive contract — 2026-10-26
 

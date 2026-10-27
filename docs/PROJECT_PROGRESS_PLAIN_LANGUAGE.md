@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-26 for the local permanent-document contract and PDF/Excel. The historical verification table
+Updated: 2026-10-26 for local private document storage and PDF/Excel. The historical verification table
 below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -67,8 +67,13 @@ duplicate. Tests include recovery in a new process. It is not connected to the
 app yet. The [database record-keeping adapter](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md)
 now has its real application migration after the other contributor's receiving
 work merged. It safely records saved-copy identity, permissions, retries and
-history, and its migration/lifecycle checks pass locally. Next is private file
-storage; app save/read controls follow after that.
+history, and its migration/lifecycle checks pass locally. The
+[private file-storage adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md) is now
+built and tested locally too. It saves a copy once, checks its exact contents,
+and can recover an interrupted save without creating another copy. Damaged or
+missing files are held for review. This step adds no database structure and
+does not change the online app or its database. Next is connecting the app's
+save/download controls to this storage and testing them locally.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
