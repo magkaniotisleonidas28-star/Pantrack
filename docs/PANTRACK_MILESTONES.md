@@ -950,6 +950,16 @@ For every numbered item, the assigned person follows the same delivery loop:
   [Part 2](C7_OWNER_SPENDING_LIMITS_SCREEN_LOCAL_EVIDENCE.md) adds the owner screen.
   It also repairs `0035` for D1's 50-byte LIKE/GLOB limit through migration `0036`,
   with a suite that fails any over-limit pattern.
+  **Owner decisions (2026-10-26, [decision 0006](decisions/0006-m10-payment-and-limits.md)):**
+  - the café pays on its existing supplier account, and Pantrack never handles
+    payment;
+  - tax and fees count toward limits;
+  - the approved cap is the line: anything above it needs owner approval with
+    password confirmation, with no automatic cushion;
+  - the Baldor browser-access inquiry is withdrawn, and whether Baldor's terms
+    allow automated access stays open.
+
+  Over-cap owner approval is now unblocked; acceptance evidence is still pending.
 - [ ] **C8 — Coordinate M11 and execute C's slice.** Prepare the runbook and
   evidence report; supervise verified cart preparation, manager checkout,
   supplier confirmation, delivery reconciliation,
