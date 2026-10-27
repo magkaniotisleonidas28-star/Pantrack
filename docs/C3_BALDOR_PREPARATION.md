@@ -30,7 +30,7 @@ disabled while fictional development continues.
 
 ### Browser-access inquiry — owner reviews and sends
 
-**Status: unsent.** Ask the supplier's appropriate contact whether Pantrack may
+**Status: withdrawn by the owner on 2026-10-26 ([decision 0006](decisions/0006-m10-payment-and-limits.md)); never sent.** Whether Baldor's terms allow automated access stays an open question, and any real Baldor session still needs separate explicit authorization. The draft is kept for reference: ask the supplier's appropriate contact whether Pantrack may
 use a controlled hosted browser to prepare a cart from an exact reviewed PO,
 with manual sign-in/2FA and a human performing all checkout. Confirm permitted
 automation, required agreements/restrictions, supported authentication domains,
@@ -141,7 +141,7 @@ Record non-sensitive status here; retain the actual account material privately.
 | --- | --- |
 | First supplier and region | Baldor / New York City, selected by owner |
 | Future café and existing business account | Owner-reported; no independent account inspection or pilot permission |
-| Integration contact / inquiry | Public routing option checked; inquiry drafted, unsent |
+| Integration contact / inquiry | Public routing option checked; browser-access inquiry withdrawn by the owner (decision 0006), never sent |
 | Permitted Stagehand/Browserbase cart use, restrictions, capabilities and costs/terms | Pending Baldor confirmation; automation permission unverified |
 | Hosted-fictional safety, Browserbase/worker budget and supplier test scope | Pending; no paid hosted or supplier test authorized |
 | Fictional testing account and authorized environment | Pending; no credentials requested or stored |

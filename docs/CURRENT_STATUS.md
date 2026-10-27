@@ -11,6 +11,23 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Owner money decisions — 2026-10-26
+
+The owner made the four postponed M10 decisions
+([decision 0006](decisions/0006-m10-payment-and-limits.md)):
+
+1. The café pays each supplier on its existing account, and Pantrack never handles
+   payment details.
+2. Tax and fees count toward the limits.
+3. The approved cap is the line. Totals up to it are accepted and differences are
+   recorded; anything above it needs the owner's password-confirmed approval.
+4. The Baldor browser-access inquiry is withdrawn. Whether Baldor's terms allow
+   automated access remains open, and any real Baldor session still needs
+   separate explicit authorization.
+
+Owner approval of over-cap supplier confirmations is now unblocked. No checkbox
+advances.
+
 ## Latest local C4 D1 archive journal — 2026-10-26
 
 The [D1 archive journal](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md) now has its
