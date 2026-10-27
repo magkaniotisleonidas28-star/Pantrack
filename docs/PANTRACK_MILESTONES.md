@@ -600,6 +600,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   only). [Weekly drafts](C4_WEEKLY_DRAFTS_PLAN_20261026.md) start with
   [suggestions per supplier](C4_SUPPLIER_SUGGESTIONS_LOCAL_EVIDENCE.md): A's
   calculation in each supplier-list mapping's own pack, read-only (no migration).
+  [Weekly schedules](C4_WEEKLY_SCHEDULES_LOCAL_EVIDENCE.md) then record each local
+  week once and create review-only drafts, with exact clock changes, no catch-up,
+  bounded retries and same-draft recovery (migration `0043`, local only; Cron not
+  wired).
   C4 is not complete and purchasing stays disabled.
   The owner-selected [cart preparation preview](C4_CART_PREVIEW_LOCAL_EVIDENCE.md)
   now proves reviewed-draft-to-fictional-cart mechanics locally, including 16
