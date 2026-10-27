@@ -1,112 +1,548 @@
 import assert from 'node:assert/strict';
-import {DatabaseSync} from 'node:sqlite';
-import {mkdirSync,readFileSync} from 'node:fs';
-import {build} from 'esbuild';
+import { DatabaseSync } from 'node:sqlite';
+import { mkdirSync, readFileSync } from 'node:fs';
+import { build } from 'esbuild';
 
-mkdirSync('.sites-runtime',{recursive:true});
-const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
-for(const entry of JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8')).entries)sql.exec(readFileSync(`drizzle/${entry.tag}.sql`,'utf8'));
-class Statement{constructor(query,values=[]){this.query=query;this.values=values;}bind(...values){return new Statement(this.query,values);}async first(){return sql.prepare(this.query).get(...this.values)??null;}async all(){return {results:sql.prepare(this.query).all(...this.values)};}async run(){if(/^\s*SELECT\b/i.test(this.query))return {results:sql.prepare(this.query).all(...this.values),meta:{changes:0}};const r=sql.prepare(this.query).run(...this.values);return {results:[],meta:{changes:Number(r.changes)}};}}
-globalThis.testDB={prepare(query){return new Statement(query);},async batch(statements){sql.exec('BEGIN');try{const results=[];for(const item of statements)results.push(await item.run());sql.exec('COMMIT');return results;}catch(error){sql.exec('ROLLBACK');throw error;}}};
-globalThis.testEnv={CLOVER_ENVIRONMENT:'sandbox',CLOVER_CLIENT_ID:'app',CLOVER_CLIENT_SECRET:'secret',CLOVER_WEBHOOK_AUTH_CODE:'hook',VENDOR_ENCRYPTION_KEY:btoa('a'.repeat(32)),PANTRACK_CLOVER_SYNC_ENABLED:'enabled'};
-const plugin={name:'mocks',setup(build){build.onResolve({filter:/^cloudflare:workers$|^@\/db\/raw$/},args=>({path:args.path,namespace:'mock'}));build.onLoad({filter:/.*/,namespace:'mock'},args=>({contents:args.path==='cloudflare:workers'?'export const env=globalThis.testEnv':'export function database(){return globalThis.testDB}'}));}};
-for(const [name,path] of [['sync','src/lib/clover-sync.ts'],['orders','src/lib/clover-orders.ts'],['crypto','src/lib/vendor-adapter.ts'],['webhook','src/app/api/clover/webhook/route.ts']])await build({entryPoints:[path],bundle:true,platform:'node',format:'esm',outfile:`.sites-runtime/clover-b6-${name}.mjs`,plugins:[plugin]});
-const {syncClover,cloverSyncStatus}=await import('../.sites-runtime/clover-b6-sync.mjs');
-const {normalizeCloverOrder,normalizeCloverDeletedOrder}=await import('../.sites-runtime/clover-b6-orders.mjs');
-const {encrypt}=await import('../.sites-runtime/clover-b6-crypto.mjs');
-const webhook=await import('../.sites-runtime/clover-b6-webhook.mjs');
-const now=Date.now(),cutoff=new Date(now-600_000).toISOString(),started=now-300_000;
-for(const id of ['a','b'])sql.prepare('INSERT INTO companies VALUES (?,?,?)').run(id,id,cutoff);
-function stock(id,dimension,onHand){sql.prepare('INSERT INTO products VALUES (?,?,?)').run('a',id,'{}');sql.prepare('INSERT INTO product_unit_versions VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)').run('a',id,'canonical',1,'curated',dimension,'canonical','1','1','fixture',cutoff);sql.prepare('INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,legacy_units_per_pack,effective_from,replaced_at,created_by,created_at) VALUES (?,?,?,?,?,?,?,?,?,NULL,?,NULL,?,?)').run('a',id,'active',1,'active','canonical',1,'unit','1',cutoff,'fixture',cutoff);sql.prepare("INSERT INTO inventory_balances_exact VALUES (?,?,?,?,?,'0','0',?,?,?)").run('a',id,'active',dimension,onHand,1,cutoff,cutoff);}
-stock('cup','count','10');
-sql.prepare('INSERT INTO recipe_lineages VALUES (?,?,?,?)').run('a','drink','fixture',cutoff);
-sql.prepare("INSERT INTO recipe_versions VALUES (?,?,?,1,'draft',?,NULL,NULL,0,?,?)").run('a','drink','drink-v1','Drink','fixture',cutoff);
-sql.prepare("INSERT INTO recipe_version_ingredients VALUES (?,?,?,?,?,'canonical',1,?,?,?,'canonical',NULL)").run('a','drink','drink-v1',0,'cup','count','1','1');
-sql.prepare("UPDATE recipe_versions SET status='active',active_from=? WHERE company_id='a' AND recipe_id='drink'").run(cutoff);
-sql.prepare('INSERT INTO clover_item_mappings VALUES (?,?,?,?,?)').run('a','sandbox','merchant','item','drink');
-const token={access_token:'access',refresh_token:'refresh',access_token_expiration:Math.floor(now/1000)+3600,refresh_token_expiration:Math.floor(now/1000)+86400};
-sql.prepare('INSERT INTO clover_connections VALUES (?,?,?,?,?,?,0)').run('a','merchant','sandbox',await encrypt(JSON.stringify(token),'clover:a'),cutoff,null);
-sql.prepare('INSERT INTO clover_sync_state(company_id,environment,merchant_id,started_at,checkpoint,lease_until) VALUES (?,?,?,?,?,0)').run('a','sandbox','merchant',started,started);
-const order={id:'order',createdTime:now-240_000,modifiedTime:now-190_000,total:500,paymentState:'PAID',payments:{elements:[{id:'payment',createdTime:now-200_000}]},lineItems:{elements:[{id:'line',item:{id:'item'},modifications:{elements:[]}}]}};
-assert.equal(normalizeCloverOrder(order,started).preparationStatus,'fulfilled');
-assert.equal(normalizeCloverOrder({...order,createdTime:started-1},started),null);
-assert.equal(normalizeCloverOrder({...order,payments:{elements:[]}},started).timeQuality,'inferred');
-assert.equal(normalizeCloverOrder({...order,paymentState:'PARTIALLY_PAID'},started),null);
-assert.equal(normalizeCloverOrder({...order,paymentState:'REFUNDED'},started).eventType,'refund');
-assert.equal(normalizeCloverOrder({...order,paymentState:'CREDITED'},started).orderStatus,'refunded');
-assert.equal(normalizeCloverOrder({...order,paymentState:'PARTIALLY_REFUNDED'},started).orderStatus,'partially_refunded');
-const fullRefund={...order,refunds:{elements:[{id:'refund',amount:500}]}};
-assert.equal(normalizeCloverOrder(fullRefund,started).eventType,'refund');
-assert.equal(normalizeCloverOrder(fullRefund,started).revision,order.modifiedTime+1);
-assert.equal(normalizeCloverOrder(fullRefund,started).occurredAt,new Date(order.modifiedTime).toISOString());
-assert.deepEqual(normalizeCloverOrder(fullRefund,started),normalizeCloverOrder({...fullRefund,paymentState:'REFUNDED'},started),'Refund identity and projection remain stable if Clover paymentState catches up.');
-assert.equal(normalizeCloverOrder({...order,refunds:{elements:[{id:'refund',amount:200}]}},started).orderStatus,'partially_refunded');
-assert.equal(normalizeCloverOrder({...order,paymentState:'OPEN',state:'CANCELED'},started).eventType,'cancellation');
-const tombstone={id:'deleted-open',createdTime:now-120_000,modifiedTime:now-100_000,paymentState:'OPEN',state:'OPEN'};
-assert.equal(normalizeCloverDeletedOrder(tombstone,started).eventType,'cancellation');
-assert.deepEqual(normalizeCloverDeletedOrder(tombstone,started).lines,[]);
-assert.deepEqual(normalizeCloverDeletedOrder({...tombstone,lineItems:{elements:[{id:'deleted-line',item:{id:'item'},modifications:{elements:[]}}]}},started).lines,[{externalLineId:'deleted-line',externalItemId:'item',quantity:'1',modifiers:[]}]);
-assert.equal(normalizeCloverDeletedOrder({...tombstone,createdTime:started-1},started),null);
-let calls=0,failDetail=false,failDeletedList=false,deletedFixture=null;globalThis.fetch=async url=>{calls++;const u=new URL(String(url));if(u.pathname.endsWith('/orders')){if(u.searchParams.getAll('filter').some(value=>value.startsWith('deletedTime'))){if(failDeletedList)throw new Error('Mock deletion-list outage.');return Response.json({elements:deletedFixture?[deletedFixture]:[]});}return Response.json({elements:[{id:order.id,modifiedTime:order.modifiedTime},...(deletedFixture?[{id:deletedFixture.id,modifiedTime:deletedFixture.modifiedTime}]:[])]});}if(u.pathname.includes('/orders/')&&u.searchParams.has('expand')){if(u.pathname.endsWith('/'+tombstone.id))throw new Error('Deleted order detail must not be fetched.');if(failDetail)throw new Error('Mock provider outage.');assert.match(u.searchParams.get('expand'),/refunds/);return Response.json(order);}throw new Error('Unexpected Clover request.');};
-const first=await syncClover('a');assert.equal(first.created,1);assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'9');
-const again=await syncClover('a');assert.equal(again.duplicates,1);assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'9');
-const notify=()=>webhook.POST(new Request('https://test/api/clover/webhook',{method:'POST',headers:{'Content-Type':'application/json','X-Clover-Auth':'hook'},body:JSON.stringify({appId:'app',merchants:{merchant:[{objectId:'O:order',type:'UPDATE',ts:now}]}})}));
-assert.equal((await notify()).status,200);assert.equal((await notify()).status,200);
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'9','Webhook retries and polling cannot deduct twice.');
-assert.equal((await cloverSyncStatus('a')).heldCount,0);assert.ok(calls>=4);
-order.id='unmapped';order.modifiedTime=now-180_000;order.lineItems.elements[0].item.id='missing';
-const held=await syncClover('a');assert.equal(held.held,1);assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'9');
-assert.equal((await cloverSyncStatus('a')).heldCount,1);
-sql.prepare('INSERT INTO recipe_modifier_lineages VALUES (?,?,?,?,?,?)').run('a','drink','extra','Extra cup','fixture',cutoff);
-sql.prepare("INSERT INTO recipe_modifier_versions VALUES (?,?,?,?,1,'draft',NULL,NULL,?,?)").run('a','drink','extra','extra-v1','fixture',cutoff);
-sql.prepare("INSERT INTO recipe_modifier_deltas VALUES (?,?,?,?,?,'cup','canonical',1,'count','1','1','canonical')").run('a','drink','extra','extra-v1',0);
-sql.prepare("UPDATE recipe_modifier_versions SET status='active',active_from=? WHERE company_id='a' AND modifier_id='extra'").run(cutoff);
-sql.prepare('INSERT INTO clover_modifier_mappings VALUES (?,?,?,?,?,?)').run('a','sandbox','merchant','item','extra-mod','extra');
-order.id='with-mod';order.modifiedTime=now-170_000;order.lineItems.elements[0].item.id='item';order.lineItems.elements[0].modifications.elements=[{id:'mod-line',modifier:{id:'extra-mod'}}];
-assert.equal((await syncClover('a')).created,1);
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'7');
-order.paymentState='PAID';order.modifiedTime=now-160_000;
-assert.equal((await syncClover('a')).created,1);
-const staleEvent=sql.prepare("SELECT e.normalized_json,s.state FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=? AND e.revision=?").get(order.id,order.modifiedTime);
-assert.equal(JSON.parse(staleEvent.normalized_json).eventType,'sale');assert.equal(staleEvent.state,'applied');
-order.refunds={elements:[{id:'refund',amount:500}]};
-assert.equal((await syncClover('a')).created,1);
-const refundedEvent=sql.prepare("SELECT e.normalized_json,s.state FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=? AND e.revision=?").get(order.id,order.modifiedTime+1);
-assert.equal(JSON.parse(refundedEvent.normalized_json).eventType,'refund');assert.equal(refundedEvent.state,'applied');
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'7','Refund never restores stock.');
-assert.equal((await syncClover('a')).duplicates,1);assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'7');
-order.id='bad-mod';order.paymentState='PAID';order.modifiedTime=now-150_000;order.lineItems.elements[0].modifications.elements=[{id:'mod-line-2',modifier:{id:'missing-mod'}}];
+mkdirSync('.sites-runtime', { recursive: true });
+const sql = new DatabaseSync(':memory:');
+sql.exec('PRAGMA foreign_keys=ON');
+for (const entry of JSON.parse(readFileSync('drizzle/meta/_journal.json', 'utf8')).entries)
+  sql.exec(readFileSync(`drizzle/${entry.tag}.sql`, 'utf8'));
+
+class Statement {
+  constructor(query, values = []) {
+    this.query = query;
+    this.values = values;
+  }
+
+  bind(...values) {
+    return new Statement(this.query, values);
+  }
+
+  async first() {
+    return sql.prepare(this.query).get(...this.values) ?? null;
+  }
+
+  async all() {
+    return { results: sql.prepare(this.query).all(...this.values) };
+  }
+
+  async run() {
+    if (/^\s*SELECT\b/i.test(this.query))
+      return { results: sql.prepare(this.query).all(...this.values), meta: { changes: 0 } };
+    const r = sql.prepare(this.query).run(...this.values);
+    return { results: [], meta: { changes: Number(r.changes) } };
+  }
+}
+
+globalThis.testDB = {
+  prepare(query) {
+    return new Statement(query);
+  },
+  async batch(statements) {
+    sql.exec('BEGIN');
+    try {
+      const results = [];
+      for (const item of statements) results.push(await item.run());
+      sql.exec('COMMIT');
+      return results;
+    } catch (error) {
+      sql.exec('ROLLBACK');
+      throw error;
+    }
+  },
+};
+globalThis.testEnv = {
+  CLOVER_ENVIRONMENT: 'sandbox',
+  CLOVER_CLIENT_ID: 'app',
+  CLOVER_CLIENT_SECRET: 'secret',
+  CLOVER_WEBHOOK_AUTH_CODE: 'hook',
+  VENDOR_ENCRYPTION_KEY: btoa('a'.repeat(32)),
+  PANTRACK_CLOVER_SYNC_ENABLED: 'enabled',
+};
+const plugin = {
+  name: 'mocks',
+  setup(build) {
+    build.onResolve({ filter: /^cloudflare:workers$|^@\/db\/raw$/ }, (args) => ({
+      path: args.path,
+      namespace: 'mock',
+    }));
+    build.onLoad({ filter: /.*/, namespace: 'mock' }, (args) => ({
+      contents:
+        args.path === 'cloudflare:workers'
+          ? 'export const env=globalThis.testEnv'
+          : 'export function database(){return globalThis.testDB}',
+    }));
+  },
+};
+for (const [name, path] of [
+  ['sync', 'src/lib/clover-sync.ts'],
+  ['orders', 'src/lib/clover-orders.ts'],
+  ['crypto', 'src/lib/vendor-adapter.ts'],
+  ['webhook', 'src/app/api/clover/webhook/route.ts'],
+])
+  await build({
+    entryPoints: [path],
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    outfile: `.sites-runtime/clover-b6-${name}.mjs`,
+    plugins: [plugin],
+  });
+const { syncClover, cloverSyncStatus } = await import('../.sites-runtime/clover-b6-sync.mjs');
+const { normalizeCloverOrder, normalizeCloverDeletedOrder } =
+  await import('../.sites-runtime/clover-b6-orders.mjs');
+const { encrypt } = await import('../.sites-runtime/clover-b6-crypto.mjs');
+const webhook = await import('../.sites-runtime/clover-b6-webhook.mjs');
+const now = Date.now(),
+  cutoff = new Date(now - 600_000).toISOString(),
+  started = now - 300_000;
+for (const id of ['a', 'b'])
+  sql.prepare('INSERT INTO companies VALUES (?,?,?)').run(id, id, cutoff);
+
+function stock(id, dimension, onHand) {
+  sql.prepare('INSERT INTO products VALUES (?,?,?)').run('a', id, '{}');
+  sql
+    .prepare('INSERT INTO product_unit_versions VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL)')
+    .run('a', id, 'canonical', 1, 'curated', dimension, 'canonical', '1', '1', 'fixture', cutoff);
+  sql
+    .prepare(
+      'INSERT INTO inventory_config_versions(company_id,product_id,id,version,status,stock_unit_id,stock_unit_version,purchase_unit_label,purchase_quantity_minor,legacy_units_per_pack,effective_from,replaced_at,created_by,created_at) VALUES (?,?,?,?,?,?,?,?,?,NULL,?,NULL,?,?)',
+    )
+    .run('a', id, 'active', 1, 'active', 'canonical', 1, 'unit', '1', cutoff, 'fixture', cutoff);
+  sql
+    .prepare("INSERT INTO inventory_balances_exact VALUES (?,?,?,?,?,'0','0',?,?,?)")
+    .run('a', id, 'active', dimension, onHand, 1, cutoff, cutoff);
+}
+
+stock('cup', 'count', '10');
+sql.prepare('INSERT INTO recipe_lineages VALUES (?,?,?,?)').run('a', 'drink', 'fixture', cutoff);
+sql
+  .prepare("INSERT INTO recipe_versions VALUES (?,?,?,1,'draft',?,NULL,NULL,0,?,?)")
+  .run('a', 'drink', 'drink-v1', 'Drink', 'fixture', cutoff);
+sql
+  .prepare(
+    "INSERT INTO recipe_version_ingredients VALUES (?,?,?,?,?,'canonical',1,?,?,?,'canonical',NULL)",
+  )
+  .run('a', 'drink', 'drink-v1', 0, 'cup', 'count', '1', '1');
+sql
+  .prepare(
+    "UPDATE recipe_versions SET status='active',active_from=? WHERE company_id='a' AND recipe_id='drink'",
+  )
+  .run(cutoff);
+sql
+  .prepare('INSERT INTO clover_item_mappings VALUES (?,?,?,?,?)')
+  .run('a', 'sandbox', 'merchant', 'item', 'drink');
+const token = {
+  access_token: 'access',
+  refresh_token: 'refresh',
+  access_token_expiration: Math.floor(now / 1000) + 3600,
+  refresh_token_expiration: Math.floor(now / 1000) + 86400,
+};
+sql
+  .prepare('INSERT INTO clover_connections VALUES (?,?,?,?,?,?,0)')
+  .run('a', 'merchant', 'sandbox', await encrypt(JSON.stringify(token), 'clover:a'), cutoff, null);
+sql
+  .prepare(
+    'INSERT INTO clover_sync_state(company_id,environment,merchant_id,started_at,checkpoint,lease_until) VALUES (?,?,?,?,?,0)',
+  )
+  .run('a', 'sandbox', 'merchant', started, started);
+const order = {
+  id: 'order',
+  createdTime: now - 240_000,
+  modifiedTime: now - 190_000,
+  total: 500,
+  paymentState: 'PAID',
+  payments: { elements: [{ id: 'payment', createdTime: now - 200_000 }] },
+  lineItems: { elements: [{ id: 'line', item: { id: 'item' }, modifications: { elements: [] } }] },
+};
+assert.equal(normalizeCloverOrder(order, started).preparationStatus, 'fulfilled');
+assert.equal(normalizeCloverOrder({ ...order, createdTime: started - 1 }, started), null);
+assert.equal(
+  normalizeCloverOrder({ ...order, payments: { elements: [] } }, started).timeQuality,
+  'inferred',
+);
+assert.equal(normalizeCloverOrder({ ...order, paymentState: 'PARTIALLY_PAID' }, started), null);
+assert.equal(
+  normalizeCloverOrder({ ...order, paymentState: 'REFUNDED' }, started).eventType,
+  'refund',
+);
+assert.equal(
+  normalizeCloverOrder({ ...order, paymentState: 'CREDITED' }, started).orderStatus,
+  'refunded',
+);
+assert.equal(
+  normalizeCloverOrder({ ...order, paymentState: 'PARTIALLY_REFUNDED' }, started).orderStatus,
+  'partially_refunded',
+);
+const fullRefund = { ...order, refunds: { elements: [{ id: 'refund', amount: 500 }] } };
+assert.equal(normalizeCloverOrder(fullRefund, started).eventType, 'refund');
+assert.equal(normalizeCloverOrder(fullRefund, started).revision, order.modifiedTime + 1);
+assert.equal(
+  normalizeCloverOrder(fullRefund, started).occurredAt,
+  new Date(order.modifiedTime).toISOString(),
+);
+assert.deepEqual(
+  normalizeCloverOrder(fullRefund, started),
+  normalizeCloverOrder({ ...fullRefund, paymentState: 'REFUNDED' }, started),
+  'Refund identity and projection remain stable if Clover paymentState catches up.',
+);
+assert.equal(
+  normalizeCloverOrder(
+    { ...order, refunds: { elements: [{ id: 'refund', amount: 200 }] } },
+    started,
+  ).orderStatus,
+  'partially_refunded',
+);
+assert.equal(
+  normalizeCloverOrder({ ...order, paymentState: 'OPEN', state: 'CANCELED' }, started).eventType,
+  'cancellation',
+);
+const tombstone = {
+  id: 'deleted-open',
+  createdTime: now - 120_000,
+  modifiedTime: now - 100_000,
+  paymentState: 'OPEN',
+  state: 'OPEN',
+};
+assert.equal(normalizeCloverDeletedOrder(tombstone, started).eventType, 'cancellation');
+assert.deepEqual(normalizeCloverDeletedOrder(tombstone, started).lines, []);
+assert.deepEqual(
+  normalizeCloverDeletedOrder(
+    {
+      ...tombstone,
+      lineItems: {
+        elements: [{ id: 'deleted-line', item: { id: 'item' }, modifications: { elements: [] } }],
+      },
+    },
+    started,
+  ).lines,
+  [{ externalLineId: 'deleted-line', externalItemId: 'item', quantity: '1', modifiers: [] }],
+);
+assert.equal(
+  normalizeCloverDeletedOrder({ ...tombstone, createdTime: started - 1 }, started),
+  null,
+);
+let calls = 0,
+  failDetail = false,
+  failDeletedList = false,
+  deletedFixture = null;
+globalThis.fetch = async (url) => {
+  calls++;
+  const u = new URL(String(url));
+  if (u.pathname.endsWith('/orders')) {
+    if (u.searchParams.getAll('filter').some((value) => value.startsWith('deletedTime'))) {
+      if (failDeletedList) throw new Error('Mock deletion-list outage.');
+      return Response.json({ elements: deletedFixture ? [deletedFixture] : [] });
+    }
+    return Response.json({
+      elements: [
+        { id: order.id, modifiedTime: order.modifiedTime },
+        ...(deletedFixture
+          ? [{ id: deletedFixture.id, modifiedTime: deletedFixture.modifiedTime }]
+          : []),
+      ],
+    });
+  }
+  if (u.pathname.includes('/orders/') && u.searchParams.has('expand')) {
+    if (u.pathname.endsWith('/' + tombstone.id))
+      throw new Error('Deleted order detail must not be fetched.');
+    if (failDetail) throw new Error('Mock provider outage.');
+    assert.match(u.searchParams.get('expand'), /refunds/);
+    return Response.json(order);
+  }
+  throw new Error('Unexpected Clover request.');
+};
+const first = await syncClover('a');
+assert.equal(first.created, 1);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '9',
+);
+const again = await syncClover('a');
+assert.equal(again.duplicates, 1);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '9',
+);
+const notify = () =>
+  webhook.POST(
+    new Request('https://test/api/clover/webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Clover-Auth': 'hook' },
+      body: JSON.stringify({
+        appId: 'app',
+        merchants: { merchant: [{ objectId: 'O:order', type: 'UPDATE', ts: now }] },
+      }),
+    }),
+  );
+assert.equal((await notify()).status, 200);
+assert.equal((await notify()).status, 200);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '9',
+  'Webhook retries and polling cannot deduct twice.',
+);
+assert.equal((await cloverSyncStatus('a')).heldCount, 0);
+assert.ok(calls >= 4);
+order.id = 'unmapped';
+order.modifiedTime = now - 180_000;
+order.lineItems.elements[0].item.id = 'missing';
+const held = await syncClover('a');
+assert.equal(held.held, 1);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '9',
+);
+assert.equal((await cloverSyncStatus('a')).heldCount, 1);
+sql
+  .prepare('INSERT INTO recipe_modifier_lineages VALUES (?,?,?,?,?,?)')
+  .run('a', 'drink', 'extra', 'Extra cup', 'fixture', cutoff);
+sql
+  .prepare("INSERT INTO recipe_modifier_versions VALUES (?,?,?,?,1,'draft',NULL,NULL,?,?)")
+  .run('a', 'drink', 'extra', 'extra-v1', 'fixture', cutoff);
+sql
+  .prepare(
+    "INSERT INTO recipe_modifier_deltas VALUES (?,?,?,?,?,'cup','canonical',1,'count','1','1','canonical')",
+  )
+  .run('a', 'drink', 'extra', 'extra-v1', 0);
+sql
+  .prepare(
+    "UPDATE recipe_modifier_versions SET status='active',active_from=? WHERE company_id='a' AND modifier_id='extra'",
+  )
+  .run(cutoff);
+sql
+  .prepare('INSERT INTO clover_modifier_mappings VALUES (?,?,?,?,?,?)')
+  .run('a', 'sandbox', 'merchant', 'item', 'extra-mod', 'extra');
+order.id = 'with-mod';
+order.modifiedTime = now - 170_000;
+order.lineItems.elements[0].item.id = 'item';
+order.lineItems.elements[0].modifications.elements = [
+  { id: 'mod-line', modifier: { id: 'extra-mod' } },
+];
+assert.equal((await syncClover('a')).created, 1);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '7',
+);
+order.paymentState = 'PAID';
+order.modifiedTime = now - 160_000;
+assert.equal((await syncClover('a')).created, 1);
+const staleEvent = sql
+  .prepare(
+    "SELECT e.normalized_json,s.state FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=? AND e.revision=?",
+  )
+  .get(order.id, order.modifiedTime);
+assert.equal(JSON.parse(staleEvent.normalized_json).eventType, 'sale');
+assert.equal(staleEvent.state, 'applied');
+order.refunds = { elements: [{ id: 'refund', amount: 500 }] };
+assert.equal((await syncClover('a')).created, 1);
+const refundedEvent = sql
+  .prepare(
+    "SELECT e.normalized_json,s.state FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=? AND e.revision=?",
+  )
+  .get(order.id, order.modifiedTime + 1);
+assert.equal(JSON.parse(refundedEvent.normalized_json).eventType, 'refund');
+assert.equal(refundedEvent.state, 'applied');
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '7',
+  'Refund never restores stock.',
+);
+assert.equal((await syncClover('a')).duplicates, 1);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '7',
+);
+order.id = 'bad-mod';
+order.paymentState = 'PAID';
+order.modifiedTime = now - 150_000;
+order.lineItems.elements[0].modifications.elements = [
+  { id: 'mod-line-2', modifier: { id: 'missing-mod' } },
+];
 delete order.refunds;
-assert.equal((await syncClover('a')).held,1);
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'7','Unknown modifier holds all ingredients.');
-order.id='cancel-before-pay';order.paymentState='OPEN';order.state='CANCELED';order.modifiedTime=now-145_000;order.lineItems.elements[0].modifications.elements=[];
-assert.equal((await syncClover('a')).created,1);assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'7','Unpaid cancellation is a no-op.');
-order.id='with-mod';order.paymentState='PAID';order.state='OPEN';order.modifiedTime=now-140_000;order.lineItems.elements=[{id:'line',item:{id:'item'},modifications:{elements:[{id:'mod-line',modifier:{id:'extra-mod'}}]}},{id:'line-added',item:{id:'item'},modifications:{elements:[]}}];
-assert.equal((await syncClover('a')).created,1);assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,'6','Later positive revision deducts only the new line.');
-deletedFixture=tombstone;
-const beforeDeletedBalance=sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor;
-const deletedSync=await syncClover('a');assert.equal(deletedSync.held,1);
-const deletedEvent=sql.prepare("SELECT e.normalized_json,s.state,s.last_reason FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=?").get(tombstone.id);
-assert.equal(deletedEvent.state,'held');assert.equal(deletedEvent.last_reason,'deleted_order_detail_unavailable');assert.deepEqual(JSON.parse(deletedEvent.normalized_json).lines,[]);
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,beforeDeletedBalance);
-await syncClover('a');assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM sales_events WHERE company_id='a' AND external_order_id=?").get(tombstone.id).n,1,'Repeated deletion poll is idempotent.');
-const paidDeletion={id:'with-mod',createdTime:order.createdTime,modifiedTime:now-90_000,paymentState:'PAID',state:'OPEN'};
-deletedFixture=paidDeletion;
-const paidDeletionBalance=sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor;
-const paidDeletionApplications=sql.prepare("SELECT COUNT(*) AS n FROM inventory_consumption_applications WHERE company_id='a'").get().n;
-assert.equal((await syncClover('a')).created,1);
-const paidDeletionEvent=sql.prepare("SELECT s.state FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=? AND e.revision=?").get(paidDeletion.id,paidDeletion.modifiedTime);
-assert.equal(paidDeletionEvent.state,'applied','A deleted paid order with missing lines is a no-op after its applied sale.');
-assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM inventory_consumption_applications WHERE company_id='a'").get().n,paidDeletionApplications);
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'").get().on_hand_minor,paidDeletionBalance);
-await syncClover('a');assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM sales_events WHERE company_id='a' AND external_order_id=? AND revision=?").get(paidDeletion.id,paidDeletion.modifiedTime).n,1);
-deletedFixture=tombstone;
-const beforeFailure=sql.prepare("SELECT checkpoint FROM clover_sync_state WHERE company_id='a'").get().checkpoint;failDetail=true;
-await assert.rejects(()=>syncClover('a'),/provider outage/);
-assert.equal(sql.prepare("SELECT checkpoint FROM clover_sync_state WHERE company_id='a'").get().checkpoint,beforeFailure,'Provider failure cannot advance checkpoint.');
-assert.match((await cloverSyncStatus('a')).lastError,/provider outage/);failDetail=false;failDeletedList=true;
-await assert.rejects(()=>syncClover('a'),/deletion-list outage/);
-assert.equal(sql.prepare("SELECT checkpoint FROM clover_sync_state WHERE company_id='a'").get().checkpoint,beforeFailure,'Deletion-list failure cannot advance checkpoint.');failDeletedList=false;
-globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED='';await assert.rejects(()=>syncClover('a'),/disabled/);
-assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[]);
-sql.close();console.log('PASS: paid sale, modifier and positive revision consume once; duplicate, refund, cancellation, deleted-order tombstone, unknown mapping, initial cutoff, failure checkpoint and gate are safe; Clover mocked.');
+assert.equal((await syncClover('a')).held, 1);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '7',
+  'Unknown modifier holds all ingredients.',
+);
+order.id = 'cancel-before-pay';
+order.paymentState = 'OPEN';
+order.state = 'CANCELED';
+order.modifiedTime = now - 145_000;
+order.lineItems.elements[0].modifications.elements = [];
+assert.equal((await syncClover('a')).created, 1);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '7',
+  'Unpaid cancellation is a no-op.',
+);
+order.id = 'with-mod';
+order.paymentState = 'PAID';
+order.state = 'OPEN';
+order.modifiedTime = now - 140_000;
+order.lineItems.elements = [
+  {
+    id: 'line',
+    item: { id: 'item' },
+    modifications: { elements: [{ id: 'mod-line', modifier: { id: 'extra-mod' } }] },
+  },
+  { id: 'line-added', item: { id: 'item' }, modifications: { elements: [] } },
+];
+assert.equal((await syncClover('a')).created, 1);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  '6',
+  'Later positive revision deducts only the new line.',
+);
+deletedFixture = tombstone;
+const beforeDeletedBalance = sql
+  .prepare(
+    "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+  )
+  .get().on_hand_minor;
+const deletedSync = await syncClover('a');
+assert.equal(deletedSync.held, 1);
+const deletedEvent = sql
+  .prepare(
+    "SELECT e.normalized_json,s.state,s.last_reason FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=?",
+  )
+  .get(tombstone.id);
+assert.equal(deletedEvent.state, 'held');
+assert.equal(deletedEvent.last_reason, 'deleted_order_detail_unavailable');
+assert.deepEqual(JSON.parse(deletedEvent.normalized_json).lines, []);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  beforeDeletedBalance,
+);
+await syncClover('a');
+assert.equal(
+  sql
+    .prepare("SELECT COUNT(*) AS n FROM sales_events WHERE company_id='a' AND external_order_id=?")
+    .get(tombstone.id).n,
+  1,
+  'Repeated deletion poll is idempotent.',
+);
+const paidDeletion = {
+  id: 'with-mod',
+  createdTime: order.createdTime,
+  modifiedTime: now - 90_000,
+  paymentState: 'PAID',
+  state: 'OPEN',
+};
+deletedFixture = paidDeletion;
+const paidDeletionBalance = sql
+  .prepare(
+    "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+  )
+  .get().on_hand_minor;
+const paidDeletionApplications = sql
+  .prepare("SELECT COUNT(*) AS n FROM inventory_consumption_applications WHERE company_id='a'")
+  .get().n;
+assert.equal((await syncClover('a')).created, 1);
+const paidDeletionEvent = sql
+  .prepare(
+    "SELECT s.state FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id='a' AND e.external_order_id=? AND e.revision=?",
+  )
+  .get(paidDeletion.id, paidDeletion.modifiedTime);
+assert.equal(
+  paidDeletionEvent.state,
+  'applied',
+  'A deleted paid order with missing lines is a no-op after its applied sale.',
+);
+assert.equal(
+  sql
+    .prepare("SELECT COUNT(*) AS n FROM inventory_consumption_applications WHERE company_id='a'")
+    .get().n,
+  paidDeletionApplications,
+);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='a' AND product_id='cup'",
+    )
+    .get().on_hand_minor,
+  paidDeletionBalance,
+);
+await syncClover('a');
+assert.equal(
+  sql
+    .prepare(
+      "SELECT COUNT(*) AS n FROM sales_events WHERE company_id='a' AND external_order_id=? AND revision=?",
+    )
+    .get(paidDeletion.id, paidDeletion.modifiedTime).n,
+  1,
+);
+deletedFixture = tombstone;
+const beforeFailure = sql
+  .prepare("SELECT checkpoint FROM clover_sync_state WHERE company_id='a'")
+  .get().checkpoint;
+failDetail = true;
+await assert.rejects(() => syncClover('a'), /provider outage/);
+assert.equal(
+  sql.prepare("SELECT checkpoint FROM clover_sync_state WHERE company_id='a'").get().checkpoint,
+  beforeFailure,
+  'Provider failure cannot advance checkpoint.',
+);
+assert.match((await cloverSyncStatus('a')).lastError, /provider outage/);
+failDetail = false;
+failDeletedList = true;
+await assert.rejects(() => syncClover('a'), /deletion-list outage/);
+assert.equal(
+  sql.prepare("SELECT checkpoint FROM clover_sync_state WHERE company_id='a'").get().checkpoint,
+  beforeFailure,
+  'Deletion-list failure cannot advance checkpoint.',
+);
+failDeletedList = false;
+globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED = '';
+await assert.rejects(() => syncClover('a'), /disabled/);
+assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(), []);
+sql.close();
+console.log(
+  'PASS: paid sale, modifier and positive revision consume once; duplicate, refund, cancellation, deleted-order tombstone, unknown mapping, initial cutoff, failure checkpoint and gate are safe; Clover mocked.',
+);

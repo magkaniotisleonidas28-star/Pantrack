@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "Pantrack | Purchasing workspace",
-  description: "Prepare café orders across suppliers, manage products, and track purchasing history.",
-  referrer: "no-referrer",
+  title: 'Pantrack | Purchasing workspace',
+  description:
+    'Prepare café orders across suppliers, manage products, and track purchasing history.',
+  referrer: 'no-referrer',
   other: {
-    "codex-preview": "development",
+    'codex-preview': 'development',
   },
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
   },
 };
 

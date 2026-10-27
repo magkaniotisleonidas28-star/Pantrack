@@ -1,0 +1,35 @@
+# Generated state, dependencies and private evidence are never cleanup input.
+node_modules/
+.sites-runtime/
+.wrangler/
+.vinext/
+.next/
+dist/
+out/
+coverage/
+work/
+.env*
+.dev.vars*
+# Preserve used migrations, generated metadata and dependency resolution text.
+drizzle/
+pnpm-lock.yaml
+next-env.d.ts
+# Preserve upstream registry sources, binaries and licensed assets.
+src/components/ui/
+src/hooks/use-mobile.ts
+vendor/
+**/*.ttf
+**/*.LICENSE
+# Preserve managed instructions and recorded historical evidence.
+.claude/
+.agents/
+.github/agents/
+.github/prompts/
+.github/skills/
+openspec/
+tests/fixtures/
+docs/*EVIDENCE*.md
+docs/*202610*.md
+# Progress records are maintained independently of source formatting.
+CODE_READABILITY_TODO.md
+docs/CODE_READABILITY_FILE_MANIFEST.json

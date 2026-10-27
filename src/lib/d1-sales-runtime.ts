@@ -1,70 +1,257 @@
-import {UserFacingError} from '@/lib/user-facing-error';
-import {D1InventoryConsumptionPort} from '@/lib/d1-inventory-consumption';
-import {D1SalesEventStore} from '@/lib/d1-sales-event-store';
-import {SALES_EVENT_CONTRACT,SalesIngestionService,type SalesActor,type SalesEventDraftV1,type SalesMappingPort,type SalesSourceBinding} from '@/lib/sales-ingestion';
+import { UserFacingError } from '@/lib/user-facing-error';
+import { D1InventoryConsumptionPort } from '@/lib/d1-inventory-consumption';
+import { D1SalesEventStore } from '@/lib/d1-sales-event-store';
+import {
+  SALES_EVENT_CONTRACT,
+  SalesIngestionService,
+  type SalesActor,
+  type SalesEventDraftV1,
+  type SalesMappingPort,
+  type SalesSourceBinding,
+} from '@/lib/sales-ingestion';
 
-export type LocalSalesSource='manual'|'recipe_csv'|'mapped_csv'|'bridge';
-export type LocalSalesLine={recipeId?:string;mappingKey?:string;quantity:number;modifiers?:Array<{modifierId:string;perItem:number}>};
+export type LocalSalesSource = 'manual' | 'recipe_csv' | 'mapped_csv' | 'bridge';
 
-const bindings:Record<LocalSalesSource,(companyId:string)=>SalesSourceBinding>={
- manual:companyId=>({kind:'manual',provider:'pantrack-manual',environment:'internal',connectionId:'manual-entry',merchantId:companyId,locationId:'default'}),
- recipe_csv:companyId=>({kind:'csv',provider:'pantrack-recipe-csv',environment:'internal',connectionId:'recipe-csv',merchantId:companyId,locationId:'default'}),
- mapped_csv:companyId=>({kind:'csv',provider:'pantrack-mapped-csv',environment:'internal',connectionId:'mapped-csv',merchantId:companyId,locationId:'default'}),
- bridge:companyId=>({kind:'bridge',provider:'pantrack-register-bridge',environment:'internal',connectionId:'register-bridge',merchantId:companyId,locationId:'default'}),
+export type LocalSalesLine = {
+  recipeId?: string;
+  mappingKey?: string;
+  quantity: number;
+  modifiers?: Array<{ modifierId: string; perItem: number }>;
 };
 
-export class D1SalesMappingPort implements SalesMappingPort{
- constructor(private readonly db:D1Database){}
- async resolveLine(input:{companyId:string;source:SalesSourceBinding;externalItemId:string;externalVariationId?:string}){
-  if(input.source.provider==='pantrack-manual'||input.source.provider==='pantrack-recipe-csv')return {status:'mapped' as const,recipeId:input.externalItemId};
-  if(input.source.kind==='native'&&input.source.provider==='clover'){
-   const row=await this.db.prepare('SELECT recipe_id FROM clover_item_mappings WHERE company_id=? AND environment=? AND merchant_id=? AND item_id=?').bind(input.companyId,input.source.environment,input.source.merchantId,input.externalItemId).first<{recipe_id:string}>();
-   return row?{status:'mapped' as const,recipeId:row.recipe_id}:{status:'unknown_item' as const};
+const bindings: Record<LocalSalesSource, (companyId: string) => SalesSourceBinding> = {
+  manual: (companyId) => ({
+    kind: 'manual',
+    provider: 'pantrack-manual',
+    environment: 'internal',
+    connectionId: 'manual-entry',
+    merchantId: companyId,
+    locationId: 'default',
+  }),
+  recipe_csv: (companyId) => ({
+    kind: 'csv',
+    provider: 'pantrack-recipe-csv',
+    environment: 'internal',
+    connectionId: 'recipe-csv',
+    merchantId: companyId,
+    locationId: 'default',
+  }),
+  mapped_csv: (companyId) => ({
+    kind: 'csv',
+    provider: 'pantrack-mapped-csv',
+    environment: 'internal',
+    connectionId: 'mapped-csv',
+    merchantId: companyId,
+    locationId: 'default',
+  }),
+  bridge: (companyId) => ({
+    kind: 'bridge',
+    provider: 'pantrack-register-bridge',
+    environment: 'internal',
+    connectionId: 'register-bridge',
+    merchantId: companyId,
+    locationId: 'default',
+  }),
+};
+
+export class D1SalesMappingPort implements SalesMappingPort {
+  constructor(private readonly db: D1Database) {}
+
+  async resolveLine(input: {
+    companyId: string;
+    source: SalesSourceBinding;
+    externalItemId: string;
+    externalVariationId?: string;
+  }) {
+    if (
+      input.source.provider === 'pantrack-manual' ||
+      input.source.provider === 'pantrack-recipe-csv'
+    )
+      return { status: 'mapped' as const, recipeId: input.externalItemId };
+    if (input.source.kind === 'native' && input.source.provider === 'clover') {
+      const row = await this.db
+        .prepare(
+          'SELECT recipe_id FROM clover_item_mappings WHERE company_id=? AND environment=? AND merchant_id=? AND item_id=?',
+        )
+        .bind(
+          input.companyId,
+          input.source.environment,
+          input.source.merchantId,
+          input.externalItemId,
+        )
+        .first<{ recipe_id: string }>();
+      return row
+        ? { status: 'mapped' as const, recipeId: row.recipe_id }
+        : { status: 'unknown_item' as const };
+    }
+    const row = await this.db
+      .prepare('SELECT data FROM register_mappings WHERE company_id=? AND external_key=?')
+      .bind(input.companyId, input.externalItemId)
+      .first<{ data: string }>();
+    if (!row) return { status: 'unknown_item' as const };
+    try {
+      const parsed = JSON.parse(row.data) as { recipeId?: unknown };
+      return typeof parsed.recipeId === 'string' && parsed.recipeId
+        ? { status: 'mapped' as const, recipeId: parsed.recipeId }
+        : { status: 'unknown_item' as const };
+    } catch {
+      return { status: 'unknown_item' as const };
+    }
   }
-  const row=await this.db.prepare('SELECT data FROM register_mappings WHERE company_id=? AND external_key=?').bind(input.companyId,input.externalItemId).first<{data:string}>();
-  if(!row)return {status:'unknown_item' as const};
-  try{const parsed=JSON.parse(row.data) as {recipeId?:unknown};return typeof parsed.recipeId==='string'&&parsed.recipeId?{status:'mapped' as const,recipeId:parsed.recipeId}:{status:'unknown_item' as const};}catch{return {status:'unknown_item' as const};}
- }
- async resolveModifier(input:{companyId:string;source:SalesSourceBinding;externalItemId:string;externalVariationId?:string;externalModifierId:string}){
-  if(input.source.provider==='pantrack-manual'){
-   const row=await this.db.prepare('SELECT 1 AS found FROM recipe_modifier_lineages WHERE company_id=? AND recipe_id=? AND id=?').bind(input.companyId,input.externalItemId,input.externalModifierId).first();
-   return row?{status:'mapped' as const,modifierId:input.externalModifierId}:{status:'unknown_modifier' as const};
+
+  async resolveModifier(input: {
+    companyId: string;
+    source: SalesSourceBinding;
+    externalItemId: string;
+    externalVariationId?: string;
+    externalModifierId: string;
+  }) {
+    if (input.source.provider === 'pantrack-manual') {
+      const row = await this.db
+        .prepare(
+          'SELECT 1 AS found FROM recipe_modifier_lineages WHERE company_id=? AND recipe_id=? AND id=?',
+        )
+        .bind(input.companyId, input.externalItemId, input.externalModifierId)
+        .first();
+      return row
+        ? { status: 'mapped' as const, modifierId: input.externalModifierId }
+        : { status: 'unknown_modifier' as const };
+    }
+    if (input.source.kind === 'native' && input.source.provider === 'clover') {
+      const row = await this.db
+        .prepare(
+          'SELECT inventory_modifier_id FROM clover_modifier_mappings WHERE company_id=? AND environment=? AND merchant_id=? AND item_id=? AND modifier_id=?',
+        )
+        .bind(
+          input.companyId,
+          input.source.environment,
+          input.source.merchantId,
+          input.externalItemId,
+          input.externalModifierId,
+        )
+        .first<{ inventory_modifier_id: string }>();
+      if (row) return { status: 'mapped' as const, modifierId: row.inventory_modifier_id };
+    }
+    return { status: 'unknown_modifier' as const };
   }
-  if(input.source.kind==='native'&&input.source.provider==='clover'){
-   const row=await this.db.prepare('SELECT inventory_modifier_id FROM clover_modifier_mappings WHERE company_id=? AND environment=? AND merchant_id=? AND item_id=? AND modifier_id=?').bind(input.companyId,input.source.environment,input.source.merchantId,input.externalItemId,input.externalModifierId).first<{inventory_modifier_id:string}>();
-   if(row)return {status:'mapped' as const,modifierId:row.inventory_modifier_id};
-  }
-  return {status:'unknown_modifier' as const};
- }
 }
 
-export function d1SalesService(db:D1Database){return new SalesIngestionService(new D1SalesEventStore(db),new D1SalesMappingPort(db),new D1InventoryConsumptionPort(db));}
-
-export async function ingestLocalSale(input:{db:D1Database;companyId:string;source:LocalSalesSource;reference:string;occurredAt?:string;lines:LocalSalesLine[];actor:SalesActor}){
- const legacyReferences=input.source==='bridge'?[input.reference,`bridge:${input.reference}`]:[input.reference];
- for(const reference of legacyReferences){if(await input.db.prepare('SELECT 1 AS found FROM sales_imports WHERE company_id=? AND reference=?').bind(input.companyId,reference).first())return {ok:true,replayed:true,legacy:true};}
- const source=bindings[input.source](input.companyId),service=d1SalesService(input.db),receivedAt=new Date();
- const occurrence=input.occurredAt??receivedAt.toISOString();
- const grouped=new Map<string,{externalItemId:string;quantity:bigint;modifiers:Array<{modifierId:string;perItem:number}>}>();
- for(const line of input.lines){
-  const externalItemId=line.recipeId??line.mappingKey;
-  if(!externalItemId)throw new UserFacingError('Every sale line requires a recipe or mapping identity.');
-  const modifiers=[...(line.modifiers??[])].sort((a,b)=>a.modifierId.localeCompare(b.modifierId));
-  if(modifiers.length&&input.source!=='manual')throw new UserFacingError('Choices are supported in manual sales only.');
-  if(new Set(modifiers.map(m=>m.modifierId)).size!==modifiers.length||modifiers.some(m=>!Number.isInteger(m.perItem)||m.perItem<1||m.perItem>5))throw new UserFacingError('Check the choices for this sale.');
-  const key=JSON.stringify([line.recipeId?'recipe':'mapping',externalItemId,modifiers]),current=grouped.get(key);
-  grouped.set(key,{externalItemId,quantity:(current?.quantity??BigInt(0))+BigInt(line.quantity),modifiers});
- }
- const normalizedLines=[...grouped].sort(([left],[right])=>left.localeCompare(right)).map(([,line],index)=>({externalLineId:`line-${index+1}`,externalItemId:line.externalItemId,quantity:String(line.quantity),modifiers:line.modifiers.map((m,n)=>({externalModifierLineId:`modifier-${n+1}`,externalModifierId:m.modifierId,quantity:String(line.quantity*BigInt(m.perItem))}))}));
- const draft:SalesEventDraftV1={schemaVersion:SALES_EVENT_CONTRACT,externalEventId:input.reference,externalOrderId:input.reference,revision:1,eventType:'sale',orderStatus:'completed',preparationStatus:'fulfilled',occurredAt:occurrence,timeQuality:input.occurredAt?(input.source==='bridge'?'provider':'confirmed'):'inferred',lines:normalizedLines};
- const receipt=await service.receive({companyId:input.companyId,source,actor:input.actor},draft);
- if(receipt.kind==='created')await service.process(input.companyId,receipt.eventKey);
- const state=await new D1SalesEventStore(input.db).state(input.companyId,receipt.eventKey);
- return {ok:true,replayed:receipt.kind==='duplicate',conflict:receipt.kind==='conflict',eventKey:receipt.eventKey,state};
+export function d1SalesService(db: D1Database) {
+  return new SalesIngestionService(
+    new D1SalesEventStore(db),
+    new D1SalesMappingPort(db),
+    new D1InventoryConsumptionPort(db),
+  );
 }
 
-export function localUserActor(user:{userId:string},companyId:string,role:string):SalesActor{
- if(role!=='owner'&&role!=='manager'&&role!=='employee')throw new UserFacingError('Unsupported company role.');
- return {kind:'user',userId:user.userId,companyId,role};
+export async function ingestLocalSale(input: {
+  db: D1Database;
+  companyId: string;
+  source: LocalSalesSource;
+  reference: string;
+  occurredAt?: string;
+  lines: LocalSalesLine[];
+  actor: SalesActor;
+}) {
+  const legacyReferences =
+    input.source === 'bridge' ? [input.reference, `bridge:${input.reference}`] : [input.reference];
+  for (const reference of legacyReferences) {
+    if (
+      await input.db
+        .prepare('SELECT 1 AS found FROM sales_imports WHERE company_id=? AND reference=?')
+        .bind(input.companyId, reference)
+        .first()
+    )
+      return { ok: true, replayed: true, legacy: true };
+  }
+  const source = bindings[input.source](input.companyId),
+    service = d1SalesService(input.db),
+    receivedAt = new Date();
+  const occurrence = input.occurredAt ?? receivedAt.toISOString();
+  const grouped = new Map<
+    string,
+    {
+      externalItemId: string;
+      quantity: bigint;
+      modifiers: Array<{ modifierId: string; perItem: number }>;
+    }
+  >();
+  for (const line of input.lines) {
+    const externalItemId = line.recipeId ?? line.mappingKey;
+    if (!externalItemId)
+      throw new UserFacingError('Every sale line requires a recipe or mapping identity.');
+    const modifiers = [...(line.modifiers ?? [])].sort((a, b) =>
+      a.modifierId.localeCompare(b.modifierId),
+    );
+    if (modifiers.length && input.source !== 'manual')
+      throw new UserFacingError('Choices are supported in manual sales only.');
+    if (
+      new Set(modifiers.map((m) => m.modifierId)).size !== modifiers.length ||
+      modifiers.some((m) => !Number.isInteger(m.perItem) || m.perItem < 1 || m.perItem > 5)
+    )
+      throw new UserFacingError('Check the choices for this sale.');
+    const key = JSON.stringify([line.recipeId ? 'recipe' : 'mapping', externalItemId, modifiers]),
+      current = grouped.get(key);
+    grouped.set(key, {
+      externalItemId,
+      quantity: (current?.quantity ?? BigInt(0)) + BigInt(line.quantity),
+      modifiers,
+    });
+  }
+  const normalizedLines = [...grouped]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([, line], index) => ({
+      externalLineId: `line-${index + 1}`,
+      externalItemId: line.externalItemId,
+      quantity: String(line.quantity),
+      modifiers: line.modifiers.map((m, n) => ({
+        externalModifierLineId: `modifier-${n + 1}`,
+        externalModifierId: m.modifierId,
+        quantity: String(line.quantity * BigInt(m.perItem)),
+      })),
+    }));
+  const draft: SalesEventDraftV1 = {
+    schemaVersion: SALES_EVENT_CONTRACT,
+    externalEventId: input.reference,
+    externalOrderId: input.reference,
+    revision: 1,
+    eventType: 'sale',
+    orderStatus: 'completed',
+    preparationStatus: 'fulfilled',
+    occurredAt: occurrence,
+    timeQuality: input.occurredAt
+      ? input.source === 'bridge'
+        ? 'provider'
+        : 'confirmed'
+      : 'inferred',
+    lines: normalizedLines,
+  };
+  const receipt = await service.receive(
+    { companyId: input.companyId, source, actor: input.actor },
+    draft,
+  );
+  if (receipt.kind === 'created') await service.process(input.companyId, receipt.eventKey);
+  const state = await new D1SalesEventStore(input.db).state(input.companyId, receipt.eventKey);
+  return {
+    ok: true,
+    replayed: receipt.kind === 'duplicate',
+    conflict: receipt.kind === 'conflict',
+    eventKey: receipt.eventKey,
+    state,
+  };
 }
-export function bridgeActor(companyId:string){const source=bindings.bridge(companyId);return {kind:'machine' as const,machineId:`register-bridge:${companyId}`,companyId,source};}
+
+export function localUserActor(
+  user: { userId: string },
+  companyId: string,
+  role: string,
+): SalesActor {
+  if (role !== 'owner' && role !== 'manager' && role !== 'employee')
+    throw new UserFacingError('Unsupported company role.');
+  return { kind: 'user', userId: user.userId, companyId, role };
+}
+
+export function bridgeActor(companyId: string) {
+  const source = bindings.bridge(companyId);
+  return { kind: 'machine' as const, machineId: `register-bridge:${companyId}`, companyId, source };
+}

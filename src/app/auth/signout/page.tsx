@@ -1,2 +1,4 @@
 import AuthForm from '../auth-form';
-export default function Page(){return <AuthForm mode="signout"/>;}
+export default function Page() {
+  return <AuthForm mode="signout" />;
+}

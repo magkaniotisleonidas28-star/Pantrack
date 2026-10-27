@@ -1,127 +1,604 @@
-import {build} from 'esbuild';
-import {DatabaseSync} from 'node:sqlite';
-import {readFileSync,readdirSync,mkdirSync} from 'node:fs';
+import { build } from 'esbuild';
+import { DatabaseSync } from 'node:sqlite';
+import { readFileSync, readdirSync, mkdirSync } from 'node:fs';
 import assert from 'node:assert/strict';
-mkdirSync('.sites-runtime',{recursive:true});
-const sql=new DatabaseSync(':memory:');for(const f of readdirSync('drizzle').filter(f=>f.endsWith('.sql')).sort())sql.exec(readFileSync('drizzle/'+f,'utf8'));
-globalThis.testDB={prepare(query){let v=[];return {bind(...values){v=values;return this},async run(){return sql.prepare(query).run(...v)},async first(){return sql.prepare(query).get(...v)||null},async all(){return {results:sql.prepare(query).all(...v)}}}},async batch(s){sql.exec('BEGIN');try{for(const i of s)await i.run();sql.exec('COMMIT')}catch(e){sql.exec('ROLLBACK');throw e;}}};
-globalThis.testUser={userId:'owner',email:'owner@example.test'};
-globalThis.testEnv={APP_ORIGIN:'https://test',CLOVER_CLIENT_ID:'test-client',CLOVER_CLIENT_SECRET:'test-secret',CLOVER_ENVIRONMENT:'sandbox',VENDOR_ENCRYPTION_KEY:btoa('a'.repeat(32))};
-sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company','Cafe','now');sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('owner','company','owner');
-const plugin={name:'mocks',setup(b){b.onResolve({filter:/chatgpt-auth|db\/raw|^cloudflare:workers$/},a=>({path:a.path,namespace:'mock'}));b.onLoad({filter:/.*/,namespace:'mock'},a=>({contents:a.path.includes('chatgpt-auth')?'export async function getChatGPTUser(){return globalThis.testUser}':a.path.includes('cloudflare:')?'export const env=globalThis.testEnv':'export function database(){return globalThis.testDB}'}));}};
-for(const [name,path] of [['clover','src/app/api/clover/route.ts'],['callback','src/app/api/clover/callback/route.ts'],['webhook','src/app/api/clover/webhook/route.ts'],['setup','src/app/api/clover/webhook/setup/route.ts']])await build({entryPoints:[path],bundle:true,platform:'node',format:'esm',outfile:'.sites-runtime/clover-'+name+'.mjs',plugins:[plugin]});
-const api=await import('../.sites-runtime/clover-clover.mjs'),callback=await import('../.sites-runtime/clover-callback.mjs'),webhook=await import('../.sites-runtime/clover-webhook.mjs'),setup=await import('../.sites-runtime/clover-setup.mjs');
-const diagnostics=[],originalConsoleError=console.error;console.error=(...args)=>diagnostics.push(args);
-let calls=[],refreshCount=0;globalThis.fetch=async(url,init)=>{calls.push(String(url));assert.equal(init.redirect,'manual');if(String(url).endsWith('/oauth/v2/token'))return Response.json({access_token:'access-secret',refresh_token:'refresh-secret',access_token_expiration:Date.now()/1000+1,refresh_token_expiration:Date.now()/1000+3600});if(String(url).endsWith('/oauth/v2/refresh')){refreshCount++;if(refreshCount===1)return new Response(null,{status:401,headers:{'X-Clover-Recovery-Available':'true'}});return Response.json({access_token:'renewed-secret',refresh_token:'renewed-refresh',access_token_expiration:Date.now()/1000+3600,refresh_token_expiration:Date.now()/1000+86400});}if(String(url).endsWith('/oauth/v2/recovery'))return Response.json({access_token:'recovered-secret',refresh_token:'recovered-refresh',access_token_expiration:Date.now()/1000+1,refresh_token_expiration:Date.now()/1000+86400});if(String(url).includes('/items?'))return Response.json({elements:[{id:'latte-id',name:'Latte'},{id:'deleted-id',deleted:true}]});return Response.json({id:'merchant1'});};
-const post=(body)=>api.POST(new Request('https://test/api/clover',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://test'},body:JSON.stringify({companyId:'company',...body})}));
-const status=()=>api.GET(new Request('https://test/api/clover?companyId=company'));
-const disconnectedStatus=await(await status()).json();assert.equal(disconnectedStatus.connected,false);assert.equal(disconnectedStatus.accessTokenExpiresAt,undefined);
-const start=await post({action:'connect'}),cookie=start.headers.get('Set-Cookie').split(';')[0],url=new URL((await start.json()).url),state=url.searchParams.get('state');assert.equal(url.host,'sandbox.dev.clover.com');assert.ok(!url.href.includes('test-secret'));
-const bad=await callback.GET(new Request('https://test/api/clover/callback?code=code&merchant_id=merchant1&state='+state));assert.equal(new URL(bad.headers.get('Location')).searchParams.get('reason'),'oauth_state');assert.equal(calls.length,0);
-const request=()=>new Request('https://test/api/clover/callback?code=code&merchant_id=merchant1&state='+state,{headers:{cookie}});
-const good=await callback.GET(request());assert.ok(good.headers.get('Location').includes('connected'));
-assert.ok(!sql.prepare('SELECT secret FROM clover_connections').get().secret.includes('access-secret'));
-assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company' AND action='clover.connected'").get().n,1);
-const stateResponse=await status(),stateData=await stateResponse.json();assert.equal(stateData.connected,true);assert.equal(stateData.merchantId,'merchant1');assert.equal(stateData.syncEnabled,false);assert.equal(stateResponse.headers.get('Cache-Control'),'private, no-store');assert.ok(Date.parse(stateData.accessTokenExpiresAt)>0);assert.ok(Date.parse(stateData.refreshTokenExpiresAt)>Date.parse(stateData.accessTokenExpiresAt));assert.ok(!JSON.stringify(stateData).includes('secret'));
-const replay=await callback.GET(request());assert.equal(new URL(replay.headers.get('Location')).searchParams.get('reason'),'state_expired');
-const menu=await(await post({action:'menu'})).json();assert.deepEqual(menu.items,[{id:'latte-id',name:'Latte'}]);assert.ok(calls.some(u=>u.endsWith('/refresh')));assert.equal(menu.nextOffset,null);
-assert.ok(calls.some(u=>u.endsWith('/recovery')));const firstRotation=await(await status()).json();assert.ok(Date.parse(firstRotation.refreshTokenExpiresAt)>Date.parse(stateData.refreshTokenExpiresAt));assert.equal((await post({action:'menu'})).status,200);assert.equal(refreshCount,2);
-const rotated=await(await status()).json();assert.ok(Date.parse(rotated.accessTokenExpiresAt)>Date.parse(stateData.accessTokenExpiresAt));assert.ok(Date.parse(rotated.refreshTokenExpiresAt)>Date.parse(firstRotation.refreshTokenExpiresAt));assert.ok(!JSON.stringify(rotated).includes('renewed-secret'));
-const previousSecret=sql.prepare('SELECT secret FROM clover_connections WHERE company_id=?').get('company').secret,realNow=Date.now,workingFetch=globalThis.fetch;
-try{Date.now=()=>realNow()+2*60*60*1000;globalThis.fetch=async(url,init)=>String(url).endsWith('/oauth/v2/refresh')?new Response(null,{status:401}):workingFetch(url,init);const failed=await post({action:'menu'});assert.equal(failed.status,400);assert.equal((await failed.json()).error,'Clover authorization expired. Reconnect your account.');}finally{Date.now=realNow;globalThis.fetch=workingFetch;}
-assert.equal(sql.prepare('SELECT secret FROM clover_connections WHERE company_id=?').get('company').secret,previousSecret);assert.equal((await(await status()).json()).accessTokenExpiresAt,rotated.accessTokenExpiresAt);
-assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM inventory_events').get().n,0);
-assert.equal(sql.prepare('SELECT started_at FROM clover_sync_state WHERE company_id=?').get('company')!==undefined,true);
-sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('failure-company','Failure Cafe','now');sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('owner','failure-company','owner');
-const freshAttempt=async()=>{const response=await post({companyId:'failure-company',action:'connect'}),data=await response.json();assert.equal(response.status,200);return {state:new URL(data.url).searchParams.get('state'),cookie:response.headers.get('Set-Cookie').split(';')[0]};};
-const finishAttempt=async(attempt,fields='code=code&merchant_id=merchant1')=>callback.GET(new Request('https://test/api/clover/callback?'+fields+'&state='+attempt.state,{headers:{cookie:attempt.cookie}}));
-const expectFailure=(response,reason)=>{const location=response.headers.get('Location'),url=new URL(location);assert.equal(response.status,303);assert.equal(url.searchParams.get('company'),'failure-company');assert.equal(url.searchParams.get('clover'),'failed');assert.equal(url.searchParams.get('reason'),reason);assert.ok(!location.includes('code=code'));assert.ok(!location.includes('access-secret'));assert.ok(!location.includes('test-secret'));assert.equal(response.headers.get('Cache-Control'),'no-store');assert.ok(response.headers.get('Set-Cookie').includes('Max-Age=0'));assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_connections WHERE company_id=?').get('failure-company').n,0);assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_sync_state WHERE company_id=?').get('failure-company').n,0);};
-expectFailure(await finishAttempt(await freshAttempt(),'error=access_denied'),'provider_denied');
-expectFailure(await finishAttempt(await freshAttempt(),'code=code'),'callback');
-const originalFetch=globalThis.fetch;
-globalThis.fetch=async(url,init)=>String(url).endsWith('/oauth/v2/token')?Response.json({error:'private-provider-error'},{status:400}):originalFetch(url,init);
-expectFailure(await finishAttempt(await freshAttempt()),'token_rejected');
-globalThis.fetch=async(url,init)=>String(url).endsWith('/oauth/v2/token')?new Response(null,{status:302,headers:{Location:'https://untrusted.example/'}}):originalFetch(url,init);
-expectFailure(await finishAttempt(await freshAttempt()),'token_rejected');
-globalThis.fetch=async(url,init)=>String(url).endsWith('/oauth/v2/token')?Promise.reject(new TypeError('hidden-provider-secret')):originalFetch(url,init);
-expectFailure(await finishAttempt(await freshAttempt()),'token_unavailable');
-globalThis.fetch=async(url,init)=>String(url).endsWith('/oauth/v2/token')?Response.json({access_token:'private-token'}):originalFetch(url,init);
-expectFailure(await finishAttempt(await freshAttempt()),'token_response');
-globalThis.fetch=async(url,init)=>String(url).includes('/v3/merchants/')?Response.json({error:'private-provider-error'},{status:403}):originalFetch(url,init);
-expectFailure(await finishAttempt(await freshAttempt()),'merchant_rejected');
-globalThis.fetch=async(url,init)=>String(url).includes('/v3/merchants/')?Response.json({id:'other-merchant'}):originalFetch(url,init);
-expectFailure(await finishAttempt(await freshAttempt()),'merchant_mismatch');
-globalThis.fetch=originalFetch;
-const anonymousAttempt=await freshAttempt();globalThis.testUser=null;const anonymous=await finishAttempt(anonymousAttempt);assert.equal(new URL(anonymous.headers.get('Location')).searchParams.get('reason'),'session');globalThis.testUser={userId:'owner',email:'owner@example.test'};
-const wrongUserAttempt=await freshAttempt();globalThis.testUser={userId:'outsider'};const wrongUser=await finishAttempt(wrongUserAttempt);assert.equal(new URL(wrongUser.headers.get('Location')).searchParams.get('reason'),'state_expired');globalThis.testUser={userId:'owner',email:'owner@example.test'};
-const forbiddenAttempt=await freshAttempt();sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('reserve-owner','failure-company','owner');sql.prepare("UPDATE memberships SET role='employee' WHERE company_id=? AND user_id=?").run('failure-company','owner');expectFailure(await finishAttempt(forbiddenAttempt),'access');sql.prepare("UPDATE memberships SET role='owner' WHERE company_id=? AND user_id=?").run('failure-company','owner');
-const auditAttempt=await freshAttempt(),originalPrepare=globalThis.testDB.prepare;globalThis.testDB.prepare=(query)=>query.startsWith('INSERT INTO security_audit')?{bind(){return {run(){throw new Error('test audit failure');}}}}:originalPrepare(query);
-expectFailure(await finishAttempt(auditAttempt),'save');globalThis.testDB.prepare=originalPrepare;
-assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_connections WHERE company_id=?').get('failure-company').n,0);
-assert.ok(diagnostics.some(([label,details])=>label==='Clover OAuth callback failed'&&details.reason==='token_rejected'&&details.providerStatus===400));
-assert.ok(diagnostics.some(([label,details])=>label==='Clover OAuth callback failed'&&details.reason==='token_unavailable'&&details.errorKind==='transport'));
-assert.ok(!JSON.stringify(diagnostics).includes('hidden-provider-secret'));console.error=originalConsoleError;
-globalThis.testUser=null;assert.equal((await status()).status,401);assert.equal((await post({action:'sync'})).status,401);
-globalThis.testUser={userId:'outsider'};assert.equal((await post({action:'disconnect'})).status,403);assert.equal((await status()).status,403);
-sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('other-company','Other','now');assert.equal((await post({companyId:'other-company',action:'mapItem',itemId:'x',recipeId:'x'})).status,403);
-globalThis.testUser={userId:'owner'};assert.equal((await post({companyId:'other-company',action:'disconnect'})).status,403);
-for(const role of ['manager','employee']){sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(role,'company',role);globalThis.testUser={userId:role};assert.equal((await status()).status,403);assert.equal((await post({action:'mapItem',itemId:'x',recipeId:'x'})).status,403);assert.equal((await post({action:'sync'})).status,403);assert.equal((await post({action:'disconnect'})).status,403);}
-globalThis.testUser={userId:'owner'};
-sql.prepare('INSERT INTO clover_item_mappings VALUES (?,?,?,?,?)').run('company','sandbox','merchant1','latte-id','recipe-id');
-sql.prepare('INSERT INTO clover_modifier_mappings VALUES (?,?,?,?,?,?)').run('company','sandbox','merchant1','latte-id','shot-id','modifier-id');
-sql.prepare('INSERT INTO inventory_events VALUES (?,?,?,?,?)').run('company','historical-event','milk','{}','now');
-sql.prepare('INSERT INTO sales_events(company_id,event_key,lineage_key,application_key,provider,environment,merchant_id,external_event_id,external_order_id,revision,occurred_at,received_at,source_payload_sha256,normalized_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run('company','historical-sale','historical-lineage','historical-application','clover','sandbox','merchant1','historical-external','historical-order',1,'now','now','digest','{}');
-const pending=await post({action:'connect'});assert.equal(pending.status,200);
-const retained=()=>({sync:sql.prepare('SELECT environment,merchant_id,started_at,checkpoint FROM clover_sync_state WHERE company_id=?').get('company'),items:sql.prepare('SELECT item_id,recipe_id FROM clover_item_mappings WHERE company_id=?').all('company'),modifiers:sql.prepare('SELECT item_id,modifier_id,inventory_modifier_id FROM clover_modifier_mappings WHERE company_id=?').all('company'),history:sql.prepare('SELECT event_key FROM sales_events WHERE company_id=?').all('company'),stock:sql.prepare('SELECT id,product_id,data FROM inventory_events WHERE company_id=?').all('company')});
-const beforeDisconnect=retained();assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_oauth_states WHERE company_id=?').get('company').n,1);
-assert.equal((await post({action:'disconnect'})).status,200);assert.equal((await(await status()).json()).connected,false);
-assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_connections WHERE company_id=?').get('company').n,0);
-assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_oauth_states WHERE company_id=?').get('company').n,0);
-assert.deepEqual(retained(),beforeDisconnect);
-globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED='enabled';const blockedSync=await post({action:'sync'});assert.equal(blockedSync.status,400);assert.equal((await blockedSync.json()).error,'Connect Clover first.');assert.deepEqual(retained(),beforeDisconnect);delete globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED;
-assert.equal((await post({action:'disconnect'})).status,200);assert.deepEqual(retained(),beforeDisconnect);
-const reconnect=await post({action:'connect'}),reconnectData=await reconnect.json(),reconnectState=new URL(reconnectData.url).searchParams.get('state'),reconnectCookie=reconnect.headers.get('Set-Cookie').split(';')[0];
-const restored=await callback.GET(new Request('https://test/api/clover/callback?code=code&merchant_id=merchant1&state='+reconnectState,{headers:{cookie:reconnectCookie}}));assert.ok(restored.headers.get('Location').includes('connected'));
-const restoredStatus=await(await status()).json();assert.equal(restoredStatus.connected,true);assert.equal(restoredStatus.merchantId,'merchant1');assert.deepEqual(restoredStatus.itemMappings,JSON.parse(JSON.stringify(beforeDisconnect.items)));assert.deepEqual(restoredStatus.modifierMappings,JSON.parse(JSON.stringify(beforeDisconnect.modifiers)));assert.deepEqual(retained(),beforeDisconnect);
-assert.deepEqual((await(await post({action:'menu'})).json()).items,[{id:'latte-id',name:'Latte'}]);
-assert.equal((await post({action:'disconnect'})).status,200);assert.deepEqual(retained(),beforeDisconnect);
-globalThis.testEnv.CLOVER_CLIENT_SECRET='';assert.equal((await post({action:'connect'})).status,400);
-const hookBody=(value,headers={})=>webhook.POST(new Request('https://test/api/clover/webhook',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify(value)}));
-assert.equal((await hookBody({verificationCode:'challenge'})).status,200);
-assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_webhook_challenges').get().n,0);
-const setupUrl=(companyId='company')=>'https://test/api/clover/webhook/setup?companyId='+companyId;
-const setupRead=(companyId)=>setup.GET(new Request(setupUrl(companyId)));
-const setupClear=(companyId='company',origin='https://test')=>setup.DELETE(new Request(setupUrl(companyId),{method:'DELETE',headers:{Origin:origin,'Content-Type':'application/json'}}));
-globalThis.testEnv.PANTRACK_CLOVER_WEBHOOK_SETUP_COMPANY_ID='company';
-assert.equal((await hookBody({verificationCode:'without-connection'})).status,200);
-assert.equal((await setupRead('company')).status,404);
-sql.prepare('INSERT INTO clover_connections(company_id,merchant_id,environment,secret,connected) VALUES (?,?,?,?,?)').run('company','setup-merchant','sandbox','encrypted-fixture','now');
-assert.equal((await hookBody({verificationCode:'first-code'})).status,200);
-let stored=sql.prepare('SELECT code_encrypted,expires_at FROM clover_webhook_challenges WHERE company_id=?').get('company');
-assert.ok(stored.code_encrypted&&!stored.code_encrypted.includes('first-code'));
-let setupResponse=await setupRead('company');assert.equal(setupResponse.status,200);assert.equal(setupResponse.headers.get('Cache-Control'),'private, no-store');assert.equal((await setupResponse.json()).verificationCode,'first-code');
-assert.equal((await hookBody({verificationCode:'replacement-code'})).status,200);
-assert.equal((await(await setupRead('company')).json()).verificationCode,'replacement-code');
-assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company' AND action='clover.webhook_challenge_captured'").get().n,2);
-assert.equal((await hookBody({verificationCode:'bad',appId:'test-client'})).status,404);
-assert.equal((await(await setupRead('company')).json()).verificationCode,'replacement-code');
-globalThis.testUser=null;assert.equal((await setupRead('company')).status,401);assert.equal((await setupClear()).status,401);
-globalThis.testUser={userId:'outsider'};assert.equal((await setupRead('company')).status,403);assert.equal((await setupClear()).status,403);
-for(const role of ['manager','employee']){globalThis.testUser={userId:role};assert.equal((await setupRead('company')).status,403);assert.equal((await setupClear()).status,403);}
-globalThis.testUser={userId:'owner'};assert.equal((await setupRead('failure-company')).status,404);
-sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('other-owner','other-company','owner');globalThis.testUser={userId:'other-owner'};assert.equal((await status()).status,403);assert.equal((await setupRead('company')).status,403);assert.equal((await setupRead('other-company')).status,404);assert.equal((await setupClear('company')).status,403);
-globalThis.testUser={userId:'owner'};assert.equal((await setupClear('company','https://other.test')).status,403);
-sql.prepare('UPDATE clover_webhook_challenges SET expires_at=? WHERE company_id=?').run(Date.now()-1,'company');
-assert.equal((await setupRead('company')).status,404);assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_webhook_challenges').get().n,0);
-assert.equal((await hookBody({verificationCode:'clear-me'})).status,200);
-assert.equal((await setupClear()).status,200);assert.equal((await setupRead('company')).status,404);
-assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company' AND action='clover.webhook_challenge_cleared'").get().n,1);
-globalThis.testEnv.PANTRACK_CLOVER_WEBHOOK_SETUP_COMPANY_ID='';
-assert.equal((await hookBody({verificationCode:'gate-off'})).status,200);assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_webhook_challenges').get().n,0);
-assert.equal((await hookBody({appId:'test-client',merchants:{}},{'X-Clover-Auth':'hook-code'})).status,404);
-globalThis.testEnv.CLOVER_ENVIRONMENT='sandbox';globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED='enabled';globalThis.testEnv.CLOVER_WEBHOOK_AUTH_CODE='hook-code';
-assert.equal((await hookBody({verificationCode:'challenge'})).status,200);
-assert.equal((await hookBody({appId:'test-client',merchants:{}})).status,401);
-assert.equal((await hookBody({appId:'wrong',merchants:{}},{'X-Clover-Auth':'hook-code'})).status,403);
-assert.equal((await hookBody({appId:'test-client',merchants:{}},{'X-Clover-Auth':'hook-code'})).status,200);
-console.log('PASS: setup gating, owner isolation, OAuth replay rejection, encrypted tokens, refresh, menu, disconnect, and webhook auth; Clover API mocked.');
+mkdirSync('.sites-runtime', { recursive: true });
+const sql = new DatabaseSync(':memory:');
+for (const f of readdirSync('drizzle')
+  .filter((f) => f.endsWith('.sql'))
+  .sort())
+  sql.exec(readFileSync('drizzle/' + f, 'utf8'));
+globalThis.testDB = {
+  prepare(query) {
+    let v = [];
+    return {
+      bind(...values) {
+        v = values;
+        return this;
+      },
+      async run() {
+        return sql.prepare(query).run(...v);
+      },
+      async first() {
+        return sql.prepare(query).get(...v) || null;
+      },
+      async all() {
+        return { results: sql.prepare(query).all(...v) };
+      },
+    };
+  },
+  async batch(s) {
+    sql.exec('BEGIN');
+    try {
+      for (const i of s) await i.run();
+      sql.exec('COMMIT');
+    } catch (e) {
+      sql.exec('ROLLBACK');
+      throw e;
+    }
+  },
+};
+globalThis.testUser = { userId: 'owner', email: 'owner@example.test' };
+globalThis.testEnv = {
+  APP_ORIGIN: 'https://test',
+  CLOVER_CLIENT_ID: 'test-client',
+  CLOVER_CLIENT_SECRET: 'test-secret',
+  CLOVER_ENVIRONMENT: 'sandbox',
+  VENDOR_ENCRYPTION_KEY: btoa('a'.repeat(32)),
+};
+sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company', 'Cafe', 'now');
+sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('owner', 'company', 'owner');
+const plugin = {
+  name: 'mocks',
+  setup(b) {
+    b.onResolve({ filter: /chatgpt-auth|db\/raw|^cloudflare:workers$/ }, (a) => ({
+      path: a.path,
+      namespace: 'mock',
+    }));
+    b.onLoad({ filter: /.*/, namespace: 'mock' }, (a) => ({
+      contents: a.path.includes('chatgpt-auth')
+        ? 'export async function getChatGPTUser(){return globalThis.testUser}'
+        : a.path.includes('cloudflare:')
+          ? 'export const env=globalThis.testEnv'
+          : 'export function database(){return globalThis.testDB}',
+    }));
+  },
+};
+for (const [name, path] of [
+  ['clover', 'src/app/api/clover/route.ts'],
+  ['callback', 'src/app/api/clover/callback/route.ts'],
+  ['webhook', 'src/app/api/clover/webhook/route.ts'],
+  ['setup', 'src/app/api/clover/webhook/setup/route.ts'],
+])
+  await build({
+    entryPoints: [path],
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    outfile: '.sites-runtime/clover-' + name + '.mjs',
+    plugins: [plugin],
+  });
+const api = await import('../.sites-runtime/clover-clover.mjs'),
+  callback = await import('../.sites-runtime/clover-callback.mjs'),
+  webhook = await import('../.sites-runtime/clover-webhook.mjs'),
+  setup = await import('../.sites-runtime/clover-setup.mjs');
+const diagnostics = [],
+  originalConsoleError = console.error;
+console.error = (...args) => diagnostics.push(args);
+let calls = [],
+  refreshCount = 0;
+globalThis.fetch = async (url, init) => {
+  calls.push(String(url));
+  assert.equal(init.redirect, 'manual');
+  if (String(url).endsWith('/oauth/v2/token'))
+    return Response.json({
+      access_token: 'access-secret',
+      refresh_token: 'refresh-secret',
+      access_token_expiration: Date.now() / 1000 + 1,
+      refresh_token_expiration: Date.now() / 1000 + 3600,
+    });
+  if (String(url).endsWith('/oauth/v2/refresh')) {
+    refreshCount++;
+    if (refreshCount === 1)
+      return new Response(null, {
+        status: 401,
+        headers: { 'X-Clover-Recovery-Available': 'true' },
+      });
+    return Response.json({
+      access_token: 'renewed-secret',
+      refresh_token: 'renewed-refresh',
+      access_token_expiration: Date.now() / 1000 + 3600,
+      refresh_token_expiration: Date.now() / 1000 + 86400,
+    });
+  }
+  if (String(url).endsWith('/oauth/v2/recovery'))
+    return Response.json({
+      access_token: 'recovered-secret',
+      refresh_token: 'recovered-refresh',
+      access_token_expiration: Date.now() / 1000 + 1,
+      refresh_token_expiration: Date.now() / 1000 + 86400,
+    });
+  if (String(url).includes('/items?'))
+    return Response.json({
+      elements: [
+        { id: 'latte-id', name: 'Latte' },
+        { id: 'deleted-id', deleted: true },
+      ],
+    });
+  return Response.json({ id: 'merchant1' });
+};
+const post = (body) =>
+  api.POST(
+    new Request('https://test/api/clover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Origin': 'https://test' },
+      body: JSON.stringify({ companyId: 'company', ...body }),
+    }),
+  );
+const status = () => api.GET(new Request('https://test/api/clover?companyId=company'));
+const disconnectedStatus = await (await status()).json();
+assert.equal(disconnectedStatus.connected, false);
+assert.equal(disconnectedStatus.accessTokenExpiresAt, undefined);
+const start = await post({ action: 'connect' }),
+  cookie = start.headers.get('Set-Cookie').split(';')[0],
+  url = new URL((await start.json()).url),
+  state = url.searchParams.get('state');
+assert.equal(url.host, 'sandbox.dev.clover.com');
+assert.ok(!url.href.includes('test-secret'));
+const bad = await callback.GET(
+  new Request('https://test/api/clover/callback?code=code&merchant_id=merchant1&state=' + state),
+);
+assert.equal(new URL(bad.headers.get('Location')).searchParams.get('reason'), 'oauth_state');
+assert.equal(calls.length, 0);
+const request = () =>
+  new Request('https://test/api/clover/callback?code=code&merchant_id=merchant1&state=' + state, {
+    headers: { cookie },
+  });
+const good = await callback.GET(request());
+assert.ok(good.headers.get('Location').includes('connected'));
+assert.ok(
+  !sql.prepare('SELECT secret FROM clover_connections').get().secret.includes('access-secret'),
+);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company' AND action='clover.connected'",
+    )
+    .get().n,
+  1,
+);
+const stateResponse = await status(),
+  stateData = await stateResponse.json();
+assert.equal(stateData.connected, true);
+assert.equal(stateData.merchantId, 'merchant1');
+assert.equal(stateData.syncEnabled, false);
+assert.equal(stateResponse.headers.get('Cache-Control'), 'private, no-store');
+assert.ok(Date.parse(stateData.accessTokenExpiresAt) > 0);
+assert.ok(Date.parse(stateData.refreshTokenExpiresAt) > Date.parse(stateData.accessTokenExpiresAt));
+assert.ok(!JSON.stringify(stateData).includes('secret'));
+const replay = await callback.GET(request());
+assert.equal(new URL(replay.headers.get('Location')).searchParams.get('reason'), 'state_expired');
+const menu = await (await post({ action: 'menu' })).json();
+assert.deepEqual(menu.items, [{ id: 'latte-id', name: 'Latte' }]);
+assert.ok(calls.some((u) => u.endsWith('/refresh')));
+assert.equal(menu.nextOffset, null);
+assert.ok(calls.some((u) => u.endsWith('/recovery')));
+const firstRotation = await (await status()).json();
+assert.ok(
+  Date.parse(firstRotation.refreshTokenExpiresAt) > Date.parse(stateData.refreshTokenExpiresAt),
+);
+assert.equal((await post({ action: 'menu' })).status, 200);
+assert.equal(refreshCount, 2);
+const rotated = await (await status()).json();
+assert.ok(Date.parse(rotated.accessTokenExpiresAt) > Date.parse(stateData.accessTokenExpiresAt));
+assert.ok(
+  Date.parse(rotated.refreshTokenExpiresAt) > Date.parse(firstRotation.refreshTokenExpiresAt),
+);
+assert.ok(!JSON.stringify(rotated).includes('renewed-secret'));
+const previousSecret = sql
+    .prepare('SELECT secret FROM clover_connections WHERE company_id=?')
+    .get('company').secret,
+  realNow = Date.now,
+  workingFetch = globalThis.fetch;
+try {
+  Date.now = () => realNow() + 2 * 60 * 60 * 1000;
+  globalThis.fetch = async (url, init) =>
+    String(url).endsWith('/oauth/v2/refresh')
+      ? new Response(null, { status: 401 })
+      : workingFetch(url, init);
+  const failed = await post({ action: 'menu' });
+  assert.equal(failed.status, 400);
+  assert.equal(
+    (await failed.json()).error,
+    'Clover authorization expired. Reconnect your account.',
+  );
+} finally {
+  Date.now = realNow;
+  globalThis.fetch = workingFetch;
+}
+assert.equal(
+  sql.prepare('SELECT secret FROM clover_connections WHERE company_id=?').get('company').secret,
+  previousSecret,
+);
+assert.equal((await (await status()).json()).accessTokenExpiresAt, rotated.accessTokenExpiresAt);
+assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM inventory_events').get().n, 0);
+assert.equal(
+  sql.prepare('SELECT started_at FROM clover_sync_state WHERE company_id=?').get('company') !==
+    undefined,
+  true,
+);
+sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('failure-company', 'Failure Cafe', 'now');
+sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('owner', 'failure-company', 'owner');
+const freshAttempt = async () => {
+  const response = await post({ companyId: 'failure-company', action: 'connect' }),
+    data = await response.json();
+  assert.equal(response.status, 200);
+  return {
+    state: new URL(data.url).searchParams.get('state'),
+    cookie: response.headers.get('Set-Cookie').split(';')[0],
+  };
+};
+const finishAttempt = async (attempt, fields = 'code=code&merchant_id=merchant1') =>
+  callback.GET(
+    new Request('https://test/api/clover/callback?' + fields + '&state=' + attempt.state, {
+      headers: { cookie: attempt.cookie },
+    }),
+  );
+const expectFailure = (response, reason) => {
+  const location = response.headers.get('Location'),
+    url = new URL(location);
+  assert.equal(response.status, 303);
+  assert.equal(url.searchParams.get('company'), 'failure-company');
+  assert.equal(url.searchParams.get('clover'), 'failed');
+  assert.equal(url.searchParams.get('reason'), reason);
+  assert.ok(!location.includes('code=code'));
+  assert.ok(!location.includes('access-secret'));
+  assert.ok(!location.includes('test-secret'));
+  assert.equal(response.headers.get('Cache-Control'), 'no-store');
+  assert.ok(response.headers.get('Set-Cookie').includes('Max-Age=0'));
+  assert.equal(
+    sql
+      .prepare('SELECT COUNT(*) AS n FROM clover_connections WHERE company_id=?')
+      .get('failure-company').n,
+    0,
+  );
+  assert.equal(
+    sql
+      .prepare('SELECT COUNT(*) AS n FROM clover_sync_state WHERE company_id=?')
+      .get('failure-company').n,
+    0,
+  );
+};
+expectFailure(await finishAttempt(await freshAttempt(), 'error=access_denied'), 'provider_denied');
+expectFailure(await finishAttempt(await freshAttempt(), 'code=code'), 'callback');
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async (url, init) =>
+  String(url).endsWith('/oauth/v2/token')
+    ? Response.json({ error: 'private-provider-error' }, { status: 400 })
+    : originalFetch(url, init);
+expectFailure(await finishAttempt(await freshAttempt()), 'token_rejected');
+globalThis.fetch = async (url, init) =>
+  String(url).endsWith('/oauth/v2/token')
+    ? new Response(null, { status: 302, headers: { Location: 'https://untrusted.example/' } })
+    : originalFetch(url, init);
+expectFailure(await finishAttempt(await freshAttempt()), 'token_rejected');
+globalThis.fetch = async (url, init) =>
+  String(url).endsWith('/oauth/v2/token')
+    ? Promise.reject(new TypeError('hidden-provider-secret'))
+    : originalFetch(url, init);
+expectFailure(await finishAttempt(await freshAttempt()), 'token_unavailable');
+globalThis.fetch = async (url, init) =>
+  String(url).endsWith('/oauth/v2/token')
+    ? Response.json({ access_token: 'private-token' })
+    : originalFetch(url, init);
+expectFailure(await finishAttempt(await freshAttempt()), 'token_response');
+globalThis.fetch = async (url, init) =>
+  String(url).includes('/v3/merchants/')
+    ? Response.json({ error: 'private-provider-error' }, { status: 403 })
+    : originalFetch(url, init);
+expectFailure(await finishAttempt(await freshAttempt()), 'merchant_rejected');
+globalThis.fetch = async (url, init) =>
+  String(url).includes('/v3/merchants/')
+    ? Response.json({ id: 'other-merchant' })
+    : originalFetch(url, init);
+expectFailure(await finishAttempt(await freshAttempt()), 'merchant_mismatch');
+globalThis.fetch = originalFetch;
+const anonymousAttempt = await freshAttempt();
+globalThis.testUser = null;
+const anonymous = await finishAttempt(anonymousAttempt);
+assert.equal(new URL(anonymous.headers.get('Location')).searchParams.get('reason'), 'session');
+globalThis.testUser = { userId: 'owner', email: 'owner@example.test' };
+const wrongUserAttempt = await freshAttempt();
+globalThis.testUser = { userId: 'outsider' };
+const wrongUser = await finishAttempt(wrongUserAttempt);
+assert.equal(
+  new URL(wrongUser.headers.get('Location')).searchParams.get('reason'),
+  'state_expired',
+);
+globalThis.testUser = { userId: 'owner', email: 'owner@example.test' };
+const forbiddenAttempt = await freshAttempt();
+sql
+  .prepare('INSERT INTO memberships VALUES (?,?,?)')
+  .run('reserve-owner', 'failure-company', 'owner');
+sql
+  .prepare("UPDATE memberships SET role='employee' WHERE company_id=? AND user_id=?")
+  .run('failure-company', 'owner');
+expectFailure(await finishAttempt(forbiddenAttempt), 'access');
+sql
+  .prepare("UPDATE memberships SET role='owner' WHERE company_id=? AND user_id=?")
+  .run('failure-company', 'owner');
+const auditAttempt = await freshAttempt(),
+  originalPrepare = globalThis.testDB.prepare;
+globalThis.testDB.prepare = (query) =>
+  query.startsWith('INSERT INTO security_audit')
+    ? {
+        bind() {
+          return {
+            run() {
+              throw new Error('test audit failure');
+            },
+          };
+        },
+      }
+    : originalPrepare(query);
+expectFailure(await finishAttempt(auditAttempt), 'save');
+globalThis.testDB.prepare = originalPrepare;
+assert.equal(
+  sql
+    .prepare('SELECT COUNT(*) AS n FROM clover_connections WHERE company_id=?')
+    .get('failure-company').n,
+  0,
+);
+assert.ok(
+  diagnostics.some(
+    ([label, details]) =>
+      label === 'Clover OAuth callback failed' &&
+      details.reason === 'token_rejected' &&
+      details.providerStatus === 400,
+  ),
+);
+assert.ok(
+  diagnostics.some(
+    ([label, details]) =>
+      label === 'Clover OAuth callback failed' &&
+      details.reason === 'token_unavailable' &&
+      details.errorKind === 'transport',
+  ),
+);
+assert.ok(!JSON.stringify(diagnostics).includes('hidden-provider-secret'));
+console.error = originalConsoleError;
+globalThis.testUser = null;
+assert.equal((await status()).status, 401);
+assert.equal((await post({ action: 'sync' })).status, 401);
+globalThis.testUser = { userId: 'outsider' };
+assert.equal((await post({ action: 'disconnect' })).status, 403);
+assert.equal((await status()).status, 403);
+sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('other-company', 'Other', 'now');
+assert.equal(
+  (await post({ companyId: 'other-company', action: 'mapItem', itemId: 'x', recipeId: 'x' }))
+    .status,
+  403,
+);
+globalThis.testUser = { userId: 'owner' };
+assert.equal((await post({ companyId: 'other-company', action: 'disconnect' })).status, 403);
+for (const role of ['manager', 'employee']) {
+  sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(role, 'company', role);
+  globalThis.testUser = { userId: role };
+  assert.equal((await status()).status, 403);
+  assert.equal((await post({ action: 'mapItem', itemId: 'x', recipeId: 'x' })).status, 403);
+  assert.equal((await post({ action: 'sync' })).status, 403);
+  assert.equal((await post({ action: 'disconnect' })).status, 403);
+}
+globalThis.testUser = { userId: 'owner' };
+sql
+  .prepare('INSERT INTO clover_item_mappings VALUES (?,?,?,?,?)')
+  .run('company', 'sandbox', 'merchant1', 'latte-id', 'recipe-id');
+sql
+  .prepare('INSERT INTO clover_modifier_mappings VALUES (?,?,?,?,?,?)')
+  .run('company', 'sandbox', 'merchant1', 'latte-id', 'shot-id', 'modifier-id');
+sql
+  .prepare('INSERT INTO inventory_events VALUES (?,?,?,?,?)')
+  .run('company', 'historical-event', 'milk', '{}', 'now');
+sql
+  .prepare(
+    'INSERT INTO sales_events(company_id,event_key,lineage_key,application_key,provider,environment,merchant_id,external_event_id,external_order_id,revision,occurred_at,received_at,source_payload_sha256,normalized_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+  )
+  .run(
+    'company',
+    'historical-sale',
+    'historical-lineage',
+    'historical-application',
+    'clover',
+    'sandbox',
+    'merchant1',
+    'historical-external',
+    'historical-order',
+    1,
+    'now',
+    'now',
+    'digest',
+    '{}',
+  );
+const pending = await post({ action: 'connect' });
+assert.equal(pending.status, 200);
+const retained = () => ({
+  sync: sql
+    .prepare(
+      'SELECT environment,merchant_id,started_at,checkpoint FROM clover_sync_state WHERE company_id=?',
+    )
+    .get('company'),
+  items: sql
+    .prepare('SELECT item_id,recipe_id FROM clover_item_mappings WHERE company_id=?')
+    .all('company'),
+  modifiers: sql
+    .prepare(
+      'SELECT item_id,modifier_id,inventory_modifier_id FROM clover_modifier_mappings WHERE company_id=?',
+    )
+    .all('company'),
+  history: sql.prepare('SELECT event_key FROM sales_events WHERE company_id=?').all('company'),
+  stock: sql
+    .prepare('SELECT id,product_id,data FROM inventory_events WHERE company_id=?')
+    .all('company'),
+});
+const beforeDisconnect = retained();
+assert.equal(
+  sql.prepare('SELECT COUNT(*) AS n FROM clover_oauth_states WHERE company_id=?').get('company').n,
+  1,
+);
+assert.equal((await post({ action: 'disconnect' })).status, 200);
+assert.equal((await (await status()).json()).connected, false);
+assert.equal(
+  sql.prepare('SELECT COUNT(*) AS n FROM clover_connections WHERE company_id=?').get('company').n,
+  0,
+);
+assert.equal(
+  sql.prepare('SELECT COUNT(*) AS n FROM clover_oauth_states WHERE company_id=?').get('company').n,
+  0,
+);
+assert.deepEqual(retained(), beforeDisconnect);
+globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED = 'enabled';
+const blockedSync = await post({ action: 'sync' });
+assert.equal(blockedSync.status, 400);
+assert.equal((await blockedSync.json()).error, 'Connect Clover first.');
+assert.deepEqual(retained(), beforeDisconnect);
+delete globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED;
+assert.equal((await post({ action: 'disconnect' })).status, 200);
+assert.deepEqual(retained(), beforeDisconnect);
+const reconnect = await post({ action: 'connect' }),
+  reconnectData = await reconnect.json(),
+  reconnectState = new URL(reconnectData.url).searchParams.get('state'),
+  reconnectCookie = reconnect.headers.get('Set-Cookie').split(';')[0];
+const restored = await callback.GET(
+  new Request(
+    'https://test/api/clover/callback?code=code&merchant_id=merchant1&state=' + reconnectState,
+    { headers: { cookie: reconnectCookie } },
+  ),
+);
+assert.ok(restored.headers.get('Location').includes('connected'));
+const restoredStatus = await (await status()).json();
+assert.equal(restoredStatus.connected, true);
+assert.equal(restoredStatus.merchantId, 'merchant1');
+assert.deepEqual(restoredStatus.itemMappings, JSON.parse(JSON.stringify(beforeDisconnect.items)));
+assert.deepEqual(
+  restoredStatus.modifierMappings,
+  JSON.parse(JSON.stringify(beforeDisconnect.modifiers)),
+);
+assert.deepEqual(retained(), beforeDisconnect);
+assert.deepEqual((await (await post({ action: 'menu' })).json()).items, [
+  { id: 'latte-id', name: 'Latte' },
+]);
+assert.equal((await post({ action: 'disconnect' })).status, 200);
+assert.deepEqual(retained(), beforeDisconnect);
+globalThis.testEnv.CLOVER_CLIENT_SECRET = '';
+assert.equal((await post({ action: 'connect' })).status, 400);
+const hookBody = (value, headers = {}) =>
+  webhook.POST(
+    new Request('https://test/api/clover/webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify(value),
+    }),
+  );
+assert.equal((await hookBody({ verificationCode: 'challenge' })).status, 200);
+assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_webhook_challenges').get().n, 0);
+const setupUrl = (companyId = 'company') =>
+  'https://test/api/clover/webhook/setup?companyId=' + companyId;
+const setupRead = (companyId) => setup.GET(new Request(setupUrl(companyId)));
+const setupClear = (companyId = 'company', origin = 'https://test') =>
+  setup.DELETE(
+    new Request(setupUrl(companyId), {
+      method: 'DELETE',
+      headers: { Origin: origin, 'Content-Type': 'application/json' },
+    }),
+  );
+globalThis.testEnv.PANTRACK_CLOVER_WEBHOOK_SETUP_COMPANY_ID = 'company';
+assert.equal((await hookBody({ verificationCode: 'without-connection' })).status, 200);
+assert.equal((await setupRead('company')).status, 404);
+sql
+  .prepare(
+    'INSERT INTO clover_connections(company_id,merchant_id,environment,secret,connected) VALUES (?,?,?,?,?)',
+  )
+  .run('company', 'setup-merchant', 'sandbox', 'encrypted-fixture', 'now');
+assert.equal((await hookBody({ verificationCode: 'first-code' })).status, 200);
+let stored = sql
+  .prepare('SELECT code_encrypted,expires_at FROM clover_webhook_challenges WHERE company_id=?')
+  .get('company');
+assert.ok(stored.code_encrypted && !stored.code_encrypted.includes('first-code'));
+let setupResponse = await setupRead('company');
+assert.equal(setupResponse.status, 200);
+assert.equal(setupResponse.headers.get('Cache-Control'), 'private, no-store');
+assert.equal((await setupResponse.json()).verificationCode, 'first-code');
+assert.equal((await hookBody({ verificationCode: 'replacement-code' })).status, 200);
+assert.equal((await (await setupRead('company')).json()).verificationCode, 'replacement-code');
+assert.equal(
+  sql
+    .prepare(
+      "SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company' AND action='clover.webhook_challenge_captured'",
+    )
+    .get().n,
+  2,
+);
+assert.equal((await hookBody({ verificationCode: 'bad', appId: 'test-client' })).status, 404);
+assert.equal((await (await setupRead('company')).json()).verificationCode, 'replacement-code');
+globalThis.testUser = null;
+assert.equal((await setupRead('company')).status, 401);
+assert.equal((await setupClear()).status, 401);
+globalThis.testUser = { userId: 'outsider' };
+assert.equal((await setupRead('company')).status, 403);
+assert.equal((await setupClear()).status, 403);
+for (const role of ['manager', 'employee']) {
+  globalThis.testUser = { userId: role };
+  assert.equal((await setupRead('company')).status, 403);
+  assert.equal((await setupClear()).status, 403);
+}
+globalThis.testUser = { userId: 'owner' };
+assert.equal((await setupRead('failure-company')).status, 404);
+sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run('other-owner', 'other-company', 'owner');
+globalThis.testUser = { userId: 'other-owner' };
+assert.equal((await status()).status, 403);
+assert.equal((await setupRead('company')).status, 403);
+assert.equal((await setupRead('other-company')).status, 404);
+assert.equal((await setupClear('company')).status, 403);
+globalThis.testUser = { userId: 'owner' };
+assert.equal((await setupClear('company', 'https://other.test')).status, 403);
+sql
+  .prepare('UPDATE clover_webhook_challenges SET expires_at=? WHERE company_id=?')
+  .run(Date.now() - 1, 'company');
+assert.equal((await setupRead('company')).status, 404);
+assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_webhook_challenges').get().n, 0);
+assert.equal((await hookBody({ verificationCode: 'clear-me' })).status, 200);
+assert.equal((await setupClear()).status, 200);
+assert.equal((await setupRead('company')).status, 404);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company' AND action='clover.webhook_challenge_cleared'",
+    )
+    .get().n,
+  1,
+);
+globalThis.testEnv.PANTRACK_CLOVER_WEBHOOK_SETUP_COMPANY_ID = '';
+assert.equal((await hookBody({ verificationCode: 'gate-off' })).status, 200);
+assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM clover_webhook_challenges').get().n, 0);
+assert.equal(
+  (await hookBody({ appId: 'test-client', merchants: {} }, { 'X-Clover-Auth': 'hook-code' }))
+    .status,
+  404,
+);
+globalThis.testEnv.CLOVER_ENVIRONMENT = 'sandbox';
+globalThis.testEnv.PANTRACK_CLOVER_SYNC_ENABLED = 'enabled';
+globalThis.testEnv.CLOVER_WEBHOOK_AUTH_CODE = 'hook-code';
+assert.equal((await hookBody({ verificationCode: 'challenge' })).status, 200);
+assert.equal((await hookBody({ appId: 'test-client', merchants: {} })).status, 401);
+assert.equal(
+  (await hookBody({ appId: 'wrong', merchants: {} }, { 'X-Clover-Auth': 'hook-code' })).status,
+  403,
+);
+assert.equal(
+  (await hookBody({ appId: 'test-client', merchants: {} }, { 'X-Clover-Auth': 'hook-code' }))
+    .status,
+  200,
+);
+console.log(
+  'PASS: setup gating, owner isolation, OAuth replay rejection, encrypted tokens, refresh, menu, disconnect, and webhook auth; Clover API mocked.',
+);

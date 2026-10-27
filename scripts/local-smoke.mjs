@@ -11,16 +11,25 @@ const portProbe = createServer();
 portProbe.listen(0, '127.0.0.1');
 await once(portProbe, 'listening');
 const port = portProbe.address().port;
-await new Promise(resolve => portProbe.close(resolve));
+await new Promise((resolve) => portProbe.close(resolve));
 const origin = `http://127.0.0.1:${port}`;
-const child = spawn(process.execPath, ['scripts/run-framework.mjs', 'dev', '--port', String(port)], {
-  stdio: ['ignore', 'pipe', 'pipe'],
-  env: { ...process.env, BROWSER: 'none', WRANGLER_SEND_METRICS: 'false' },
-  detached: process.platform !== 'win32',
-});
+const child = spawn(
+  process.execPath,
+  ['scripts/run-framework.mjs', 'dev', '--port', String(port)],
+  {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, BROWSER: 'none', WRANGLER_SEND_METRICS: 'false' },
+    detached: process.platform !== 'win32',
+  },
+);
 let output = '';
-for (const stream of [child.stdout, child.stderr]) stream.on('data', chunk => { output = (output + chunk).slice(-12000); });
-child.on('error', error => { output += error.message; });
+for (const stream of [child.stdout, child.stderr])
+  stream.on('data', (chunk) => {
+    output = (output + chunk).slice(-12000);
+  });
+child.on('error', (error) => {
+  output += error.message;
+});
 const deadline = Date.now() + 120_000;
 try {
   let ready = false;
@@ -28,49 +37,124 @@ try {
     if (child.exitCode !== null) throw new Error(`Dev server exited (${child.exitCode})`);
     try {
       const response = await fetch(origin, { signal: AbortSignal.timeout(5_000) });
-      if (response.ok && (await response.text()).includes('pantrack')) { ready = true; break; }
-    } catch { /* The dev server compiles on the first request. */ }
-    await new Promise(resolve => setTimeout(resolve, 500));
+      if (response.ok && (await response.text()).includes('pantrack')) {
+        ready = true;
+        break;
+      }
+    } catch {
+      /* The dev server compiles on the first request. */
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
   assert.ok(ready, 'Home page must load locally');
-  for(const path of ['/auth','/auth/callback','/auth/signout','/invite']){
-    assert.equal((await fetch(origin+path)).status,200,'M2 page '+path);
+  for (const path of ['/auth', '/auth/callback', '/auth/signout', '/invite']) {
+    assert.equal((await fetch(origin + path)).status, 200, 'M2 page ' + path);
   }
   assert.equal((await fetch(`${origin}/api/companies`)).status, 401, 'Anonymous access');
-  assert.equal((await fetch(`${origin}/api/companies`, { headers: {
-    'oai-authenticated-user-id': 'forged', 'oai-authenticated-user-email': 'forged@example.test',
-  } })).status, 401, 'Local middleware strips forged identity headers');
+  assert.equal(
+    (
+      await fetch(`${origin}/api/companies`, {
+        headers: {
+          'oai-authenticated-user-id': 'forged',
+          'oai-authenticated-user-email': 'forged@example.test',
+        },
+      })
+    ).status,
+    401,
+    'Local middleware strips forged identity headers',
+  );
   const signIn = await fetch(`${origin}/signin-with-chatgpt?return_to=/`, { redirect: 'manual' });
   assert.equal(signIn.status, 302);
   const cookie = signIn.headers.get('set-cookie')?.split(';')[0];
   assert.ok(cookie, 'Local sign in provides a fixture cookie');
   const companyId = crypto.randomUUID();
   const created = await fetch(`${origin}/api/companies`, {
-    method: 'POST', headers: { cookie, origin, 'content-type': 'application/json' },
+    method: 'POST',
+    headers: { cookie, origin, 'content-type': 'application/json' },
     body: JSON.stringify({ action: 'create', id: companyId, name: 'Local smoke test café' }),
   });
   assert.equal(created.status, 200, await created.text());
   const companies = await (await fetch(`${origin}/api/companies`, { headers: { cookie } })).json();
-  assert.ok(companies.companies.some(company => company.id === companyId && company.role === 'owner'));
-  const catalog = await fetch(`${origin}/api/workspace?companyId=${companyId}`, { headers: { cookie } });
+  assert.ok(
+    companies.companies.some((company) => company.id === companyId && company.role === 'owner'),
+  );
+  const catalog = await fetch(`${origin}/api/workspace?companyId=${companyId}`, {
+    headers: { cookie },
+  });
   assert.equal(catalog.status, 200, 'New local company catalog');
-  assert.equal((await fetch(`${origin}/api/purchase-orders?companyId=${companyId}`, {headers:{cookie}})).status,404,'PO drafts default off');
-  assert.equal((await fetch(`${origin}/api/purchase-order-documents?companyId=${companyId}&view=list&kind=history`, {headers:{cookie}})).status,404,'Permanent document copies default off');
-  assert.equal((await fetch(`${origin}/api/purchasing-suppliers?companyId=${companyId}`, {headers:{cookie}})).status,404,'Supplier registry default off');
-  assert.equal((await fetch(`${origin}/api/workspace?companyId=${crypto.randomUUID()}`, { headers: { cookie } })).status, 403, 'Wrong-company access');
-  assert.equal((await fetch(`${origin}/api/companies`,{method:'POST',headers:{cookie,origin:'https://evil.example','content-type':'application/json'},body:JSON.stringify({action:'create',id:crypto.randomUUID(),name:'CSRF rejected'})})).status,403,'HTTP CSRF rejection');
-  assert.equal((await fetch(`${origin}/api/members?companyId=${companyId}`,{headers:{cookie}})).status,200,'Owner membership screen data');
-  const signOut = await fetch(`${origin}/signout-with-chatgpt?return_to=/`, { headers: { cookie }, redirect: 'manual' });
+  assert.equal(
+    (await fetch(`${origin}/api/purchase-orders?companyId=${companyId}`, { headers: { cookie } }))
+      .status,
+    404,
+    'PO drafts default off',
+  );
+  assert.equal(
+    (
+      await fetch(
+        `${origin}/api/purchase-order-documents?companyId=${companyId}&view=list&kind=history`,
+        { headers: { cookie } },
+      )
+    ).status,
+    404,
+    'Permanent document copies default off',
+  );
+  assert.equal(
+    (
+      await fetch(`${origin}/api/purchasing-suppliers?companyId=${companyId}`, {
+        headers: { cookie },
+      })
+    ).status,
+    404,
+    'Supplier registry default off',
+  );
+  assert.equal(
+    (
+      await fetch(`${origin}/api/workspace?companyId=${crypto.randomUUID()}`, {
+        headers: { cookie },
+      })
+    ).status,
+    403,
+    'Wrong-company access',
+  );
+  assert.equal(
+    (
+      await fetch(`${origin}/api/companies`, {
+        method: 'POST',
+        headers: { cookie, origin: 'https://evil.example', 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'create', id: crypto.randomUUID(), name: 'CSRF rejected' }),
+      })
+    ).status,
+    403,
+    'HTTP CSRF rejection',
+  );
+  assert.equal(
+    (await fetch(`${origin}/api/members?companyId=${companyId}`, { headers: { cookie } })).status,
+    200,
+    'Owner membership screen data',
+  );
+  const signOut = await fetch(`${origin}/signout-with-chatgpt?return_to=/`, {
+    headers: { cookie },
+    redirect: 'manual',
+  });
   assert.equal(signOut.status, 302);
   assert.match(signOut.headers.get('set-cookie'), /Max-Age=0/);
-  console.log('PASS: local home page, anonymous/forged-header rejection, fixture sign in, company creation, catalog, tenant isolation and sign out.');
+  console.log(
+    'PASS: local home page, anonymous/forged-header rejection, fixture sign in, company creation, catalog, tenant isolation and sign out.',
+  );
   console.log('The smoke test leaves a fictional company in your local D1 database.');
 } catch (error) {
   console.error(output);
   throw error;
 } finally {
   if (child.pid && child.exitCode === null) {
-    if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], { stdio: 'ignore' });
-    else { try { process.kill(-child.pid, 'SIGTERM'); } catch { /* Already stopped. */ } }
+    if (process.platform === 'win32')
+      spawnSync('taskkill', ['/pid', String(child.pid), '/t', '/f'], { stdio: 'ignore' });
+    else {
+      try {
+        process.kill(-child.pid, 'SIGTERM');
+      } catch {
+        /* Already stopped. */
+      }
+    }
   }
 }

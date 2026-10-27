@@ -1,29 +1,25 @@
 // Vendored from @openai/sites-vite-plugin 0.2.0 (openai/sites#9).
 // See sites-vite-plugin.LICENSE for the upstream MIT license.
-import { access, cp, mkdir, rm } from "node:fs/promises";
-import type { IncomingMessage, ServerResponse } from "node:http";
-import { resolve } from "node:path";
-import {createHmac,randomBytes} from 'node:crypto';
-import type { Plugin } from "vite";
+import { access, cp, mkdir, rm } from 'node:fs/promises';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { resolve } from 'node:path';
+import { createHmac, randomBytes } from 'node:crypto';
+import type { Plugin } from 'vite';
 
-const localUserId = "local_seedy";
-const localEmail = "seedy@sites.test";
-const localFullName = "Seedy";
-const localCookieName = "__sites_local_auth";
-const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
-const localAddresses = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
-const authPaths = new Set([
-  "/signin-with-chatgpt",
-  "/signout-with-chatgpt",
-  "/callback",
-]);
+const localUserId = 'local_seedy';
+const localEmail = 'seedy@sites.test';
+const localFullName = 'Seedy';
+const localCookieName = '__sites_local_auth';
+const localHosts = new Set(['localhost', '127.0.0.1', '::1']);
+const localAddresses = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+const authPaths = new Set(['/signin-with-chatgpt', '/signout-with-chatgpt', '/callback']);
 
 async function exists(path: string): Promise<boolean> {
   try {
     await access(path);
     return true;
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       return false;
     }
     throw error;
@@ -31,13 +27,21 @@ async function exists(path: string): Promise<boolean> {
 }
 
 export function sites({ mockAuth = true } = {}): Plugin {
-  const localKey=randomBytes(32).toString('hex');
+  const localKey = randomBytes(32).toString('hex');
   let root = process.cwd();
-  let command: "build" | "serve" = "build";
+  let command: 'build' | 'serve' = 'build';
 
   return {
-    name: "sites",
-    config(_config,context){return {define:{__PANTRACK_LOCAL_AUTH_KEY__:JSON.stringify(mockAuth&&context.command==='serve'?localKey:'')}};},
+    name: 'sites',
+    config(_config, context) {
+      return {
+        define: {
+          __PANTRACK_LOCAL_AUTH_KEY__: JSON.stringify(
+            mockAuth && context.command === 'serve' ? localKey : '',
+          ),
+        },
+      };
+    },
     configResolved(config) {
       root = config.root;
       command = config.command;
@@ -49,7 +53,7 @@ export function sites({ mockAuth = true } = {}): Plugin {
       server.config.logger.info(`Sites local sign-in: ${localEmail}`);
       server.middlewares.use((request, response, next) => {
         for (const name of Object.keys(request.headers)) {
-          if (name.startsWith("oai-authenticated-user-") || name.startsWith('x-pantrack-local-')) {
+          if (name.startsWith('oai-authenticated-user-') || name.startsWith('x-pantrack-local-')) {
             removeHeader(request, name);
           }
         }
@@ -57,12 +61,10 @@ export function sites({ mockAuth = true } = {}): Plugin {
         let authority: URL;
         let url: URL;
         try {
-          authority = new URL(
-            `${secure ? "https" : "http"}://${request.headers.host}`,
-          );
-          url = new URL(request.url ?? "/", authority);
+          authority = new URL(`${secure ? 'https' : 'http'}://${request.headers.host}`);
+          url = new URL(request.url ?? '/', authority);
         } catch {
-          if (authPaths.has((request.url ?? "/").split("?")[0])) {
+          if (authPaths.has((request.url ?? '/').split('?')[0])) {
             respond(response, 403);
           } else {
             next();
@@ -70,12 +72,10 @@ export function sites({ mockAuth = true } = {}): Plugin {
           return;
         }
 
-        const hostname = authority.hostname
-          .replace(/^\[|\]$/g, "")
-          .toLowerCase();
+        const hostname = authority.hostname.replace(/^\[|\]$/g, '').toLowerCase();
         if (
           !localHosts.has(hostname) ||
-          !localAddresses.has(request.socket.remoteAddress ?? "") ||
+          !localAddresses.has(request.socket.remoteAddress ?? '') ||
           url.origin !== authority.origin
         ) {
           if (authPaths.has(url.pathname)) respond(response, 403);
@@ -83,8 +83,8 @@ export function sites({ mockAuth = true } = {}): Plugin {
           return;
         }
 
-        const cookies = (request.headers.cookie ?? "")
-          .split(";")
+        const cookies = (request.headers.cookie ?? '')
+          .split(';')
           .map((cookie) => cookie.trim())
           .filter(Boolean);
         const signInCookies = cookies
@@ -94,35 +94,35 @@ export function sites({ mockAuth = true } = {}): Plugin {
           (cookie) => !cookie.startsWith(`${localCookieName}=`),
         );
         if (applicationCookies.length !== cookies.length) {
-          removeHeader(request, "cookie");
+          removeHeader(request, 'cookie');
           if (applicationCookies.length) {
-            setHeader(request, "cookie", applicationCookies.join("; "));
+            setHeader(request, 'cookie', applicationCookies.join('; '));
           }
         }
 
-        if (url.pathname === "/callback") {
+        if (url.pathname === '/callback') {
           respond(response, 501);
           return;
         }
 
-        const signIn = url.pathname === "/signin-with-chatgpt";
-        const signOut = url.pathname === "/signout-with-chatgpt";
+        const signIn = url.pathname === '/signin-with-chatgpt';
+        const signOut = url.pathname === '/signout-with-chatgpt';
         if (!signIn && !signOut) {
-          if (signInCookies.length === 1 && signInCookies[0] === "1") {
-            const stamp=String(Date.now());
-            setHeader(request,'x-pantrack-local-stamp',stamp);
-            setHeader(request,'x-pantrack-local-signature',createHmac('sha256',localKey).update(stamp).digest('hex'));
-            setHeader(request, "oai-authenticated-user-id", localUserId);
-            setHeader(request, "oai-authenticated-user-email", localEmail);
+          if (signInCookies.length === 1 && signInCookies[0] === '1') {
+            const stamp = String(Date.now());
+            setHeader(request, 'x-pantrack-local-stamp', stamp);
             setHeader(
               request,
-              "oai-authenticated-user-full-name",
-              localFullName,
+              'x-pantrack-local-signature',
+              createHmac('sha256', localKey).update(stamp).digest('hex'),
             );
+            setHeader(request, 'oai-authenticated-user-id', localUserId);
+            setHeader(request, 'oai-authenticated-user-email', localEmail);
+            setHeader(request, 'oai-authenticated-user-full-name', localFullName);
             setHeader(
               request,
-              "oai-authenticated-user-full-name-encoding",
-              "percent-encoded-utf-8",
+              'oai-authenticated-user-full-name-encoding',
+              'percent-encoded-utf-8',
             );
           }
           next();
@@ -131,64 +131,56 @@ export function sites({ mockAuth = true } = {}): Plugin {
 
         if (
           (request.headers.origin && request.headers.origin !== url.origin) ||
-          request.headers["sec-fetch-site"] === "cross-site"
+          request.headers['sec-fetch-site'] === 'cross-site'
         ) {
           respond(response, 403);
           return;
         }
 
         if (
-          request.headers["next-router-prefetch"] !== undefined ||
-          request.headers["x-middleware-prefetch"] === "1" ||
-          [request.headers.purpose, request.headers["sec-purpose"]].some(
+          request.headers['next-router-prefetch'] !== undefined ||
+          request.headers['x-middleware-prefetch'] === '1' ||
+          [request.headers.purpose, request.headers['sec-purpose']].some(
             (value) =>
-              typeof value === "string" &&
-              value
-                .split(/[;,]/)
-                .some((part) => part.trim().toLowerCase() === "prefetch"),
+              typeof value === 'string' &&
+              value.split(/[;,]/).some((part) => part.trim().toLowerCase() === 'prefetch'),
           )
         ) {
           respond(response, 204);
           return;
         }
 
-        if (
-          request.method !== "GET" &&
-          (!signOut || request.method !== "POST")
-        ) {
-          response.setHeader("Allow", signIn ? "GET" : "GET, POST");
+        if (request.method !== 'GET' && (!signOut || request.method !== 'POST')) {
+          response.setHeader('Allow', signIn ? 'GET' : 'GET, POST');
           respond(response, 405);
           return;
         }
 
-        response.statusCode = request.method === "POST" ? 303 : 302;
-        response.setHeader("Cache-Control", "private, no-store");
+        response.statusCode = request.method === 'POST' ? 303 : 302;
+        response.setHeader('Cache-Control', 'private, no-store');
+        response.setHeader('Location', safeReturn(url.searchParams.get('return_to')));
         response.setHeader(
-          "Location",
-          safeReturn(url.searchParams.get("return_to")),
-        );
-        response.setHeader(
-          "Set-Cookie",
-          `${localCookieName}=${signIn ? "1" : ""}; Path=/; ${
-            signOut ? "Max-Age=0; " : ""
-          }HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`,
+          'Set-Cookie',
+          `${localCookieName}=${signIn ? '1' : ''}; Path=/; ${
+            signOut ? 'Max-Age=0; ' : ''
+          }HttpOnly; SameSite=Lax${secure ? '; Secure' : ''}`,
         );
         response.end();
       });
     },
     async closeBundle() {
-      if (command !== "build") return;
+      if (command !== 'build') return;
 
-      const outputDirectory = resolve(root, "dist", ".openai");
-      const hostingConfig = resolve(root, ".openai", "hosting.json");
-      const drizzleSource = resolve(root, "drizzle");
+      const outputDirectory = resolve(root, 'dist', '.openai');
+      const hostingConfig = resolve(root, '.openai', 'hosting.json');
+      const drizzleSource = resolve(root, 'drizzle');
 
       await rm(outputDirectory, { recursive: true, force: true });
       await mkdir(outputDirectory, { recursive: true });
 
-      await cp(hostingConfig, resolve(outputDirectory, "hosting.json"));
+      await cp(hostingConfig, resolve(outputDirectory, 'hosting.json'));
       if (await exists(drizzleSource)) {
-        await cp(drizzleSource, resolve(outputDirectory, "drizzle"), {
+        await cp(drizzleSource, resolve(outputDirectory, 'drizzle'), {
           recursive: true,
         });
       }
@@ -205,11 +197,7 @@ function removeHeader(request: IncomingMessage, name: string): void {
   }
 }
 
-function setHeader(
-  request: IncomingMessage,
-  name: string,
-  value: string,
-): void {
+function setHeader(request: IncomingMessage, name: string, value: string): void {
   removeHeader(request, name);
   request.headers[name] = value;
   request.rawHeaders.push(name, value);
@@ -217,20 +205,20 @@ function setHeader(
 
 function respond(response: ServerResponse, status: number): void {
   response.statusCode = status;
-  response.setHeader("Cache-Control", "private, no-store");
+  response.setHeader('Cache-Control', 'private, no-store');
   response.end();
 }
 
 function safeReturn(value: string | null): string {
-  if (!value?.startsWith("/") || value.startsWith("//")) return "/";
+  if (!value?.startsWith('/') || value.startsWith('//')) return '/';
 
   try {
-    const url = new URL(value, "http://localhost");
-    if (url.origin !== "http://localhost" || authPaths.has(url.pathname)) {
-      return "/";
+    const url = new URL(value, 'http://localhost');
+    if (url.origin !== 'http://localhost' || authPaths.has(url.pathname)) {
+      return '/';
     }
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
-    return "/";
+    return '/';
   }
 }

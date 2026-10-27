@@ -1,695 +1,2805 @@
 import assert from 'node:assert/strict';
-import {build} from 'esbuild';
-import {DatabaseSync} from 'node:sqlite';
-import {mkdirSync,readFileSync} from 'node:fs';
+import { build } from 'esbuild';
+import { DatabaseSync } from 'node:sqlite';
+import { mkdirSync, readFileSync } from 'node:fs';
 
-mkdirSync('.sites-runtime',{recursive:true});
-const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON');
-const journal=JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8'));
-for(const entry of journal.entries)sql.exec(readFileSync('drizzle/'+entry.tag+'.sql','utf8'));
+mkdirSync('.sites-runtime', { recursive: true });
+const sql = new DatabaseSync(':memory:');
+sql.exec('PRAGMA foreign_keys=ON');
+const journal = JSON.parse(readFileSync('drizzle/meta/_journal.json', 'utf8'));
+for (const entry of journal.entries)
+  sql.exec(readFileSync('drizzle/' + entry.tag + '.sql', 'utf8'));
 // A populated upgrade deliberately expires sessions that lack a fence, without
 // changing any other persisted company, membership, identity or audit record.
-const upgrade=new DatabaseSync(':memory:');upgrade.exec('PRAGMA foreign_keys=ON');
-const fenceMigration=journal.entries.findIndex(entry=>entry.tag.endsWith('_auth_recovery_fence'));assert.ok(fenceMigration>=0);
-for(const entry of journal.entries.slice(0,fenceMigration))upgrade.exec(readFileSync('drizzle/'+entry.tag+'.sql','utf8'));
-upgrade.prepare('INSERT INTO companies VALUES (?,?,?)').run('upgrade-company','Fictional upgrade café','now');
-upgrade.prepare('INSERT INTO auth_users VALUES (?,?,?)').run('upgrade-user','upgrade@example.test',123);
-upgrade.prepare('INSERT INTO memberships VALUES (?,?,?)').run('upgrade-user','upgrade-company','owner');
-upgrade.prepare('INSERT INTO products VALUES (?,?,?)').run('upgrade-company','upgrade-product','{"name":"Fictional milk"}');
-upgrade.prepare('INSERT INTO orders VALUES (?,?,?,?)').run('upgrade-company','upgrade-order','{"id":"upgrade-order"}','now');
-upgrade.prepare('INSERT INTO security_audit VALUES (?,?,?,?,?,?)').run('upgrade-audit','upgrade-company','upgrade-user','session.created','',123);
-upgrade.prepare('INSERT INTO auth_sessions VALUES (?,?,?,?,?,?)').run('legacy-hash','upgrade-user','legacy-encrypted-token',Date.now()+3600000,123,0);
-const preservedTables=upgrade.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('auth_users','auth_sessions') ORDER BY name").all().map(r=>r.name);
-const beforeUpgrade=preservedTables.map(name=>upgrade.prepare(`SELECT * FROM "${name}"`).all());
-upgrade.exec(readFileSync('drizzle/'+journal.entries[fenceMigration].tag+'.sql','utf8'));
-assert.deepEqual(preservedTables.map(name=>upgrade.prepare(`SELECT * FROM "${name}"`).all()),beforeUpgrade);
-assert.deepEqual({...upgrade.prepare('SELECT * FROM auth_users').get()},{id:'upgrade-user',email:'upgrade@example.test',verified_at:123,session_epoch:0,recovery_id:null,recovery_until:0});
-assert.equal(upgrade.prepare('SELECT COUNT(*) AS n FROM auth_sessions').get().n,0);
-assert.equal(upgrade.prepare('SELECT epoch FROM auth_fence WHERE id=1').get().epoch,0);
-assert.deepEqual(upgrade.prepare('PRAGMA foreign_key_check').all(),[]);upgrade.close();
-function deferred(){let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};}
-function barrier(){return {entered:deferred(),release:deferred()};}
-let sessionBatchBarrier,completionFailures=0;const recoveryClaimBarriers=[];
-let failingAuditAction,failMembership=false;
+const upgrade = new DatabaseSync(':memory:');
+upgrade.exec('PRAGMA foreign_keys=ON');
+const fenceMigration = journal.entries.findIndex((entry) =>
+  entry.tag.endsWith('_auth_recovery_fence'),
+);
+assert.ok(fenceMigration >= 0);
+for (const entry of journal.entries.slice(0, fenceMigration))
+  upgrade.exec(readFileSync('drizzle/' + entry.tag + '.sql', 'utf8'));
+upgrade
+  .prepare('INSERT INTO companies VALUES (?,?,?)')
+  .run('upgrade-company', 'Fictional upgrade café', 'now');
+upgrade
+  .prepare('INSERT INTO auth_users VALUES (?,?,?)')
+  .run('upgrade-user', 'upgrade@example.test', 123);
+upgrade
+  .prepare('INSERT INTO memberships VALUES (?,?,?)')
+  .run('upgrade-user', 'upgrade-company', 'owner');
+upgrade
+  .prepare('INSERT INTO products VALUES (?,?,?)')
+  .run('upgrade-company', 'upgrade-product', '{"name":"Fictional milk"}');
+upgrade
+  .prepare('INSERT INTO orders VALUES (?,?,?,?)')
+  .run('upgrade-company', 'upgrade-order', '{"id":"upgrade-order"}', 'now');
+upgrade
+  .prepare('INSERT INTO security_audit VALUES (?,?,?,?,?,?)')
+  .run('upgrade-audit', 'upgrade-company', 'upgrade-user', 'session.created', '', 123);
+upgrade
+  .prepare('INSERT INTO auth_sessions VALUES (?,?,?,?,?,?)')
+  .run('legacy-hash', 'upgrade-user', 'legacy-encrypted-token', Date.now() + 3600000, 123, 0);
+const preservedTables = upgrade
+  .prepare(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('auth_users','auth_sessions') ORDER BY name",
+  )
+  .all()
+  .map((r) => r.name);
+const beforeUpgrade = preservedTables.map((name) =>
+  upgrade.prepare(`SELECT * FROM "${name}"`).all(),
+);
+upgrade.exec(readFileSync('drizzle/' + journal.entries[fenceMigration].tag + '.sql', 'utf8'));
+assert.deepEqual(
+  preservedTables.map((name) => upgrade.prepare(`SELECT * FROM "${name}"`).all()),
+  beforeUpgrade,
+);
+assert.deepEqual(
+  { ...upgrade.prepare('SELECT * FROM auth_users').get() },
+  {
+    id: 'upgrade-user',
+    email: 'upgrade@example.test',
+    verified_at: 123,
+    session_epoch: 0,
+    recovery_id: null,
+    recovery_until: 0,
+  },
+);
+assert.equal(upgrade.prepare('SELECT COUNT(*) AS n FROM auth_sessions').get().n, 0);
+assert.equal(upgrade.prepare('SELECT epoch FROM auth_fence WHERE id=1').get().epoch, 0);
+assert.deepEqual(upgrade.prepare('PRAGMA foreign_key_check').all(), []);
+upgrade.close();
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+}
+
+function barrier() {
+  return { entered: deferred(), release: deferred() };
+}
+
+let sessionBatchBarrier,
+  completionFailures = 0;
+const recoveryClaimBarriers = [];
+let failingAuditAction,
+  failMembership = false;
 let failingQuery;
-let failingSessionQuery,providerFault;
-globalThis.m2db={prepare(query){if(failingQuery&&query.startsWith(failingQuery))throw new Error('Fictional D1 internal SQL and secret detail');let values=[];return {query,bind(...v){values=v;return this;},async first(){if(failingSessionQuery&&query.startsWith(failingSessionQuery))throw new Error('Fictional internal session D1 failure');if(failMembership&&query.startsWith('SELECT role FROM memberships'))throw new Error('Fictional internal membership failure');return sql.prepare(query).get(...values)||null;},async all(){return {results:sql.prepare(query).all(...values)};},execute(){const statement=sql.prepare(query);if(/^\s*SELECT\b/i.test(query))return {results:statement.all(...values),meta:{changes:0}};const r=statement.run(...values);return {results:[],meta:{changes:Number(r.changes)}};},async run(){if(query.startsWith('INSERT INTO security_audit')&&values.includes(failingAuditAction))throw new Error('Fictional internal audit failure');return this.execute();}};},async batch(statements){
- if(sessionBatchBarrier&&statements.some(s=>/^INSERT INTO auth_sessions\b/.test(s.query))){const gate=sessionBatchBarrier;sessionBatchBarrier=undefined;gate.entered.resolve();await gate.release.promise;}
- if(recoveryClaimBarriers.length&&statements.some(s=>s.query.startsWith('DELETE FROM auth_sessions WHERE user_id='))){const gate=recoveryClaimBarriers.shift();gate.entered.resolve();await gate.release.promise;}
- sql.exec('BEGIN');try{const out=statements.map(s=>s.execute());if(completionFailures&&statements.some(s=>s.query.includes('recovery_until=CASE'))){completionFailures--;throw new Error('Fictional completion commit failure');}sql.exec('COMMIT');return out;}catch(e){sql.exec('ROLLBACK');throw e;}
-}};
-globalThis.m2env={APP_ORIGIN:'https://test',SUPABASE_URL:'https://test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public-test',AUTH_ENCRYPTION_KEY:'ab'.repeat(32)};
-globalThis.m2headers=new Headers();
-const plugin={name:'m2-runtime',setup(b){b.onResolve({filter:/^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/},a=>({path:a.path,namespace:'m2'}));b.onLoad({filter:/.*/,namespace:'m2'},a=>({contents:a.path==='next/headers'?'export async function headers(){return globalThis.m2headers}':a.path==='next/navigation'?'export function redirect(path){throw new Error(path)}':a.path==='cloudflare:workers'?'export const env=globalThis.m2env':'export function database(){return globalThis.m2db}'}));}};
-const modules={};
-for(const [name,path] of [...['companies','workspace','inventory','sales','sales/events','register','clover','payments','automation','members','auth','clover/callback','register/ingest','automation/tick','replenishment/review','replenishment/proposals','waste','waste/shortcuts','waste/items','waste/entries','waste/sales','waste/setup','waste/review'].map(n=>[n,'src/app/api/'+n+'/route.ts']),['authlib','src/lib/auth.ts'],['fence','src/lib/auth-session-fence.ts'],['authorization','src/lib/authorization.ts'],['passwordPolicy','src/lib/password-policy.ts']]){
- const out='.sites-runtime/m2-'+name.replaceAll('/','-')+'.mjs';await build({entryPoints:[path],outfile:out,bundle:true,platform:'node',format:'esm',plugins:[plugin]});modules[name]=await import('../'+out);
-}
-const accounts=Object.fromEntries(['owner','manager','employee','other','invitee'].map(name=>[name,{id:crypto.randomUUID(),email:name+'@example.test',email_confirmed_at:new Date().toISOString()}]));
-const tokens=new Map(),providerRequests=new Map();let failProvider=false;
-const passwords=new Map(Object.values(accounts).map(user=>[user.id,'existingpassword']));
-const tokenBarriers=new Map();let nextTokenBarrier,passwordPutBarrier,passwordFailure,logoutFailure=false,providerLifetime=3600,passwordUpdates=0;
-async function issueToken(user){const access_token=crypto.randomUUID();tokens.set(access_token,user);if(nextTokenBarrier){const gate=nextTokenBarrier;tokenBarriers.set(access_token,gate);nextTokenBarrier=undefined;if(gate.pauseAt==='exchange'){gate.entered.resolve();await gate.release.promise;}}return Response.json({access_token,expires_in:providerLifetime,refresh_token:'fictional-unused-refresh-token'});}
-globalThis.fetch=async(url,init={})=>{
- assert.ok(String(url).startsWith('https://test.supabase.co/auth/v1/'),'Only fake Supabase requests are allowed');
- assert.equal(init.redirect,'manual','Supabase requests must not follow redirects in Workers');
- if(failProvider)return Response.json({error:'offline'},{status:503});
- const path=new URL(url).pathname,body=init.body?JSON.parse(init.body):{},token=init.headers?.Authorization?.slice(7);
- providerRequests.set(path,(providerRequests.get(path)||0)+1);
- if(path.endsWith('/user')){
-   if(providerFault==='timeout')throw new DOMException('Fictional provider timeout','TimeoutError');
-   if(providerFault==='malformed')return Response.json({invalid:true});
-   if(typeof providerFault==='number')return Response.json({error:'Fictional provider failure'},{status:providerFault});
-   if(!tokens.has(token))return Response.json({error:'expired'},{status:401});
-   if(init.method==='PUT'){
-     passwordUpdates++;const failure=passwordFailure,gate=passwordPutBarrier;passwordFailure=undefined;passwordPutBarrier=undefined;
-     if(failure==='rejected')return Response.json({error:'rejected'},{status:400});
-     if(failure==='unavailable')return Response.json({error:'unavailable'},{status:503});
-     if(failure==='timeout')throw new DOMException('Fictional provider timeout','TimeoutError');
-     passwords.set(tokens.get(token).id,body.password);
-     if(gate){gate.entered.resolve();await gate.release.promise;}
-     if(failure==='lost-response')throw new DOMException('Fictional lost password response','TimeoutError');
-     return Response.json(tokens.get(token));
-   }
-   const gate=tokenBarriers.get(token);
-   if(gate&&++gate.calls===gate.pauseAt){gate.entered.resolve();await gate.release.promise;}
-   return Response.json(tokens.get(token));
- }
- if(path.endsWith('/token')){
-   const user=Object.values(accounts).find(u=>u.email===body.email);
-   if(!user||body.password!==passwords.get(user.id))return Response.json({error:'bad'},{status:400});
-   return issueToken(user);
- }
- if(path.endsWith('/verify')){
-   if(!['valid-recovery','valid-signup'].includes(body.token_hash))return Response.json({error:'replay'},{status:400});
-   return issueToken(accounts.owner);
- }
- if(path.endsWith('/logout'))return logoutFailure?Response.json({error:'unavailable'},{status:503}):new Response(null,{status:204});
- return Response.json({});
+let failingSessionQuery, providerFault;
+globalThis.m2db = {
+  prepare(query) {
+    if (failingQuery && query.startsWith(failingQuery))
+      throw new Error('Fictional D1 internal SQL and secret detail');
+    let values = [];
+    return {
+      query,
+      bind(...v) {
+        values = v;
+        return this;
+      },
+      async first() {
+        if (failingSessionQuery && query.startsWith(failingSessionQuery))
+          throw new Error('Fictional internal session D1 failure');
+        if (failMembership && query.startsWith('SELECT role FROM memberships'))
+          throw new Error('Fictional internal membership failure');
+        return sql.prepare(query).get(...values) || null;
+      },
+      async all() {
+        return { results: sql.prepare(query).all(...values) };
+      },
+      execute() {
+        const statement = sql.prepare(query);
+        if (/^\s*SELECT\b/i.test(query))
+          return { results: statement.all(...values), meta: { changes: 0 } };
+        const r = statement.run(...values);
+        return { results: [], meta: { changes: Number(r.changes) } };
+      },
+      async run() {
+        if (query.startsWith('INSERT INTO security_audit') && values.includes(failingAuditAction))
+          throw new Error('Fictional internal audit failure');
+        return this.execute();
+      },
+    };
+  },
+  async batch(statements) {
+    if (
+      sessionBatchBarrier &&
+      statements.some((s) => /^INSERT INTO auth_sessions\b/.test(s.query))
+    ) {
+      const gate = sessionBatchBarrier;
+      sessionBatchBarrier = undefined;
+      gate.entered.resolve();
+      await gate.release.promise;
+    }
+    if (
+      recoveryClaimBarriers.length &&
+      statements.some((s) => s.query.startsWith('DELETE FROM auth_sessions WHERE user_id='))
+    ) {
+      const gate = recoveryClaimBarriers.shift();
+      gate.entered.resolve();
+      await gate.release.promise;
+    }
+    sql.exec('BEGIN');
+    try {
+      const out = statements.map((s) => s.execute());
+      if (completionFailures && statements.some((s) => s.query.includes('recovery_until=CASE'))) {
+        completionFailures--;
+        throw new Error('Fictional completion commit failure');
+      }
+      sql.exec('COMMIT');
+      return out;
+    } catch (e) {
+      sql.exec('ROLLBACK');
+      throw e;
+    }
+  },
 };
-function req(name,method='GET',body, cookie='',extra={}){const headers=new Headers({'Content-Type':'application/json',Origin:'https://test',...extra});if(cookie)headers.set('Cookie',cookie);globalThis.m2headers=headers;return new Request('https://test/api/'+name+(method==='GET'?'?companyId=company-a'+(name.startsWith('replenishment/')?'&productId=milk':''):''),{method,headers,...(method==='POST'?{body:JSON.stringify(body)}:{})});}
-async function call(name,method='GET',body,cookie='',extra={}){return modules[name][method](req(name,method,body,cookie,extra));}
-async function login(name){const r=await call('auth','POST',{action:'signin',email:accounts[name].email,password:passwords.get(accounts[name].id)});assert.equal(r.status,200,await r.clone().text());const cookie=r.headers.get('set-cookie');assert.match(cookie,/__Host-pantrack=[a-f0-9]{64}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=3600; Secure/);return cookie.split(';')[0];}
-const cookies={};for(const name of Object.keys(accounts))cookies[name]=await login(name);
-assert.equal(modules.passwordPolicy.isValidNewPassword('short!'),false,'New passwords require 12 characters.');
-assert.equal(modules.passwordPolicy.isValidNewPassword('longpasswordonly'),false,'New passwords require a special character.');
-assert.equal(modules.passwordPolicy.isValidNewPassword('longpässwordonly'),false,'Letters outside ASCII are not misclassified as special characters.');
-assert.equal(modules.passwordPolicy.isValidNewPassword('valid-password!'),true,'Compliant new passwords are accepted.');
-const signupRequests=providerRequests.get('/auth/v1/signup')||0;
-assert.equal((await call('auth','POST',{action:'signup',email:'signup@example.test',password:'short!'})).status,400,'Signup rejects a password shorter than 12 characters.');
-assert.equal((await call('auth','POST',{action:'signup',email:'signup@example.test',password:'longpasswordonly'})).status,400,'Signup rejects a missing special character before the provider.');
-assert.equal(providerRequests.get('/auth/v1/signup')||0,signupRequests,'Invalid signup does not call the provider.');
-assert.equal((await call('auth','POST',{action:'signup',email:'signup@example.test',password:'valid-password!'})).status,200,'Signup accepts a compliant new password.');
-assert.ok(!JSON.stringify(sql.prepare('SELECT * FROM auth_sessions').all()).includes([...tokens.keys()][0]),'Provider tokens encrypted at rest');
-sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-a','A','now');sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-b','B','now');
-for(const name of ['owner','manager','employee'])sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(accounts[name].id,'company-a',name);
-sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(accounts.other.id,'company-b','owner');
-sql.prepare('INSERT INTO products VALUES (?,?,?)').run('company-a','milk',JSON.stringify({id:'milk',name:'Milk'}));
-sql.prepare('INSERT INTO orders VALUES (?,?,?,?)').run('company-a','private-order',JSON.stringify({id:'private-order'}),'now');
-sql.prepare('INSERT INTO sales_imports(company_id,reference,data,created) VALUES (?,?,?,?)').run('company-a','fictional-legacy-reference',JSON.stringify({reference:'fictional-legacy-reference'}),'now');
-sql.prepare('INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?)').run('company-a','fictional-register-reference',JSON.stringify({key:'fictional-register-reference'}));
+globalThis.m2env = {
+  APP_ORIGIN: 'https://test',
+  SUPABASE_URL: 'https://test.supabase.co',
+  SUPABASE_PUBLISHABLE_KEY: 'public-test',
+  AUTH_ENCRYPTION_KEY: 'ab'.repeat(32),
+};
+globalThis.m2headers = new Headers();
+const plugin = {
+  name: 'm2-runtime',
+  setup(b) {
+    b.onResolve(
+      { filter: /^cloudflare:workers$|^next\/headers$|^next\/navigation$|db\/raw$/ },
+      (a) => ({ path: a.path, namespace: 'm2' }),
+    );
+    b.onLoad({ filter: /.*/, namespace: 'm2' }, (a) => ({
+      contents:
+        a.path === 'next/headers'
+          ? 'export async function headers(){return globalThis.m2headers}'
+          : a.path === 'next/navigation'
+            ? 'export function redirect(path){throw new Error(path)}'
+            : a.path === 'cloudflare:workers'
+              ? 'export const env=globalThis.m2env'
+              : 'export function database(){return globalThis.m2db}',
+    }));
+  },
+};
+const modules = {};
+for (const [name, path] of [
+  ...[
+    'companies',
+    'workspace',
+    'inventory',
+    'sales',
+    'sales/events',
+    'register',
+    'clover',
+    'payments',
+    'automation',
+    'members',
+    'auth',
+    'clover/callback',
+    'register/ingest',
+    'automation/tick',
+    'replenishment/review',
+    'replenishment/proposals',
+    'waste',
+    'waste/shortcuts',
+    'waste/items',
+    'waste/entries',
+    'waste/sales',
+    'waste/setup',
+    'waste/review',
+  ].map((n) => [n, 'src/app/api/' + n + '/route.ts']),
+  ['authlib', 'src/lib/auth.ts'],
+  ['fence', 'src/lib/auth-session-fence.ts'],
+  ['authorization', 'src/lib/authorization.ts'],
+  ['passwordPolicy', 'src/lib/password-policy.ts'],
+]) {
+  const out = '.sites-runtime/m2-' + name.replaceAll('/', '-') + '.mjs';
+  await build({
+    entryPoints: [path],
+    outfile: out,
+    bundle: true,
+    platform: 'node',
+    format: 'esm',
+    plugins: [plugin],
+  });
+  modules[name] = await import('../' + out);
+}
+const accounts = Object.fromEntries(
+  ['owner', 'manager', 'employee', 'other', 'invitee'].map((name) => [
+    name,
+    {
+      id: crypto.randomUUID(),
+      email: name + '@example.test',
+      email_confirmed_at: new Date().toISOString(),
+    },
+  ]),
+);
+const tokens = new Map(),
+  providerRequests = new Map();
+let failProvider = false;
+const passwords = new Map(Object.values(accounts).map((user) => [user.id, 'existingpassword']));
+const tokenBarriers = new Map();
+let nextTokenBarrier,
+  passwordPutBarrier,
+  passwordFailure,
+  logoutFailure = false,
+  providerLifetime = 3600,
+  passwordUpdates = 0;
+
+async function issueToken(user) {
+  const access_token = crypto.randomUUID();
+  tokens.set(access_token, user);
+  if (nextTokenBarrier) {
+    const gate = nextTokenBarrier;
+    tokenBarriers.set(access_token, gate);
+    nextTokenBarrier = undefined;
+    if (gate.pauseAt === 'exchange') {
+      gate.entered.resolve();
+      await gate.release.promise;
+    }
+  }
+  return Response.json({
+    access_token,
+    expires_in: providerLifetime,
+    refresh_token: 'fictional-unused-refresh-token',
+  });
+}
+
+globalThis.fetch = async (url, init = {}) => {
+  assert.ok(
+    String(url).startsWith('https://test.supabase.co/auth/v1/'),
+    'Only fake Supabase requests are allowed',
+  );
+  assert.equal(init.redirect, 'manual', 'Supabase requests must not follow redirects in Workers');
+  if (failProvider) return Response.json({ error: 'offline' }, { status: 503 });
+  const path = new URL(url).pathname,
+    body = init.body ? JSON.parse(init.body) : {},
+    token = init.headers?.Authorization?.slice(7);
+  providerRequests.set(path, (providerRequests.get(path) || 0) + 1);
+  if (path.endsWith('/user')) {
+    if (providerFault === 'timeout')
+      throw new DOMException('Fictional provider timeout', 'TimeoutError');
+    if (providerFault === 'malformed') return Response.json({ invalid: true });
+    if (typeof providerFault === 'number')
+      return Response.json({ error: 'Fictional provider failure' }, { status: providerFault });
+    if (!tokens.has(token)) return Response.json({ error: 'expired' }, { status: 401 });
+    if (init.method === 'PUT') {
+      passwordUpdates++;
+      const failure = passwordFailure,
+        gate = passwordPutBarrier;
+      passwordFailure = undefined;
+      passwordPutBarrier = undefined;
+      if (failure === 'rejected') return Response.json({ error: 'rejected' }, { status: 400 });
+      if (failure === 'unavailable')
+        return Response.json({ error: 'unavailable' }, { status: 503 });
+      if (failure === 'timeout')
+        throw new DOMException('Fictional provider timeout', 'TimeoutError');
+      passwords.set(tokens.get(token).id, body.password);
+      if (gate) {
+        gate.entered.resolve();
+        await gate.release.promise;
+      }
+      if (failure === 'lost-response')
+        throw new DOMException('Fictional lost password response', 'TimeoutError');
+      return Response.json(tokens.get(token));
+    }
+    const gate = tokenBarriers.get(token);
+    if (gate && ++gate.calls === gate.pauseAt) {
+      gate.entered.resolve();
+      await gate.release.promise;
+    }
+    return Response.json(tokens.get(token));
+  }
+  if (path.endsWith('/token')) {
+    const user = Object.values(accounts).find((u) => u.email === body.email);
+    if (!user || body.password !== passwords.get(user.id))
+      return Response.json({ error: 'bad' }, { status: 400 });
+    return issueToken(user);
+  }
+  if (path.endsWith('/verify')) {
+    if (!['valid-recovery', 'valid-signup'].includes(body.token_hash))
+      return Response.json({ error: 'replay' }, { status: 400 });
+    return issueToken(accounts.owner);
+  }
+  if (path.endsWith('/logout'))
+    return logoutFailure
+      ? Response.json({ error: 'unavailable' }, { status: 503 })
+      : new Response(null, { status: 204 });
+  return Response.json({});
+};
+
+function req(name, method = 'GET', body, cookie = '', extra = {}) {
+  const headers = new Headers({
+    'Content-Type': 'application/json',
+    Origin: 'https://test',
+    ...extra,
+  });
+  if (cookie) headers.set('Cookie', cookie);
+  globalThis.m2headers = headers;
+  return new Request(
+    'https://test/api/' +
+      name +
+      (method === 'GET'
+        ? '?companyId=company-a' + (name.startsWith('replenishment/') ? '&productId=milk' : '')
+        : ''),
+    { method, headers, ...(method === 'POST' ? { body: JSON.stringify(body) } : {}) },
+  );
+}
+
+async function call(name, method = 'GET', body, cookie = '', extra = {}) {
+  return modules[name][method](req(name, method, body, cookie, extra));
+}
+
+async function login(name) {
+  const r = await call('auth', 'POST', {
+    action: 'signin',
+    email: accounts[name].email,
+    password: passwords.get(accounts[name].id),
+  });
+  assert.equal(r.status, 200, await r.clone().text());
+  const cookie = r.headers.get('set-cookie');
+  assert.match(
+    cookie,
+    /__Host-pantrack=[a-f0-9]{64}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=3600; Secure/,
+  );
+  return cookie.split(';')[0];
+}
+
+const cookies = {};
+for (const name of Object.keys(accounts)) cookies[name] = await login(name);
+assert.equal(
+  modules.passwordPolicy.isValidNewPassword('short!'),
+  false,
+  'New passwords require 12 characters.',
+);
+assert.equal(
+  modules.passwordPolicy.isValidNewPassword('longpasswordonly'),
+  false,
+  'New passwords require a special character.',
+);
+assert.equal(
+  modules.passwordPolicy.isValidNewPassword('longpässwordonly'),
+  false,
+  'Letters outside ASCII are not misclassified as special characters.',
+);
+assert.equal(
+  modules.passwordPolicy.isValidNewPassword('valid-password!'),
+  true,
+  'Compliant new passwords are accepted.',
+);
+const signupRequests = providerRequests.get('/auth/v1/signup') || 0;
+assert.equal(
+  (
+    await call('auth', 'POST', {
+      action: 'signup',
+      email: 'signup@example.test',
+      password: 'short!',
+    })
+  ).status,
+  400,
+  'Signup rejects a password shorter than 12 characters.',
+);
+assert.equal(
+  (
+    await call('auth', 'POST', {
+      action: 'signup',
+      email: 'signup@example.test',
+      password: 'longpasswordonly',
+    })
+  ).status,
+  400,
+  'Signup rejects a missing special character before the provider.',
+);
+assert.equal(
+  providerRequests.get('/auth/v1/signup') || 0,
+  signupRequests,
+  'Invalid signup does not call the provider.',
+);
+assert.equal(
+  (
+    await call('auth', 'POST', {
+      action: 'signup',
+      email: 'signup@example.test',
+      password: 'valid-password!',
+    })
+  ).status,
+  200,
+  'Signup accepts a compliant new password.',
+);
+assert.ok(
+  !JSON.stringify(sql.prepare('SELECT * FROM auth_sessions').all()).includes([...tokens.keys()][0]),
+  'Provider tokens encrypted at rest',
+);
+sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-a', 'A', 'now');
+sql.prepare('INSERT INTO companies VALUES (?,?,?)').run('company-b', 'B', 'now');
+for (const name of ['owner', 'manager', 'employee'])
+  sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(accounts[name].id, 'company-a', name);
+sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(accounts.other.id, 'company-b', 'owner');
+sql
+  .prepare('INSERT INTO products VALUES (?,?,?)')
+  .run('company-a', 'milk', JSON.stringify({ id: 'milk', name: 'Milk' }));
+sql
+  .prepare('INSERT INTO orders VALUES (?,?,?,?)')
+  .run('company-a', 'private-order', JSON.stringify({ id: 'private-order' }), 'now');
+sql
+  .prepare('INSERT INTO sales_imports(company_id,reference,data,created) VALUES (?,?,?,?)')
+  .run(
+    'company-a',
+    'fictional-legacy-reference',
+    JSON.stringify({ reference: 'fictional-legacy-reference' }),
+    'now',
+  );
+sql
+  .prepare('INSERT INTO register_mappings(company_id,external_key,data) VALUES (?,?,?)')
+  .run(
+    'company-a',
+    'fictional-register-reference',
+    JSON.stringify({ key: 'fictional-register-reference' }),
+  );
 // F2: a committed credential must survive a failing outcome audit.
-for(const [family,action,key,table,column] of [
- ['register','token','token','register_settings','token_hash'],
- ['automation','scheduler','schedulerToken','automation_settings','scheduler_hash']
-]){
- failingAuditAction=family+'.succeeded';
- const response=await call(family,'POST',{companyId:'company-a',action},cookies.owner);
- failingAuditAction=undefined;
- assert.equal(response.status,200,'Committed '+family+' credential response survives an outcome-audit failure');
- assert.match(response.headers.get('Cache-Control'),/no-store/);
- const body=await response.json();
- assert.equal(sql.prepare('SELECT '+column+' AS hash FROM '+table+' WHERE company_id=?').get('company-a').hash,await modules.authlib.hash(body[key]));
+for (const [family, action, key, table, column] of [
+  ['register', 'token', 'token', 'register_settings', 'token_hash'],
+  ['automation', 'scheduler', 'schedulerToken', 'automation_settings', 'scheduler_hash'],
+]) {
+  failingAuditAction = family + '.succeeded';
+  const response = await call(family, 'POST', { companyId: 'company-a', action }, cookies.owner);
+  failingAuditAction = undefined;
+  assert.equal(
+    response.status,
+    200,
+    'Committed ' + family + ' credential response survives an outcome-audit failure',
+  );
+  assert.match(response.headers.get('Cache-Control'), /no-store/);
+  const body = await response.json();
+  assert.equal(
+    sql
+      .prepare('SELECT ' + column + ' AS hash FROM ' + table + ' WHERE company_id=?')
+      .get('company-a').hash,
+    await modules.authlib.hash(body[key]),
+  );
 }
-for(const family of ['register','waste','waste/shortcuts']){
- for(const body of ['{',JSON.stringify({companyId:42})]){
-  const template=req(family,'POST',{},cookies.owner);
-  const response=await modules[family].POST(new Request(template.url,{method:'POST',headers:template.headers,body}));
-  assert.equal(response.status,400,'Malformed '+family+' input is a client error');
-  assert.ok(!('uncertain' in await response.json()));
- }
- failingAuditAction=(family==='waste/shortcuts'?'waste-shortcuts':family)+'.attempt';
- const response=await call(family,'POST',{companyId:'company-a'},cookies.owner);
- failingAuditAction=undefined;
- assert.equal(response.status,503,'Attempt-audit failure is a server fault');
- assert.ok(!('uncertain' in await response.json()),'A pre-dispatch fault is not an uncertain save');
- failMembership=true;
- const unavailable=await call(family,'POST',{companyId:'company-a'},cookies.owner);
- failMembership=false;
- assert.equal(unavailable.status,503,'Membership D1 failure is a server fault');
- assert.ok(!('uncertain' in await unavailable.json()));
+for (const family of ['register', 'waste', 'waste/shortcuts']) {
+  for (const body of ['{', JSON.stringify({ companyId: 42 })]) {
+    const template = req(family, 'POST', {}, cookies.owner);
+    const response = await modules[family].POST(
+      new Request(template.url, { method: 'POST', headers: template.headers, body }),
+    );
+    assert.equal(response.status, 400, 'Malformed ' + family + ' input is a client error');
+    assert.ok(!('uncertain' in (await response.json())));
+  }
+  failingAuditAction = (family === 'waste/shortcuts' ? 'waste-shortcuts' : family) + '.attempt';
+  const response = await call(family, 'POST', { companyId: 'company-a' }, cookies.owner);
+  failingAuditAction = undefined;
+  assert.equal(response.status, 503, 'Attempt-audit failure is a server fault');
+  assert.ok(
+    !('uncertain' in (await response.json())),
+    'A pre-dispatch fault is not an uncertain save',
+  );
+  failMembership = true;
+  const unavailable = await call(family, 'POST', { companyId: 'company-a' }, cookies.owner);
+  failMembership = false;
+  assert.equal(unavailable.status, 503, 'Membership D1 failure is a server fault');
+  assert.ok(!('uncertain' in (await unavailable.json())));
 }
-for(const family of ['waste','waste-shortcuts']){
- let dispatched=0;
- const wrapped=modules.authorization.withCompanyRoute(family,async()=>{dispatched++;throw new Error('Fictional post-dispatch failure');});
- const response=await wrapped(req('waste','POST',{companyId:'company-a'},cookies.owner));
- assert.equal(dispatched,1);assert.equal(response.status,503);
- assert.equal((await response.json()).uncertain,true,'Genuine post-dispatch waste faults preserve safe replay advice');
+for (const family of ['waste', 'waste-shortcuts']) {
+  let dispatched = 0;
+  const wrapped = modules.authorization.withCompanyRoute(family, async () => {
+    dispatched++;
+    throw new Error('Fictional post-dispatch failure');
+  });
+  const response = await wrapped(req('waste', 'POST', { companyId: 'company-a' }, cookies.owner));
+  assert.equal(dispatched, 1);
+  assert.equal(response.status, 503);
+  assert.equal(
+    (await response.json()).uncertain,
+    true,
+    'Genuine post-dispatch waste faults preserve safe replay advice',
+  );
 }
-console.log('PASS: F2 committed credentials, malformed input, pre-dispatch outages and waste uncertainty');
+console.log(
+  'PASS: F2 committed credentials, malformed input, pre-dispatch outages and waste uncertainty',
+);
 // F6: unexpected failures must not expose D1, crypto, or runtime details.
-for(const [family,body,query,fallback] of [
- ['auth',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)},'UPDATE auth_fence','Authentication unavailable.'],
- ['register',{companyId:'company-a',action:'token'},'INSERT INTO register_settings','Could not save settings.'],
- ['automation',{companyId:'company-a',action:'scheduler'},'INSERT INTO automation_settings','Could not update automation.'],
- ['clover',{companyId:'company-a',action:'disconnect'},'DELETE FROM clover_connections','Clover request failed.'],
- ['sales',{companyId:'company-a',action:'removeMapping',mappingKey:'missing'},'DELETE FROM register_mappings','Could not save sales.'],
- ['register/ingest',{},'SELECT company_id FROM register_settings','Could not import sales.']
-]){
- failingQuery=query;
- const template=req(family,'POST',body,cookies.owner,family==='register/ingest'?{Authorization:'Bearer fictional-bridge-token'}:{});
- const response=await modules[family].POST(family==='register/ingest'?new Request(template.url+'?companyId=company-a',template):template);
- failingQuery=undefined;
- assert.equal(response.status,family==='register/ingest'?422:400);
- assert.equal((await response.json()).error,fallback,'F6 '+family+' hides unexpected internal error details');
+for (const [family, body, query, fallback] of [
+  [
+    'auth',
+    { action: 'signin', email: accounts.owner.email, password: passwords.get(accounts.owner.id) },
+    'UPDATE auth_fence',
+    'Authentication unavailable.',
+  ],
+  [
+    'register',
+    { companyId: 'company-a', action: 'token' },
+    'INSERT INTO register_settings',
+    'Could not save settings.',
+  ],
+  [
+    'automation',
+    { companyId: 'company-a', action: 'scheduler' },
+    'INSERT INTO automation_settings',
+    'Could not update automation.',
+  ],
+  [
+    'clover',
+    { companyId: 'company-a', action: 'disconnect' },
+    'DELETE FROM clover_connections',
+    'Clover request failed.',
+  ],
+  [
+    'sales',
+    { companyId: 'company-a', action: 'removeMapping', mappingKey: 'missing' },
+    'DELETE FROM register_mappings',
+    'Could not save sales.',
+  ],
+  ['register/ingest', {}, 'SELECT company_id FROM register_settings', 'Could not import sales.'],
+]) {
+  failingQuery = query;
+  const template = req(
+    family,
+    'POST',
+    body,
+    cookies.owner,
+    family === 'register/ingest' ? { Authorization: 'Bearer fictional-bridge-token' } : {},
+  );
+  const response = await modules[family].POST(
+    family === 'register/ingest'
+      ? new Request(template.url + '?companyId=company-a', template)
+      : template,
+  );
+  failingQuery = undefined;
+  assert.equal(response.status, family === 'register/ingest' ? 422 : 400);
+  assert.equal(
+    (await response.json()).error,
+    fallback,
+    'F6 ' + family + ' hides unexpected internal error details',
+  );
 }
-const originalDigest=crypto.subtle.digest;
-try{
- crypto.subtle.digest=async function(algorithm,data){
-  if(data.byteLength===72)throw new DOMException('Fictional crypto internal key material','OperationError');
-  return originalDigest.call(this,algorithm,data);
- };
- const failed=await call('register','POST',{companyId:'company-a',action:'token'},cookies.owner);
- assert.equal(failed.status,400);assert.equal((await failed.json()).error,'Could not save settings.');
-}finally{crypto.subtle.digest=originalDigest;}
-const cryptoKey=globalThis.m2env.AUTH_ENCRYPTION_KEY;
-globalThis.m2env.AUTH_ENCRYPTION_KEY='ab';
-const cryptoFailure=await call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)});
-globalThis.m2env.AUTH_ENCRYPTION_KEY=cryptoKey;
-assert.equal((await cryptoFailure.json()).error,'Authentication encryption is not configured.','Deliberately authored setup message remains unchanged');
-assert.equal((await(await call('register','POST',{companyId:'company-a',action:'save'},cookies.owner)).json()).error,'Enter register settings.');
-assert.equal((await(await call('sales','POST',{companyId:'company-a',action:'import'},cookies.owner)).json()).error,'Enter a unique sales reference and quantities.');
-assert.equal((await(await call('automation','POST',{companyId:'company-a',action:'vendor'},cookies.owner)).json()).error,'Vendor details required.');
+const originalDigest = crypto.subtle.digest;
+try {
+  crypto.subtle.digest = async function (algorithm, data) {
+    if (data.byteLength === 72)
+      throw new DOMException('Fictional crypto internal key material', 'OperationError');
+    return originalDigest.call(this, algorithm, data);
+  };
+  const failed = await call(
+    'register',
+    'POST',
+    { companyId: 'company-a', action: 'token' },
+    cookies.owner,
+  );
+  assert.equal(failed.status, 400);
+  assert.equal((await failed.json()).error, 'Could not save settings.');
+} finally {
+  crypto.subtle.digest = originalDigest;
+}
+const cryptoKey = globalThis.m2env.AUTH_ENCRYPTION_KEY;
+globalThis.m2env.AUTH_ENCRYPTION_KEY = 'ab';
+const cryptoFailure = await call('auth', 'POST', {
+  action: 'signin',
+  email: accounts.owner.email,
+  password: passwords.get(accounts.owner.id),
+});
+globalThis.m2env.AUTH_ENCRYPTION_KEY = cryptoKey;
+assert.equal(
+  (await cryptoFailure.json()).error,
+  'Authentication encryption is not configured.',
+  'Deliberately authored setup message remains unchanged',
+);
+assert.equal(
+  (
+    await (
+      await call('register', 'POST', { companyId: 'company-a', action: 'save' }, cookies.owner)
+    ).json()
+  ).error,
+  'Enter register settings.',
+);
+assert.equal(
+  (
+    await (
+      await call('sales', 'POST', { companyId: 'company-a', action: 'import' }, cookies.owner)
+    ).json()
+  ).error,
+  'Enter a unique sales reference and quantities.',
+);
+assert.equal(
+  (
+    await (
+      await call('automation', 'POST', { companyId: 'company-a', action: 'vendor' }, cookies.owner)
+    ).json()
+  ).error,
+  'Vendor details required.',
+);
 console.log('PASS: F6 six API error boundaries hide internals and preserve intended messages');
 // F8: distinguish invalid identity from unavailable verification without caching.
-const savedSessions=sql.prepare('SELECT * FROM auth_sessions ORDER BY hash').all();
-for(const fault of [503,429,'timeout','malformed']){
- providerFault=fault;
- for(const family of ['companies','members','waste']){
-  const response=await call(family,'GET',null,cookies.owner);
-  assert.equal(response.status,503,'F8 '+family+' unavailable verification is not session expiry: '+fault);
-  const body=await response.json();assert.ok(!('uncertain' in body));
-  assert.equal(body.error,'Authentication is temporarily unavailable. Please retry.');
-  assert.match(response.headers.get('Cache-Control'),/no-store/);
- }
- const response=await call('auth','POST',{action:'reauthenticate',password:passwords.get(accounts.owner.id)},cookies.owner);
- assert.equal(response.status,503,'Auth API also distinguishes unavailable session verification');
- providerFault=undefined;
+const savedSessions = sql.prepare('SELECT * FROM auth_sessions ORDER BY hash').all();
+for (const fault of [503, 429, 'timeout', 'malformed']) {
+  providerFault = fault;
+  for (const family of ['companies', 'members', 'waste']) {
+    const response = await call(family, 'GET', null, cookies.owner);
+    assert.equal(
+      response.status,
+      503,
+      'F8 ' + family + ' unavailable verification is not session expiry: ' + fault,
+    );
+    const body = await response.json();
+    assert.ok(!('uncertain' in body));
+    assert.equal(body.error, 'Authentication is temporarily unavailable. Please retry.');
+    assert.match(response.headers.get('Cache-Control'), /no-store/);
+  }
+  const response = await call(
+    'auth',
+    'POST',
+    { action: 'reauthenticate', password: passwords.get(accounts.owner.id) },
+    cookies.owner,
+  );
+  assert.equal(
+    response.status,
+    503,
+    'Auth API also distinguishes unavailable session verification',
+  );
+  providerFault = undefined;
 }
-assert.deepEqual(sql.prepare('SELECT * FROM auth_sessions ORDER BY hash').all(),savedSessions,'Outages preserve sessions for recovery');
+assert.deepEqual(
+  sql.prepare('SELECT * FROM auth_sessions ORDER BY hash').all(),
+  savedSessions,
+  'Outages preserve sessions for recovery',
+);
 // A request without any session cookie is anonymous, even when origin configuration is unusable;
 // a present session that cannot be verified still fails closed.
-for(const origin of ['http://127.0.0.1:5181',undefined]){
- if(origin)globalThis.m2env.APP_ORIGIN=origin;else delete globalThis.m2env.APP_ORIGIN;
- for(const family of ['companies','members','waste'])assert.equal((await call(family,'GET',null)).status,401,'Anonymous is not an outage: '+family+' '+origin);
- assert.equal((await call('companies','GET',null,cookies.owner)).status,503,'An unverifiable present session is unavailable: '+origin);
+for (const origin of ['http://127.0.0.1:5181', undefined]) {
+  if (origin) globalThis.m2env.APP_ORIGIN = origin;
+  else delete globalThis.m2env.APP_ORIGIN;
+  for (const family of ['companies', 'members', 'waste'])
+    assert.equal(
+      (await call(family, 'GET', null)).status,
+      401,
+      'Anonymous is not an outage: ' + family + ' ' + origin,
+    );
+  assert.equal(
+    (await call('companies', 'GET', null, cookies.owner)).status,
+    503,
+    'An unverifiable present session is unavailable: ' + origin,
+  );
 }
-globalThis.m2env.APP_ORIGIN='https://test';
-assert.equal((await call('companies','GET',null)).status,401);assert.equal((await call('companies','GET',null,cookies.owner)).status,200);
-for(const query of ['SELECT s.* FROM auth_sessions','SELECT s.hash FROM auth_sessions']){
- failingSessionQuery=query;
- const response=await call('companies','GET',null,cookies.owner);failingSessionQuery=undefined;
- assert.equal(response.status,503,'Both D1 session reads distinguish outages');
- assert.equal((await response.json()).error,'Authentication is temporarily unavailable. Please retry.');
+globalThis.m2env.APP_ORIGIN = 'https://test';
+assert.equal((await call('companies', 'GET', null)).status, 401);
+assert.equal((await call('companies', 'GET', null, cookies.owner)).status, 200);
+for (const query of ['SELECT s.* FROM auth_sessions', 'SELECT s.hash FROM auth_sessions']) {
+  failingSessionQuery = query;
+  const response = await call('companies', 'GET', null, cookies.owner);
+  failingSessionQuery = undefined;
+  assert.equal(response.status, 503, 'Both D1 session reads distinguish outages');
+  assert.equal(
+    (await response.json()).error,
+    'Authentication is temporarily unavailable. Please retry.',
+  );
 }
-for(const status of [401,403]){
- providerFault=status;assert.equal((await call('companies','GET',null,cookies.owner)).status,401,'Provider rejection remains invalid identity');providerFault=undefined;
+for (const status of [401, 403]) {
+  providerFault = status;
+  assert.equal(
+    (await call('companies', 'GET', null, cookies.owner)).status,
+    401,
+    'Provider rejection remains invalid identity',
+  );
+  providerFault = undefined;
 }
-const verifications=providerRequests.get('/auth/v1/user')||0;
-assert.equal((await call('companies','GET',null,cookies.owner)).status,200);
-const afterFirst=providerRequests.get('/auth/v1/user');assert.ok(afterFirst>verifications);
-assert.equal((await call('companies','GET',null,cookies.owner)).status,200);
-assert.ok(providerRequests.get('/auth/v1/user')>afterFirst,'Every request still reaches the provider');
+const verifications = providerRequests.get('/auth/v1/user') || 0;
+assert.equal((await call('companies', 'GET', null, cookies.owner)).status, 200);
+const afterFirst = providerRequests.get('/auth/v1/user');
+assert.ok(afterFirst > verifications);
+assert.equal((await call('companies', 'GET', null, cookies.owner)).status, 200);
+assert.ok(
+  providerRequests.get('/auth/v1/user') > afterFirst,
+  'Every request still reaches the provider',
+);
 console.log('PASS: F8 provider/D1 outages, invalid sessions, recovery and uncached verification');
-const families=['workspace','inventory','sales','register','clover','payments','automation','members'];
-const actions={workspace:['product','prepare','remove'],inventory:['settings','count','receive','use','waste','incoming','configureExact','publishRecipeExact','createStockExact','packageStockExact','movementExact','countExact','saveRecipeDraftExact','activateRecipeExact','archiveRecipeExact','saveModifierDraftExact','activateModifierExact','archiveModifierExact'],sales:['recipe','import','mapping','removeMapping'],register:['save','token','revoke'],clover:['connect','disconnect','menu'],payments:['setup','default','remove','verify'],automation:['vendor','policy','test','run','approve','reconcile','dismiss','received','scheduler','pause'],members:['invite','role','remove','transfer','revoke','cancelTransfer']};
-for(const family of families){
- assert.equal((await call(family)).status,401,family+' anonymous read');
- assert.equal((await call(family,'POST',{companyId:'company-a'})).status,401,family+' anonymous write');
- assert.equal((await call(family,'GET',null,cookies.other)).status,403,family+' cross-company read');
- for(const action of actions[family]){
-   const body={companyId:'company-a',action,...(family==='members'?{email:'new@example.test',role:'employee',userId:accounts.employee.id,id:crypto.randomUUID()}: {})};
-   assert.equal((await call(family,'POST',body,cookies.other)).status,403,family+' cross-company '+action);
-   assert.equal((await call(family,'POST',body,cookies.owner,{Origin:'https://evil.test'})).status,403,family+' CSRF '+action);
-   // Members parse input before permission checks; use a valid role mutation below.
-   if(family!=='members')assert.equal((await call(family,'POST',body,cookies.employee)).status,403,family+' employee '+action);
- }
+const families = [
+  'workspace',
+  'inventory',
+  'sales',
+  'register',
+  'clover',
+  'payments',
+  'automation',
+  'members',
+];
+const actions = {
+  workspace: ['product', 'prepare', 'remove'],
+  inventory: [
+    'settings',
+    'count',
+    'receive',
+    'use',
+    'waste',
+    'incoming',
+    'configureExact',
+    'publishRecipeExact',
+    'createStockExact',
+    'packageStockExact',
+    'movementExact',
+    'countExact',
+    'saveRecipeDraftExact',
+    'activateRecipeExact',
+    'archiveRecipeExact',
+    'saveModifierDraftExact',
+    'activateModifierExact',
+    'archiveModifierExact',
+  ],
+  sales: ['recipe', 'import', 'mapping', 'removeMapping'],
+  register: ['save', 'token', 'revoke'],
+  clover: ['connect', 'disconnect', 'menu'],
+  payments: ['setup', 'default', 'remove', 'verify'],
+  automation: [
+    'vendor',
+    'policy',
+    'test',
+    'run',
+    'approve',
+    'reconcile',
+    'dismiss',
+    'received',
+    'scheduler',
+    'pause',
+  ],
+  members: ['invite', 'role', 'remove', 'transfer', 'revoke', 'cancelTransfer'],
+};
+for (const family of families) {
+  assert.equal((await call(family)).status, 401, family + ' anonymous read');
+  assert.equal(
+    (await call(family, 'POST', { companyId: 'company-a' })).status,
+    401,
+    family + ' anonymous write',
+  );
+  assert.equal(
+    (await call(family, 'GET', null, cookies.other)).status,
+    403,
+    family + ' cross-company read',
+  );
+  for (const action of actions[family]) {
+    const body = {
+      companyId: 'company-a',
+      action,
+      ...(family === 'members'
+        ? {
+            email: 'new@example.test',
+            role: 'employee',
+            userId: accounts.employee.id,
+            id: crypto.randomUUID(),
+          }
+        : {}),
+    };
+    assert.equal(
+      (await call(family, 'POST', body, cookies.other)).status,
+      403,
+      family + ' cross-company ' + action,
+    );
+    assert.equal(
+      (await call(family, 'POST', body, cookies.owner, { Origin: 'https://evil.test' })).status,
+      403,
+      family + ' CSRF ' + action,
+    );
+    // Members parse input before permission checks; use a valid role mutation below.
+    if (family !== 'members')
+      assert.equal(
+        (await call(family, 'POST', body, cookies.employee)).status,
+        403,
+        family + ' employee ' + action,
+      );
+  }
 }
 // Membership actions require complete inputs before permission evaluation.
-for(const role of ['manager','employee','other'])assert.equal((await call('members','POST',{companyId:'company-a',action:'remove',userId:accounts.employee.id},cookies[role])).status,403);
-for(const family of ['companies',...families]){
- const r=await call(family,'POST',{action:family==='companies'?'create':'pause',id:crypto.randomUUID(),name:'No',companyId:'company-a'},cookies.owner,{Origin:''});assert.equal(r.status,403,'Missing Origin: '+family);
+for (const role of ['manager', 'employee', 'other'])
+  assert.equal(
+    (
+      await call(
+        'members',
+        'POST',
+        { companyId: 'company-a', action: 'remove', userId: accounts.employee.id },
+        cookies[role],
+      )
+    ).status,
+    403,
+  );
+for (const family of ['companies', ...families]) {
+  const r = await call(
+    family,
+    'POST',
+    {
+      action: family === 'companies' ? 'create' : 'pause',
+      id: crypto.randomUUID(),
+      name: 'No',
+      companyId: 'company-a',
+    },
+    cookies.owner,
+    { Origin: '' },
+  );
+  assert.equal(r.status, 403, 'Missing Origin: ' + family);
 }
-for(const role of ['owner','manager','employee']){
- for(const family of ['workspace','inventory','sales','register'])assert.equal((await call(family,'GET',null,cookies[role])).status,200,role+' reads '+family);
- for(const family of ['clover','payments'])assert.equal((await call(family,'GET',null,cookies[role])).status,role==='owner'?200:403,role+' reads '+family);
- assert.equal((await call('automation','GET',null,cookies[role])).status,role==='employee'?403:200);
+for (const role of ['owner', 'manager', 'employee']) {
+  for (const family of ['workspace', 'inventory', 'sales', 'register'])
+    assert.equal(
+      (await call(family, 'GET', null, cookies[role])).status,
+      200,
+      role + ' reads ' + family,
+    );
+  for (const family of ['clover', 'payments'])
+    assert.equal(
+      (await call(family, 'GET', null, cookies[role])).status,
+      role === 'owner' ? 200 : 403,
+      role + ' reads ' + family,
+    );
+  assert.equal(
+    (await call('automation', 'GET', null, cookies[role])).status,
+    role === 'employee' ? 403 : 200,
+  );
 }
-const employeeRecipes=await(await call('sales','GET',null,cookies.employee)).json();
-assert.deepEqual(employeeRecipes.imports,[],'Employees cannot read legacy import references.');
-assert.deepEqual(employeeRecipes.mappings,[],'Employees cannot read register mapping identifiers.');
-const managerRecipes=await(await call('sales','GET',null,cookies.manager)).json();
-assert.equal(managerRecipes.imports[0].reference,'fictional-legacy-reference','Managers retain legacy import review data.');
-assert.equal(managerRecipes.mappings[0].key,'fictional-register-reference','Managers retain register mapping review data.');
-assert.equal((await call('sales/events')).status,401,'Sales event review denies anonymous reads.');
-assert.equal((await call('sales/events','GET',null,cookies.other)).status,403,'Sales event review denies wrong-company reads.');
-assert.equal((await call('sales/events','POST',{companyId:'company-a',action:'dismiss',eventKey:'missing',reason:'reviewed'},cookies.employee)).status,403,'Employees cannot mutate sales events.');
-assert.equal((await call('sales/events','POST',{companyId:'company-b',action:'dismiss',eventKey:'missing',reason:'reviewed'},cookies.manager)).status,403,'Managers cannot mutate another company’s sales events.');
-assert.equal((await call('sales/events','GET',null,cookies.employee)).status,200,'Employees may read safe sales status while the gate is dark.');
-assert.equal((await(await call('inventory','GET',null,cookies.owner)).json()).exactEnabled,false,'Exact inventory is dark by default.');
-assert.equal((await call('replenishment/review')).status,401,'Anonymous A8 review is denied.');
-assert.equal((await call('replenishment/review','GET',null,cookies.other)).status,403,'Wrong-company A8 review is denied.');
-assert.equal((await call('replenishment/review','GET',null,cookies.employee)).status,403,'Employees cannot inspect purchasing proposals.');
-assert.equal((await call('replenishment/review','GET',null,cookies.manager)).status,404,'A8 review stays dark with exact preview off.');
-const a8Create={action:'create',companyId:'company-a',productId:'milk',proposalId:crypto.randomUUID(),createId:crypto.randomUUID()};
-const a8Edit={action:'edit',companyId:'company-a',proposalId:'missing-review',expectedRevision:1,changeId:crypto.randomUUID(),packs:'1',reason:'Fictional manager review'};
-const a8Cancel={action:'cancel',companyId:'company-a',proposalId:'missing-review',expectedRevision:1,changeId:crypto.randomUUID(),reason:'Fictional manager review'};
-assert.equal((await call('replenishment/proposals')).status,401,'Anonymous saved proposal reads are denied.');
-assert.equal((await call('replenishment/proposals','GET',null,cookies.other)).status,403,'Wrong-company saved proposal reads are denied.');
-assert.equal((await call('replenishment/proposals','GET',null,cookies.employee)).status,403,'Employees cannot inspect saved proposals.');
-assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.employee)).status,403,'Employees cannot save proposals.');
-assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.other)).status,403,'Wrong-company proposal saves are denied.');
-for(const body of [a8Edit,a8Cancel]){
- assert.equal((await call('replenishment/proposals','POST',body,cookies.employee)).status,403,'Employees cannot change saved reviews.');
- assert.equal((await call('replenishment/proposals','POST',body,cookies.other)).status,403,'Wrong-company review changes are denied.');
+const employeeRecipes = await (await call('sales', 'GET', null, cookies.employee)).json();
+assert.deepEqual(employeeRecipes.imports, [], 'Employees cannot read legacy import references.');
+assert.deepEqual(
+  employeeRecipes.mappings,
+  [],
+  'Employees cannot read register mapping identifiers.',
+);
+const managerRecipes = await (await call('sales', 'GET', null, cookies.manager)).json();
+assert.equal(
+  managerRecipes.imports[0].reference,
+  'fictional-legacy-reference',
+  'Managers retain legacy import review data.',
+);
+assert.equal(
+  managerRecipes.mappings[0].key,
+  'fictional-register-reference',
+  'Managers retain register mapping review data.',
+);
+assert.equal(
+  (await call('sales/events')).status,
+  401,
+  'Sales event review denies anonymous reads.',
+);
+assert.equal(
+  (await call('sales/events', 'GET', null, cookies.other)).status,
+  403,
+  'Sales event review denies wrong-company reads.',
+);
+assert.equal(
+  (
+    await call(
+      'sales/events',
+      'POST',
+      { companyId: 'company-a', action: 'dismiss', eventKey: 'missing', reason: 'reviewed' },
+      cookies.employee,
+    )
+  ).status,
+  403,
+  'Employees cannot mutate sales events.',
+);
+assert.equal(
+  (
+    await call(
+      'sales/events',
+      'POST',
+      { companyId: 'company-b', action: 'dismiss', eventKey: 'missing', reason: 'reviewed' },
+      cookies.manager,
+    )
+  ).status,
+  403,
+  'Managers cannot mutate another company’s sales events.',
+);
+assert.equal(
+  (await call('sales/events', 'GET', null, cookies.employee)).status,
+  200,
+  'Employees may read safe sales status while the gate is dark.',
+);
+assert.equal(
+  (await (await call('inventory', 'GET', null, cookies.owner)).json()).exactEnabled,
+  false,
+  'Exact inventory is dark by default.',
+);
+assert.equal((await call('replenishment/review')).status, 401, 'Anonymous A8 review is denied.');
+assert.equal(
+  (await call('replenishment/review', 'GET', null, cookies.other)).status,
+  403,
+  'Wrong-company A8 review is denied.',
+);
+assert.equal(
+  (await call('replenishment/review', 'GET', null, cookies.employee)).status,
+  403,
+  'Employees cannot inspect purchasing proposals.',
+);
+assert.equal(
+  (await call('replenishment/review', 'GET', null, cookies.manager)).status,
+  404,
+  'A8 review stays dark with exact preview off.',
+);
+const a8Create = {
+  action: 'create',
+  companyId: 'company-a',
+  productId: 'milk',
+  proposalId: crypto.randomUUID(),
+  createId: crypto.randomUUID(),
+};
+const a8Edit = {
+  action: 'edit',
+  companyId: 'company-a',
+  proposalId: 'missing-review',
+  expectedRevision: 1,
+  changeId: crypto.randomUUID(),
+  packs: '1',
+  reason: 'Fictional manager review',
+};
+const a8Cancel = {
+  action: 'cancel',
+  companyId: 'company-a',
+  proposalId: 'missing-review',
+  expectedRevision: 1,
+  changeId: crypto.randomUUID(),
+  reason: 'Fictional manager review',
+};
+assert.equal(
+  (await call('replenishment/proposals')).status,
+  401,
+  'Anonymous saved proposal reads are denied.',
+);
+assert.equal(
+  (await call('replenishment/proposals', 'GET', null, cookies.other)).status,
+  403,
+  'Wrong-company saved proposal reads are denied.',
+);
+assert.equal(
+  (await call('replenishment/proposals', 'GET', null, cookies.employee)).status,
+  403,
+  'Employees cannot inspect saved proposals.',
+);
+assert.equal(
+  (await call('replenishment/proposals', 'POST', a8Create, cookies.employee)).status,
+  403,
+  'Employees cannot save proposals.',
+);
+assert.equal(
+  (await call('replenishment/proposals', 'POST', a8Create, cookies.other)).status,
+  403,
+  'Wrong-company proposal saves are denied.',
+);
+for (const body of [a8Edit, a8Cancel]) {
+  assert.equal(
+    (await call('replenishment/proposals', 'POST', body, cookies.employee)).status,
+    403,
+    'Employees cannot change saved reviews.',
+  );
+  assert.equal(
+    (await call('replenishment/proposals', 'POST', body, cookies.other)).status,
+    403,
+    'Wrong-company review changes are denied.',
+  );
 }
-assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.manager,{Origin:'https://evil.test'})).status,403,'Proposal writes reject cross-site origins.');
-assert.equal((await call('replenishment/proposals','GET',null,cookies.manager)).status,404,'Saved proposals stay dark with exact preview off.');
-globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
-assert.equal(modules.authlib.appOrigin(),'https://test');
-globalThis.m2env.APP_ORIGIN='http://127.0.0.1:5177';assert.throws(()=>modules.authlib.appOrigin(),/Invalid application origin/);
-globalThis.m2env.PANTRACK_USABILITY_PREVIEW='enabled';assert.equal(modules.authlib.appOrigin(),'http://127.0.0.1:5177');
-globalThis.m2env.APP_ORIGIN='http://192.168.1.1:5177';assert.throws(()=>modules.authlib.appOrigin(),/Invalid application origin/);
-delete globalThis.m2env.PANTRACK_USABILITY_PREVIEW;globalThis.m2env.APP_ORIGIN='https://test';
-const exactConfigure={companyId:'company-a',action:'configureExact',productId:'milk',operationId:'config-milk',stockUnit:{kind:'curated',id:'mL'},purchaseUnitLabel:'carton',purchaseAmount:'1000',openingAmount:'10',effectiveAt:'2026-01-01T00:00:00Z'};
-assert.equal((await call('inventory','POST',exactConfigure,cookies.employee)).status,403,'Employees cannot mutate exact inventory.');
-assert.equal((await call('inventory','POST',{...exactConfigure,companyId:'company-b'},cookies.manager)).status,403,'Managers cannot mutate another company.');
-assert.equal((await call('inventory','POST',exactConfigure,cookies.manager)).status,200,'Managers can classify company inventory when the preview is enabled.');
-const stockBody={companyId:'company-a',action:'createStockExact',productId:crypto.randomUUID(),operationId:crypto.randomUUID(),name:'New fictional croissant',stockUnit:{kind:'curated',id:'each'},purchaseUnitLabel:'box',purchaseAmount:'6',openingAmount:'12',effectiveAt:'2026-01-01T00:00:00Z'};
-for(const cookie of [undefined,cookies.other,cookies.employee])assert.equal((await call('inventory','POST',stockBody,cookie)).status,cookie?403:401);
-assert.equal((await call('inventory','POST',{...stockBody,companyId:'company-b'},cookies.manager)).status,403);
-assert.equal((await call('inventory','POST',stockBody,cookies.manager)).status,200);
-assert.equal((await call('inventory','POST',stockBody,cookies.manager)).status,200);
-assert.equal((await call('workspace','POST',{companyId:'company-a',action:'prepare',id:crypto.randomUUID(),items:[{id:stockBody.productId,quantity:1}]},cookies.owner)).status,400,'Stock items with unknown prices and supplier details cannot become purchasing orders.');
-const packageBody={companyId:'company-a',action:'packageStockExact',productId:stockBody.productId,operationId:crypto.randomUUID(),configId:stockBody.operationId,expectedVersion:1,movement:'receive',quantity:{packages:'2',remainder:'0',remainderUnitId:'each'},effectiveAt:'2026-02-01T00:00:00Z',note:''};
-for(const cookie of [undefined,cookies.other,cookies.employee])assert.equal((await call('inventory','POST',packageBody,cookie)).status,cookie?403:401);
-assert.equal((await call('inventory','POST',{...packageBody,companyId:'company-b'},cookies.manager)).status,403);
-assert.equal((await call('inventory','POST',packageBody,cookies.manager,{Origin:'https://evil.test'})).status,403);
-assert.equal((await call('inventory','POST',packageBody,cookies.manager)).status,200);
-assert.equal((await call('inventory','POST',packageBody,cookies.manager)).status,200);
-assert.equal(sql.prepare('SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id=? AND product_id=?').get('company-a',stockBody.productId).on_hand_minor,'24');
-assert.equal((await call('inventory','POST',{...packageBody,quantity:{...packageBody.quantity,packages:'3'}},cookies.manager)).status,409);
-const packageConfig={companyId:'company-a',action:'configureExact',productId:stockBody.productId,operationId:crypto.randomUUID(),expectedConfigId:stockBody.operationId,stockUnit:{kind:'curated',id:'each'},purchaseUnitLabel:'box',purchaseAmount:'8',purchaseContentUnitId:'each',effectiveAt:'2026-03-01T00:00:00Z'};
-assert.equal((await call('inventory','POST',{...packageConfig,purchaseContentUnitId:'mL'},cookies.manager)).status,409,'Package contents cannot cross mass/volume/count dimensions.');
-assert.equal((await call('inventory','POST',packageConfig,cookies.manager)).status,200);
-assert.equal((await call('inventory','POST',packageBody,cookies.manager)).status,200,'A saved package entry confirms after a package edit without using the new size.');
-const publishBody={companyId:'company-a',action:'publishRecipeExact',operationId:'atomic-security',recipeId:crypto.randomUUID(),versionId:crypto.randomUUID(),name:'Atomic milk',expectedActiveVersionId:null,expectedModifiers:{},ingredients:[{productId:'milk',amount:'1',unitId:'mL'}],choices:[],modifiers:[]};
-for(const cookie of [undefined,cookies.other,cookies.employee])assert.equal((await call('inventory','POST',publishBody,cookie)).status,cookie?403:401);
-assert.equal((await call('inventory','POST',{...publishBody,companyId:'company-b'},cookies.manager)).status,403);
-assert.equal((await call('inventory','POST',publishBody,cookies.manager)).status,200);
-assert.equal(sql.prepare("SELECT count(*) AS count FROM security_audit WHERE company_id='company-a' AND action='inventory.succeeded' AND target='configureExact'").get().count,2,'Both stock configurations are audited.');
-assert.equal((await(await call('inventory','GET',null,cookies.employee)).json()).exact.records.length,2,'Employees can read their company exact inventory.');
-const a8Preview=await call('replenishment/review','GET',null,cookies.manager);
-assert.equal(a8Preview.status,200,'Manager may request a read-only A8 review.');
-assert.deepEqual(await a8Preview.json(),{kind:'unavailable',reason:'settings_missing'},'Missing planning settings remain a reviewable unavailable result.');
-const a8Saved=await call('replenishment/proposals','GET',null,cookies.manager);
-assert.equal(a8Saved.status,200,'Manager may list company saved proposals.');
-assert.deepEqual(await a8Saved.json(),{views:[]});
-assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.manager)).status,409,'Missing planning settings cannot create a durable proposal.');
-assert.equal((await call('replenishment/proposals','POST',a8Edit,cookies.manager)).status,404,'Missing proposal cannot be edited.');
-assert.equal((await call('replenishment/proposals','POST',a8Cancel,cookies.manager)).status,404,'Missing proposal cannot be canceled.');
-assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM replenishment_proposal_origins').get().n,0,'Rejected proposal creation writes no origin.');
-const a8Config=sql.prepare("SELECT id,version FROM inventory_config_versions WHERE company_id='company-a' AND product_id='milk' AND status='active'").get();
-const a8Quantity=minor=>({dimension:'volume',minor:String(minor)});
-const a8Settings={target:a8Quantity(20000000),capacity:a8Quantity(10000000000),dailyUse:a8Quantity(1000000),shelfDays:3650,countEveryDays:3650,minimumPacks:'0',orderMultiplePacks:'1',maximumPacks:'5'};
-const a8Now=Date.now(),a8At=new Date(a8Now).toISOString(),a8Success=new Date(a8Now-60000).toISOString();
-sql.prepare(`INSERT INTO replenishment_settings_versions
+assert.equal(
+  (
+    await call('replenishment/proposals', 'POST', a8Create, cookies.manager, {
+      Origin: 'https://evil.test',
+    })
+  ).status,
+  403,
+  'Proposal writes reject cross-site origins.',
+);
+assert.equal(
+  (await call('replenishment/proposals', 'GET', null, cookies.manager)).status,
+  404,
+  'Saved proposals stay dark with exact preview off.',
+);
+globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW = 'enabled';
+assert.equal(modules.authlib.appOrigin(), 'https://test');
+globalThis.m2env.APP_ORIGIN = 'http://127.0.0.1:5177';
+assert.throws(() => modules.authlib.appOrigin(), /Invalid application origin/);
+globalThis.m2env.PANTRACK_USABILITY_PREVIEW = 'enabled';
+assert.equal(modules.authlib.appOrigin(), 'http://127.0.0.1:5177');
+globalThis.m2env.APP_ORIGIN = 'http://192.168.1.1:5177';
+assert.throws(() => modules.authlib.appOrigin(), /Invalid application origin/);
+delete globalThis.m2env.PANTRACK_USABILITY_PREVIEW;
+globalThis.m2env.APP_ORIGIN = 'https://test';
+const exactConfigure = {
+  companyId: 'company-a',
+  action: 'configureExact',
+  productId: 'milk',
+  operationId: 'config-milk',
+  stockUnit: { kind: 'curated', id: 'mL' },
+  purchaseUnitLabel: 'carton',
+  purchaseAmount: '1000',
+  openingAmount: '10',
+  effectiveAt: '2026-01-01T00:00:00Z',
+};
+assert.equal(
+  (await call('inventory', 'POST', exactConfigure, cookies.employee)).status,
+  403,
+  'Employees cannot mutate exact inventory.',
+);
+assert.equal(
+  (await call('inventory', 'POST', { ...exactConfigure, companyId: 'company-b' }, cookies.manager))
+    .status,
+  403,
+  'Managers cannot mutate another company.',
+);
+assert.equal(
+  (await call('inventory', 'POST', exactConfigure, cookies.manager)).status,
+  200,
+  'Managers can classify company inventory when the preview is enabled.',
+);
+const stockBody = {
+  companyId: 'company-a',
+  action: 'createStockExact',
+  productId: crypto.randomUUID(),
+  operationId: crypto.randomUUID(),
+  name: 'New fictional croissant',
+  stockUnit: { kind: 'curated', id: 'each' },
+  purchaseUnitLabel: 'box',
+  purchaseAmount: '6',
+  openingAmount: '12',
+  effectiveAt: '2026-01-01T00:00:00Z',
+};
+for (const cookie of [undefined, cookies.other, cookies.employee])
+  assert.equal((await call('inventory', 'POST', stockBody, cookie)).status, cookie ? 403 : 401);
+assert.equal(
+  (await call('inventory', 'POST', { ...stockBody, companyId: 'company-b' }, cookies.manager))
+    .status,
+  403,
+);
+assert.equal((await call('inventory', 'POST', stockBody, cookies.manager)).status, 200);
+assert.equal((await call('inventory', 'POST', stockBody, cookies.manager)).status, 200);
+assert.equal(
+  (
+    await call(
+      'workspace',
+      'POST',
+      {
+        companyId: 'company-a',
+        action: 'prepare',
+        id: crypto.randomUUID(),
+        items: [{ id: stockBody.productId, quantity: 1 }],
+      },
+      cookies.owner,
+    )
+  ).status,
+  400,
+  'Stock items with unknown prices and supplier details cannot become purchasing orders.',
+);
+const packageBody = {
+  companyId: 'company-a',
+  action: 'packageStockExact',
+  productId: stockBody.productId,
+  operationId: crypto.randomUUID(),
+  configId: stockBody.operationId,
+  expectedVersion: 1,
+  movement: 'receive',
+  quantity: { packages: '2', remainder: '0', remainderUnitId: 'each' },
+  effectiveAt: '2026-02-01T00:00:00Z',
+  note: '',
+};
+for (const cookie of [undefined, cookies.other, cookies.employee])
+  assert.equal((await call('inventory', 'POST', packageBody, cookie)).status, cookie ? 403 : 401);
+assert.equal(
+  (await call('inventory', 'POST', { ...packageBody, companyId: 'company-b' }, cookies.manager))
+    .status,
+  403,
+);
+assert.equal(
+  (await call('inventory', 'POST', packageBody, cookies.manager, { Origin: 'https://evil.test' }))
+    .status,
+  403,
+);
+assert.equal((await call('inventory', 'POST', packageBody, cookies.manager)).status, 200);
+assert.equal((await call('inventory', 'POST', packageBody, cookies.manager)).status, 200);
+assert.equal(
+  sql
+    .prepare(
+      'SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id=? AND product_id=?',
+    )
+    .get('company-a', stockBody.productId).on_hand_minor,
+  '24',
+);
+assert.equal(
+  (
+    await call(
+      'inventory',
+      'POST',
+      { ...packageBody, quantity: { ...packageBody.quantity, packages: '3' } },
+      cookies.manager,
+    )
+  ).status,
+  409,
+);
+const packageConfig = {
+  companyId: 'company-a',
+  action: 'configureExact',
+  productId: stockBody.productId,
+  operationId: crypto.randomUUID(),
+  expectedConfigId: stockBody.operationId,
+  stockUnit: { kind: 'curated', id: 'each' },
+  purchaseUnitLabel: 'box',
+  purchaseAmount: '8',
+  purchaseContentUnitId: 'each',
+  effectiveAt: '2026-03-01T00:00:00Z',
+};
+assert.equal(
+  (
+    await call(
+      'inventory',
+      'POST',
+      { ...packageConfig, purchaseContentUnitId: 'mL' },
+      cookies.manager,
+    )
+  ).status,
+  409,
+  'Package contents cannot cross mass/volume/count dimensions.',
+);
+assert.equal((await call('inventory', 'POST', packageConfig, cookies.manager)).status, 200);
+assert.equal(
+  (await call('inventory', 'POST', packageBody, cookies.manager)).status,
+  200,
+  'A saved package entry confirms after a package edit without using the new size.',
+);
+const publishBody = {
+  companyId: 'company-a',
+  action: 'publishRecipeExact',
+  operationId: 'atomic-security',
+  recipeId: crypto.randomUUID(),
+  versionId: crypto.randomUUID(),
+  name: 'Atomic milk',
+  expectedActiveVersionId: null,
+  expectedModifiers: {},
+  ingredients: [{ productId: 'milk', amount: '1', unitId: 'mL' }],
+  choices: [],
+  modifiers: [],
+};
+for (const cookie of [undefined, cookies.other, cookies.employee])
+  assert.equal((await call('inventory', 'POST', publishBody, cookie)).status, cookie ? 403 : 401);
+assert.equal(
+  (await call('inventory', 'POST', { ...publishBody, companyId: 'company-b' }, cookies.manager))
+    .status,
+  403,
+);
+assert.equal((await call('inventory', 'POST', publishBody, cookies.manager)).status, 200);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT count(*) AS count FROM security_audit WHERE company_id='company-a' AND action='inventory.succeeded' AND target='configureExact'",
+    )
+    .get().count,
+  2,
+  'Both stock configurations are audited.',
+);
+assert.equal(
+  (await (await call('inventory', 'GET', null, cookies.employee)).json()).exact.records.length,
+  2,
+  'Employees can read their company exact inventory.',
+);
+const a8Preview = await call('replenishment/review', 'GET', null, cookies.manager);
+assert.equal(a8Preview.status, 200, 'Manager may request a read-only A8 review.');
+assert.deepEqual(
+  await a8Preview.json(),
+  { kind: 'unavailable', reason: 'settings_missing' },
+  'Missing planning settings remain a reviewable unavailable result.',
+);
+const a8Saved = await call('replenishment/proposals', 'GET', null, cookies.manager);
+assert.equal(a8Saved.status, 200, 'Manager may list company saved proposals.');
+assert.deepEqual(await a8Saved.json(), { views: [] });
+assert.equal(
+  (await call('replenishment/proposals', 'POST', a8Create, cookies.manager)).status,
+  409,
+  'Missing planning settings cannot create a durable proposal.',
+);
+assert.equal(
+  (await call('replenishment/proposals', 'POST', a8Edit, cookies.manager)).status,
+  404,
+  'Missing proposal cannot be edited.',
+);
+assert.equal(
+  (await call('replenishment/proposals', 'POST', a8Cancel, cookies.manager)).status,
+  404,
+  'Missing proposal cannot be canceled.',
+);
+assert.equal(
+  sql.prepare('SELECT COUNT(*) AS n FROM replenishment_proposal_origins').get().n,
+  0,
+  'Rejected proposal creation writes no origin.',
+);
+const a8Config = sql
+  .prepare(
+    "SELECT id,version FROM inventory_config_versions WHERE company_id='company-a' AND product_id='milk' AND status='active'",
+  )
+  .get();
+const a8Quantity = (minor) => ({ dimension: 'volume', minor: String(minor) });
+const a8Settings = {
+  target: a8Quantity(20000000),
+  capacity: a8Quantity(10000000000),
+  dailyUse: a8Quantity(1000000),
+  shelfDays: 3650,
+  countEveryDays: 3650,
+  minimumPacks: '0',
+  orderMultiplePacks: '1',
+  maximumPacks: '5',
+};
+const a8Now = Date.now(),
+  a8At = new Date(a8Now).toISOString(),
+  a8Success = new Date(a8Now - 60000).toISOString();
+sql
+  .prepare(
+    `INSERT INTO replenishment_settings_versions
  (company_id,product_id,version,change_id,inventory_config_id,inventory_config_version,dimension,settings_json,changed_by,change_reason,changed_at)
- VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run('company-a','milk',1,'a8-settings',a8Config.id,a8Config.version,'volume',JSON.stringify(a8Settings),accounts.manager.id,'Fictional A8 route review',a8At);
-sql.prepare('INSERT INTO clover_connections(company_id,merchant_id,environment,secret,connected,last_checked,lease_until) VALUES (?,?,?,?,?,?,0)')
- .run('company-a','fictional-merchant','sandbox','encrypted-fictional-placeholder',a8At,a8At);
-sql.prepare('INSERT INTO clover_sync_state(company_id,environment,merchant_id,started_at,checkpoint,last_attempt,last_success,last_error,lease_until) VALUES (?,?,?,?,?,?,?,?,0)')
- .run('company-a','sandbox','fictional-merchant',a8Now-3600000,a8Now-60000,a8At,a8Success,null);
-globalThis.m2env.PANTRACK_CLOVER_SYNC_ENABLED='enabled';globalThis.m2env.CLOVER_ENVIRONMENT='sandbox';
-const a8Ready=await call('replenishment/review','GET',null,cookies.manager);
-assert.equal(a8Ready.status,200);
-assert.equal((await a8Ready.json()).snapshot.contract,'pantrack.replenishment-review.v2','Manager route produces a Clover-backed preview.');
-const savedA8=await call('replenishment/proposals','POST',a8Create,cookies.manager);
-assert.equal(savedA8.status,200,await savedA8.clone().text());
-assert.equal((await savedA8.json()).view.handoff.supplierSubmissionAllowed,false);
-assert.equal((await call('replenishment/proposals','POST',a8Create,cookies.manager)).status,200,'Create retry replays one saved origin.');
-const a8Listed=await call('replenishment/proposals','GET',null,cookies.manager);
-assert.equal((await a8Listed.json()).views.length,1,'Saved proposal can be reloaded by the manager.');
-const positiveEdit={...a8Edit,proposalId:a8Create.proposalId};
-const editedA8=await call('replenishment/proposals','POST',positiveEdit,cookies.manager);
-assert.equal(editedA8.status,200,await editedA8.clone().text());
-assert.equal((await editedA8.json()).view.revision,2,'Manager edit adds one audited revision.');
-const positiveCancel={...a8Cancel,proposalId:a8Create.proposalId,expectedRevision:2};
-const canceledA8=await call('replenishment/proposals','POST',positiveCancel,cookies.manager);
-assert.equal(canceledA8.status,200,await canceledA8.clone().text());
-assert.equal((await canceledA8.json()).view.status,'canceled');
-assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM replenishment_proposal_origins WHERE company_id='company-a'").get().n,1);
-globalThis.m2env.PANTRACK_CLOVER_SYNC_ENABLED='';
-assert.equal((await call('sales/events','GET',null,cookies.employee)).status,200,'Employees may read safe exact-sales status.');
-const exactRecipeId=crypto.randomUUID(),exactDraftId=crypto.randomUUID();
-assert.equal((await call('inventory','POST',{companyId:'company-a',action:'saveRecipeDraftExact',recipeId:exactRecipeId,draftId:exactDraftId,name:'Exact milk',ingredients:[{productId:'milk',amount:'1',unitId:'mL'}]},cookies.manager)).status,200,'Manager can save exact recipe draft.');
-assert.equal((await call('inventory','POST',{companyId:'company-a',action:'activateRecipeExact',recipeId:exactRecipeId,versionId:exactDraftId,expectedActiveVersionId:null},cookies.manager)).status,200,'Manager can activate exact recipe.');
-const reusableModifier={companyId:'company-a',action:'saveModifierDraftExact',recipeId:exactRecipeId,modifierId:crypto.randomUUID(),draftId:crypto.randomUUID(),name:'Fictional reusable milk rule',deltas:[{productId:'milk',amount:'0.001',unitId:'L',signed:false}]};
-assert.equal((await call('inventory','POST',reusableModifier)).status,401,'Anonymous modifier setup is denied.');
-assert.equal((await call('inventory','POST',reusableModifier,cookies.other)).status,403,'Wrong-company modifier setup is denied.');
-assert.equal((await call('inventory','POST',reusableModifier,cookies.employee)).status,403,'Employees cannot set up reusable modifier rules.');
-assert.equal((await call('inventory','POST',reusableModifier,cookies.manager,{Origin:'https://evil.test'})).status,403,'Modifier setup rejects cross-site requests.');
-const balanceBeforeRule=sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor;
-assert.equal((await call('inventory','POST',reusableModifier,cookies.manager)).status,200,'Managers can use a compatible standard unit in a modifier draft.');
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor,balanceBeforeRule,'Modifier setup has no stock effect.');
-const confirmedSaleTime=new Date().toISOString();
-const privateReference='fictional-customer@example.test',privateReason='Fictional private note: redacted@example.test';
-const exactSale=await call('sales','POST',{companyId:'company-a',action:'import',source:'manual',reference:privateReference,occurredAt:confirmedSaleTime,lines:[{recipeId:exactRecipeId,quantity:1}]},cookies.manager);
-assert.equal(exactSale.status,200,await exactSale.clone().text());assert.equal((await exactSale.json()).state,'applied','Manual exact sale applies through B4.');
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor,'9000000','B4 route deducts exact inventory.');
-const exactEventKey=sql.prepare("SELECT event_key FROM sales_events WHERE company_id='company-a' AND external_order_id=?").get(privateReference).event_key;
-assert.equal((await call('sales/events','POST',{companyId:'company-a',action:'requestCorrection',eventKey:exactEventKey,reason:privateReason},cookies.manager)).status,200,'Manager can request a reviewed correction.');
-sql.prepare('INSERT INTO sales_event_conflicts(company_id,conflict_id,canonical_event_key,received_at,source_payload_sha256,external_event_id,external_order_id,revision,reason) VALUES (?,?,?,?,?,?,?,?,?)').run('company-a',crypto.randomUUID(),exactEventKey,confirmedSaleTime,'a'.repeat(64),'fictional-event',privateReference,1,privateReason);
-const employeeSales=await(await call('sales/events','GET',null,cookies.employee)).json();
-assert.deepEqual(employeeSales,{enabled:true,events:[{state:'applied',occurredAt:confirmedSaleTime}],conflicts:[],corrections:[]},'Employees receive only state and time, with no identities, references, reasons, or correction details.');
-assert.ok(!JSON.stringify(employeeSales).includes(privateReference));assert.ok(!JSON.stringify(employeeSales).includes(privateReason));assert.ok(!JSON.stringify(employeeSales).includes(exactEventKey));
-const employeeDetailHeaders=new Headers({Cookie:cookies.employee});globalThis.m2headers=employeeDetailHeaders;
-assert.equal((await modules['sales/events'].GET(new Request('https://test/api/sales/events?companyId=company-a&eventKey='+encodeURIComponent(exactEventKey),{headers:employeeDetailHeaders}))).status,403,'Employees cannot read individual event history.');
-const managerSales=await(await call('sales/events','GET',null,cookies.manager)).json();
-assert.equal(managerSales.events[0].externalReference,privateReference,'Managers retain sale references for review.');
-assert.equal(managerSales.corrections[0].reason,privateReason,'Managers retain correction reasons for review.');
-assert.equal(managerSales.conflicts[0].reason,privateReason,'Managers retain conflict reasons for review.');
-sql.prepare("UPDATE sales_event_states SET state='dismissed' WHERE company_id='company-a' AND event_key=?").run(exactEventKey);
-const dismissedReplay={companyId:'company-a',action:'replay',eventKey:exactEventKey,reason:'Owner reviewed dismissal'};
-assert.equal((await call('sales/events','POST',dismissedReplay)).status,401,'Anonymous users cannot replay dismissed events.');
-assert.equal((await call('sales/events','POST',dismissedReplay,cookies.other)).status,403,'Other companies cannot replay dismissed events.');
-assert.equal((await call('sales/events','POST',dismissedReplay,cookies.employee)).status,403,'Employees cannot replay dismissed events.');
-const managerDismissedReplay=await call('sales/events','POST',dismissedReplay,cookies.manager);
-assert.equal(managerDismissedReplay.status,403,await managerDismissedReplay.clone().text());
-const ownerDismissedReplay=await call('sales/events','POST',dismissedReplay,cookies.owner);
-assert.equal(ownerDismissedReplay.status,200,await ownerDismissedReplay.clone().text());
-assert.equal(sql.prepare("SELECT state FROM sales_event_states WHERE company_id='company-a' AND event_key=?").get(exactEventKey).state,'applied','Owner replay resolves the event.');
-assert.equal(sql.prepare("SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'").get().on_hand_minor,'9000000','Replaying a previously applied idempotency key does not deduct stock twice.');
-assert.equal((await call('sales','POST',{companyId:'company-a',action:'import',reference:'missing-confirmed-time',lines:[{recipeId:crypto.randomUUID(),quantity:1}]},cookies.manager)).status,400,'Exact sales imports require a manager-confirmed occurrence time.');
+ VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+  )
+  .run(
+    'company-a',
+    'milk',
+    1,
+    'a8-settings',
+    a8Config.id,
+    a8Config.version,
+    'volume',
+    JSON.stringify(a8Settings),
+    accounts.manager.id,
+    'Fictional A8 route review',
+    a8At,
+  );
+sql
+  .prepare(
+    'INSERT INTO clover_connections(company_id,merchant_id,environment,secret,connected,last_checked,lease_until) VALUES (?,?,?,?,?,?,0)',
+  )
+  .run('company-a', 'fictional-merchant', 'sandbox', 'encrypted-fictional-placeholder', a8At, a8At);
+sql
+  .prepare(
+    'INSERT INTO clover_sync_state(company_id,environment,merchant_id,started_at,checkpoint,last_attempt,last_success,last_error,lease_until) VALUES (?,?,?,?,?,?,?,?,0)',
+  )
+  .run(
+    'company-a',
+    'sandbox',
+    'fictional-merchant',
+    a8Now - 3600000,
+    a8Now - 60000,
+    a8At,
+    a8Success,
+    null,
+  );
+globalThis.m2env.PANTRACK_CLOVER_SYNC_ENABLED = 'enabled';
+globalThis.m2env.CLOVER_ENVIRONMENT = 'sandbox';
+const a8Ready = await call('replenishment/review', 'GET', null, cookies.manager);
+assert.equal(a8Ready.status, 200);
+assert.equal(
+  (await a8Ready.json()).snapshot.contract,
+  'pantrack.replenishment-review.v2',
+  'Manager route produces a Clover-backed preview.',
+);
+const savedA8 = await call('replenishment/proposals', 'POST', a8Create, cookies.manager);
+assert.equal(savedA8.status, 200, await savedA8.clone().text());
+assert.equal((await savedA8.json()).view.handoff.supplierSubmissionAllowed, false);
+assert.equal(
+  (await call('replenishment/proposals', 'POST', a8Create, cookies.manager)).status,
+  200,
+  'Create retry replays one saved origin.',
+);
+const a8Listed = await call('replenishment/proposals', 'GET', null, cookies.manager);
+assert.equal(
+  (await a8Listed.json()).views.length,
+  1,
+  'Saved proposal can be reloaded by the manager.',
+);
+const positiveEdit = { ...a8Edit, proposalId: a8Create.proposalId };
+const editedA8 = await call('replenishment/proposals', 'POST', positiveEdit, cookies.manager);
+assert.equal(editedA8.status, 200, await editedA8.clone().text());
+assert.equal((await editedA8.json()).view.revision, 2, 'Manager edit adds one audited revision.');
+const positiveCancel = { ...a8Cancel, proposalId: a8Create.proposalId, expectedRevision: 2 };
+const canceledA8 = await call('replenishment/proposals', 'POST', positiveCancel, cookies.manager);
+assert.equal(canceledA8.status, 200, await canceledA8.clone().text());
+assert.equal((await canceledA8.json()).view.status, 'canceled');
+assert.equal(
+  sql
+    .prepare(
+      "SELECT COUNT(*) AS n FROM replenishment_proposal_origins WHERE company_id='company-a'",
+    )
+    .get().n,
+  1,
+);
+globalThis.m2env.PANTRACK_CLOVER_SYNC_ENABLED = '';
+assert.equal(
+  (await call('sales/events', 'GET', null, cookies.employee)).status,
+  200,
+  'Employees may read safe exact-sales status.',
+);
+const exactRecipeId = crypto.randomUUID(),
+  exactDraftId = crypto.randomUUID();
+assert.equal(
+  (
+    await call(
+      'inventory',
+      'POST',
+      {
+        companyId: 'company-a',
+        action: 'saveRecipeDraftExact',
+        recipeId: exactRecipeId,
+        draftId: exactDraftId,
+        name: 'Exact milk',
+        ingredients: [{ productId: 'milk', amount: '1', unitId: 'mL' }],
+      },
+      cookies.manager,
+    )
+  ).status,
+  200,
+  'Manager can save exact recipe draft.',
+);
+assert.equal(
+  (
+    await call(
+      'inventory',
+      'POST',
+      {
+        companyId: 'company-a',
+        action: 'activateRecipeExact',
+        recipeId: exactRecipeId,
+        versionId: exactDraftId,
+        expectedActiveVersionId: null,
+      },
+      cookies.manager,
+    )
+  ).status,
+  200,
+  'Manager can activate exact recipe.',
+);
+const reusableModifier = {
+  companyId: 'company-a',
+  action: 'saveModifierDraftExact',
+  recipeId: exactRecipeId,
+  modifierId: crypto.randomUUID(),
+  draftId: crypto.randomUUID(),
+  name: 'Fictional reusable milk rule',
+  deltas: [{ productId: 'milk', amount: '0.001', unitId: 'L', signed: false }],
+};
+assert.equal(
+  (await call('inventory', 'POST', reusableModifier)).status,
+  401,
+  'Anonymous modifier setup is denied.',
+);
+assert.equal(
+  (await call('inventory', 'POST', reusableModifier, cookies.other)).status,
+  403,
+  'Wrong-company modifier setup is denied.',
+);
+assert.equal(
+  (await call('inventory', 'POST', reusableModifier, cookies.employee)).status,
+  403,
+  'Employees cannot set up reusable modifier rules.',
+);
+assert.equal(
+  (
+    await call('inventory', 'POST', reusableModifier, cookies.manager, {
+      Origin: 'https://evil.test',
+    })
+  ).status,
+  403,
+  'Modifier setup rejects cross-site requests.',
+);
+const balanceBeforeRule = sql
+  .prepare(
+    "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'",
+  )
+  .get().on_hand_minor;
+assert.equal(
+  (await call('inventory', 'POST', reusableModifier, cookies.manager)).status,
+  200,
+  'Managers can use a compatible standard unit in a modifier draft.',
+);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'",
+    )
+    .get().on_hand_minor,
+  balanceBeforeRule,
+  'Modifier setup has no stock effect.',
+);
+const confirmedSaleTime = new Date().toISOString();
+const privateReference = 'fictional-customer@example.test',
+  privateReason = 'Fictional private note: redacted@example.test';
+const exactSale = await call(
+  'sales',
+  'POST',
+  {
+    companyId: 'company-a',
+    action: 'import',
+    source: 'manual',
+    reference: privateReference,
+    occurredAt: confirmedSaleTime,
+    lines: [{ recipeId: exactRecipeId, quantity: 1 }],
+  },
+  cookies.manager,
+);
+assert.equal(exactSale.status, 200, await exactSale.clone().text());
+assert.equal((await exactSale.json()).state, 'applied', 'Manual exact sale applies through B4.');
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'",
+    )
+    .get().on_hand_minor,
+  '9000000',
+  'B4 route deducts exact inventory.',
+);
+const exactEventKey = sql
+  .prepare(
+    "SELECT event_key FROM sales_events WHERE company_id='company-a' AND external_order_id=?",
+  )
+  .get(privateReference).event_key;
+assert.equal(
+  (
+    await call(
+      'sales/events',
+      'POST',
+      {
+        companyId: 'company-a',
+        action: 'requestCorrection',
+        eventKey: exactEventKey,
+        reason: privateReason,
+      },
+      cookies.manager,
+    )
+  ).status,
+  200,
+  'Manager can request a reviewed correction.',
+);
+sql
+  .prepare(
+    'INSERT INTO sales_event_conflicts(company_id,conflict_id,canonical_event_key,received_at,source_payload_sha256,external_event_id,external_order_id,revision,reason) VALUES (?,?,?,?,?,?,?,?,?)',
+  )
+  .run(
+    'company-a',
+    crypto.randomUUID(),
+    exactEventKey,
+    confirmedSaleTime,
+    'a'.repeat(64),
+    'fictional-event',
+    privateReference,
+    1,
+    privateReason,
+  );
+const employeeSales = await (await call('sales/events', 'GET', null, cookies.employee)).json();
+assert.deepEqual(
+  employeeSales,
+  {
+    enabled: true,
+    events: [{ state: 'applied', occurredAt: confirmedSaleTime }],
+    conflicts: [],
+    corrections: [],
+  },
+  'Employees receive only state and time, with no identities, references, reasons, or correction details.',
+);
+assert.ok(!JSON.stringify(employeeSales).includes(privateReference));
+assert.ok(!JSON.stringify(employeeSales).includes(privateReason));
+assert.ok(!JSON.stringify(employeeSales).includes(exactEventKey));
+const employeeDetailHeaders = new Headers({ Cookie: cookies.employee });
+globalThis.m2headers = employeeDetailHeaders;
+assert.equal(
+  (
+    await modules['sales/events'].GET(
+      new Request(
+        'https://test/api/sales/events?companyId=company-a&eventKey=' +
+          encodeURIComponent(exactEventKey),
+        { headers: employeeDetailHeaders },
+      ),
+    )
+  ).status,
+  403,
+  'Employees cannot read individual event history.',
+);
+const managerSales = await (await call('sales/events', 'GET', null, cookies.manager)).json();
+assert.equal(
+  managerSales.events[0].externalReference,
+  privateReference,
+  'Managers retain sale references for review.',
+);
+assert.equal(
+  managerSales.corrections[0].reason,
+  privateReason,
+  'Managers retain correction reasons for review.',
+);
+assert.equal(
+  managerSales.conflicts[0].reason,
+  privateReason,
+  'Managers retain conflict reasons for review.',
+);
+sql
+  .prepare(
+    "UPDATE sales_event_states SET state='dismissed' WHERE company_id='company-a' AND event_key=?",
+  )
+  .run(exactEventKey);
+const dismissedReplay = {
+  companyId: 'company-a',
+  action: 'replay',
+  eventKey: exactEventKey,
+  reason: 'Owner reviewed dismissal',
+};
+assert.equal(
+  (await call('sales/events', 'POST', dismissedReplay)).status,
+  401,
+  'Anonymous users cannot replay dismissed events.',
+);
+assert.equal(
+  (await call('sales/events', 'POST', dismissedReplay, cookies.other)).status,
+  403,
+  'Other companies cannot replay dismissed events.',
+);
+assert.equal(
+  (await call('sales/events', 'POST', dismissedReplay, cookies.employee)).status,
+  403,
+  'Employees cannot replay dismissed events.',
+);
+const managerDismissedReplay = await call('sales/events', 'POST', dismissedReplay, cookies.manager);
+assert.equal(managerDismissedReplay.status, 403, await managerDismissedReplay.clone().text());
+const ownerDismissedReplay = await call('sales/events', 'POST', dismissedReplay, cookies.owner);
+assert.equal(ownerDismissedReplay.status, 200, await ownerDismissedReplay.clone().text());
+assert.equal(
+  sql
+    .prepare("SELECT state FROM sales_event_states WHERE company_id='company-a' AND event_key=?")
+    .get(exactEventKey).state,
+  'applied',
+  'Owner replay resolves the event.',
+);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT on_hand_minor FROM inventory_balances_exact WHERE company_id='company-a' AND product_id='milk'",
+    )
+    .get().on_hand_minor,
+  '9000000',
+  'Replaying a previously applied idempotency key does not deduct stock twice.',
+);
+assert.equal(
+  (
+    await call(
+      'sales',
+      'POST',
+      {
+        companyId: 'company-a',
+        action: 'import',
+        reference: 'missing-confirmed-time',
+        lines: [{ recipeId: crypto.randomUUID(), quantity: 1 }],
+      },
+      cookies.manager,
+    )
+  ).status,
+  400,
+  'Exact sales imports require a manager-confirmed occurrence time.',
+);
 delete globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW;
-assert.deepEqual((await(await call('workspace','GET',null,cookies.employee)).json()).orders,[]);
-assert.equal((await(await call('workspace','GET',null,cookies.manager)).json()).orders.length,1);
-assert.equal((await call('automation','POST',{companyId:'company-a',action:'pause'},cookies.manager)).status,200);
-assert.equal((await call('automation','POST',{companyId:'company-a',action:'scheduler'},cookies.manager)).status,403);
-assert.ok(!('policy' in await(await call('automation','GET',null,cookies.manager)).json()));
-for(const family of ['register/ingest','automation/tick']){
- assert.equal((await call(family,'POST',{},cookies.owner)).status,401,'Session is not a machine credential');
- assert.equal((await call(family,'POST',{},'',{Authorization:'Bearer wrong'})).status,401);
+assert.deepEqual(
+  (await (await call('workspace', 'GET', null, cookies.employee)).json()).orders,
+  [],
+);
+assert.equal(
+  (await (await call('workspace', 'GET', null, cookies.manager)).json()).orders.length,
+  1,
+);
+assert.equal(
+  (await call('automation', 'POST', { companyId: 'company-a', action: 'pause' }, cookies.manager))
+    .status,
+  200,
+);
+assert.equal(
+  (
+    await call(
+      'automation',
+      'POST',
+      { companyId: 'company-a', action: 'scheduler' },
+      cookies.manager,
+    )
+  ).status,
+  403,
+);
+assert.ok(!('policy' in (await (await call('automation', 'GET', null, cookies.manager)).json())));
+for (const family of ['register/ingest', 'automation/tick']) {
+  assert.equal(
+    (await call(family, 'POST', {}, cookies.owner)).status,
+    401,
+    'Session is not a machine credential',
+  );
+  assert.equal((await call(family, 'POST', {}, '', { Authorization: 'Bearer wrong' })).status, 401);
 }
-assert.match((await call('clover/callback')).headers.get('location'),/failed/);
+assert.match((await call('clover/callback')).headers.get('location'), /failed/);
 // W1 has a narrow permission, separate from general inventory writes.
-for(const route of ['waste','waste/shortcuts']){
- assert.equal((await call(route)).status,401,route+' anonymous read');
- assert.equal((await call(route,'POST',{companyId:'company-a'})).status,401,route+' anonymous write');
- assert.equal((await call(route,'GET',null,cookies.other)).status,403,route+' wrong-company read');
- assert.equal((await call(route,'POST',{companyId:'company-a'},cookies.other)).status,403,route+' wrong-company write');
- assert.equal((await call(route,'POST',{companyId:'company-a'},cookies.owner,{Origin:'https://evil.test'})).status,403,route+' CSRF');
+for (const route of ['waste', 'waste/shortcuts']) {
+  assert.equal((await call(route)).status, 401, route + ' anonymous read');
+  assert.equal(
+    (await call(route, 'POST', { companyId: 'company-a' })).status,
+    401,
+    route + ' anonymous write',
+  );
+  assert.equal(
+    (await call(route, 'GET', null, cookies.other)).status,
+    403,
+    route + ' wrong-company read',
+  );
+  assert.equal(
+    (await call(route, 'POST', { companyId: 'company-a' }, cookies.other)).status,
+    403,
+    route + ' wrong-company write',
+  );
+  assert.equal(
+    (
+      await call(route, 'POST', { companyId: 'company-a' }, cookies.owner, {
+        Origin: 'https://evil.test',
+      })
+    ).status,
+    403,
+    route + ' CSRF',
+  );
 }
-assert.equal((await call('waste/shortcuts','GET',null,cookies.employee)).status,403,'Employees cannot configure shortcuts.');
-assert.equal((await call('waste/shortcuts','POST',{companyId:'company-a'},cookies.employee)).status,403,'Employees cannot save shortcuts.');
-globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='';
-assert.equal((await call('waste','GET',null,cookies.employee)).status,404,'Waste is dark by default.');
-assert.equal((await call('waste','POST',{companyId:'company-a'},cookies.employee)).status,404,'Dark waste writes are blocked.');
-globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
-const safeWaste=await(await call('waste','GET',null,cookies.employee)).json();
-assert.deepEqual(Object.keys(safeWaste).sort(),['enabled','items','serverNow']);
-assert.deepEqual(Object.keys(safeWaste.items[0]).sort(),['configId','name','productId','shortcutRevision','shortcuts','unitId','unitLabel','version']);
-assert.ok(!/price|cost|actor|email|payment|audit|onHand/.test(JSON.stringify(safeWaste)),'Waste response excludes finances and other staff details.');
-const wasteItem=safeWaste.items.find(i=>i.productId==='milk');
-const shortcutRequest={companyId:'company-a',productId:'milk',configId:wasteItem.configId,expectedRevision:0,operationId:crypto.randomUUID(),shortcuts:[{label:'Small spill',amount:'1',unitId:'mL'}]};
-assert.equal((await call('waste/shortcuts','POST',shortcutRequest,cookies.manager)).status,200,'Managers can configure company shortcuts.');
-assert.equal((await call('waste/shortcuts','POST',shortcutRequest,cookies.manager)).status,200,'Shortcut retry is idempotent.');
-const wasteRequest={companyId:'company-a',productId:'milk',operationId:crypto.randomUUID(),expectedVersion:wasteItem.version,amount:'1',unitId:'mL',effectiveAt:'2026-05-01T00:00:00Z',reason:'spilled',note:''};
-assert.equal((await call('waste','POST',{...wasteRequest,actor:accounts.owner.id},cookies.employee)).status,400,'Client actor is rejected.');
-assert.equal((await call('waste','POST',{...wasteRequest,action:'receive'},cookies.employee)).status,400,'Waste cannot be used for receipts.');
-assert.equal((await call('waste','POST',{...wasteRequest,reason:'unknown'},cookies.employee)).status,400,'Reasons are required and validated.');
-const savedWaste=await call('waste','POST',wasteRequest,cookies.employee);
-assert.equal(savedWaste.status,200,await savedWaste.clone().text());
-assert.match(savedWaste.headers.get('Cache-Control'),/no-store/);
-assert.deepEqual(Object.keys((await savedWaste.json()).result).sort(),['amount','effectiveAt','operationId','productId','reason','unitId']);
-assert.equal((await call('waste','POST',wasteRequest,cookies.employee)).status,200,'Staff can confirm a duplicate without another deduction.');
-assert.equal((await call('waste','POST',{...wasteRequest,reason:'other'},cookies.employee)).status,409,'Changed duplicate reason is rejected.');
-const wasteEvent=sql.prepare('SELECT actor,waste_reason FROM inventory_events_exact WHERE company_id=? AND id=?').get('company-a','movement:'+wasteRequest.operationId);
-assert.equal(wasteEvent.actor,accounts.employee.id,'Waste actor is session-derived.');
-assert.equal(wasteEvent.waste_reason,'spilled');
-assert.equal(sql.prepare("SELECT count(*) AS n FROM security_audit WHERE company_id='company-a' AND action='waste.succeeded'").get().n,2,'Waste mutations are audited.');
-assert.equal((await call('waste','POST',wasteRequest,'expired-cookie')).status,401,'Expired session never claims success.');
-assert.equal((await call('inventory','POST',{companyId:'company-a',action:'movementExact',movement:'waste'},cookies.employee)).status,403,'Broad inventory writes remain forbidden.');
+assert.equal(
+  (await call('waste/shortcuts', 'GET', null, cookies.employee)).status,
+  403,
+  'Employees cannot configure shortcuts.',
+);
+assert.equal(
+  (await call('waste/shortcuts', 'POST', { companyId: 'company-a' }, cookies.employee)).status,
+  403,
+  'Employees cannot save shortcuts.',
+);
+globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW = '';
+assert.equal(
+  (await call('waste', 'GET', null, cookies.employee)).status,
+  404,
+  'Waste is dark by default.',
+);
+assert.equal(
+  (await call('waste', 'POST', { companyId: 'company-a' }, cookies.employee)).status,
+  404,
+  'Dark waste writes are blocked.',
+);
+globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW = 'enabled';
+const safeWaste = await (await call('waste', 'GET', null, cookies.employee)).json();
+assert.deepEqual(Object.keys(safeWaste).sort(), ['enabled', 'items', 'serverNow']);
+assert.deepEqual(Object.keys(safeWaste.items[0]).sort(), [
+  'configId',
+  'name',
+  'productId',
+  'shortcutRevision',
+  'shortcuts',
+  'unitId',
+  'unitLabel',
+  'version',
+]);
+assert.ok(
+  !/price|cost|actor|email|payment|audit|onHand/.test(JSON.stringify(safeWaste)),
+  'Waste response excludes finances and other staff details.',
+);
+const wasteItem = safeWaste.items.find((i) => i.productId === 'milk');
+const shortcutRequest = {
+  companyId: 'company-a',
+  productId: 'milk',
+  configId: wasteItem.configId,
+  expectedRevision: 0,
+  operationId: crypto.randomUUID(),
+  shortcuts: [{ label: 'Small spill', amount: '1', unitId: 'mL' }],
+};
+assert.equal(
+  (await call('waste/shortcuts', 'POST', shortcutRequest, cookies.manager)).status,
+  200,
+  'Managers can configure company shortcuts.',
+);
+assert.equal(
+  (await call('waste/shortcuts', 'POST', shortcutRequest, cookies.manager)).status,
+  200,
+  'Shortcut retry is idempotent.',
+);
+const wasteRequest = {
+  companyId: 'company-a',
+  productId: 'milk',
+  operationId: crypto.randomUUID(),
+  expectedVersion: wasteItem.version,
+  amount: '1',
+  unitId: 'mL',
+  effectiveAt: '2026-05-01T00:00:00Z',
+  reason: 'spilled',
+  note: '',
+};
+assert.equal(
+  (await call('waste', 'POST', { ...wasteRequest, actor: accounts.owner.id }, cookies.employee))
+    .status,
+  400,
+  'Client actor is rejected.',
+);
+assert.equal(
+  (await call('waste', 'POST', { ...wasteRequest, action: 'receive' }, cookies.employee)).status,
+  400,
+  'Waste cannot be used for receipts.',
+);
+assert.equal(
+  (await call('waste', 'POST', { ...wasteRequest, reason: 'unknown' }, cookies.employee)).status,
+  400,
+  'Reasons are required and validated.',
+);
+const savedWaste = await call('waste', 'POST', wasteRequest, cookies.employee);
+assert.equal(savedWaste.status, 200, await savedWaste.clone().text());
+assert.match(savedWaste.headers.get('Cache-Control'), /no-store/);
+assert.deepEqual(Object.keys((await savedWaste.json()).result).sort(), [
+  'amount',
+  'effectiveAt',
+  'operationId',
+  'productId',
+  'reason',
+  'unitId',
+]);
+assert.equal(
+  (await call('waste', 'POST', wasteRequest, cookies.employee)).status,
+  200,
+  'Staff can confirm a duplicate without another deduction.',
+);
+assert.equal(
+  (await call('waste', 'POST', { ...wasteRequest, reason: 'other' }, cookies.employee)).status,
+  409,
+  'Changed duplicate reason is rejected.',
+);
+const wasteEvent = sql
+  .prepare('SELECT actor,waste_reason FROM inventory_events_exact WHERE company_id=? AND id=?')
+  .get('company-a', 'movement:' + wasteRequest.operationId);
+assert.equal(wasteEvent.actor, accounts.employee.id, 'Waste actor is session-derived.');
+assert.equal(wasteEvent.waste_reason, 'spilled');
+assert.equal(
+  sql
+    .prepare(
+      "SELECT count(*) AS n FROM security_audit WHERE company_id='company-a' AND action='waste.succeeded'",
+    )
+    .get().n,
+  2,
+  'Waste mutations are audited.',
+);
+assert.equal(
+  (await call('waste', 'POST', wasteRequest, 'expired-cookie')).status,
+  401,
+  'Expired session never claims success.',
+);
+assert.equal(
+  (
+    await call(
+      'inventory',
+      'POST',
+      { companyId: 'company-a', action: 'movementExact', movement: 'waste' },
+      cookies.employee,
+    )
+  ).status,
+  403,
+  'Broad inventory writes remain forbidden.',
+);
 
 // W2 reuses narrow staff waste access, never broader inventory or finance access.
-for(const [route,methods] of [['waste/items',['GET']],['waste/sales',['GET']],['waste/entries',['POST']],['waste/setup',['POST']],['waste/review',['GET','POST']]]) {
- for(const method of methods) {
-  const body=method==='POST'?{companyId:'company-a'}:null;
-  assert.equal((await call(route,method,body)).status,401,route+' anonymous '+method);
-  assert.equal((await call(route,method,body,cookies.other)).status,403,route+' wrong company '+method);
-  if(method==='POST')assert.equal((await call(route,method,body,cookies.owner,{Origin:'https://evil.test'})).status,403,route+' CSRF');
-  if(route==='waste/setup'||route==='waste/review')assert.equal((await call(route,method,body,cookies.employee)).status,403,route+' forbidden employee '+method);
-  globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='';
-  assert.equal((await call(route,method,body,cookies.owner)).status,404,route+' preview off');
-  globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW='enabled';
- }
+for (const [route, methods] of [
+  ['waste/items', ['GET']],
+  ['waste/sales', ['GET']],
+  ['waste/entries', ['POST']],
+  ['waste/setup', ['POST']],
+  ['waste/review', ['GET', 'POST']],
+]) {
+  for (const method of methods) {
+    const body = method === 'POST' ? { companyId: 'company-a' } : null;
+    assert.equal((await call(route, method, body)).status, 401, route + ' anonymous ' + method);
+    assert.equal(
+      (await call(route, method, body, cookies.other)).status,
+      403,
+      route + ' wrong company ' + method,
+    );
+    if (method === 'POST')
+      assert.equal(
+        (await call(route, method, body, cookies.owner, { Origin: 'https://evil.test' })).status,
+        403,
+        route + ' CSRF',
+      );
+    if (route === 'waste/setup' || route === 'waste/review')
+      assert.equal(
+        (await call(route, method, body, cookies.employee)).status,
+        403,
+        route + ' forbidden employee ' + method,
+      );
+    globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW = '';
+    assert.equal(
+      (await call(route, method, body, cookies.owner)).status,
+      404,
+      route + ' preview off',
+    );
+    globalThis.m2env.PANTRACK_EXACT_INVENTORY_PREVIEW = 'enabled';
+  }
 }
-const menuOptionsResponse=await call('waste/items','GET',null,cookies.employee);
-assert.equal(menuOptionsResponse.status,200);assert.match(menuOptionsResponse.headers.get('Cache-Control'),/no-store/);
-const menuOptions=await menuOptionsResponse.json();
-assert.ok(!/price|cost|actor|email|payment|audit|onHand|supplier/.test(JSON.stringify(menuOptions)));
-const menuRecipe=menuOptions.items.find(i=>i.kind==='recipe'&&i.id===exactRecipeId);
-const menuRequest={companyId:'company-a',operationId:crypto.randomUUID(),sourceKind:'recipe',sourceId:exactRecipeId,sourceVersion:menuRecipe.version,quantity:1,reason:'end_of_day',note:'',mode:'unsold',effectiveAt:new Date().toISOString(),modifiers:[]};
-for(const changed of [{actor:accounts.owner.id},{quantity:0.5},{reason:'unknown'},{mode:'receive'}])assert.equal((await call('waste/entries','POST',{...menuRequest,...changed},cookies.employee)).status,400,'Invalid/privileged menu fields rejected.');
-const menuSaved=await call('waste/entries','POST',menuRequest,cookies.employee);
-assert.equal(menuSaved.status,200,await menuSaved.clone().text());assert.match(menuSaved.headers.get('Cache-Control'),/no-store/);
-assert.equal((await menuSaved.json()).result.status,'deducted');
-assert.equal((await call('waste/entries','POST',menuRequest,cookies.employee)).status,200,'Menu retry applies once.');
-assert.equal((await call('waste/entries','POST',{...menuRequest,note:'changed'},cookies.employee)).status,409);
-assert.equal(sql.prepare('SELECT actor FROM waste_entries WHERE company_id=? AND id=?').get('company-a',menuRequest.operationId).actor,accounts.employee.id);
-assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company-a' AND action='waste.succeeded' AND target=?").get(menuRequest.operationId).n,2,'Menu save/retry audited by operation reference.');
-assert.equal((await call('waste/entries','POST',menuRequest,'expired-cookie')).status,401,'Expired menu save cannot claim success.');
-const menuSetup={companyId:'company-a',productId:'milk',offered:true,expectedRevision:0,operationId:crypto.randomUUID()};
-assert.equal((await call('waste/setup','POST',menuSetup,cookies.manager)).status,200);
-assert.equal((await call('waste/setup','POST',menuSetup,cookies.manager)).status,200);
-assert.equal((await call('waste/review','GET',null,cookies.manager)).status,200);
-const narrowSalesReq=req('waste/sales','GET',null,cookies.employee);const narrowSalesUrl=new URL(narrowSalesReq.url);narrowSalesUrl.searchParams.set('sourceKind','recipe');narrowSalesUrl.searchParams.set('sourceId',exactRecipeId);
-const narrowSales=await modules['waste/sales'].GET(new Request(narrowSalesUrl,{headers:narrowSalesReq.headers}));assert.equal(narrowSales.status,200);
-assert.ok(!JSON.stringify(await narrowSales.json()).includes(privateReference),'Sale choices do not expose provider references.');
+const menuOptionsResponse = await call('waste/items', 'GET', null, cookies.employee);
+assert.equal(menuOptionsResponse.status, 200);
+assert.match(menuOptionsResponse.headers.get('Cache-Control'), /no-store/);
+const menuOptions = await menuOptionsResponse.json();
+assert.ok(
+  !/price|cost|actor|email|payment|audit|onHand|supplier/.test(JSON.stringify(menuOptions)),
+);
+const menuRecipe = menuOptions.items.find((i) => i.kind === 'recipe' && i.id === exactRecipeId);
+const menuRequest = {
+  companyId: 'company-a',
+  operationId: crypto.randomUUID(),
+  sourceKind: 'recipe',
+  sourceId: exactRecipeId,
+  sourceVersion: menuRecipe.version,
+  quantity: 1,
+  reason: 'end_of_day',
+  note: '',
+  mode: 'unsold',
+  effectiveAt: new Date().toISOString(),
+  modifiers: [],
+};
+for (const changed of [
+  { actor: accounts.owner.id },
+  { quantity: 0.5 },
+  { reason: 'unknown' },
+  { mode: 'receive' },
+])
+  assert.equal(
+    (await call('waste/entries', 'POST', { ...menuRequest, ...changed }, cookies.employee)).status,
+    400,
+    'Invalid/privileged menu fields rejected.',
+  );
+const menuSaved = await call('waste/entries', 'POST', menuRequest, cookies.employee);
+assert.equal(menuSaved.status, 200, await menuSaved.clone().text());
+assert.match(menuSaved.headers.get('Cache-Control'), /no-store/);
+assert.equal((await menuSaved.json()).result.status, 'deducted');
+assert.equal(
+  (await call('waste/entries', 'POST', menuRequest, cookies.employee)).status,
+  200,
+  'Menu retry applies once.',
+);
+assert.equal(
+  (await call('waste/entries', 'POST', { ...menuRequest, note: 'changed' }, cookies.employee))
+    .status,
+  409,
+);
+assert.equal(
+  sql
+    .prepare('SELECT actor FROM waste_entries WHERE company_id=? AND id=?')
+    .get('company-a', menuRequest.operationId).actor,
+  accounts.employee.id,
+);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT COUNT(*) AS n FROM security_audit WHERE company_id='company-a' AND action='waste.succeeded' AND target=?",
+    )
+    .get(menuRequest.operationId).n,
+  2,
+  'Menu save/retry audited by operation reference.',
+);
+assert.equal(
+  (await call('waste/entries', 'POST', menuRequest, 'expired-cookie')).status,
+  401,
+  'Expired menu save cannot claim success.',
+);
+const menuSetup = {
+  companyId: 'company-a',
+  productId: 'milk',
+  offered: true,
+  expectedRevision: 0,
+  operationId: crypto.randomUUID(),
+};
+assert.equal((await call('waste/setup', 'POST', menuSetup, cookies.manager)).status, 200);
+assert.equal((await call('waste/setup', 'POST', menuSetup, cookies.manager)).status, 200);
+assert.equal((await call('waste/review', 'GET', null, cookies.manager)).status, 200);
+const narrowSalesReq = req('waste/sales', 'GET', null, cookies.employee);
+const narrowSalesUrl = new URL(narrowSalesReq.url);
+narrowSalesUrl.searchParams.set('sourceKind', 'recipe');
+narrowSalesUrl.searchParams.set('sourceId', exactRecipeId);
+const narrowSales = await modules['waste/sales'].GET(
+  new Request(narrowSalesUrl, { headers: narrowSalesReq.headers }),
+);
+assert.equal(narrowSales.status, 200);
+assert.ok(
+  !JSON.stringify(await narrowSales.json()).includes(privateReference),
+  'Sale choices do not expose provider references.',
+);
 
 // Direct hostile hosting headers never create identity.
-assert.equal((await call('companies','GET',null,'',{'oai-authenticated-user-id':accounts.owner.id,'oai-authenticated-user-email':accounts.owner.email,'x-pantrack-local-stamp':String(Date.now()),'x-pantrack-local-signature':'ab'.repeat(32)})).status,401);
+assert.equal(
+  (
+    await call('companies', 'GET', null, '', {
+      'oai-authenticated-user-id': accounts.owner.id,
+      'oai-authenticated-user-email': accounts.owner.email,
+      'x-pantrack-local-stamp': String(Date.now()),
+      'x-pantrack-local-signature': 'ab'.repeat(32),
+    })
+  ).status,
+  401,
+);
 // A real second-company membership has its own role.
-sql.prepare('INSERT INTO memberships VALUES (?,?,?)').run(accounts.owner.id,'company-b','employee');
-const list=await(await call('companies','GET',null,cookies.owner)).json();assert.equal(list.companies.length,2);assert.equal(list.companies.find(c=>c.id==='company-b').role,'employee');
+sql
+  .prepare('INSERT INTO memberships VALUES (?,?,?)')
+  .run(accounts.owner.id, 'company-b', 'employee');
+const list = await (await call('companies', 'GET', null, cookies.owner)).json();
+assert.equal(list.companies.length, 2);
+assert.equal(list.companies.find((c) => c.id === 'company-b').role, 'employee');
 
-async function invite(email=accounts.invitee.email,role='manager'){const r=await call('members','POST',{action:'invite',companyId:'company-a',email,role},cookies.owner);assert.equal(r.status,200,await r.clone().text());return r.json();}
-async function accept(token,cookie=cookies.invitee){return call('members','POST',{action:'accept',token},cookie);}
-let invitation=await invite();
-assert.ok(Math.abs(invitation.expires-Date.now()-7*86400000)<2000);
-assert.equal(sql.prepare('SELECT token_hash FROM company_invitations WHERE id=?').get(invitation.id).token_hash,await modules.authlib.hash(invitation.token));
-assert.equal((await accept(invitation.token,cookies.other)).status,409,'Wrong verified email');
-assert.equal((await accept(invitation.token)).status,200);assert.equal((await accept(invitation.token)).status,409,'Single use');
-assert.equal(sql.prepare('SELECT role FROM memberships WHERE user_id=?').get(accounts.invitee.id).role,'manager');
-assert.equal((await call('members','POST',{action:'remove',companyId:'company-a',userId:accounts.invitee.id},cookies.owner)).status,200);
-invitation=await invite();sql.prepare('UPDATE company_invitations SET expires=? WHERE id=?').run(Date.now()-1,invitation.id);assert.equal((await accept(invitation.token)).status,409);
-invitation=await invite();await call('members','POST',{action:'revoke',companyId:'company-a',id:invitation.id},cookies.owner);assert.equal((await accept(invitation.token)).status,409);
-const replaced=await invite();invitation=await invite();assert.equal((await accept(replaced.token)).status,409,'Reissue revokes old token');
-const replay=await Promise.all([accept(invitation.token),accept(invitation.token)]);assert.deepEqual(replay.map(r=>r.status).sort(),[200,409],'Concurrent acceptance has one winner');
-assert.equal((await call('members','POST',{action:'invite',companyId:'company-a',email:'x@example.test',role:'owner'},cookies.owner)).status,400,'No owner invitation escalation');
-assert.equal((await call('members','POST',{action:'remove',companyId:'company-a',userId:accounts.owner.id},cookies.owner)).status,409);
-assert.throws(()=>sql.prepare('DELETE FROM memberships WHERE user_id=? AND company_id=?').run(accounts.owner.id,'company-a'),/retain an owner/);
-assert.throws(()=>sql.prepare("UPDATE memberships SET role='employee' WHERE user_id=? AND company_id=?").run(accounts.owner.id,'company-a'),/retain an owner/);
-const ownerHash=await modules.authlib.hash(cookies.owner.split('=')[1]);
-sql.prepare('UPDATE auth_sessions SET reauthenticated_at=? WHERE hash=?').run(Date.now()-301000,ownerHash);
-assert.equal((await call('members','POST',{action:'transfer',companyId:'company-a',userId:accounts.invitee.id},cookies.owner)).status,403,'Recent authentication required');
-const reauth=await call('auth','POST',{action:'reauthenticate',password:'existingpassword'},cookies.owner);assert.equal(reauth.status,200);const oldCookie=cookies.owner;cookies.owner=reauth.headers.get('set-cookie').split(';')[0];assert.equal((await call('companies','GET',null,oldCookie)).status,401,'Reauthentication rotates sessions');
-const offer=await(await call('members','POST',{action:'transfer',companyId:'company-a',userId:accounts.invitee.id},cookies.owner)).json();assert.ok(offer.id);
-const formerOwnerInvite=await invite(accounts.other.email);
-assert.equal((await call('members','POST',{action:'acceptTransfer',companyId:'company-a',id:offer.id},cookies.employee)).status,409);
-assert.equal((await call('members','POST',{action:'acceptTransfer',companyId:'company-a',id:offer.id},cookies.invitee)).status,200);
-assert.equal(sql.prepare('SELECT role FROM memberships WHERE user_id=? AND company_id=?').get(accounts.owner.id,'company-a').role,'manager');
-assert.equal(sql.prepare('SELECT role FROM memberships WHERE user_id=?').get(accounts.invitee.id).role,'owner');
-assert.equal((await call('members','POST',{action:'acceptTransfer',companyId:'company-a',id:offer.id},cookies.invitee)).status,409,'Transfer cannot replay');
-assert.equal((await call('payments','GET',null,cookies.owner)).status,403,'Demotion affects existing sessions');
-assert.equal((await accept(formerOwnerInvite.token,cookies.other)).status,409,'Former owner invitations revoked');
-assert.ok(sql.prepare("SELECT count(*) AS n FROM security_audit WHERE action='ownership.accepted'").get().n===1);
-async function newOffer(){const r=await call('members','POST',{action:'transfer',companyId:'company-a',userId:accounts.manager.id},cookies.invitee);assert.equal(r.status,200);return r.json();}
-let rejectedOffer=await newOffer();
-await call('members','POST',{action:'cancelTransfer',companyId:'company-a',id:rejectedOffer.id},cookies.invitee);
-assert.equal((await call('members','POST',{action:'acceptTransfer',companyId:'company-a',id:rejectedOffer.id},cookies.manager)).status,409,'Canceled ownership offer rejected');
-rejectedOffer=await newOffer();sql.prepare('UPDATE ownership_transfers SET expires=0 WHERE id=?').run(rejectedOffer.id);
-assert.equal((await call('members','POST',{action:'acceptTransfer',companyId:'company-a',id:rejectedOffer.id},cookies.manager)).status,409,'Expired ownership offer rejected');
+async function invite(email = accounts.invitee.email, role = 'manager') {
+  const r = await call(
+    'members',
+    'POST',
+    { action: 'invite', companyId: 'company-a', email, role },
+    cookies.owner,
+  );
+  assert.equal(r.status, 200, await r.clone().text());
+  return r.json();
+}
+
+async function accept(token, cookie = cookies.invitee) {
+  return call('members', 'POST', { action: 'accept', token }, cookie);
+}
+
+let invitation = await invite();
+assert.ok(Math.abs(invitation.expires - Date.now() - 7 * 86400000) < 2000);
+assert.equal(
+  sql.prepare('SELECT token_hash FROM company_invitations WHERE id=?').get(invitation.id)
+    .token_hash,
+  await modules.authlib.hash(invitation.token),
+);
+assert.equal((await accept(invitation.token, cookies.other)).status, 409, 'Wrong verified email');
+assert.equal((await accept(invitation.token)).status, 200);
+assert.equal((await accept(invitation.token)).status, 409, 'Single use');
+assert.equal(
+  sql.prepare('SELECT role FROM memberships WHERE user_id=?').get(accounts.invitee.id).role,
+  'manager',
+);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'remove', companyId: 'company-a', userId: accounts.invitee.id },
+      cookies.owner,
+    )
+  ).status,
+  200,
+);
+invitation = await invite();
+sql
+  .prepare('UPDATE company_invitations SET expires=? WHERE id=?')
+  .run(Date.now() - 1, invitation.id);
+assert.equal((await accept(invitation.token)).status, 409);
+invitation = await invite();
+await call(
+  'members',
+  'POST',
+  { action: 'revoke', companyId: 'company-a', id: invitation.id },
+  cookies.owner,
+);
+assert.equal((await accept(invitation.token)).status, 409);
+const replaced = await invite();
+invitation = await invite();
+assert.equal((await accept(replaced.token)).status, 409, 'Reissue revokes old token');
+const replay = await Promise.all([accept(invitation.token), accept(invitation.token)]);
+assert.deepEqual(
+  replay.map((r) => r.status).sort(),
+  [200, 409],
+  'Concurrent acceptance has one winner',
+);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'invite', companyId: 'company-a', email: 'x@example.test', role: 'owner' },
+      cookies.owner,
+    )
+  ).status,
+  400,
+  'No owner invitation escalation',
+);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'remove', companyId: 'company-a', userId: accounts.owner.id },
+      cookies.owner,
+    )
+  ).status,
+  409,
+);
+assert.throws(
+  () =>
+    sql
+      .prepare('DELETE FROM memberships WHERE user_id=? AND company_id=?')
+      .run(accounts.owner.id, 'company-a'),
+  /retain an owner/,
+);
+assert.throws(
+  () =>
+    sql
+      .prepare("UPDATE memberships SET role='employee' WHERE user_id=? AND company_id=?")
+      .run(accounts.owner.id, 'company-a'),
+  /retain an owner/,
+);
+const ownerHash = await modules.authlib.hash(cookies.owner.split('=')[1]);
+sql
+  .prepare('UPDATE auth_sessions SET reauthenticated_at=? WHERE hash=?')
+  .run(Date.now() - 301000, ownerHash);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'transfer', companyId: 'company-a', userId: accounts.invitee.id },
+      cookies.owner,
+    )
+  ).status,
+  403,
+  'Recent authentication required',
+);
+const reauth = await call(
+  'auth',
+  'POST',
+  { action: 'reauthenticate', password: 'existingpassword' },
+  cookies.owner,
+);
+assert.equal(reauth.status, 200);
+const oldCookie = cookies.owner;
+cookies.owner = reauth.headers.get('set-cookie').split(';')[0];
+assert.equal(
+  (await call('companies', 'GET', null, oldCookie)).status,
+  401,
+  'Reauthentication rotates sessions',
+);
+const offer = await (
+  await call(
+    'members',
+    'POST',
+    { action: 'transfer', companyId: 'company-a', userId: accounts.invitee.id },
+    cookies.owner,
+  )
+).json();
+assert.ok(offer.id);
+const formerOwnerInvite = await invite(accounts.other.email);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'acceptTransfer', companyId: 'company-a', id: offer.id },
+      cookies.employee,
+    )
+  ).status,
+  409,
+);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'acceptTransfer', companyId: 'company-a', id: offer.id },
+      cookies.invitee,
+    )
+  ).status,
+  200,
+);
+assert.equal(
+  sql
+    .prepare('SELECT role FROM memberships WHERE user_id=? AND company_id=?')
+    .get(accounts.owner.id, 'company-a').role,
+  'manager',
+);
+assert.equal(
+  sql.prepare('SELECT role FROM memberships WHERE user_id=?').get(accounts.invitee.id).role,
+  'owner',
+);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'acceptTransfer', companyId: 'company-a', id: offer.id },
+      cookies.invitee,
+    )
+  ).status,
+  409,
+  'Transfer cannot replay',
+);
+assert.equal(
+  (await call('payments', 'GET', null, cookies.owner)).status,
+  403,
+  'Demotion affects existing sessions',
+);
+assert.equal(
+  (await accept(formerOwnerInvite.token, cookies.other)).status,
+  409,
+  'Former owner invitations revoked',
+);
+assert.ok(
+  sql.prepare("SELECT count(*) AS n FROM security_audit WHERE action='ownership.accepted'").get()
+    .n === 1,
+);
+
+async function newOffer() {
+  const r = await call(
+    'members',
+    'POST',
+    { action: 'transfer', companyId: 'company-a', userId: accounts.manager.id },
+    cookies.invitee,
+  );
+  assert.equal(r.status, 200);
+  return r.json();
+}
+
+let rejectedOffer = await newOffer();
+await call(
+  'members',
+  'POST',
+  { action: 'cancelTransfer', companyId: 'company-a', id: rejectedOffer.id },
+  cookies.invitee,
+);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'acceptTransfer', companyId: 'company-a', id: rejectedOffer.id },
+      cookies.manager,
+    )
+  ).status,
+  409,
+  'Canceled ownership offer rejected',
+);
+rejectedOffer = await newOffer();
+sql.prepare('UPDATE ownership_transfers SET expires=0 WHERE id=?').run(rejectedOffer.id);
+assert.equal(
+  (
+    await call(
+      'members',
+      'POST',
+      { action: 'acceptTransfer', companyId: 'company-a', id: rejectedOffer.id },
+      cookies.manager,
+    )
+  ).status,
+  409,
+  'Expired ownership offer rejected',
+);
 // Logout replay, provider rejection, expiry, duplicate cookies, recovery isolation.
-assert.equal((await call('auth','POST',{action:'signout'},cookies.employee)).status,200);assert.equal((await call('companies','GET',null,cookies.employee)).status,401);
-sql.prepare('UPDATE auth_sessions SET expires=0 WHERE user_id=?').run(accounts.manager.id);assert.equal((await call('companies','GET',null,cookies.manager)).status,401);
-assert.equal((await call('companies','GET',null,cookies.owner+'; '+cookies.owner)).status,401);
-failProvider=true;assert.equal((await call('companies','GET',null,cookies.owner)).status,503);failProvider=false;
-const outageCookie=await login('other');failProvider=true;
-assert.equal((await call('auth','POST',{action:'signout'},outageCookie)).status,200,'Logout works during provider outage');
-failProvider=false;assert.equal((await call('companies','GET',null,outageCookie)).status,401,'Outage logout cannot replay');
-const providerExpired=await login('employee');tokens.clear();
-assert.equal((await call('companies','GET',null,providerExpired)).status,401,'Provider-expired tokens rejected before D1 expiry');
-cookies.owner=await login('owner');
-const recovery=await call('auth','POST',{action:'verify',type:'recovery',token_hash:'valid-recovery'});assert.equal(recovery.status,200);const recoveryCookie=recovery.headers.get('set-cookie').split(';')[0];
-assert.equal((await call('companies','GET',null,recoveryCookie)).status,401,'Recovery cannot access company data');
-assert.equal((await call('auth','POST',{action:'password',password:'replacement-password'},cookies.owner)).status,403,'Only recovery sessions reset passwords');
-assert.equal((await call('auth','POST',{action:'password',password:'longpasswordonly'},recoveryCookie)).status,400,'Recovery rejects a missing special character.');
-assert.equal((await call('auth','POST',{action:'password',password:'replacement-password'},recoveryCookie)).status,200);
-assert.equal((await call('companies','GET',null,cookies.owner)).status,401,'Recovery invalidates other sessions');
-assert.equal(sql.prepare('SELECT count(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,0);
-accounts.other.email_confirmed_at='';
-assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'existingpassword'})).status,400,'Unconfirmed email rejected');
-accounts.other.email_confirmed_at=new Date().toISOString();accounts.other.is_anonymous=true;
-assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'existingpassword'})).status,400,'Anonymous provider identity rejected');
+assert.equal((await call('auth', 'POST', { action: 'signout' }, cookies.employee)).status, 200);
+assert.equal((await call('companies', 'GET', null, cookies.employee)).status, 401);
+sql.prepare('UPDATE auth_sessions SET expires=0 WHERE user_id=?').run(accounts.manager.id);
+assert.equal((await call('companies', 'GET', null, cookies.manager)).status, 401);
+assert.equal(
+  (await call('companies', 'GET', null, cookies.owner + '; ' + cookies.owner)).status,
+  401,
+);
+failProvider = true;
+assert.equal((await call('companies', 'GET', null, cookies.owner)).status, 503);
+failProvider = false;
+const outageCookie = await login('other');
+failProvider = true;
+assert.equal(
+  (await call('auth', 'POST', { action: 'signout' }, outageCookie)).status,
+  200,
+  'Logout works during provider outage',
+);
+failProvider = false;
+assert.equal(
+  (await call('companies', 'GET', null, outageCookie)).status,
+  401,
+  'Outage logout cannot replay',
+);
+const providerExpired = await login('employee');
+tokens.clear();
+assert.equal(
+  (await call('companies', 'GET', null, providerExpired)).status,
+  401,
+  'Provider-expired tokens rejected before D1 expiry',
+);
+cookies.owner = await login('owner');
+const recovery = await call('auth', 'POST', {
+  action: 'verify',
+  type: 'recovery',
+  token_hash: 'valid-recovery',
+});
+assert.equal(recovery.status, 200);
+const recoveryCookie = recovery.headers.get('set-cookie').split(';')[0];
+assert.equal(
+  (await call('companies', 'GET', null, recoveryCookie)).status,
+  401,
+  'Recovery cannot access company data',
+);
+assert.equal(
+  (
+    await call(
+      'auth',
+      'POST',
+      { action: 'password', password: 'replacement-password' },
+      cookies.owner,
+    )
+  ).status,
+  403,
+  'Only recovery sessions reset passwords',
+);
+assert.equal(
+  (await call('auth', 'POST', { action: 'password', password: 'longpasswordonly' }, recoveryCookie))
+    .status,
+  400,
+  'Recovery rejects a missing special character.',
+);
+assert.equal(
+  (
+    await call(
+      'auth',
+      'POST',
+      { action: 'password', password: 'replacement-password' },
+      recoveryCookie,
+    )
+  ).status,
+  200,
+);
+assert.equal(
+  (await call('companies', 'GET', null, cookies.owner)).status,
+  401,
+  'Recovery invalidates other sessions',
+);
+assert.equal(
+  sql.prepare('SELECT count(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,
+  0,
+);
+accounts.other.email_confirmed_at = '';
+assert.equal(
+  (
+    await call('auth', 'POST', {
+      action: 'signin',
+      email: accounts.other.email,
+      password: 'existingpassword',
+    })
+  ).status,
+  400,
+  'Unconfirmed email rejected',
+);
+accounts.other.email_confirmed_at = new Date().toISOString();
+accounts.other.is_anonymous = true;
+assert.equal(
+  (
+    await call('auth', 'POST', {
+      action: 'signin',
+      email: accounts.other.email,
+      password: 'existingpassword',
+    })
+  ).status,
+  400,
+  'Anonymous provider identity rejected',
+);
 delete accounts.other.is_anonymous;
-assert.equal((await call('auth','POST',{action:'signin',email:accounts.other.email,password:'wrong'})).status,400,'Wrong password rejected');
+assert.equal(
+  (await call('auth', 'POST', { action: 'signin', email: accounts.other.email, password: 'wrong' }))
+    .status,
+  400,
+  'Wrong password rejected',
+);
 // BUG-01: the real route must fence proofs acquired before recovery, even if the
 // fake provider keeps every issued token valid after password PUT/global logout.
-async function recoveryLink(){const r=await call('auth','POST',{action:'verify',type:'recovery',token_hash:'valid-recovery'});assert.equal(r.status,200,await r.clone().text());return r.headers.get('set-cookie').split(';')[0];}
-async function reached(gate,pending){await Promise.race([gate.entered.promise,pending.then(async r=>{throw new Error('Race barrier was not reached: '+await r.text());})]);}
-const ownerState=()=>sql.prepare('SELECT session_epoch,recovery_id,recovery_until FROM auth_users WHERE id=?').get(accounts.owner.id);
-const auditCount=action=>sql.prepare('SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action=?').get(accounts.owner.id,action).n;
-const preservedCompanyTables=['companies','memberships','products','orders','inventory_balances_exact','inventory_events_exact','inventory_reconciliations'];
-const companyRecords=()=>preservedCompanyTables.map(name=>sql.prepare(`SELECT * FROM "${name}"`).all());
-const companyRecordsBefore=companyRecords();
-async function recoveryRace(flow,stage){
- const predecessor=await login('owner'),recoveryCookie=await recoveryLink();
- const oldPassword=passwords.get(accounts.owner.id),replacementPassword=`race-${flow}-${stage}-replacement!`;
- const gate=barrier();
- if(stage==='insert')sessionBatchBarrier=gate;
- else nextTokenBarrier={...gate,pauseAt:stage,calls:0};
- const body=flow==='signin'?{action:'signin',email:accounts.owner.email,password:oldPassword}
-  :flow==='reauthenticate'?{action:'reauthenticate',password:oldPassword}
-  :{action:'verify',type:flow,token_hash:flow==='signup'?'valid-signup':'valid-recovery'};
- // Route headers stay request-local while the company-route harness uses m2headers.
- const pending=call('auth','POST',body,flow==='reauthenticate'?predecessor:'');
- await reached(gate,pending);
- const auditBefore=sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action IN ('session.created','recovery.started')").get(accounts.owner.id).n;
- const reset=await call('auth','POST',{action:'password',password:replacementPassword},recoveryCookie);
- assert.equal(reset.status,200,await reset.clone().text());
- assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,0,'Recovery revoked the predecessor before releasing '+flow+'/'+stage);
- gate.release.resolve();const stale=await pending;
- const staleCookie=stale.headers.get('set-cookie')?.split(';')[0];
- const usable=staleCookie?await modules.authlib.sessionFromHeaders(new Headers({Cookie:staleCookie})):null;
- assert.equal(stale.status,400,`${flow}/${stage}: delayed auth returned ${stale.status}; authenticatable=${!!usable}`);
- assert.equal(usable,null,flow+'/'+stage+' cannot create a usable stale session');
- assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,0);
- assert.equal(sql.prepare("SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action IN ('session.created','recovery.started')").get(accounts.owner.id).n,auditBefore,'Rejected stale creation is not audited as success');
- assert.equal((await call('companies','GET',null,predecessor)).status,401,'Reauthentication cannot resurrect a revoked predecessor');
- assert.equal((await call('auth','POST',{action:'signin',email:accounts.owner.email,password:oldPassword})).status,400,'The old password cannot start a fresh session');
- const fresh=await login('owner');assert.equal((await call('companies','GET',null,fresh)).status,200,'Fresh new-password signin works');
+async function recoveryLink() {
+  const r = await call('auth', 'POST', {
+    action: 'verify',
+    type: 'recovery',
+    token_hash: 'valid-recovery',
+  });
+  assert.equal(r.status, 200, await r.clone().text());
+  return r.headers.get('set-cookie').split(';')[0];
 }
-const raceFailures=[];
-for(const flow of ['signin','reauthenticate','signup','recovery']){
- for(const stage of ['exchange',1,...(flow==='reauthenticate'?[2]:[]),'insert']){
-  try{await recoveryRace(flow,stage);console.log(`PASS: BUG-01 ${flow}/${stage}`);}
-  catch(e){raceFailures.push(e);console.error(e.message);}
- }
+
+async function reached(gate, pending) {
+  await Promise.race([
+    gate.entered.promise,
+    pending.then(async (r) => {
+      throw new Error('Race barrier was not reached: ' + (await r.text()));
+    }),
+  ]);
 }
-if(raceFailures.length)throw new AggregateError(raceFailures,'BUG-01 stale authentication regressions');
+
+const ownerState = () =>
+  sql
+    .prepare('SELECT session_epoch,recovery_id,recovery_until FROM auth_users WHERE id=?')
+    .get(accounts.owner.id);
+const auditCount = (action) =>
+  sql
+    .prepare('SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action=?')
+    .get(accounts.owner.id, action).n;
+const preservedCompanyTables = [
+  'companies',
+  'memberships',
+  'products',
+  'orders',
+  'inventory_balances_exact',
+  'inventory_events_exact',
+  'inventory_reconciliations',
+];
+const companyRecords = () =>
+  preservedCompanyTables.map((name) => sql.prepare(`SELECT * FROM "${name}"`).all());
+const companyRecordsBefore = companyRecords();
+
+async function recoveryRace(flow, stage) {
+  const predecessor = await login('owner'),
+    recoveryCookie = await recoveryLink();
+  const oldPassword = passwords.get(accounts.owner.id),
+    replacementPassword = `race-${flow}-${stage}-replacement!`;
+  const gate = barrier();
+  if (stage === 'insert') sessionBatchBarrier = gate;
+  else nextTokenBarrier = { ...gate, pauseAt: stage, calls: 0 };
+  const body =
+    flow === 'signin'
+      ? { action: 'signin', email: accounts.owner.email, password: oldPassword }
+      : flow === 'reauthenticate'
+        ? { action: 'reauthenticate', password: oldPassword }
+        : {
+            action: 'verify',
+            type: flow,
+            token_hash: flow === 'signup' ? 'valid-signup' : 'valid-recovery',
+          };
+  // Route headers stay request-local while the company-route harness uses m2headers.
+  const pending = call('auth', 'POST', body, flow === 'reauthenticate' ? predecessor : '');
+  await reached(gate, pending);
+  const auditBefore = sql
+    .prepare(
+      "SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action IN ('session.created','recovery.started')",
+    )
+    .get(accounts.owner.id).n;
+  const reset = await call(
+    'auth',
+    'POST',
+    { action: 'password', password: replacementPassword },
+    recoveryCookie,
+  );
+  assert.equal(reset.status, 200, await reset.clone().text());
+  assert.equal(
+    sql.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,
+    0,
+    'Recovery revoked the predecessor before releasing ' + flow + '/' + stage,
+  );
+  gate.release.resolve();
+  const stale = await pending;
+  const staleCookie = stale.headers.get('set-cookie')?.split(';')[0];
+  const usable = staleCookie
+    ? await modules.authlib.sessionFromHeaders(new Headers({ Cookie: staleCookie }))
+    : null;
+  assert.equal(
+    stale.status,
+    400,
+    `${flow}/${stage}: delayed auth returned ${stale.status}; authenticatable=${!!usable}`,
+  );
+  assert.equal(usable, null, flow + '/' + stage + ' cannot create a usable stale session');
+  assert.equal(
+    sql.prepare('SELECT COUNT(*) AS n FROM auth_sessions WHERE user_id=?').get(accounts.owner.id).n,
+    0,
+  );
+  assert.equal(
+    sql
+      .prepare(
+        "SELECT COUNT(*) AS n FROM security_audit WHERE actor=? AND action IN ('session.created','recovery.started')",
+      )
+      .get(accounts.owner.id).n,
+    auditBefore,
+    'Rejected stale creation is not audited as success',
+  );
+  assert.equal(
+    (await call('companies', 'GET', null, predecessor)).status,
+    401,
+    'Reauthentication cannot resurrect a revoked predecessor',
+  );
+  assert.equal(
+    (
+      await call('auth', 'POST', {
+        action: 'signin',
+        email: accounts.owner.email,
+        password: oldPassword,
+      })
+    ).status,
+    400,
+    'The old password cannot start a fresh session',
+  );
+  const fresh = await login('owner');
+  assert.equal(
+    (await call('companies', 'GET', null, fresh)).status,
+    200,
+    'Fresh new-password signin works',
+  );
+}
+
+const raceFailures = [];
+for (const flow of ['signin', 'reauthenticate', 'signup', 'recovery']) {
+  for (const stage of ['exchange', 1, ...(flow === 'reauthenticate' ? [2] : []), 'insert']) {
+    try {
+      await recoveryRace(flow, stage);
+      console.log(`PASS: BUG-01 ${flow}/${stage}`);
+    } catch (e) {
+      raceFailures.push(e);
+      console.error(e.message);
+    }
+  }
+}
+if (raceFailures.length)
+  throw new AggregateError(raceFailures, 'BUG-01 stale authentication regressions');
 // Two requests have both validated their recovery sessions before either claim.
 // Only the committed winner can call the provider, including the same cookie.
-async function concurrentRecovery(sameCookie){
- const firstCookie=await recoveryLink(),secondCookie=sameCookie?firstCookie:await recoveryLink();
- const firstGate=barrier(),secondGate=barrier(),putGate=barrier();recoveryClaimBarriers.push(firstGate,secondGate);
- const before={attempt:auditCount('password.recovery_attempt'),success:auditCount('password.recovered'),puts:passwordUpdates};
- const first=call('auth','POST',{action:'password',password:'first-concurrent-password!'},firstCookie);await reached(firstGate,first);
- const second=call('auth','POST',{action:'password',password:'second-concurrent-password!'},secondCookie);await reached(secondGate,second);
- passwordPutBarrier=putGate;firstGate.release.resolve();await reached(putGate,first);
- secondGate.release.resolve();assert.equal((await second).status,400,'A verified but revoked recovery predecessor loses the atomic claim');
- assert.equal((await call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)})).status,400,'Normal sessions cannot be created during recovery');
- assert.equal((await call('auth','POST',{action:'verify',type:'recovery',token_hash:'valid-recovery'})).status,400,'Email exchanges cannot bypass the active lease');
- const other=await login('other');assert.equal((await call('companies','GET',null,other)).status,200,'Another user remains available during recovery');
- assert.equal((await call('workspace','GET',null,other)).status,403,'Concurrent recovery preserves company isolation');
- logoutFailure=true;putGate.release.resolve();const winner=await first;logoutFailure=false;
- assert.equal(winner.status,200,'Provider logout failure does not affect durable revocation');assert.match(winner.headers.get('set-cookie'),/Max-Age=0/);
- assert.equal(passwordUpdates,before.puts+1);assert.equal(auditCount('password.recovery_attempt'),before.attempt+1);assert.equal(auditCount('password.recovered'),before.success+1);
- assert.equal(ownerState().recovery_id,null);assert.equal(ownerState().recovery_until,0);
- assert.equal((await call('auth','POST',{action:'password',password:'replayed-password!'},firstCookie)).status,403,'Recovery claim cannot replay');
- assert.equal((await call('companies','GET',null,await login('owner'))).status,200);
+async function concurrentRecovery(sameCookie) {
+  const firstCookie = await recoveryLink(),
+    secondCookie = sameCookie ? firstCookie : await recoveryLink();
+  const firstGate = barrier(),
+    secondGate = barrier(),
+    putGate = barrier();
+  recoveryClaimBarriers.push(firstGate, secondGate);
+  const before = {
+    attempt: auditCount('password.recovery_attempt'),
+    success: auditCount('password.recovered'),
+    puts: passwordUpdates,
+  };
+  const first = call(
+    'auth',
+    'POST',
+    { action: 'password', password: 'first-concurrent-password!' },
+    firstCookie,
+  );
+  await reached(firstGate, first);
+  const second = call(
+    'auth',
+    'POST',
+    { action: 'password', password: 'second-concurrent-password!' },
+    secondCookie,
+  );
+  await reached(secondGate, second);
+  passwordPutBarrier = putGate;
+  firstGate.release.resolve();
+  await reached(putGate, first);
+  secondGate.release.resolve();
+  assert.equal(
+    (await second).status,
+    400,
+    'A verified but revoked recovery predecessor loses the atomic claim',
+  );
+  assert.equal(
+    (
+      await call('auth', 'POST', {
+        action: 'signin',
+        email: accounts.owner.email,
+        password: passwords.get(accounts.owner.id),
+      })
+    ).status,
+    400,
+    'Normal sessions cannot be created during recovery',
+  );
+  assert.equal(
+    (
+      await call('auth', 'POST', {
+        action: 'verify',
+        type: 'recovery',
+        token_hash: 'valid-recovery',
+      })
+    ).status,
+    400,
+    'Email exchanges cannot bypass the active lease',
+  );
+  const other = await login('other');
+  assert.equal(
+    (await call('companies', 'GET', null, other)).status,
+    200,
+    'Another user remains available during recovery',
+  );
+  assert.equal(
+    (await call('workspace', 'GET', null, other)).status,
+    403,
+    'Concurrent recovery preserves company isolation',
+  );
+  logoutFailure = true;
+  putGate.release.resolve();
+  const winner = await first;
+  logoutFailure = false;
+  assert.equal(winner.status, 200, 'Provider logout failure does not affect durable revocation');
+  assert.match(winner.headers.get('set-cookie'), /Max-Age=0/);
+  assert.equal(passwordUpdates, before.puts + 1);
+  assert.equal(auditCount('password.recovery_attempt'), before.attempt + 1);
+  assert.equal(auditCount('password.recovered'), before.success + 1);
+  assert.equal(ownerState().recovery_id, null);
+  assert.equal(ownerState().recovery_until, 0);
+  assert.equal(
+    (
+      await call(
+        'auth',
+        'POST',
+        { action: 'password', password: 'replayed-password!' },
+        firstCookie,
+      )
+    ).status,
+    403,
+    'Recovery claim cannot replay',
+  );
+  assert.equal((await call('companies', 'GET', null, await login('owner'))).status, 200);
 }
-await concurrentRecovery(true);await concurrentRecovery(false);
+
+await concurrentRecovery(true);
+await concurrentRecovery(false);
 console.log('PASS: BUG-01 concurrent reset claims, per-user isolation and provider logout failure');
 
-async function failedRecovery(mode){
- const oldCookie=await login('owner'),recoveryCookie=await recoveryLink(),gate=barrier();
- nextTokenBarrier={...gate,pauseAt:'exchange',calls:0};
- const pending=call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)});await reached(gate,pending);
- const outcome=mode==='rejected'?'password.recovery_failed':'password.recovery_unknown';
- const before={attempt:auditCount('password.recovery_attempt'),success:auditCount('password.recovered'),outcome:auditCount(outcome)};
- passwordFailure=mode;assert.equal((await call('auth','POST',{action:'password',password:'failure-replacement-password!'},recoveryCookie)).status,400);
- assert.equal(ownerState().recovery_id,null);assert.equal(ownerState().recovery_until,0,'Failures do not leave a permanent recovery lock');
- gate.release.resolve();assert.equal((await pending).status,400,'Failure also fences the delayed old proof');
- assert.equal(auditCount('password.recovery_attempt'),before.attempt+1);assert.equal(auditCount('password.recovered'),before.success);assert.equal(auditCount(outcome),before.outcome+1);
- assert.equal((await call('companies','GET',null,oldCookie)).status,401);
- assert.equal((await call('auth','POST',{action:'password',password:'replayed-password!'},recoveryCookie)).status,403);
- assert.equal((await call('companies','GET',null,await login('owner'))).status,200,'Fresh provider-approved credentials work after any failed/unknown outcome');
- const freshLink=await recoveryLink();assert.equal((await call('auth','POST',{action:'reauthenticate',password:passwords.get(accounts.owner.id)},freshLink)).status,401,'Recovery cannot reauthenticate into company access');
- assert.equal((await call('auth','POST',{action:'password',password:'fresh-retry-password!'},freshLink)).status,200,'A fresh recovery can retry');
+async function failedRecovery(mode) {
+  const oldCookie = await login('owner'),
+    recoveryCookie = await recoveryLink(),
+    gate = barrier();
+  nextTokenBarrier = { ...gate, pauseAt: 'exchange', calls: 0 };
+  const pending = call('auth', 'POST', {
+    action: 'signin',
+    email: accounts.owner.email,
+    password: passwords.get(accounts.owner.id),
+  });
+  await reached(gate, pending);
+  const outcome = mode === 'rejected' ? 'password.recovery_failed' : 'password.recovery_unknown';
+  const before = {
+    attempt: auditCount('password.recovery_attempt'),
+    success: auditCount('password.recovered'),
+    outcome: auditCount(outcome),
+  };
+  passwordFailure = mode;
+  assert.equal(
+    (
+      await call(
+        'auth',
+        'POST',
+        { action: 'password', password: 'failure-replacement-password!' },
+        recoveryCookie,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(ownerState().recovery_id, null);
+  assert.equal(ownerState().recovery_until, 0, 'Failures do not leave a permanent recovery lock');
+  gate.release.resolve();
+  assert.equal((await pending).status, 400, 'Failure also fences the delayed old proof');
+  assert.equal(auditCount('password.recovery_attempt'), before.attempt + 1);
+  assert.equal(auditCount('password.recovered'), before.success);
+  assert.equal(auditCount(outcome), before.outcome + 1);
+  assert.equal((await call('companies', 'GET', null, oldCookie)).status, 401);
+  assert.equal(
+    (
+      await call(
+        'auth',
+        'POST',
+        { action: 'password', password: 'replayed-password!' },
+        recoveryCookie,
+      )
+    ).status,
+    403,
+  );
+  assert.equal(
+    (await call('companies', 'GET', null, await login('owner'))).status,
+    200,
+    'Fresh provider-approved credentials work after any failed/unknown outcome',
+  );
+  const freshLink = await recoveryLink();
+  assert.equal(
+    (
+      await call(
+        'auth',
+        'POST',
+        { action: 'reauthenticate', password: passwords.get(accounts.owner.id) },
+        freshLink,
+      )
+    ).status,
+    401,
+    'Recovery cannot reauthenticate into company access',
+  );
+  assert.equal(
+    (
+      await call(
+        'auth',
+        'POST',
+        { action: 'password', password: 'fresh-retry-password!' },
+        freshLink,
+      )
+    ).status,
+    200,
+    'A fresh recovery can retry',
+  );
 }
-for(const mode of ['rejected','unavailable','timeout','lost-response'])await failedRecovery(mode);
-console.log('PASS: BUG-01 rejected/unknown/timeout/lost-response recovery, audit outcomes and fresh retry');
+
+for (const mode of ['rejected', 'unavailable', 'timeout', 'lost-response'])
+  await failedRecovery(mode);
+console.log(
+  'PASS: BUG-01 rejected/unknown/timeout/lost-response recovery, audit outcomes and fresh retry',
+);
 
 // A company authentication that already read its row must recheck revocation
 // after the delayed provider response, using its own captured cookie headers.
-const validationCookie=await login('owner'),validationRecovery=await recoveryLink();
-const validationUser=await modules.authlib.sessionFromHeaders(new Headers({Cookie:validationCookie})),validationGate=barrier();
-tokenBarriers.set(validationUser.accessToken,{...validationGate,pauseAt:1,calls:0});
-const validationPending=call('companies','GET',null,validationCookie);await reached(validationGate,validationPending);
-assert.equal((await call('auth','POST',{action:'password',password:'validation-reset-password!'},validationRecovery)).status,200);
-validationGate.release.resolve();assert.equal((await validationPending).status,401,'Provider verification cannot revive a session revoked during that GET');
+const validationCookie = await login('owner'),
+  validationRecovery = await recoveryLink();
+const validationUser = await modules.authlib.sessionFromHeaders(
+    new Headers({ Cookie: validationCookie }),
+  ),
+  validationGate = barrier();
+tokenBarriers.set(validationUser.accessToken, { ...validationGate, pauseAt: 1, calls: 0 });
+const validationPending = call('companies', 'GET', null, validationCookie);
+await reached(validationGate, validationPending);
+assert.equal(
+  (
+    await call(
+      'auth',
+      'POST',
+      { action: 'password', password: 'validation-reset-password!' },
+      validationRecovery,
+    )
+  ).status,
+  200,
+);
+validationGate.release.resolve();
+assert.equal(
+  (await validationPending).status,
+  401,
+  'Provider verification cannot revive a session revoked during that GET',
+);
 
 // A deleted predecessor must fail even without a recovery epoch change.
-const deletedCookie=await login('owner'),deletedGate=barrier();sessionBatchBarrier=deletedGate;
-const deletedPending=call('auth','POST',{action:'reauthenticate',password:passwords.get(accounts.owner.id)},deletedCookie);await reached(deletedGate,deletedPending);
-assert.equal((await call('auth','POST',{action:'signout'},deletedCookie)).status,200);deletedGate.release.resolve();
-assert.equal((await deletedPending).status,400,'A missing oldHash cannot bypass the insertion fence');
+const deletedCookie = await login('owner'),
+  deletedGate = barrier();
+sessionBatchBarrier = deletedGate;
+const deletedPending = call(
+  'auth',
+  'POST',
+  { action: 'reauthenticate', password: passwords.get(accounts.owner.id) },
+  deletedCookie,
+);
+await reached(deletedGate, deletedPending);
+assert.equal((await call('auth', 'POST', { action: 'signout' }, deletedCookie)).status, 200);
+deletedGate.release.resolve();
+assert.equal(
+  (await deletedPending).status,
+  400,
+  'A missing oldHash cannot bypass the insertion fence',
+);
 console.log('PASS: BUG-01 delayed company authentication and deleted reauthentication predecessor');
 
 // Advance a fake clock rather than sleeping. Expiration invalidates proofs
 // captured during the lease; late completion cannot clear a newer reset's lease.
-const realNow=Date.now;let clock=realNow();Date.now=()=>clock;
-try{
- const firstCookie=await recoveryLink(),firstPut=barrier();passwordPutBarrier=firstPut;
- const first=call('auth','POST',{action:'password',password:'abandoned-reset-password!'},firstCookie);await reached(firstPut,first);
- const expiredId=ownerState().recovery_id,duringGate=barrier();sessionBatchBarrier=duringGate;
- const during=call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)});await reached(duringGate,during);
- clock+=modules.fence.RECOVERY_LEASE_MS+1;
- const afterExpiry=await login('owner');assert.equal((await call('companies','GET',null,afterExpiry)).status,200,'Abandoned recovery unlocks only through a fresh fence');
- assert.equal(sql.prepare('SELECT action,target FROM security_audit WHERE id=?').get(expiredId+':expired').action,'password.recovery_unknown');
- duringGate.release.resolve();assert.equal((await during).status,400,'Lease expiration cannot admit a proof started during recovery');
- const secondCookie=await recoveryLink(),secondPut=barrier();passwordPutBarrier=secondPut;
- const second=call('auth','POST',{action:'password',password:'newer-reset-password!'},secondCookie);await reached(secondPut,second);
- const newer=ownerState();firstPut.release.resolve();assert.equal((await first).status,200);
- assert.equal(ownerState().recovery_id,newer.recovery_id);assert.equal(ownerState().recovery_until,newer.recovery_until,'Late completion must not unlock a newer recovery');
- assert.equal((await call('companies','GET',null,afterExpiry)).status,401);
- secondPut.release.resolve();assert.equal((await second).status,200);assert.equal(ownerState().recovery_id,null);
- assert.equal((await call('companies','GET',null,await login('owner'))).status,200);
- const commitCookie=await recoveryLink();completionFailures=1;
- const successes=auditCount('password.recovered');
- assert.equal((await call('auth','POST',{action:'password',password:'commit-failure-password!'},commitCookie)).status,400);
- assert.equal(auditCount('password.recovered'),successes,'A rolled-back completion cannot claim audited success');
- assert.ok(ownerState().recovery_id);clock+=modules.fence.RECOVERY_LEASE_MS+1;
- assert.equal((await call('companies','GET',null,await login('owner'))).status,200,'A completion DB failure does not leave a permanent lock');
-}finally{Date.now=realNow;}
+const realNow = Date.now;
+let clock = realNow();
+Date.now = () => clock;
+try {
+  const firstCookie = await recoveryLink(),
+    firstPut = barrier();
+  passwordPutBarrier = firstPut;
+  const first = call(
+    'auth',
+    'POST',
+    { action: 'password', password: 'abandoned-reset-password!' },
+    firstCookie,
+  );
+  await reached(firstPut, first);
+  const expiredId = ownerState().recovery_id,
+    duringGate = barrier();
+  sessionBatchBarrier = duringGate;
+  const during = call('auth', 'POST', {
+    action: 'signin',
+    email: accounts.owner.email,
+    password: passwords.get(accounts.owner.id),
+  });
+  await reached(duringGate, during);
+  clock += modules.fence.RECOVERY_LEASE_MS + 1;
+  const afterExpiry = await login('owner');
+  assert.equal(
+    (await call('companies', 'GET', null, afterExpiry)).status,
+    200,
+    'Abandoned recovery unlocks only through a fresh fence',
+  );
+  assert.equal(
+    sql.prepare('SELECT action,target FROM security_audit WHERE id=?').get(expiredId + ':expired')
+      .action,
+    'password.recovery_unknown',
+  );
+  duringGate.release.resolve();
+  assert.equal(
+    (await during).status,
+    400,
+    'Lease expiration cannot admit a proof started during recovery',
+  );
+  const secondCookie = await recoveryLink(),
+    secondPut = barrier();
+  passwordPutBarrier = secondPut;
+  const second = call(
+    'auth',
+    'POST',
+    { action: 'password', password: 'newer-reset-password!' },
+    secondCookie,
+  );
+  await reached(secondPut, second);
+  const newer = ownerState();
+  firstPut.release.resolve();
+  assert.equal((await first).status, 200);
+  assert.equal(ownerState().recovery_id, newer.recovery_id);
+  assert.equal(
+    ownerState().recovery_until,
+    newer.recovery_until,
+    'Late completion must not unlock a newer recovery',
+  );
+  assert.equal((await call('companies', 'GET', null, afterExpiry)).status, 401);
+  secondPut.release.resolve();
+  assert.equal((await second).status, 200);
+  assert.equal(ownerState().recovery_id, null);
+  assert.equal((await call('companies', 'GET', null, await login('owner'))).status, 200);
+  const commitCookie = await recoveryLink();
+  completionFailures = 1;
+  const successes = auditCount('password.recovered');
+  assert.equal(
+    (
+      await call(
+        'auth',
+        'POST',
+        { action: 'password', password: 'commit-failure-password!' },
+        commitCookie,
+      )
+    ).status,
+    400,
+  );
+  assert.equal(
+    auditCount('password.recovered'),
+    successes,
+    'A rolled-back completion cannot claim audited success',
+  );
+  assert.ok(ownerState().recovery_id);
+  clock += modules.fence.RECOVERY_LEASE_MS + 1;
+  assert.equal(
+    (await call('companies', 'GET', null, await login('owner'))).status,
+    200,
+    'A completion DB failure does not leave a permanent lock',
+  );
+} finally {
+  Date.now = realNow;
+}
 console.log('PASS: BUG-01 abandoned/late recovery, fenced lease expiry and completion rollback');
 
 // Preserve the provider lifetime cap, token encryption and recovery isolation.
-for(const lifetime of [30,7200]){
- providerLifetime=lifetime;
- const r=await call('auth','POST',{action:'signin',email:accounts.owner.email,password:passwords.get(accounts.owner.id)});
- assert.equal(r.status,200);const cookie=r.headers.get('set-cookie'),digest=await modules.authlib.hash(cookie.split(';')[0].split('=')[1]);
- assert.match(cookie,new RegExp('Max-Age='+Math.min(lifetime,3600)+'; Secure'));
- const row=sql.prepare('SELECT * FROM auth_sessions WHERE hash=?').get(digest);
- assert.ok(Math.abs(row.expires-Date.now()-Math.min(lifetime,3600)*1000)<2000);
- assert.ok(!row.token.includes('fictional-unused-refresh-token'));assert.ok(!tokens.has(row.token),'Only encrypted access tokens are retained');
- const normalHeaders=new Headers({Cookie:cookie.split(';')[0]});assert.ok(await modules.authlib.sessionFromHeaders(normalHeaders));
- sql.prepare('UPDATE auth_sessions SET token=? WHERE hash=?').run('tampered',digest);
- assert.equal(await modules.authlib.sessionFromHeaders(normalHeaders),null,'Encrypted token tampering fails closed');
+for (const lifetime of [30, 7200]) {
+  providerLifetime = lifetime;
+  const r = await call('auth', 'POST', {
+    action: 'signin',
+    email: accounts.owner.email,
+    password: passwords.get(accounts.owner.id),
+  });
+  assert.equal(r.status, 200);
+  const cookie = r.headers.get('set-cookie'),
+    digest = await modules.authlib.hash(cookie.split(';')[0].split('=')[1]);
+  assert.match(cookie, new RegExp('Max-Age=' + Math.min(lifetime, 3600) + '; Secure'));
+  const row = sql.prepare('SELECT * FROM auth_sessions WHERE hash=?').get(digest);
+  assert.ok(Math.abs(row.expires - Date.now() - Math.min(lifetime, 3600) * 1000) < 2000);
+  assert.ok(!row.token.includes('fictional-unused-refresh-token'));
+  assert.ok(!tokens.has(row.token), 'Only encrypted access tokens are retained');
+  const normalHeaders = new Headers({ Cookie: cookie.split(';')[0] });
+  assert.ok(await modules.authlib.sessionFromHeaders(normalHeaders));
+  sql.prepare('UPDATE auth_sessions SET token=? WHERE hash=?').run('tampered', digest);
+  assert.equal(
+    await modules.authlib.sessionFromHeaders(normalHeaders),
+    null,
+    'Encrypted token tampering fails closed',
+  );
 }
-providerLifetime=3600;
-assert.deepEqual(companyRecords(),companyRecordsBefore,'BUG-01 never changes company roles, stock or history');
-assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(),[]);
-assert.equal(sql.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
-console.log('PASS: M2 verified sessions, all API families, role/company isolation, CSRF, invitations/replay/concurrency, ownership protection, audit, logout, expiry and recovery. Supabase responses mocked; real provider setup remains a separate acceptance step.');
+providerLifetime = 3600;
+assert.deepEqual(
+  companyRecords(),
+  companyRecordsBefore,
+  'BUG-01 never changes company roles, stock or history',
+);
+assert.deepEqual(sql.prepare('PRAGMA foreign_key_check').all(), []);
+assert.equal(sql.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
+console.log(
+  'PASS: M2 verified sessions, all API families, role/company isolation, CSRF, invitations/replay/concurrency, ownership protection, audit, logout, expiry and recovery. Supabase responses mocked; real provider setup remains a separate acceptance step.',
+);

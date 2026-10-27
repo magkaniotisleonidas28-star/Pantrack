@@ -54,7 +54,9 @@
     "cart:spending-limits:check": "node scripts/po-cart-spending-limits-ui-check.mjs",
     "cart:confirmation:check": "node scripts/po-cart-confirmation-ui-check.mjs",
     "cart:delivery:check": "node scripts/po-cart-delivery-ui-check.mjs",
-    "cart:weekly-drafts:check": "node scripts/po-draft-schedule-ui-check.mjs"
+    "cart:weekly-drafts:check": "node scripts/po-draft-schedule-ui-check.mjs",
+    "format:check": "node scripts/readability-format.mjs",
+    "format:write": "node scripts/readability-format.mjs --write"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -110,7 +112,8 @@
     "typescript": "5.9.3",
     "vinext": "1.0.0-beta.5",
     "vite": "8.0.13",
-    "wrangler": "4.92.0"
+    "wrangler": "4.92.0",
+    "prettier": "3.9.10"
   },
   "type": "module",
   "overrides": {

@@ -6,20 +6,20 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "PANTRACK_EXACT_INVENTORY_PREVIEW": "enabled",
-    "PANTRACK_CLOVER_SYNC_ENABLED": "disabled"
+    "PANTRACK_CLOVER_SYNC_ENABLED": "disabled",
   },
   "main": "vinext/server/fetch-handler",
   "assets": {
     "directory": "dist/client",
     "not_found_handling": "none",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "pantrack-dev-db",
       "database_id": "9b50014b-f929-4f03-a187-599df6e438b1",
-      "migrations_dir": "drizzle"
-    }
-  ]
+      "migrations_dir": "drizzle",
+    },
+  ],
 }

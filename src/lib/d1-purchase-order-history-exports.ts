@@ -1,16 +1,31 @@
-import {buildPurchaseOrderHistoryRecord} from './purchase-order-export-contract';
-import {purchaseOrderHistoryWhere} from './purchase-order-history-sql';
-import {buildPurchaseOrderHistoryExport,historyExportFail,purchaseOrderHistoryExportRequest,
-  HISTORY_EXPORT_MAX_ORDERS,HISTORY_EXPORT_MAX_LINES,HISTORY_EXPORT_MAX_BYTES} from './purchase-order-history-export-contract';
+import { buildPurchaseOrderHistoryRecord } from './purchase-order-export-contract';
+import { purchaseOrderHistoryWhere } from './purchase-order-history-sql';
+import {
+  buildPurchaseOrderHistoryExport,
+  historyExportFail,
+  purchaseOrderHistoryExportRequest,
+  HISTORY_EXPORT_MAX_ORDERS,
+  HISTORY_EXPORT_MAX_LINES,
+  HISTORY_EXPORT_MAX_BYTES,
+} from './purchase-order-history-export-contract';
 
 /** One database snapshot covers all matching current revisions and authorization; no client paging. */
-export class D1PurchaseOrderHistoryExports{
-  constructor(private readonly db:D1Database,private readonly options:{identity:()=>Promise<string|null>}){}
-  async get(value:unknown){
-    const parsed=purchaseOrderHistoryExportRequest.safeParse(value);if(!parsed.success)historyExportFail('invalid_request','Check the history export filters.');
-    const {companyId,filters,expected}=parsed.data,actor=await this.options.identity();if(!actor)historyExportFail('forbidden','Owner or manager membership is required.');
-    const where=purchaseOrderHistoryWhere(filters);
-    const result=await this.db.prepare(`WITH history_export_allowed AS (
+export class D1PurchaseOrderHistoryExports {
+  constructor(
+    private readonly db: D1Database,
+    private readonly options: { identity: () => Promise<string | null> },
+  ) {}
+
+  async get(value: unknown) {
+    const parsed = purchaseOrderHistoryExportRequest.safeParse(value);
+    if (!parsed.success) historyExportFail('invalid_request', 'Check the history export filters.');
+    const { companyId, filters, expected } = parsed.data,
+      actor = await this.options.identity();
+    if (!actor) historyExportFail('forbidden', 'Owner or manager membership is required.');
+    const where = purchaseOrderHistoryWhere(filters);
+    const result = await this.db
+      .prepare(
+        `WITH history_export_allowed AS (
       SELECT user_id FROM memberships WHERE company_id=? AND user_id=? AND role IN ('owner','manager')
     ), matched AS (
       SELECT h.company_id,h.id,h.number,h.supplier_id,h.created_at AS header_created_at,h.revision AS current_revision,h.status AS current_status,
@@ -26,18 +41,45 @@ export class D1PurchaseOrderHistoryExports{
         coalesce(max(bad),0) AS bad_source FROM matched
     ) SELECT stats.*,m.* FROM history_export_allowed CROSS JOIN stats LEFT JOIN matched m
       ON stats.order_count<=? AND stats.line_count<=? AND stats.source_bytes<=? AND stats.bad_source=0
-      ORDER BY m.header_created_at DESC,m.id DESC`)
-      .bind(companyId,actor,companyId,...where.args,HISTORY_EXPORT_MAX_ORDERS,HISTORY_EXPORT_MAX_LINES,HISTORY_EXPORT_MAX_BYTES).all<Record<string,unknown>>();
-    const first=result.results[0];if(!first)historyExportFail('forbidden','Owner or manager membership is required.');
-    if(first.bad_source!==0)historyExportFail('source_invalid','A saved draft needs review before this history can be exported.');
-    if(first.order_count===0)historyExportFail('empty','No saved drafts match these filters.');
-    if(Number(first.order_count)>HISTORY_EXPORT_MAX_ORDERS||Number(first.line_count)>HISTORY_EXPORT_MAX_LINES||Number(first.source_bytes)>HISTORY_EXPORT_MAX_BYTES){
-      historyExportFail('too_large','This history export is too large. Narrow the filters and try again.');
+      ORDER BY m.header_created_at DESC,m.id DESC`,
+      )
+      .bind(
+        companyId,
+        actor,
+        companyId,
+        ...where.args,
+        HISTORY_EXPORT_MAX_ORDERS,
+        HISTORY_EXPORT_MAX_LINES,
+        HISTORY_EXPORT_MAX_BYTES,
+      )
+      .all<Record<string, unknown>>();
+    const first = result.results[0];
+    if (!first) historyExportFail('forbidden', 'Owner or manager membership is required.');
+    if (first.bad_source !== 0)
+      historyExportFail(
+        'source_invalid',
+        'A saved draft needs review before this history can be exported.',
+      );
+    if (first.order_count === 0) historyExportFail('empty', 'No saved drafts match these filters.');
+    if (
+      Number(first.order_count) > HISTORY_EXPORT_MAX_ORDERS ||
+      Number(first.line_count) > HISTORY_EXPORT_MAX_LINES ||
+      Number(first.source_bytes) > HISTORY_EXPORT_MAX_BYTES
+    ) {
+      historyExportFail(
+        'too_large',
+        'This history export is too large. Narrow the filters and try again.',
+      );
     }
-    const records=result.results.map(row=>buildPurchaseOrderHistoryRecord(row,companyId));
-    if(records.length!==first.order_count)historyExportFail('source_invalid','The history is incomplete. Refresh the results.');
-    const snapshot=await buildPurchaseOrderHistoryExport(companyId,filters,records);
-    if(expected&&snapshot.fingerprint!==expected)historyExportFail('changed','The matching history changed. Refresh the results before exporting again.');
+    const records = result.results.map((row) => buildPurchaseOrderHistoryRecord(row, companyId));
+    if (records.length !== first.order_count)
+      historyExportFail('source_invalid', 'The history is incomplete. Refresh the results.');
+    const snapshot = await buildPurchaseOrderHistoryExport(companyId, filters, records);
+    if (expected && snapshot.fingerprint !== expected)
+      historyExportFail(
+        'changed',
+        'The matching history changed. Refresh the results before exporting again.',
+      );
     return snapshot;
   }
 }
