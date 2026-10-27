@@ -105,6 +105,9 @@ Built and verified locally: [Part 2 evidence](C4_WEEKLY_SCHEDULES_LOCAL_EVIDENCE
 
 ### Part 3 — screens
 
+Built and verified locally: [Part 3 evidence](C4_WEEKLY_SCHEDULE_SCREENS_LOCAL_EVIDENCE.md). The draft label is on the opened draft (the draft list belongs to the teammate's history code).
+
+
 - Schedule settings for owners and managers.
 - Each schedule's recent weeks and next run.
 - Drafts created by a schedule are labelled in the draft list.
