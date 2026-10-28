@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRequestScope } from '@/hooks/use-request-scope';
 import Workspace from './workspace';
 import MembersPanel from './members-panel';
 import EmployeeWorkspace from './employee-workspace';
@@ -38,33 +39,46 @@ export default function CompanyPortal({ email }: { email: string }) {
   const createId = useRef(''),
     saving = useRef(false);
   const preference = 'pantry-company:' + email;
-  async function load() {
+  const beginRequest = useRequestScope(email);
+  const loadData = useCallback(() => {
+    const currentRequest = beginRequest();
+    return fetch('/api/companies')
+      .then(async (response) => {
+        const data = (await response.json()) as { companies: Company[]; error?: string };
+        if (!response.ok) throw new Error(data.error);
+        return data;
+      })
+      .then((data) => {
+        if (!currentRequest()) return;
+        setCompanies(data.companies);
+        let saved = new URLSearchParams(location.search).get('company') || '';
+        if (!saved)
+          try {
+            saved = localStorage.getItem(preference) || '';
+          } catch {}
+        setActive(
+          data.companies.find((company) => company.id === saved)?.id || data.companies[0]?.id || '',
+        );
+        if (!data.companies.length) {
+          setForm('create');
+          createId.current = crypto.randomUUID();
+        }
+      })
+      .catch((error) => {
+        if (currentRequest()) setError((error as Error).message);
+      })
+      .finally(() => {
+        if (currentRequest()) setLoading(false);
+      });
+  }, [preference, beginRequest]);
+  function load() {
     setLoading(true);
     setError('');
-    try {
-      const r = await fetch('/api/companies'),
-        d = (await r.json()) as { companies: Company[]; error?: string };
-      if (!r.ok) throw new Error(d.error);
-      setCompanies(d.companies);
-      let saved = new URLSearchParams(location.search).get('company') || '';
-      if (!saved)
-        try {
-          saved = localStorage.getItem(preference) || '';
-        } catch {}
-      setActive(d.companies.find((c) => c.id === saved)?.id || d.companies[0]?.id || '');
-      if (!d.companies.length) {
-        setForm('create');
-        createId.current = crypto.randomUUID();
-      }
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
+    return loadData();
   }
   useEffect(() => {
-    void load();
-  }, []);
+    void loadData();
+  }, [loadData]);
   useEffect(() => {
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => {

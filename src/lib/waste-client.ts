@@ -82,3 +82,11 @@ export async function sendSaveRequest(
 export function wasteStorageKey(companyId: string, person: string) {
   return 'pantrack-waste:' + JSON.stringify([companyId, person]);
 }
+
+/** Capture a new entry's server-calibrated time only in its submit handler. */
+export function wasteEffectiveAt(
+  calibration: { at: number; received: number },
+  now = () => performance.now(),
+) {
+  return new Date(calibration.at + Math.max(0, now() - calibration.received)).toISOString();
+}

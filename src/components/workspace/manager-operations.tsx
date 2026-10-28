@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRequestScope } from '@/hooks/use-request-scope';
 import { Button } from '@/components/ui/button';
 export default function ManagerOperations({ companyId }: { companyId: string }) {
   const [data, setData] = useState<{
@@ -8,19 +9,25 @@ export default function ManagerOperations({ companyId }: { companyId: string }) 
     } | null>(null),
     [message, setMessage] = useState(''),
     [busy, setBusy] = useState(false);
-  async function load() {
-    try {
-      const r = await fetch('/api/automation?companyId=' + encodeURIComponent(companyId)),
-        d = (await r.json()) as NonNullable<typeof data> & { error?: string; message?: string };
-      if (!r.ok) throw new Error(d.error);
-      setData(d);
-    } catch (e) {
-      setMessage((e as Error).message);
-    }
-  }
+  const beginRequest = useRequestScope(companyId);
+  const load = useCallback(() => {
+    const current = beginRequest();
+    return fetch('/api/automation?companyId=' + encodeURIComponent(companyId))
+      .then(async (response) => {
+        const next = (await response.json()) as NonNullable<typeof data> & { error?: string };
+        if (!response.ok) throw new Error(next.error);
+        return next;
+      })
+      .then((next) => {
+        if (current()) setData(next);
+      })
+      .catch((error) => {
+        if (current()) setMessage((error as Error).message);
+      });
+  }, [companyId, beginRequest]);
   useEffect(() => {
     void load();
-  }, [companyId]);
+  }, [load]);
   async function act(action: string, id?: string) {
     setBusy(true);
     try {

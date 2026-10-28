@@ -1,5 +1,8 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRequestScope } from '@/hooks/use-request-scope';
+import { useBrowserReady } from '@/hooks/use-browser-ready';
+import { recoverIngredientWaste } from '@/lib/waste-browser-recovery';
 import { Trash2, Star, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,16 +16,15 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog';
+import { WASTE_REASONS, type WasteOptions, type WasteShortcut } from '@/lib/waste-contract';
 import {
-  WASTE_REASONS,
-  shortcutSubmission,
-  wasteSubmission,
-  type WasteOptions,
-  type WasteShortcut,
-} from '@/lib/waste-contract';
-import { sendWasteSave, wasteStorageKey, type PendingWasteSave } from '@/lib/waste-client';
+  sendWasteSave,
+  wasteStorageKey,
+  wasteEffectiveAt,
+  type PendingWasteSave,
+} from '@/lib/waste-client';
 
-export default function WasteRecorder({
+function WasteRecorderClient({
   companyId,
   email,
   role,
@@ -39,101 +41,89 @@ export default function WasteRecorder({
   launchCount?: number;
   showButton?: boolean;
 }) {
+  const storageKey = wasteStorageKey(companyId, email);
+  const [restored] = useState(() => recoverIngredientWaste(storageKey, companyId));
+  const restoredWaste = restored.pending?.kind === 'waste' ? restored.pending.request : null;
+  const restoredShortcuts =
+    restored.pending?.kind === 'shortcuts' ? restored.pending.request : null;
+  const [observedLaunch, setObservedLaunch] = useState(launchCount);
+  const [loadedLaunch, setLoadedLaunch] = useState(launchCount);
   const [enabled, setEnabled] = useState(false),
-    [open, setOpen] = useState(false),
+    [open, setOpen] = useState(!!restored.pending || launchCount > 0),
     [options, setOptions] = useState<WasteOptions | null>(null),
-    [loading, setLoading] = useState(false),
-    [error, setError] = useState(''),
+    [explicitLoading, setLoading] = useState(false),
+    [error, setError] = useState(
+      restored.pending
+        ? 'A previous save needs confirmation. Retry the same entry to check it safely.'
+        : '',
+    ),
     [notice, setNotice] = useState('');
   const [search, setSearch] = useState(''),
-    [productId, setProductId] = useState(''),
-    [amount, setAmount] = useState(''),
-    [reason, setReason] = useState(''),
-    [note, setNote] = useState('');
-  const [favorites, setFavorites] = useState<string[]>([]),
-    [recent, setRecent] = useState<string[]>([]),
-    [pending, setPending] = useState<PendingWasteSave | null>(null),
+    [productId, setProductId] = useState(restored.pending?.request.productId ?? ''),
+    [amount, setAmount] = useState(restoredWaste?.amount ?? ''),
+    [reason, setReason] = useState(restoredWaste?.reason ?? ''),
+    [note, setNote] = useState(restoredWaste?.note ?? '');
+  const [favorites, setFavorites] = useState<string[]>(restored.favorites),
+    [recent, setRecent] = useState<string[]>(restored.recent),
+    [pending, setPending] = useState<PendingWasteSave | null>(restored.pending),
     [busy, setBusy] = useState(false),
     [saved, setSaved] = useState(false),
     [discard, setDiscard] = useState(false);
-  const [editingShortcuts, setEditingShortcuts] = useState(false),
-    [shortcuts, setShortcuts] = useState<WasteShortcut[]>([]);
+  const [editingShortcuts, setEditingShortcuts] = useState(!!restoredShortcuts),
+    [shortcuts, setShortcuts] = useState<WasteShortcut[]>(restoredShortcuts?.shortcuts ?? []);
   const lock = useRef(false),
     serverTime = useRef({ at: 0, received: 0 });
-  const storageKey = wasteStorageKey(companyId, email),
-    canConfigure = role === 'owner' || role === 'manager';
+  const canConfigure = role === 'owner' || role === 'manager';
   const item = options?.items.find((i) => i.productId === productId),
     dirty = !saved && !!(productId || amount || reason || note || pending || editingShortcuts);
   const frozen = busy || !!pending;
-
-  async function load() {
-    setLoading(true);
-    try {
-      const r = await fetch('/api/waste?companyId=' + encodeURIComponent(companyId), {
-        cache: 'no-store',
-      });
-      if (r.status === 404) {
-        setEnabled(false);
-        return;
-      }
-      const d = (await r.json()) as WasteOptions & { error?: string };
-      if (!r.ok) throw new Error(d.error || 'Could not load ingredients.');
-      serverTime.current = { at: Date.parse(d.serverNow), received: performance.now() };
-      setOptions(d);
-      setEnabled(true);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
+  const loading = explicitLoading || loadedLaunch !== launchCount;
+  if (observedLaunch !== launchCount) {
+    setObservedLaunch(launchCount);
+    if (launchCount > 0) {
+      setOpen(true);
+      if (!pending) setError('');
     }
   }
-  useEffect(() => {
-    void load();
-    try {
-      const preferences = JSON.parse(localStorage.getItem(storageKey) || '{}');
-      if (Array.isArray(preferences.favorites))
-        setFavorites(
-          preferences.favorites.filter((v: unknown) => typeof v === 'string').slice(0, 50),
-        );
-      if (Array.isArray(preferences.recent))
-        setRecent(preferences.recent.filter((v: unknown) => typeof v === 'string').slice(0, 6));
-    } catch {
-      /* Preferences must never prevent recovery of a pending save. */
-    }
-    try {
-      const stored = JSON.parse(sessionStorage.getItem(storageKey + ':pending') || 'null');
-      if (stored) {
-        const restored: PendingWasteSave | null =
-          stored.kind === 'waste'
-            ? { kind: 'waste', request: wasteSubmission.parse(stored.request) }
-            : stored.kind === 'shortcuts'
-              ? { kind: 'shortcuts', request: shortcutSubmission.parse(stored.request) }
-              : null;
-        if (restored && restored.request.companyId === companyId) {
-          setPending(restored);
-          setProductId(restored.request.productId);
-          setOpen(true);
-          if (restored.kind === 'waste') {
-            setAmount(restored.request.amount);
-            setReason(restored.request.reason);
-            setNote(restored.request.note);
-          } else {
-            setEditingShortcuts(true);
-            setShortcuts(restored.request.shortcuts);
-          }
-          setError('A previous save needs confirmation. Retry the same entry to check it safely.');
+
+  const beginRequest = useRequestScope(companyId);
+  const loadData = useCallback(() => {
+    const current = beginRequest();
+    return fetch('/api/waste?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' })
+      .then(async (response) => {
+        if (!current()) return;
+        if (response.status === 404) {
+          setEnabled(false);
+          return;
         }
-      }
-    } catch {
-      /* Invalid browser data is never submitted to the server. */
-    }
-  }, [companyId, email]);
+        const data = (await response.json()) as WasteOptions & { error?: string };
+        if (!response.ok) throw new Error(data.error || 'Could not load ingredients.');
+        if (!current()) return;
+        serverTime.current = { at: Date.parse(data.serverNow), received: performance.now() };
+        setOptions(data);
+        setEnabled(true);
+      })
+      .catch((error) => {
+        if (current()) setError((error as Error).message);
+      })
+      .finally(() => {
+        if (current()) {
+          setLoadedLaunch(launchCount);
+          setLoading(false);
+        }
+      });
+  }, [companyId, beginRequest, launchCount]);
+  function load() {
+    setLoading(true);
+    return loadData();
+  }
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
   useEffect(() => {
     onDirtyChange(dirty);
   }, [dirty, onDirtyChange]);
-  useEffect(() => {
-    if (launchCount > 0) close(true);
-  }, [launchCount]);
+
   useEffect(() => {
     if (!dirty) return;
     const warn = (e: BeforeUnloadEvent) => {
@@ -238,9 +228,7 @@ export default function WasteRecorder({
             unitId: item.unitId,
             reason: reason as 'spilled',
             note,
-            effectiveAt: new Date(
-              serverTime.current.at + Math.max(0, performance.now() - serverTime.current.received),
-            ).toISOString(),
+            effectiveAt: wasteEffectiveAt(serverTime.current),
           },
         };
       if (!freeze(attempt)) return;
@@ -611,4 +599,11 @@ export default function WasteRecorder({
       </AlertDialog>
     </>
   );
+}
+
+export default function WasteRecorder(props: React.ComponentProps<typeof WasteRecorderClient>) {
+  const ready = useBrowserReady();
+  return ready ? (
+    <WasteRecorderClient key={JSON.stringify([props.companyId, props.email])} {...props} />
+  ) : null;
 }

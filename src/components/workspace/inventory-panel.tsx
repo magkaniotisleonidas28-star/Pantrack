@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
@@ -16,18 +17,22 @@ import ExactInventoryPanel from './exact-inventory-panel';
 import {InventoryLayout,StockSearch} from './inventory-layout';
 type Recipe={id:string;name:string;ingredients:{productId:string;quantity:number;unit:string}[]};
 type Edit={productId:string;action:string;id:string;version:number;settings:InventorySettings};
-export default function InventoryPanel({companyId,products,role,hasDraft,onStage,section,onSectionChange,onModeChange,focusProductId,onFocusHandled,refreshKey,onCatalogReload,onDirtyChange}:{companyId:string;products:Product[];role:string;hasDraft:boolean;section:InventorySection;onSectionChange:(section:InventorySection)=>void;refreshKey:number;focusProductId?:string;onFocusHandled:()=>void;onCatalogReload:()=>Promise<void>;onModeChange:(mode:InventoryMode)=>void;onDirtyChange:(dirty:boolean)=>void;onStage:(q:Record<string,number>)=>void}){
-const [records,setRecords]=useState<InventoryRecord[]>([]),[events,setEvents]=useState<InventoryEvent[]>([]),[recipes,setRecipes]=useState<Recipe[]>([]),[imports,setImports]=useState<{reference:string;created:string}[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[edit,setEdit]=useState<Edit|null>(null),[amount,setAmount]=useState(0),[note,setNote]=useState(''),[fromIncoming,setFromIncoming]=useState(true),[busy,setBusy]=useState(false),[recipe,setRecipe]=useState<Recipe|null>(null),[sales,setSales]=useState<Record<string,number>>({}),[reference,setReference]=useState(''),[clock,setClock]=useState(Date.now());
+export default function InventoryPanel({companyId,products,role,hasDraft,onStage,section:requestedSection,onSectionChange,onModeChange,focusProductId,onFocusHandled,refreshKey,onCatalogReload,onDirtyChange}:{companyId:string;products:Product[];role:string;hasDraft:boolean;section:InventorySection;onSectionChange:(section:InventorySection)=>void;refreshKey:number;focusProductId?:string;onFocusHandled:()=>void;onCatalogReload:()=>Promise<void>;onModeChange:(mode:InventoryMode)=>void;onDirtyChange:(dirty:boolean)=>void;onStage:(q:Record<string,number>)=>void}){
+const [records,setRecords]=useState<InventoryRecord[]>([]),[events,setEvents]=useState<InventoryEvent[]>([]),[recipes,setRecipes]=useState<Recipe[]>([]),[imports,setImports]=useState<{reference:string;created:string}[]>([]),[explicitLoading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[edit,setEdit]=useState<Edit|null>(null),[amount,setAmount]=useState(0),[note,setNote]=useState(''),[fromIncoming,setFromIncoming]=useState(true),[busy,setBusy]=useState(false),[recipe,setRecipe]=useState<Recipe|null>(null),[sales,setSales]=useState<Record<string,number>>({}),[reference,setReference]=useState(''),[clock,setClock]=useState(Date.now);
 const [exactEnabled,setExactEnabled]=useState(false),[exact,setExact]=useState<InventoryManagementView|null>(null);
 const lock=useRef(false);
 const [onlyChecks,setOnlyChecks]=useState(false),[stockSearch,setStockSearch]=useState('');
-async function call(path:string,body?:Record<string,unknown>){const r=await fetch('/api/'+path+'?companyId='+encodeURIComponent(companyId),body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})}:undefined);const d=await r.json() as any;if(!r.ok)throw new Error(d.error||'Request failed');return d;}
-async function load(rethrow=false){setLoading(true);try{const [i,s]=await Promise.all([call('inventory'),call('sales')]);setRecords(i.records);setEvents(i.events);setRecipes(s.recipes);setImports(s.imports);setExactEnabled(i.exactEnabled===true);setExact(i.exact??null);setClock(Date.now());}catch(e){setError((e as Error).message);if(rethrow)throw e;}finally{setLoading(false);}}
-useEffect(()=>{void load();},[refreshKey]);
+const call=useCallback(async(path:string,body?:Record<string,unknown>)=>{const r=await fetch('/api/'+path+'?companyId='+encodeURIComponent(companyId),body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})}:undefined);const d=await r.json() as any;if(!r.ok)throw new Error(d.error||'Request failed');return d;},[companyId]);
+const [loadedRefresh,setLoadedRefresh]=useState(refreshKey);
+const loading=explicitLoading||loadedRefresh!==refreshKey;
+const beginRequest=useRequestScope(companyId);
+const loadData=useCallback((rethrow=false)=>{const current=beginRequest();return Promise.all([call('inventory'),call('sales')]).then(([i,s])=>{if(!current())return;setRecords(i.records);setEvents(i.events);setRecipes(s.recipes);setImports(s.imports);setExactEnabled(i.exactEnabled===true);setExact(i.exact??null);setClock(Date.now());}).catch(e=>{if(current())setError((e as Error).message);if(rethrow)throw e;}).finally(()=>{if(current()){setLoadedRefresh(refreshKey);setLoading(false);}});},[call,beginRequest,refreshKey]);
+function load(rethrow=false){setLoading(true);return loadData(rethrow);}
+useEffect(()=>{void loadData();},[loadData]);
 useEffect(()=>{const id=setInterval(()=>setClock(Date.now()),60000);return()=>clearInterval(id);},[]);
 useEffect(()=>{if(!loading)onModeChange(exactEnabled&&exact?'exact':'legacy');},[loading,exactEnabled,exact,onModeChange]);
 const availableSections=exactEnabled&&exact?exactInventorySections:legacyInventorySections;
-section=availableSections.some(item=>item.id===section)?section:'stock';
+const section=availableSections.some(item=>item.id===requestedSection)?requestedSection:'stock';
 if(exactEnabled&&exact)return <ExactInventoryPanel onFocusHandled={onFocusHandled} focusProductId={focusProductId} section={section} onSectionChange={onSectionChange} companyId={companyId} products={products} role={role} view={exact} legacyRecords={records} now={clock} hasDraft={hasDraft} onStage={onStage} loading={loading} onReload={()=>load(true)} onCatalogReload={onCatalogReload} onDirtyChange={onDirtyChange}/>;
 const lookup=(id:string)=>products.find(p=>p.id===id);
 const plans=records.map(r=>({r,plan:recommendation(r,clock)})),suggested=plans.filter(x=>x.plan.packs>0),exceptions=plans.filter(x=>x.plan.needsCheck||x.plan.expired||x.plan.limited);

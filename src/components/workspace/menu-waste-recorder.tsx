@@ -1,5 +1,8 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useRequestScope } from '@/hooks/use-request-scope';
+import { useBrowserReady } from '@/hooks/use-browser-ready';
+import { recoverMenuWaste } from '@/lib/waste-browser-recovery';
 import { Star, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +10,7 @@ import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@/components/
 import { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { WASTE_REASONS } from '@/lib/waste-contract';
 import { menuWasteSubmission, menuWasteSetup, menuWasteReview, type MenuWasteOptions, type MenuWasteItem, type MenuWasteReceipt, type WasteSaleChoice } from '@/lib/menu-waste-contract';
-import { sendSaveRequest, wasteStorageKey } from '@/lib/waste-client';
+import { sendSaveRequest, wasteStorageKey, wasteEffectiveAt } from '@/lib/waste-client';
 import WasteRecorder from './waste-recorder';
 import {TaskSection,ChoiceField} from './task-form';
 import {RefreshCw} from 'lucide-react';
@@ -32,7 +35,7 @@ type Held = {
     sourceId: string;
 };
 const itemKey = (i: Pick<MenuWasteItem, 'kind' | 'id'>) => JSON.stringify([i.kind, i.id]);
-export default function MenuWasteRecorder({ companyId, email, role, page, section = 'record', launchCount = 0, refreshKey = 0, onEnabledChange, onDirtyChange, onSaved, onSetup, onSection }: {
+function MenuWasteRecorderClient({ companyId, email, role, page, section = 'record', launchCount = 0, refreshKey = 0, onEnabledChange, onDirtyChange, onSaved, onSetup, onSection }: {
     companyId: string;
     email: string;
     role: string;
@@ -46,108 +49,63 @@ export default function MenuWasteRecorder({ companyId, email, role, page, sectio
     onSetup?: (id: string) => void;
     onSection?: (v: WasteSection) => void;
 }) {
-    const [options, setOptions] = useState<MenuWasteOptions | null>(null), [enabled, setEnabled] = useState(false), [loading, setLoading] = useState(false), [open, setOpen] = useState(false), [discard, setDiscard] = useState(false);
-    const [error, setError] = useState(''), [notice, setNotice] = useState(''), [search, setSearch] = useState(''), [selected, setSelected] = useState(''), [quantity, setQuantity] = useState('1'), [reason, setReason] = useState(''), [note, setNote] = useState(''), [mode, setMode] = useState<'unsold' | 'replacement' | 'sold'>('unsold'), [modifiers, setModifiers] = useState<Record<string, number>>({});
-    const [favorites, setFavorites] = useState<string[]>([]), [recent, setRecent] = useState<string[]>([]), [pending, setPending] = useState<Pending | null>(null), [busy, setBusy] = useState(false), [saved, setSaved] = useState<MenuWasteReceipt | null>(null), [sales, setSales] = useState<WasteSaleChoice[]>([]), [saleKey, setSaleKey] = useState(''), [salesLoading, setSalesLoading] = useState(false);
+    const storage = wasteStorageKey(companyId, email) + ':menu';
+    const [restored] = useState(() => recoverMenuWaste(storage, companyId));
+    const entry = restored.pending?.kind === 'entry' ? restored.pending.request : null;
+    const pageSection = page ? section : null;
+    const requestVersion = JSON.stringify([refreshKey, launchCount, pageSection]);
+    const [loadedVersion, setLoadedVersion] = useState(requestVersion);
+    const [observedLaunch, setObservedLaunch] = useState(launchCount), [observedPage, setObservedPage] = useState(pageSection);
+    const [options, setOptions] = useState<MenuWasteOptions | null>(null), [enabled, setEnabled] = useState(false), [explicitLoading, setLoading] = useState(false), [open, setOpen] = useState(!page && (!!restored.pending || launchCount > 0)), [discard, setDiscard] = useState(false);
+    const [error, setError] = useState(restored.pending ? 'A previous save needs confirmation. Retry the same save.' : ''), [notice, setNotice] = useState(''), [search, setSearch] = useState(''), [selected, setSelected] = useState(entry ? itemKey({kind:entry.sourceKind,id:entry.sourceId}) : ''), [quantity, setQuantity] = useState(entry ? String(entry.quantity) : '1'), [reason, setReason] = useState(entry?.reason ?? ''), [note, setNote] = useState(entry?.note ?? ''), [mode, setMode] = useState<'unsold' | 'replacement' | 'sold'>(entry?.mode ?? 'unsold'), [modifiers, setModifiers] = useState<Record<string, number>>(Object.fromEntries((entry?.modifiers ?? []).map(m=>[m.id,m.perItem])));
+    const [favorites, setFavorites] = useState<string[]>(restored.favorites), [recent, setRecent] = useState<string[]>(restored.recent), [pending, setPending] = useState<Pending | null>(restored.pending), [busy, setBusy] = useState(false), [saved, setSaved] = useState<MenuWasteReceipt | null>(null), [sales, setSales] = useState<WasteSaleChoice[]>([]), [saleKey, setSaleKey] = useState(''), [salesLoading, setSalesLoading] = useState(false);
     const [held, setHeld] = useState<Held[]>([]), [reviewId, setReviewId] = useState(''), [ingredientLaunch, setIngredientLaunch] = useState(0), [ingredientDirty, setIngredientDirty] = useState(false);
-    const manager = role === 'owner' || role === 'manager', storage = wasteStorageKey(companyId, email) + ':menu', lock = useRef(false), serverTime = useRef({ at: Date.now(), received: 0 });
+    const manager = role === 'owner' || role === 'manager', lock = useRef(false), serverTime = useRef({ at: 0, received: 0 });
+    const loading = explicitLoading || loadedVersion !== requestVersion;
+    if (observedLaunch !== launchCount) { setObservedLaunch(launchCount); if (launchCount > 0) setOpen(true); }
+    if (observedPage !== pageSection) { setObservedPage(pageSection); if (page) setOpen(false); }
     const item = options?.items.find(i => itemKey(i) === selected), dirty = !saved && !!(selected || pending || note), frozen = busy || !!pending;
     const view = pending?.kind === 'setup' ? 'setup' : pending?.kind === 'review' ? 'review' : pending?.kind === 'entry' ? 'record' : page ? section : 'record';
-    async function load() {
-        setLoading(true);
-        try {
-            const r = await fetch('/api/waste/items?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' });
-            if (r.status === 404) {
-                setEnabled(false);
-                onEnabledChange(false);
-                return;
-            }
-            const d = await r.json() as MenuWasteOptions & {
-                error?: string;
-            };
-            if (!r.ok)
-                throw Error(d.error || 'Could not load café items.');
-            setOptions(d);
-            setEnabled(true);
-            onEnabledChange(true);
-            serverTime.current = { at: Date.parse(d.serverNow), received: performance.now() };
+    const beginOptions = useRequestScope(companyId);
+    const loadData = useCallback(() => {
+        const current = beginOptions();
+        return fetch('/api/waste/items?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' }).then(async response => {
+            if (!current()) return;
+            if (response.status === 404) { setEnabled(false); onEnabledChange(false); return; }
+            const data = await response.json() as MenuWasteOptions & { error?: string };
+            if (!response.ok) throw Error(data.error || 'Could not load café items.');
+            if (!current()) return;
+            setOptions(data); setEnabled(true); onEnabledChange(true);
+            serverTime.current = { at: Date.parse(data.serverNow), received: performance.now() };
             if (manager) {
-                const h = await fetch('/api/waste/review?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' }), v = await h.json() as {
-                    entries: Held[];
-                    error?: string;
-                };
-                if (!h.ok)
-                    throw Error(v.error || 'Could not load review entries.');
-                setHeld(v.entries);
+                const response = await fetch('/api/waste/review?companyId=' + encodeURIComponent(companyId), { cache: 'no-store' });
+                const data = await response.json() as { entries: Held[]; error?: string };
+                if (!response.ok) throw Error(data.error || 'Could not load review entries.');
+                if (current()) setHeld(data.entries);
             }
-        }
-        catch (e) {
-            setError((e as Error).message);
-        }
-        finally {
-            setLoading(false);
-        }
-    }
-    useEffect(() => { void load(); }, [companyId, refreshKey]);
-    useEffect(() => {
-        try {
-            const d = JSON.parse(localStorage.getItem(storage) || '{}');
-            if (Array.isArray(d.favorites))
-                setFavorites(d.favorites.filter((v: unknown) => typeof v === 'string').slice(0, 50));
-            if (Array.isArray(d.recent))
-                setRecent(d.recent.filter((v: unknown) => typeof v === 'string').slice(0, 6));
-        }
-        catch { }
-        try {
-            const p = JSON.parse(sessionStorage.getItem(storage + ':pending') || 'null');
-            if (p) {
-                const parsed: Pending = p.kind === 'entry' ? { kind: 'entry', request: menuWasteSubmission.parse(p.request) } : p.kind === 'setup' ? { kind: 'setup', request: menuWasteSetup.parse(p.request) } : { kind: 'review', request: menuWasteReview.parse(p.request) };
-                if (parsed.request.companyId === companyId) {
-                    setPending({...parsed,ambiguous:true});
-                    setOpen(true);
-                    setError('A previous save needs confirmation. Retry the same save.');
-                    if (parsed.kind === 'entry') {
-                        const b = parsed.request;
-                        setSelected(itemKey({ kind: b.sourceKind, id: b.sourceId }));
-                        setQuantity(String(b.quantity));
-                        setReason(b.reason);
-                        setNote(b.note);
-                        setMode(b.mode);
-                        setModifiers(Object.fromEntries(b.modifiers.map(m => [m.id, m.perItem])));
-                    }
-                }
-            }
-        }
-        catch { }
-    }, [companyId, email]);
-    useEffect(() => { if (launchCount > 0) {
-        setOpen(true);
-        void load();
-    } }, [launchCount]);
-    useEffect(() => { if (page) {
-        setOpen(false);
-        void load();
-    } }, [page, section]);
+        }).catch(error => { if (current()) setError((error as Error).message); })
+          .finally(() => { if (current()) { setLoadedVersion(requestVersion); setLoading(false); } });
+    }, [companyId, manager, onEnabledChange, beginOptions, requestVersion]);
+    function load() { setLoading(true); return loadData(); }
+    useEffect(() => { void loadData(); }, [loadData]);
     useEffect(() => { onDirtyChange(dirty || ingredientDirty); }, [dirty, ingredientDirty, onDirtyChange]);
     useEffect(() => { if (!dirty)
         return; const warn = (e: BeforeUnloadEvent) => e.preventDefault(); window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
-    async function loadSales(kind: 'product' | 'recipe', id: string) { setSalesLoading(true); setSales([]); setSaleKey(''); try {
-        const r = await fetch('/api/waste/sales?' + new URLSearchParams({ companyId, sourceKind: kind, sourceId: id }), { cache: 'no-store' }), d = await r.json() as {
-            sales: WasteSaleChoice[];
-            error?: string;
-        };
-        if (!r.ok)
-            throw Error(d.error || 'Could not find recorded sales.');
-        setSales(d.sales);
-    }
-    catch (e) {
-        setError((e as Error).message);
-    }
-    finally {
-        setSalesLoading(false);
-    } }
-    useEffect(() => { if (item && mode === 'sold')
-        void loadSales(item.kind, item.id); }, [selected, mode]);
+    const saleKind = mode === 'sold' ? item?.kind : undefined, saleId = mode === 'sold' ? item?.id : undefined;
+    const salesIdentity = JSON.stringify([companyId, saleKind, saleId]);
+    const beginSales = useRequestScope(salesIdentity);
+    const [observedSales, setObservedSales] = useState(salesIdentity);
+    if (observedSales !== salesIdentity) { setObservedSales(salesIdentity); setSales([]); setSaleKey(''); setSalesLoading(!!saleId); }
+    const loadSales = useCallback((kind: 'product' | 'recipe', id: string) => {
+        const current = beginSales();
+        return fetch('/api/waste/sales?' + new URLSearchParams({ companyId, sourceKind: kind, sourceId: id }), { cache: 'no-store' })
+            .then(async response => { const data = await response.json() as { sales: WasteSaleChoice[]; error?: string };
+                if (!response.ok) throw Error(data.error || 'Could not find recorded sales.'); return data; })
+            .then(data => { if (current()) setSales(data.sales); })
+            .catch(error => { if (current()) setError((error as Error).message); })
+            .finally(() => { if (current()) setSalesLoading(false); });
+    }, [companyId, beginSales]);
+    useEffect(() => { if (saleKind && saleId) void loadSales(saleKind, saleId); }, [saleKind, saleId, loadSales]);
     function remember(f: string[], r: string[]) { setFavorites(f); setRecent(r); try {
         localStorage.setItem(storage, JSON.stringify({ favorites: f, recent: r }));
     }
@@ -238,7 +196,7 @@ export default function MenuWasteRecorder({ companyId, email, role, page, sectio
         if (!item)
             return;
         const choice = sales.find(s => JSON.stringify([s.applicationKey, s.lineId]) === saleKey);
-        const request = { companyId, operationId: crypto.randomUUID(), sourceKind: item.kind, sourceId: item.id, sourceVersion: item.version, quantity: Number(quantity), reason: reason as 'spilled', note, mode, effectiveAt: new Date(serverTime.current.at + Math.max(0, performance.now() - serverTime.current.received)).toISOString(), modifiers: mode === 'sold' ? [] : item.modifiers.filter(m => modifiers[m.id]).map(m => ({ id: m.id, versionId: m.versionId, perItem: modifiers[m.id] })), ...(choice ? { sale: { applicationKey: choice.applicationKey, lineId: choice.lineId } } : {}) };
+        const request = { companyId, operationId: crypto.randomUUID(), sourceKind: item.kind, sourceId: item.id, sourceVersion: item.version, quantity: Number(quantity), reason: reason as 'spilled', note, mode, effectiveAt: wasteEffectiveAt(serverTime.current), modifiers: mode === 'sold' ? [] : item.modifiers.filter(m => modifiers[m.id]).map(m => ({ id: m.id, versionId: m.versionId, perItem: modifiers[m.id] })), ...(choice ? { sale: { applicationKey: choice.applicationKey, lineId: choice.lineId } } : {}) };
         const parsed = menuWasteSubmission.safeParse(request);
         if (!parsed.success) {
             setError('Choose a reason and a whole quantity from 1 to 999.');
@@ -297,4 +255,9 @@ export default function MenuWasteRecorder({ companyId, email, role, page, sectio
   <WasteRecorder companyId={companyId} email={email} role={role} showButton={false} launchCount={ingredientLaunch} onDirtyChange={setIngredientDirty} onSaved={onSaved}/>
   <AlertDialog open={discard} onOpenChange={setDiscard}><AlertDialogContent className="waste-discard-dialog"><AlertDialogTitle>Discard this unfinished entry?</AlertDialogTitle><AlertDialogDescription>No waste has been saved. Your order draft stays in place.</AlertDialogDescription><AlertDialogFooter><AlertDialogCancel>Keep entry</AlertDialogCancel><AlertDialogAction onClick={() => { reset(); setOpen(false); }}>Discard entry</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
  </>;
+}
+
+export default function MenuWasteRecorder(props: React.ComponentProps<typeof MenuWasteRecorderClient>) {
+    const ready = useBrowserReady();
+    return ready ? <MenuWasteRecorderClient key={JSON.stringify([props.companyId, props.email])} {...props} /> : null;
 }

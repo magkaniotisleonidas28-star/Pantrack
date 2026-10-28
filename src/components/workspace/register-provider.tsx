@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRequestScope } from '@/hooks/use-request-scope';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -43,22 +44,33 @@ export default function RegisterProvider({
     [notice, setNotice] = useState(''),
     [confirm, setConfirm] = useState<'token' | 'revoke' | null>(null);
   const [availability, setAvailability] = useState<PosAvailability | null>(null);
-  async function load() {
-    const r = await fetch('/api/register?companyId=' + encodeURIComponent(companyId));
-    const d = (await r.json()) as {
-      error?: string;
-      settings: RegisterSettings;
-      bridgeEnabled: boolean;
-      lastReceived: string | null;
-      availability: PosAvailability;
-    };
-    if (!r.ok) throw new Error(d.error || 'Unable to load settings.');
-    setSaved(d.settings);
-    setDraft(d.settings);
-    setEnabled(d.bridgeEnabled);
-    setLast(d.lastReceived);
-    setAvailability(d.availability);
-  }
+  const beginRequest = useRequestScope(companyId);
+  const load = useCallback(() => {
+    const current = beginRequest();
+    return fetch('/api/register?companyId=' + encodeURIComponent(companyId))
+      .then(async (response) => {
+        const data = (await response.json()) as {
+          error?: string;
+          settings: RegisterSettings;
+          bridgeEnabled: boolean;
+          lastReceived: string | null;
+          availability: PosAvailability;
+        };
+        if (!response.ok) throw new Error(data.error || 'Unable to load settings.');
+        return data;
+      })
+      .then((data) => {
+        if (!current()) return;
+        setSaved(data.settings);
+        setDraft(data.settings);
+        setEnabled(data.bridgeEnabled);
+        setLast(data.lastReceived);
+        setAvailability(data.availability);
+      })
+      .catch((error) => {
+        if (current()) throw error;
+      });
+  }, [companyId, beginRequest]);
   async function refreshAvailability() {
     setAvailability(null);
     try {
@@ -72,7 +84,7 @@ export default function RegisterProvider({
   }
   useEffect(() => {
     void load().catch((e) => setError(e.message));
-  }, [companyId]);
+  }, [load]);
   async function action(action: string) {
     if (busy) return;
     setBusy(true);

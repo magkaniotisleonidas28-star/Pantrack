@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {Checkbox} from '@/components/ui/checkbox';
@@ -15,9 +16,11 @@ type State={vendors:Vendor[];policy:Policy;jobs:Job[];lastRun:string|null;schedu
 export default function VendorAutomation({companyId,products,section,onSectionChange}:{companyId:string;products:Product[];section:SupplierSection;onSectionChange:(section:SupplierSection)=>void}){
  const [data,setData]=useState<State|null>(null),[policy,setPolicy]=useState<Policy>(defaultPolicy),[vendor,setVendor]=useState<Vendor|null>(null),[token,setToken]=useState(''),[clearToken,setClearToken]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[confirm,setConfirm]=useState<{action:'dismiss'|'received';id?:string;label:string}|null>(null),[scheduler,setScheduler]=useState<{url:string;token:string}|null>(null);
  const lock=useRef(false);
- async function call(body?:Record<string,unknown>){const r=await fetch('/api/automation?companyId='+encodeURIComponent(companyId),body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})}:undefined);const d=await r.json() as any;if(!r.ok)throw new Error(d.error||'Request failed');return d;}
- async function load(){setLoading(true);try{const d=await call();setData(d);setPolicy(d.policy);}catch(e){setError((e as Error).message);}finally{setLoading(false);}}
- useEffect(()=>{void load();},[]);
+ const call=useCallback(async(body?:Record<string,unknown>)=>{const r=await fetch('/api/automation?companyId='+encodeURIComponent(companyId),body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})}:undefined);const d=await r.json() as any;if(!r.ok)throw new Error(d.error||'Request failed');return d;},[companyId]);
+ const beginRequest=useRequestScope(companyId);
+ const loadData=useCallback(()=>{const current=beginRequest();return call().then(d=>{if(!current())return;setData(d);setPolicy(d.policy);}).catch(e=>{if(current())setError((e as Error).message);}).finally(()=>{if(current())setLoading(false);});},[call,beginRequest]);
+ function load(){setLoading(true);return loadData();}
+ useEffect(()=>{void loadData();},[loadData]);
  async function act(body:Record<string,unknown>){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{const d=await call(body);setNotice(d.message||'Saved.');if(d.schedulerToken)setScheduler({url:d.schedulerUrl,token:d.schedulerToken});if(body.action==='vendor'){setVendor(null);setToken('');}setConfirm(null);await load();}catch(e){setError((e as Error).message);}finally{setBusy(false);lock.current=false;}}
  function newVendor(){setError('');setToken('');setClearToken(false);setVendor({id:crypto.randomUUID(),name:'',website:'',endpoint:'',account:'',deliveryAddress:'',notes:'',enabled:false,verified:false});}
  function editVendor(v:Vendor){setError('');setToken('');setClearToken(false);setVendor({...v});}
