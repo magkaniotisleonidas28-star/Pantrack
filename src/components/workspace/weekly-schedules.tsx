@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import type {D1PoDraftSchedules} from '@/lib/d1-po-draft-schedules';
@@ -28,30 +29,35 @@ const groupKey=(s:{supplierId:string;accountId:string;locationId:string})=>[s.su
 
 /** On an opened draft: says which weekly schedule created it. Silent when the preview is off or the draft is manual. */
 export function WeeklyDraftLabel({companyId,orderId}:{companyId:string;orderId:string}){
-  const [week,setWeek]=useState<string|null>(null);
-  useEffect(()=>{let live=true;setWeek(null);
+  const source=JSON.stringify([companyId,orderId]);
+  const [result,setResult]=useState<{source:string;week:string|null}|null>(null);
+  const week=result?.source===source?result.week:null;
+  useEffect(()=>{let live=true;
     fetch(`/api/po-draft-schedules?${new URLSearchParams({companyId,orderId})}`,{cache:'no-store'}).then(r=>r.ok?r.json() as Promise<{weeklySchedule:{weekKey:string}|null}>:null)
-      .then(data=>{if(live)setWeek(data?.weeklySchedule?.weekKey??null);},()=>{});
-    return()=>{live=false;};},[companyId,orderId]);
+      .then(data=>{if(live)setResult({source,week:data?.weeklySchedule?.weekKey??null});},()=>{});
+    return()=>{live=false;};},[companyId,orderId,source]);
   return week?<p className="po-weekly-label" data-weekly-draft>Created by the weekly schedule for the week of {week}. Review it like any other draft.</p>:null;
 }
 export default function WeeklySchedules({companyId,active,onEnabledChange,onDirtyChange}:{companyId:string;active:boolean;onEnabledChange:(v:boolean)=>void;onDirtyChange:(v:boolean)=>void}){
   const [view,setView]=useState<View|null>(null),[enabled,setEnabled]=useState(false),[form,setForm]=useState<Form|null>(null);
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[uncertain,setUncertain]=useState(false);
+  const [retryBody,setRetryBody]=useState<Record<string,unknown>|null>(null);
   const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false);
   useEffect(()=>onDirtyChange(!!form||uncertain),[form,uncertain,onDirtyChange]);
   useEffect(()=>{let live=true;void scheduleRequest<View>(companyId).then(data=>{if(live){setView(data);setEnabled(true);onEnabledChange(true);}})
     .catch(e=>{if(live){setEnabled(false);onEnabledChange(false);if(!(e instanceof ScheduleRequestError&&[403,404].includes(e.status)))setError(e.message);}});
     return()=>{live=false;};},[companyId,onEnabledChange]);
-  useEffect(()=>{if(enabled&&active&&!form&&!pending.current)void scheduleRequest<View>(companyId).then(setView).catch(e=>setError(e.message));},[enabled,active]);
+  const canRefresh=enabled&&active&&!form&&!busy&&!uncertain;
+  const beginRefresh=useRequestScope(JSON.stringify([companyId,canRefresh]));
+  useEffect(()=>{if(!canRefresh)return;const current=beginRefresh();void scheduleRequest<View>(companyId).then(next=>{if(current())setView(next);}).catch(e=>{if(current())setError(e.message);});},[companyId,canRefresh,beginRefresh]);
   async function send(body:Record<string,unknown>,done:string){
     if(lock.current)return;lock.current=true;setBusy(true);setError('');setNotice('');pending.current=body;
-    try{await scheduleRequest(companyId,body);pending.current=null;setUncertain(false);
+    try{await scheduleRequest(companyId,body);pending.current=null;setRetryBody(null);setUncertain(false);
       // The confirmation appears with the refreshed list, never beside stale values.
       const next=await scheduleRequest<View>(companyId);setView(next);setForm(null);setNotice(done);}
     catch(e){const failure=e as ScheduleRequestError;
-      if(failure.uncertain){setUncertain(true);setError('The save outcome is uncertain. Retry the same save; it will not be applied twice.');}
-      else{pending.current=null;setError(failure.message);}}
+      if(failure.uncertain){setRetryBody(pending.current);setUncertain(true);setError('The save outcome is uncertain. Retry the same save; it will not be applied twice.');}
+      else{pending.current=null;setRetryBody(null);setError(failure.message);}}
     finally{lock.current=false;setBusy(false);}
   }
   if(!active)return null;
@@ -78,7 +84,7 @@ export default function WeeklySchedules({companyId,active,onEnabledChange,onDirt
       {!form&&zone&&<Button disabled={blocked||!groups.some(g=>!taken.has(g.key))} onClick={()=>{setNotice('');setForm(blank(view.choices.people));}}>New schedule</Button>}</div>
     {zone?<p className="po-muted">Times use the café's time zone, {zone}.</p>:<p role="alert">The owner needs to set the café's time zone under Spending limits before schedules can run.</p>}
     {error&&<div role="alert" className="error">{error}</div>}{notice&&<p role="status" className="notice">{notice}</p>}
-    {uncertain&&pending.current&&<div className="inventory-actions"><Button disabled={busy} onClick={()=>void send(pending.current!,'Saved.')}>Retry the same save</Button></div>}
+    {uncertain&&retryBody&&<div className="inventory-actions"><Button disabled={busy} onClick={()=>void send(retryBody,'Saved.')}>Retry the same save</Button></div>}
     {form&&<form className="po-section" onSubmit={submit} aria-label={form.scheduleId?'Edit weekly schedule':'New weekly schedule'} data-weekly-form><fieldset disabled={blocked}>
       <legend>{form.scheduleId?'Edit weekly schedule':'New weekly schedule'}</legend>
       <div className="po-fields">

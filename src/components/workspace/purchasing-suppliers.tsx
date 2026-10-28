@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import type {D1PurchasingSuppliers} from '@/lib/d1-purchasing-suppliers';
@@ -23,31 +24,40 @@ export default function PurchasingSuppliers({companyId,active,onEnabledChange,on
   const [current,setCurrent]=useState<SupplierVersion|null>(null),[profile,setProfile]=useState<SupplierProfile|null>(null),[profileId,setProfileId]=useState('');
   const [minimum,setMinimum]=useState(''),[fee,setFee]=useState(''),[reason,setReason]=useState(''),[archiveReason,setArchiveReason]=useState('');
   const [maps,setMaps]=useState<MappingList>({mappings:[],hasMore:false}),[mapOffset,setMapOffset]=useState(0),[mapForm,setMapForm]=useState<MapForm|null>(null);
-  const [stocks,setStocks]=useState<Stocks>([]),[units,setUnits]=useState<UnitDefinition[]>([]),[config,setConfig]=useState<{productId:string;id:string;version:number}|null>(null);
+  const [stocks,setStocks]=useState<Stocks>([]);
+  const productId=mapForm?.productId??'',unitSource=JSON.stringify([companyId,current?.id,mapForm?.id,productId]);
+  const [unitView,setUnitView]=useState<{source:string;units:UnitDefinition[];config:{productId:string;id:string;version:number}}|null>(null);
+  const [observedUnitSource,setObservedUnitSource]=useState(unitSource);
+  if(observedUnitSource!==unitSource){setObservedUnitSource(unitSource);setUnitView(null);}
+  const units=unitView?.source===unitSource?unitView.units:[],config=unitView?.source===unitSource?unitView.config:null;
   const [stockMore,setStockMore]=useState(false),[stockOffset,setStockOffset]=useState(0);
   const [history,setHistory]=useState<History>({versions:[],hasMore:false}),[historyKind,setHistoryKind]=useState<'profile'|'mapping'>('profile'),[historyId,setHistoryId]=useState(''),[historyOffset,setHistoryOffset]=useState(0);
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[uncertain,setUncertain]=useState(false);
-  const baseline=useRef(''),pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false);
+  const [baseline,setBaseline]=useState('');
+  const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false);
   const profileText=JSON.stringify({profile,minimum,fee});
-  const dirty=!!profile&&profileText!==baseline.current||!!mapForm;
+  const dirty=!!profile&&profileText!==baseline||!!mapForm;
   useEffect(()=>onDirtyChange(dirty||uncertain),[dirty,uncertain,onDirtyChange]);
   useEffect(()=>{let live=true;void supplierRequest<SupplierList>(companyId).then(data=>{if(live){setList(data);setEnabled(true);onEnabledChange(true);}})
     .catch(e=>{if(live){setEnabled(false);onEnabledChange(false);if(!(e instanceof PurchasingRequestError&&e.status===404))setError(e.message);}});return()=>{live=false;};},[companyId,onEnabledChange]);
-  useEffect(()=>{if(enabled&&active)void loadList(offset);},[enabled,active,offset]);
-  useEffect(()=>{if(enabled&&active)void loadStocks(0);},[enabled,active]);
-  useEffect(()=>{if(enabled&&active&&current)void loadMaps(mapOffset);},[enabled,active,current,mapOffset]);
-  useEffect(()=>{if(!mapForm){setConfig(null);setUnits([]);return;}let live=true;setConfig(null);setUnits([]);
-    if(mapForm.productId)void supplierRequest<Awaited<ReturnType<D1PurchasingSuppliers['units']>>>(companyId,`&view=units&productId=${encodeURIComponent(mapForm.productId)}`).then(data=>{
-      if(live){setConfig({productId:mapForm.productId,id:data.config.id,version:data.config.version});setUnits([...CURATED_UNIT_IDS.map(curatedUnit).filter(u=>u.dimension===data.config.dimension),...data.units]);}
-    }).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[companyId,mapForm?.productId]);
-  async function loadList(page:number){try{setList(await supplierRequest<SupplierList>(companyId,`&offset=${page}`));}catch(e){setError((e as Error).message);}}
-  async function loadStocks(page:number){try{const d=await supplierRequest<Awaited<ReturnType<D1PurchasingSuppliers['stocks']>>>(companyId,`&view=stocks&offset=${page}`);setStocks(previous=>page===0?d.stocks:[...previous,...d.stocks.filter(s=>!previous.some(p=>p.product_id===s.product_id))]);setStockMore(d.hasMore);setStockOffset(page);}catch(e){setError((e as Error).message);}}
-  async function loadMaps(page:number,supplierId=current?.id){if(!supplierId)return;try{setMaps(await supplierRequest<MappingList>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=${page}`));}catch(e){setError((e as Error).message);}}
+  const currentId=current?.id;
+  const beginList=useRequestScope(companyId),beginStocks=useRequestScope(companyId),beginMaps=useRequestScope(JSON.stringify([companyId,currentId,current?.version]));
+  const loadList=useCallback((page:number)=>{const valid=beginList();return supplierRequest<SupplierList>(companyId,`&offset=${page}`).then(data=>{if(valid())setList(data);}).catch(e=>{if(valid())setError((e as Error).message);});},[companyId,beginList]);
+  const loadStocks=useCallback((page:number)=>{const valid=beginStocks();return supplierRequest<Awaited<ReturnType<D1PurchasingSuppliers['stocks']>>>(companyId,`&view=stocks&offset=${page}`).then(d=>{if(!valid())return;setStocks(previous=>page===0?d.stocks:[...previous,...d.stocks.filter(s=>!previous.some(p=>p.product_id===s.product_id))]);setStockMore(d.hasMore);setStockOffset(page);}).catch(e=>{if(valid())setError((e as Error).message);});},[companyId,beginStocks]);
+  const loadMaps=useCallback((page:number,supplierId=currentId)=>{if(!supplierId)return Promise.resolve();const valid=beginMaps();return supplierRequest<MappingList>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=${page}`).then(data=>{if(valid())setMaps(data);}).catch(e=>{if(valid())setError((e as Error).message);});},[companyId,currentId,beginMaps]);
+  useEffect(()=>{if(enabled&&active)void loadList(offset);},[enabled,active,offset,loadList]);
+  useEffect(()=>{if(enabled&&active)void loadStocks(0);},[enabled,active,loadStocks]);
+  useEffect(()=>{if(enabled&&active&&current)void loadMaps(mapOffset);},[enabled,active,current,mapOffset,loadMaps]);
+  const beginUnits=useRequestScope(unitSource);
+  useEffect(()=>{if(!productId)return;const valid=beginUnits();
+    void supplierRequest<Awaited<ReturnType<D1PurchasingSuppliers['units']>>>(companyId,`&view=units&productId=${encodeURIComponent(productId)}`).then(data=>{
+      if(valid())setUnitView({source:unitSource,config:{productId,id:data.config.id,version:data.config.version},units:[...CURATED_UNIT_IDS.map(curatedUnit).filter(u=>u.dimension===data.config.dimension),...data.units]});
+    }).catch(e=>{if(valid())setError(e.message);});},[companyId,productId,unitSource,beginUnits]);
   function adopt(p:SupplierVersion){setCurrent(p);setProfileId(p.id);setProfile(structuredClone(p.profile));const min=purchasingDollars(p.profile.minimumOrderMinor),f=purchasingDollars(p.profile.deliveryFeeMinor);
-    setMinimum(min);setFee(f);baseline.current=JSON.stringify({profile:p.profile,minimum:min,fee:f});setReason('');setMapForm(null);setMapOffset(0);setArchiveReason('');}
+    setMinimum(min);setFee(f);setBaseline(JSON.stringify({profile:p.profile,minimum:min,fee:f}));setReason('');setMapForm(null);setMapOffset(0);setArchiveReason('');}
   function discard(){return !dirty||window.confirm('Discard unsaved supplier or mapping changes?');}
   async function open(id:string){if(!discard())return;try{const data=await supplierRequest<{supplier:SupplierVersion}>(companyId,`&supplierId=${encodeURIComponent(id)}`);adopt(data.supplier);setHistory({versions:[],hasMore:false});setHistoryId('');}catch(e){setError((e as Error).message);}}
-  function newSupplier(){if(!discard())return;const p=newProfile();setCurrent(null);setProfileId(crypto.randomUUID());setProfile(p);setMinimum('');setFee('');baseline.current='';setReason('');setMapForm(null);setMaps({mappings:[],hasMore:false});setHistoryId('');setHistory({versions:[],hasMore:false});}
+  function newSupplier(){if(!discard())return;const p=newProfile();setCurrent(null);setProfileId(crypto.randomUUID());setProfile(p);setMinimum('');setFee('');setBaseline('');setReason('');setMapForm(null);setMaps({mappings:[],hasMore:false});setHistoryId('');setHistory({versions:[],hasMore:false});}
   async function showHistory(id:string,kind:'profile'|'mapping',page=0){try{setHistory(await supplierRequest<History>(companyId,`&view=history&${kind==='profile'?'supplierId':'mappingId'}=${encodeURIComponent(id)}&offset=${page}`));setHistoryId(id);setHistoryKind(kind);setHistoryOffset(page);}catch(e){setError((e as Error).message);}}
   async function save(body:Record<string,unknown>){if(lock.current)return;lock.current=true;setBusy(true);pending.current=body;setError('');setNotice('');
     try{const data=await supplierRequest<{supplier?:SupplierVersion;mapping?:MappingVersion}>(companyId,'',body);pending.current=null;setUncertain(false);

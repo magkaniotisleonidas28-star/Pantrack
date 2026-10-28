@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useCallback,useEffect,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import type {D1PoCartDeliveries} from '@/lib/d1-po-cart-deliveries';
@@ -13,17 +14,20 @@ type Decision={accept:string;excess:string;releaseRest:boolean};
 const kinds={stock:'',non_stock:' (no stock)',extra:' (substitute, no stock)'};
 const time=(iso:string)=>new Date(iso).toLocaleString();
 export default function SupplierDeliveries({companyId,jobId}:{companyId:string;jobId:string}){
-  const [view,setView]=useState<View|null>(null),[error,setError]=useState(''),[decisions,setDecisions]=useState<Record<string,Decision>>({}),[note,setNote]=useState('');
-  async function load(){
-    try{
-      const next=await deliveryRequest<View>({companyId,view:'manager',jobId});setView(next);setError('');setNote('');setReason('');
+  const [view,setView]=useState<View|null>(null),[error,setError]=useState(''),[decisions,setDecisions]=useState<Record<string,Decision>>({}),[note,setNote]=useState(''),[reason,setReason]=useState('');
+  const beginRequest=useRequestScope(JSON.stringify([companyId,jobId]));
+  const load=useCallback(()=>{
+    const current=beginRequest();
+    return deliveryRequest<View>({companyId,view:'manager',jobId}).then(next=>{
+      if(!current())return;
+      setView(next);setError('');setNote('');setReason('');
       const pending=next.deliveries.find(d=>d.state==='counted');
       setDecisions(Object.fromEntries((pending?.count??[]).map(c=>{const owed=BigInt(next.lines.find(l=>l.lineId===c.lineId)?.owedPacks??'0'),good=BigInt(c.receivedPacks)-BigInt(c.damagedPacks);
         return [c.lineId,{accept:String(good<owed?good:owed),excess:'0',releaseRest:false}];})));
-    }catch(e){setError((e as Error).message);}
-  }
-  useEffect(()=>{void load();},[companyId,jobId]);
-  const save=useDeliverySave(()=>void load()),closing=useDeliverySave(()=>void load()),[reason,setReason]=useState('');
+    }).catch(e=>{if(current())setError((e as Error).message);});
+  },[companyId,jobId,beginRequest]);
+  useEffect(()=>{void load();},[load]);
+  const save=useDeliverySave(()=>void load()),closing=useDeliverySave(()=>void load());
   if(!view)return error?<p role="alert" className="po-field-error">{error}</p>:null;
   const pending=view.deliveries.find(d=>d.state==='counted'),line=(id:string)=>view.lines.find(l=>l.lineId===id)!;
   const set=(id:string,patch:Partial<Decision>)=>setDecisions({...decisions,[id]:{...decisions[id],...patch}});

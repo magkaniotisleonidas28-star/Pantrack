@@ -1,5 +1,6 @@
 'use client';
-import {createContext,useContext,useEffect,useRef,useState} from 'react';
+import {createContext,useCallback,useContext,useEffect,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {ArrowLeft,Plus,Pencil,Check} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Input as BaseInput} from '@/components/ui/input';
@@ -40,9 +41,9 @@ function Input(props:React.ComponentProps<typeof BaseInput>){const errors=useCon
 export default function PurchaseOrderDrafts(props:Props){return <DraftWorkspace key={props.companyId} {...props}/>;}
 function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyChange}:Props){
   const [enabled,setEnabled]=useState(false),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false);
-  const [choices,setChoices]=useState<Choices>({stocks:[],proposals:[]}),[list,setList]=useState<List>({orders:[],hasMore:false}),[offset,setOffset]=useState(0);
+  const [choices,setChoices]=useState<Choices>({stocks:[],proposals:[]}),[storedList,setList]=useState<List>({orders:[],hasMore:false}),[offset,setOffset]=useState(0);
   const [suppliers,setSuppliers]=useState<Suppliers>({suppliers:[],hasMore:false}),[supplierPage,setSupplierPage]=useState(0);
-  const [profile,setProfile]=useState<SupplierVersion|null>(null),[mappings,setMappings]=useState<Mappings>({mappings:[],hasMore:false}),[mappingPage,setMappingPage]=useState(0);
+  const [profileData,setProfileData]=useState<{source:string;value:SupplierVersion}|null>(null),[mappings,setMappings]=useState<Mappings>({mappings:[],hasMore:false}),[mappingPage,setMappingPage]=useState(0);
   const [selected,setSelected]=useState<PurchaseOrderView|null>(null),[editor,setEditor]=useState<DraftEditor|null>(null),[baseline,setBaseline]=useState('');
   const [reason,setReason]=useState(''),[ack,setAck]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [invalid,setInvalid]=useState<Record<string,string>>({}),[uncertain,setUncertain]=useState(false),[conflict,setConflict]=useState(false);
@@ -53,8 +54,12 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   const archiveCancel=useRef<(()=>void)|null>(null),historyArchiveCancel=useRef<(()=>void)|null>(null);
   const [filters,setFilters]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters),[filterDraft,setFilterDraft]=useState<PurchaseOrderHistoryFilters>(emptyHistoryFilters);
   const [dateTimeZone,setDateTimeZone]=useState<HistoryDateTimeZone>('America/New_York'),[filterError,setFilterError]=useState('');
-  const [historyLoading,setHistoryLoading]=useState(true),[historyError,setHistoryError]=useState('');
-  const historyListRequest=useRef(0),historyListAbort=useRef<AbortController|null>(null);
+  const [historyBusyLoading,setHistoryLoading]=useState(true),[historyError,setHistoryError]=useState('');
+  const historyRead=useRef({generation:0,abort:null as AbortController|null});
+  const historyReadKey=JSON.stringify([companyId,offset,filters]);
+  const [historyResultKey,setHistoryResultKey]=useState<string|null>(null);
+  const list=historyResultKey===historyReadKey?storedList:{orders:[],hasMore:false};
+  const historyLoading=historyBusyLoading||historyResultKey!==historyReadKey;
   const historyVisible=enabled&&active&&!selected&&!editor,hasFilters=!!(filters.q||filters.supplier||filters.status||filters.product||filters.from||filters.to);
   const dirty=!!editor&&JSON.stringify(editor)!==baseline||uncertain;
   useEffect(()=>{onDirtyChange(dirty);},[dirty,onDirtyChange]);
@@ -62,28 +67,41 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   useEffect(()=>{let live=true;void request<Choices>(companyId,'&view=choices').then(data=>{if(live){setChoices(data);setEnabled(true);onEnabledChange(true);}})
     .catch(e=>{if(live){setEnabled(false);onEnabledChange(false);if(!(e instanceof RequestError&&e.status===404))setError(e.message);}})
     .finally(()=>{if(live)setLoading(false);});return()=>{live=false;};},[companyId,onEnabledChange]);
-  useEffect(()=>{if(historyVisible)void loadList(offset);return()=>{historyListRequest.current++;historyListAbort.current?.abort();};},[historyVisible,offset,filters]);
-  useEffect(()=>{if(enabled&&active){void loadSuppliers(0);void request<Choices>(companyId,'&view=choices').then(setChoices).catch(e=>setError(e.message));}},[enabled,active,refreshKey]);
   const supplierId=editor?.source==='registry'?editor.supplierId:'';
-  useEffect(()=>{if(!supplierId){setProfile(null);return;}if(selected){setProfile(selected.snapshot.registry?.profile??null);return;}
-    let live=true;setProfile(null);void supplierRequest<{supplier:SupplierVersion}>(companyId,`&supplierId=${encodeURIComponent(supplierId)}`)
-      .then(d=>{if(live)setProfile(d.supplier);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[supplierId,selected,companyId]);
-  useEffect(()=>{let live=true;setMappings({mappings:[],hasMore:false});setMappingPage(0);
-    if(supplierId)void supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=0`)
-      .then(d=>{if(live)setMappings(d);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[supplierId,refreshKey,companyId]);
-  async function loadList(page:number){
+  const profileSource=JSON.stringify([companyId,supplierId,selected?.snapshot.id,selected?.revision]);
+  const [observedProfileSource,setObservedProfileSource]=useState(profileSource);
+  if(observedProfileSource!==profileSource){setObservedProfileSource(profileSource);setProfileData(null);}
+  const profile=selected?(selected.snapshot.registry?.profile??null):profileData?.source===profileSource?profileData.value:null;
+  function setProfile(value:SupplierVersion|null){setProfileData(value?{source:profileSource,value}:null);}
+  const beginProfile=useRequestScope(profileSource);
+  useEffect(()=>{if(!supplierId||selected)return;const current=beginProfile();
+    void supplierRequest<{supplier:SupplierVersion}>(companyId,`&supplierId=${encodeURIComponent(supplierId)}`)
+      .then(data=>{if(current())setProfileData({source:profileSource,value:data.supplier});}).catch(e=>{if(current())setError(e.message);});},[supplierId,selected,companyId,profileSource,beginProfile]);
+  const mappingSource=JSON.stringify([companyId,supplierId,refreshKey]);
+  const [observedMappingSource,setObservedMappingSource]=useState(mappingSource);
+  if(observedMappingSource!==mappingSource){setObservedMappingSource(mappingSource);setMappings({mappings:[],hasMore:false});setMappingPage(0);}
+  const beginMappings=useRequestScope(mappingSource);
+  const loadMappingPage=useCallback((page:number)=>{if(!supplierId)return Promise.resolve();const valid=beginMappings();return supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=${page}`).then(data=>{if(!valid())return;setMappings(old=>page?{...data,mappings:[...old.mappings,...data.mappings.filter(m=>!old.mappings.some(o=>o.mapping.id===m.mapping.id))]}:data);setMappingPage(page);}).catch(e=>{if(valid())setError((e as Error).message);});},[companyId,supplierId,beginMappings]);
+  useEffect(()=>{void loadMappingPage(0);},[loadMappingPage,refreshKey]);
+  const readList=useCallback((page:number)=>{
     historyExportCancel.current?.();historyArchiveCancel.current?.();
-    const sequence=++historyListRequest.current;historyListAbort.current?.abort();const abort=new AbortController();historyListAbort.current=abort;
-    setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});
-    try{const data=await request<List>(companyId,purchaseOrderHistorySearch(filters,page),undefined,abort.signal);if(sequence===historyListRequest.current)setList(data);}
-    catch(e){if(sequence===historyListRequest.current&&!abort.signal.aborted)setHistoryError((e as Error).message);}
-    finally{if(sequence===historyListRequest.current)setHistoryLoading(false);}
-  }
+    const current=historyRead.current,sequence=++current.generation;current.abort?.abort();const abort=new AbortController();current.abort=abort;
+    const key=JSON.stringify([companyId,page,filters]);
+    return request<List>(companyId,purchaseOrderHistorySearch(filters,page),undefined,abort.signal)
+      .then(data=>{if(sequence===current.generation){setList(data);setHistoryError('');}})
+      .catch(e=>{if(sequence===current.generation&&!abort.signal.aborted){setList({orders:[],hasMore:false});setHistoryError((e as Error).message);}})
+      .finally(()=>{if(sequence===current.generation){setHistoryResultKey(key);setHistoryLoading(false);}});
+  },[companyId,filters]);
+  function loadList(page:number){setHistoryLoading(true);setHistoryError('');setList({orders:[],hasMore:false});return readList(page);}
+  useEffect(()=>{const current=historyRead.current;if(historyVisible)void readList(offset);return()=>{current.generation++;current.abort?.abort();};},[historyVisible,offset,readList]);
+  const beginSuppliers=useRequestScope(companyId);
+  const loadSuppliers=useCallback((page:number)=>{const valid=beginSuppliers();return supplierRequest<Suppliers>(companyId,`&offset=${page}`).then(data=>{if(!valid())return;setSuppliers(old=>page?{...data,suppliers:[...old.suppliers,...data.suppliers.filter(s=>!old.suppliers.some(o=>o.id===s.id))]}:data);setSupplierPage(page);}).catch(e=>{if(valid())setError((e as Error).message);});},[companyId,beginSuppliers]);
+  useEffect(()=>{if(!enabled||!active)return;let live=true;void loadSuppliers(0);void request<Choices>(companyId,'&view=choices').then(data=>{if(live)setChoices(data);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[companyId,enabled,active,refreshKey,loadSuppliers]);
   function applyHistoryFilters(event:React.FormEvent<HTMLFormElement>){event.preventDefault();
     const parsed=purchaseOrderHistoryFilters.safeParse(filterDraft);if(!parsed.success){setFilterError(parsed.error.issues[0]?.message??'Check the history filters.');return;}
     prepareHistoryRead();setFilterDraft(parsed.data);setFilters(parsed.data);setOffset(0);
   }
-  function prepareHistoryRead(){historyExportCancel.current?.();historyArchiveCancel.current?.();historyListRequest.current++;historyListAbort.current?.abort();setHistoryLoading(true);setHistoryError('');setFilterError('');setList({orders:[],hasMore:false});}
+  function prepareHistoryRead(){historyExportCancel.current?.();historyArchiveCancel.current?.();historyRead.current.generation++;historyRead.current.abort?.abort();setHistoryLoading(true);setHistoryError('');setFilterError('');setList({orders:[],hasMore:false});}
   function patchHistoryFilters(values:Partial<PurchaseOrderHistoryFilters>){historyExportCancel.current?.();historyArchiveCancel.current?.();setFilterError('');setFilterDraft(old=>({...old,...values}));}
   function patchHistoryDate(field:'from'|'to',value:string){historyExportCancel.current?.();historyArchiveCancel.current?.();setFilterError('');setFilterDraft(old=>{
     const next={...old,[field]:value||undefined};return {...next,timeZone:next.from||next.to?dateTimeZone:undefined};
@@ -91,8 +109,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   function changeDateTimeZone(zone:HistoryDateTimeZone){setDateTimeZone(zone);patchHistoryFilters({timeZone:filterDraft.from||filterDraft.to?zone:undefined});}
   function clearHistoryFilters(){prepareHistoryRead();setFilterDraft({...emptyHistoryFilters});setFilters({...emptyHistoryFilters});setOffset(0);}
   function changeHistoryPage(page:number){prepareHistoryRead();setOffset(page);}
-  async function loadSuppliers(page:number){try{const data=await supplierRequest<Suppliers>(companyId,`&offset=${page}`);setSuppliers(old=>page?{...data,suppliers:[...old.suppliers,...data.suppliers.filter(s=>!old.suppliers.some(o=>o.id===s.id))]}:data);setSupplierPage(page);}catch(e){setError((e as Error).message);}}
-  async function moreMappings(){try{const page=mappingPage+20,data=await supplierRequest<Mappings>(companyId,`&view=mappings&supplierId=${encodeURIComponent(supplierId)}&offset=${page}`);setMappings(old=>({...data,mappings:[...old.mappings,...data.mappings.filter(m=>!old.mappings.some(o=>o.mapping.id===m.mapping.id))]}));setMappingPage(page);}catch(e){setError((e as Error).message);}}
+  function moreMappings(){return loadMappingPage(mappingPage+20);}
   function clearFeedback(){setError('');setNotice('');setInvalid({});setConflict(false);setLatest(null);setHistory(null);setHistoryBusy(false);historyRequest.current++;setAck(false);setReason('');}
   function mayLeave(){return !busy&&!uncertain&&(!dirty||window.confirm('Discard your unsaved draft changes?'));}
   function openEditor(value:DraftEditor){historyExportCancel.current?.();historyArchiveCancel.current?.();downloadCancel.current?.();archiveCancel.current?.();setEditor(value);setBaseline(JSON.stringify(value));setReason('');setInvalid({});setAck(false);}

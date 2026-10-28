@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import type {D1PoCartDeliveries} from '@/lib/d1-po-cart-deliveries';
@@ -35,7 +36,9 @@ const localNow=()=>{const d=new Date();d.setSeconds(0,0);return new Date(d.getTi
 export function DeliveryCountForm({companyId,order,title='Count this delivery',onSaved}:{companyId:string;order:CountableOrder;title?:string;onSaved:()=>void}){
   const [lines,setLines]=useState(order.lines.map(l=>({lineId:l.lineId,received:'',damaged:'0'}))),[arrived,setArrived]=useState(localNow),[note,setNote]=useState('');
   const save=useDeliverySave(onSaved);
-  useEffect(()=>{setLines(order.lines.map(l=>({lineId:l.lineId,received:'',damaged:'0'})));},[order.confirmationId,order.lines.length]);
+  const scope=JSON.stringify([order.confirmationId,order.lines.length]);
+  const [observedScope,setObservedScope]=useState(scope);
+  if(observedScope!==scope){setObservedScope(scope);setLines(order.lines.map(l=>({lineId:l.lineId,received:'',damaged:'0'})));}
   function submit(e:React.FormEvent){
     e.preventDefault();
     const whole=(v:string)=>/^\d{1,4}$/.test(v.trim());
@@ -63,8 +66,9 @@ export function DeliveryCountForm({companyId,order,title='Count this delivery',o
 }
 export default function StaffDeliveries({companyId}:{companyId:string}){
   const [orders,setOrders]=useState<CountableOrder[]|null>(null),[error,setError]=useState(''),[saved,setSaved]=useState(false);
-  async function load(){try{setOrders((await deliveryRequest<{orders:CountableOrder[]}>({companyId,view:'staff'})).orders);setError('');}catch(e){setError((e as Error).message);}}
-  useEffect(()=>{void load();},[companyId]);
+  const beginRequest=useRequestScope(companyId);
+  const load=useCallback(()=>{const current=beginRequest();return deliveryRequest<{orders:CountableOrder[]}>({companyId,view:'staff'}).then(data=>{if(current()){setOrders(data.orders);setError('');}}).catch(e=>{if(current())setError((e as Error).message);});},[companyId,beginRequest]);
+  useEffect(()=>{void load();},[load]);
   return <section className="staff-deliveries" aria-labelledby="staff-deliveries-title" data-staff-deliveries>
     <h1 id="staff-deliveries-title">Deliveries</h1>
     {saved&&<p role="status">Count saved. A manager will review it.</p>}

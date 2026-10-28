@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import type {D1PoCartConfirmations} from '@/lib/d1-po-cart-confirmations';
@@ -32,14 +33,15 @@ type Confirmation=NonNullable<View['confirmation']>;
 function OverCapReview({companyId,jobId,c,onSaved}:{companyId:string;jobId:string;c:Confirmation;onSaved:()=>Promise<void>}){
   const [note,setNote]=useState(''),[password,setPassword]=useState(''),[confirming,setConfirming]=useState('');
   const [error,setError]=useState(''),[busy,setBusy]=useState(false),[uncertain,setUncertain]=useState(false);
+  const [retryBody,setRetryBody]=useState<Record<string,unknown>|null>(null);
   const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false);
   async function send(body:Record<string,unknown>){
     if(lock.current)return;lock.current=true;setBusy(true);setError('');pending.current=body;
-    try{await confirmationRequest(companyId,jobId,body);pending.current=null;setUncertain(false);setConfirming('');setNote('');await onSaved();}
+    try{await confirmationRequest(companyId,jobId,body);pending.current=null;setRetryBody(null);setUncertain(false);setConfirming('');setNote('');await onSaved();}
     catch(e){const failure=e as ConfirmationRequestError;
       if(failure.code==='reauthentication_required')setConfirming(failure.message);
-      else if(failure.uncertain){setUncertain(true);setError('The save outcome is uncertain. Retry the same save; it will not be applied twice.');}
-      else{pending.current=null;setError(failure.message);}}
+      else if(failure.uncertain){setRetryBody(pending.current);setUncertain(true);setError('The save outcome is uncertain. Retry the same save; it will not be applied twice.');}
+      else{pending.current=null;setRetryBody(null);setError(failure.message);}}
     finally{lock.current=false;setBusy(false);}
   }
   async function confirm(e:React.FormEvent){
@@ -51,7 +53,7 @@ function OverCapReview({companyId,jobId,c,onSaved}:{companyId:string;jobId:strin
     finally{setPassword('');lock.current=false;setBusy(false);}
     if(confirmed&&pending.current)await send(pending.current);
   }
-  function cancel(){pending.current=null;setConfirming('');setPassword('');setError('');setUncertain(false);}
+  function cancel(){pending.current=null;setRetryBody(null);setConfirming('');setPassword('');setError('');setUncertain(false);}
   const blocked=busy||uncertain||!!confirming;
   return <div className="over-cap-review" data-over-cap-review>
     <h4>Owner review</h4>
@@ -67,7 +69,7 @@ function OverCapReview({companyId,jobId,c,onSaved}:{companyId:string;jobId:strin
         <Button type="button" variant="outline" onClick={()=>{if(!note.trim())return setError('Say what should happen with this order.');
           void send({action:'hold_note',companyId,confirmationId:c.id,operationId:crypto.randomUUID(),note:note.trim()});}}>Leave it held with this note</Button></div>
     </fieldset>
-    {uncertain&&pending.current&&<div className="po-actions"><Button type="button" disabled={busy} onClick={()=>void send(pending.current!)}>Retry the same save</Button></div>}
+    {uncertain&&retryBody&&<div className="po-actions"><Button type="button" disabled={busy} onClick={()=>void send(retryBody)}>Retry the same save</Button></div>}
     {error&&<p role="alert" className="po-field-error">{error}</p>}
   </div>;
 }
@@ -77,13 +79,14 @@ export default function SupplierConfirmation({companyId,jobId,canRecord,onState}
   const [reference,setReference]=useState(''),[delivery,setDelivery]=useState(''),[note,setNote]=useState('');
   const [error,setError]=useState(''),[busy,setBusy]=useState(false),[uncertain,setUncertain]=useState(false);
   const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false);
-  function adopt(next:View){
+  const adopt=useCallback((next:View)=>{
     // An owner-approved over-cap confirmation counts as confirmed from here on.
     setView(next);onState(next.confirmation?(next.confirmation.approval?'confirmed':next.confirmation.state):null);
     setLines(next.authorizedLines.map(l=>({lineId:l.lineId,packs:l.packs,price:purchasingDollars(l.unitMinor)})));
-  }
-  async function load(){try{adopt(await confirmationRequest<View>(companyId,jobId));setError('');}catch(e){setError((e as Error).message);}}
-  useEffect(()=>{void load();},[companyId,jobId]);
+  },[onState]);
+  const beginRequest=useRequestScope(JSON.stringify([companyId,jobId]));
+  const load=useCallback(()=>{const current=beginRequest();return confirmationRequest<View>(companyId,jobId).then(next=>{if(current()){adopt(next);setError('');}}).catch(e=>{if(current())setError((e as Error).message);});},[companyId,jobId,adopt,beginRequest]);
+  useEffect(()=>{void load();},[load]);
   const totals=useMemo(()=>{try{
     const items=lines.reduce((s,l)=>s+BigInt(l.packs||'0')*BigInt(cents(l.price||'0','Price')),BigInt(0))+extras.reduce((s,e)=>s+BigInt(e.packs||'0')*BigInt(cents(e.price||'0','Price')),BigInt(0));
     const fees=charges.reduce((s,c)=>s+BigInt(cents(c.amount||'0','Charge')),BigInt(0));return {items,fees,total:items+fees};}catch{return null;}},[lines,extras,charges]);
