@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {useBrowserReady} from '@/hooks/use-browser-ready';
 import {Button} from '@/components/ui/button';
 import type {PurchaseOrderView} from '@/lib/purchase-order-contract';
 import type {BrowserConfig} from '@/lib/po-cart-browser-contract';
@@ -17,25 +18,33 @@ const holds:Record<string,string>={sign_in_required:'Practice sign-in expired. O
   verification_failed:'The observed cart failed verification. Review is required before any further preparation.',
   session_unavailable:'The private practice browser session is unavailable. Review is required.'};
 const usd=(minor:string|number)=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(minor)/100);
-export default function DurableCart({companyId,order,initial}:{companyId:string;order:PurchaseOrderView;initial:ManagerCartView}){
-  const [view,setView]=useState(initial),[pending,setPending]=useState<PendingCartIntent|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
-  const [ack,setAck]=useState(false),[browser,setBrowser]=useState<BrowserConfig>({layout:'rows',scenario:'normal'}),[storageReady,setStorageReady]=useState(false),[recoveryError,setRecoveryError]=useState('');
+export default function DurableCart(props:{companyId:string;order:PurchaseOrderView;initial:ManagerCartView}){
+  const ready=useBrowserReady();return ready?<DurableCartClient key={JSON.stringify([props.initial.actorId,props.companyId,props.order.snapshot.id])} {...props}/>:null;
+}
+function recoverIntent(key:string){try{return {pending:readIntent(sessionStorage,key),ready:true,error:''};}catch{return {pending:null,ready:false,error:'Private request recovery is unavailable in this tab. Enable browser session storage before preparing.'};}}
+function DurableCartClient({companyId,order,initial}:{companyId:string;order:PurchaseOrderView;initial:ManagerCartView}){
+  const key=intentKey(initial.actorId,companyId,order.snapshot.id);
+  const [recovery]=useState(()=>recoverIntent(key));
+  const [view,setView]=useState(initial),[pending,setPending]=useState<PendingCartIntent|null>(recovery.pending),[busy,setBusy]=useState(false),[error,setError]=useState('');
+  const [ack,setAck]=useState(false),[browser,setBrowser]=useState<BrowserConfig>({layout:'rows',scenario:'normal'}),[storageReady,setStorageReady]=useState(recovery.ready),[recoveryError,setRecoveryError]=useState(recovery.error);
   const [decisionNote,setDecisionNote]=useState(''),[confirmation,setConfirmation]=useState<ConfirmationState|null>(null);
-  const lock=useRef(false),live=useRef(true),sequence=useRef(0);
-  const key=intentKey(initial.actorId,companyId,order.snapshot.id),a=view.authorization,j=view.job,human=j?.session;
-  useEffect(()=>{live.current=true;try{setPending(readIntent(sessionStorage,key));setStorageReady(true);}catch{setRecoveryError('Private request recovery is unavailable in this tab. Enable browser session storage before preparing.');}
-    return()=>{live.current=false;sequence.current++;};},[key]);
-  async function refresh(clearError=true){const n=++sequence.current;
-    try{const next=await managerStatus(companyId,order.snapshot.id);if(!live.current||n!==sequence.current)return;
-      if(next.actorId!==initial.actorId||next.mode!=='durable')throw new ManagerCartError('Session or local profile changed. Reload before continuing.',false,403);
+  const lock=useRef(false),live=useRef(true),sequence=useRef({generation:0});
+  const a=view.authorization,j=view.job,human=j?.session;
+  const orderId=order.snapshot.id,actorId=initial.actorId,jobId=j?.id,jobState=j?.state;
+  const humanActive=human?.active,evidenceCurrent=j?.reconciliation?.evidence?.current;
+  const shouldPoll=!!j&&(['queued','preparing'].includes(j.state)||!!humanActive||!!evidenceCurrent);
+  useEffect(()=>{live.current=true;const requests=sequence.current;return()=>{live.current=false;requests.generation++;};},[]);
+  const refresh=useCallback((clearError=true)=>{const n=++sequence.current.generation;
+    return managerStatus(companyId,orderId).then(next=>{if(!live.current||n!==sequence.current.generation)return;
+      if(next.actorId!==actorId||next.mode!=='durable')throw new ManagerCartError('Session or local profile changed. Reload before continuing.',false,403);
       setView(next);if(clearError)setError('');
-    }catch(e){if(live.current&&n===sequence.current){setError((e as Error).message);if(e instanceof ManagerCartError&&[401,403].includes(e.status)){setStorageReady(false);setRecoveryError('Session or permission changed. Reload after signing in to recover preparation requests.');}}}
-  }
-  useEffect(()=>{void refresh();if(!j||!['queued','preparing'].includes(j.state)&&!human?.active&&!j.reconciliation?.evidence?.current)return;
+    }).catch(e=>{if(live.current&&n===sequence.current.generation){setError((e as Error).message);if(e instanceof ManagerCartError&&[401,403].includes(e.status)){setStorageReady(false);setRecoveryError('Session or permission changed. Reload after signing in to recover preparation requests.');}}});
+  },[companyId,orderId,actorId]);
+  useEffect(()=>{void refresh();if(!shouldPoll)return;
     const timer=setInterval(()=>{if(!lock.current)void refresh();},2000);return()=>clearInterval(timer);
-  },[order.revision,j?.id,j?.state,human?.active,j?.reconciliation?.evidence?.current]);
+  },[order.revision,jobId,jobState,humanActive,evidenceCurrent,shouldPoll,refresh]);
   async function submit(intent:PendingCartIntent){
-    if(lock.current||!storageReady)return;lock.current=true;setBusy(true);setError('');sequence.current++;
+    if(lock.current||!storageReady)return;lock.current=true;setBusy(true);setError('');sequence.current.generation++;
     try{
       // Persist the exact non-secret intent before transmission, including on explicit retry.
       sessionStorage.setItem(key,JSON.stringify(intent));setPending(intent);

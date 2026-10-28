@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useMemo,useRef,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import type {SpendingLimits,SpendingLimitsResult,SpendingLimitsStatus} from '@/lib/po-cart-spending-limits-contract';
@@ -39,11 +40,15 @@ export default function SpendingLimitsPanel({companyId,active,onEnabledChange,on
   useEffect(()=>onDirtyChange(dirty||uncertain||!!confirming),[dirty,uncertain,confirming,onDirtyChange]);
   // The prompt opens at the top of the panel; bring all of it into view, not just the focused field.
   useEffect(()=>{if(confirming)prompt.current?.scrollIntoView({block:'start'});},[confirming]);
-  function adopt(next:SpendingLimitsStatus){setStatus(next);setForm(formOf(next.limits));setZone(next.timeZone?.timeZone??'');}
+  const adopt=useCallback((next:SpendingLimitsStatus)=>{setStatus(next);setForm(formOf(next.limits));setZone(next.timeZone?.timeZone??'');},[]);
   useEffect(()=>{let live=true;void limitsRequest<SpendingLimitsStatus>(companyId).then(data=>{if(live){adopt(data);setEnabled(true);onEnabledChange(true);}})
     .catch(e=>{if(live){setEnabled(false);onEnabledChange(false);if(!(e instanceof LimitsRequestError&&[403,404].includes(e.status)))setError(e.message);}});
-    return()=>{live=false;};},[companyId,onEnabledChange]);
-  useEffect(()=>{if(enabled&&active&&!dirty&&!pending.current)void limitsRequest<SpendingLimitsStatus>(companyId).then(adopt).catch(e=>setError(e.message));},[enabled,active]);
+    return()=>{live=false;};},[companyId,onEnabledChange,adopt]);
+  const canRefresh=enabled&&active&&!dirty&&!busy&&!uncertain&&!confirming;
+  const beginRefresh=useRequestScope(JSON.stringify([companyId,canRefresh]));
+  useEffect(()=>{if(!canRefresh||pending.current)return;const current=beginRefresh();
+    void limitsRequest<SpendingLimitsStatus>(companyId).then(data=>{if(current())adopt(data);}).catch(e=>{if(current())setError(e.message);});
+  },[companyId,canRefresh,adopt,beginRefresh]);
   async function send(body:Record<string,unknown>){
     if(lock.current)return;lock.current=true;setBusy(true);setError('');setNotice('');pending.current=body;
     try{

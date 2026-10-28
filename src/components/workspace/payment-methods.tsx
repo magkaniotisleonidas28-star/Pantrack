@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {CreditCard,Plus,LockKeyhole,ExternalLink,ShieldCheck} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Skeleton} from '@/components/ui/skeleton';
@@ -9,13 +10,15 @@ type State={configured:boolean;testMode:boolean;cards:Card[];defaultId:string|nu
 export default function PaymentMethods({companyId,companyName,hasDraft}:{companyId:string;companyName:string;hasDraft:boolean}){
  const [data,setData]=useState<State|null>(null),[loading,setLoading]=useState(true),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[remove,setRemove]=useState<Card|null>(null);
  const setupId=useRef(''),lock=useRef(false);
- async function action(body:Record<string,unknown>){const r=await fetch('/api/payments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})});const d=await r.json() as {url?:string;error?:string};if(!r.ok)throw new Error(d.error);return d;}
- async function load(){setLoading(true);try{const r=await fetch('/api/payments?companyId='+encodeURIComponent(companyId)),d=await r.json() as State&{error?:string};if(!r.ok)throw new Error(d.error);setData(d);}catch(e){setError((e as Error).message);}finally{setLoading(false);}}
+ const action=useCallback(async (body:Record<string,unknown>)=>{const r=await fetch('/api/payments',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})});const d=await r.json() as {url?:string;error?:string};if(!r.ok)throw new Error(d.error);return d;},[companyId]);
+ const beginLoad=useRequestScope(companyId);
+ const loadData=useCallback(()=>{const current=beginLoad();return fetch('/api/payments?companyId='+encodeURIComponent(companyId)).then(async r=>{const d=await r.json() as State&{error?:string};if(!current())return;if(!r.ok)throw new Error(d.error);setData(d);}).catch(e=>{if(current())setError((e as Error).message);}).finally(()=>{if(current())setLoading(false);});},[companyId,beginLoad]);
+ function load(){setLoading(true);return loadData();}
  useEffect(()=>{let live=true;async function initialize(){setError('');const q=new URLSearchParams(location.search);if(q.get('company')===companyId&&q.has('payment_setup')){
  if(q.get('payment_setup')==='success'){try{await action({action:'verify',sessionId:q.get('session_id')});if(live)setMessage('Card saved securely. No payment was charged.');}catch(e){if(live)setError((e as Error).message);}}
  else if(live)setMessage('Card setup canceled.');
  const clean=new URL(location.href);clean.searchParams.delete('session_id');clean.searchParams.delete('payment_setup');history.replaceState(null,'',clean.pathname+clean.search);
- }if(live)await load();}void initialize();return()=>{live=false;};},[companyId]);
+ }if(live)await loadData();}void initialize();return()=>{live=false;};},[companyId,action,loadData]);
  async function addCard(){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{if(!setupId.current)setupId.current=crypto.randomUUID();const d=await action({action:'setup',requestId:setupId.current});if(!d.url||new URL(d.url).origin!=='https://checkout.stripe.com')throw new Error('Unable to open secure card setup.');window.location.assign(d.url);}catch(e){setError((e as Error).message);setBusy(false);lock.current=false;}}
  async function update(actionName:'default'|'remove',id:string){if(lock.current)return;lock.current=true;setBusy(true);setError('');try{await action({action:actionName,paymentMethodId:id});setRemove(null);setMessage(actionName==='default'?'Default card updated.':'Card removed.');await load();}catch(e){setError((e as Error).message);}finally{setBusy(false);lock.current=false;}}
  return <><div className="page-heading"><div><h1>Payment methods</h1><p>Manage saved cards for {companyName}.</p></div><Button disabled={loading||busy||!data?.configured||hasDraft} onClick={addCard}><Plus size={17}/>{busy?'Please wait…':'Add card'}</Button></div>

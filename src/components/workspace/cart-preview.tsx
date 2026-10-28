@@ -9,6 +9,14 @@ import { managerStatus, ManagerCartError } from './durable-cart-client';
 import type { ManagerCartView } from '@/lib/po-cart-manager-contract';
 
 export default function CartPreview(props: { companyId: string; order: PurchaseOrderView }) {
+  return (
+    <CartPreviewSource
+      key={JSON.stringify([props.companyId, props.order.snapshot.id])}
+      {...props}
+    />
+  );
+}
+function CartPreviewSource(props: { companyId: string; order: PurchaseOrderView }) {
   const [view, setView] = useState<ManagerCartView | null>(null),
     [error, setError] = useState('');
   useEffect(() => {
@@ -92,11 +100,13 @@ function LegacyCartPreview({ companyId, order }: { companyId: string; order: Pur
       alive.current = false;
     };
   }, [companyId, order.snapshot.id]);
+  const jobId = job?.id,
+    jobState = job?.state;
   useEffect(() => {
-    if (!job || job.state === 'canceled') return;
+    if (!jobId || jobState === 'canceled') return;
     let live = true;
     const refresh = () =>
-      void call(companyId, undefined, job.id)
+      void call(companyId, undefined, jobId)
         .then((d) => {
           if (live) setJob(d.job);
         })
@@ -109,7 +119,7 @@ function LegacyCartPreview({ companyId, order }: { companyId: string; order: Pur
       live = false;
       clearInterval(timer);
     };
-  }, [companyId, job?.id, job?.state, order.revision]);
+  }, [companyId, jobId, jobState, order.revision]);
   async function action(action: 'start' | 'resume' | 'cancel' | 'inspect') {
     if (lock.current) return;
     lock.current = true;

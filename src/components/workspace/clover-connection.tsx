@@ -1,5 +1,6 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useCallback,useEffect,useState} from 'react';
+import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {AlertDialog,AlertDialogContent,AlertDialogTitle,AlertDialogDescription,AlertDialogFooter,AlertDialogCancel} from '@/components/ui/alert-dialog';
 
@@ -26,8 +27,9 @@ const failureMessages:Record<string,string>={
 export default function CloverConnection({companyId,onMap,onStatusChange}:{companyId:string;onMap:(item:Item,merchantId:string)=>void;onStatusChange?:()=>void}){
  const [status,setStatus]=useState<Status|null>(null),[items,setItems]=useState<Item[]>([]),[modifiers,setModifiers]=useState<Item[]>([]),[itemOffset,setItemOffset]=useState<number|null>(0),[modifierOffset,setModifierOffset]=useState<number|null>(0);
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[confirm,setConfirm]=useState(false),[selectedItem,setSelectedItem]=useState(''),[selectedModifier,setSelectedModifier]=useState(''),[selectedRecipe,setSelectedRecipe]=useState(''),[selectedRecipeModifier,setSelectedRecipeModifier]=useState('');
- async function refresh(){const r=await fetch('/api/clover?companyId='+encodeURIComponent(companyId));const d=await r.json() as Status&{error?:string};if(!r.ok)throw new Error(d.error||'Could not load Clover.');setStatus(d);}
- useEffect(()=>{void refresh().catch(e=>setError(e.message));const params=new URLSearchParams(location.search),returnedCompany=params.get('company');if(returnedCompany&&returnedCompany!==companyId)return;if(params.get('clover')==='failed'){const reason=params.get('reason')||'';setError((failureMessages[reason]||'Clover authorization could not be completed. Start Connect Clover again.')+(reason?' ('+reason+')':''));}else if(params.get('clover')==='connected')setNotice('Clover connected.');},[companyId]);
+ const beginRefresh=useRequestScope(companyId);
+ const refresh=useCallback(()=>{const current=beginRefresh();return fetch('/api/clover?companyId='+encodeURIComponent(companyId)).then(async r=>{const d=await r.json() as Status&{error?:string};if(!current())return;if(!r.ok)throw new Error(d.error||'Could not load Clover.');setStatus(d);}).catch(e=>{if(current())setError((e as Error).message);});},[companyId,beginRefresh]);
+ useEffect(()=>{void refresh().catch(e=>setError(e.message));const params=new URLSearchParams(location.search),returnedCompany=params.get('company');if(returnedCompany&&returnedCompany!==companyId)return;if(params.get('clover')==='failed'){const reason=params.get('reason')||'';setError((failureMessages[reason]||'Clover authorization could not be completed. Start Connect Clover again.')+(reason?' ('+reason+')':''));}else if(params.get('clover')==='connected')setNotice('Clover connected.');},[companyId,refresh]);
  async function action(action:string,extra:Record<string,unknown>={}){if(busy)return;setBusy(true);setError('');setNotice('');try{
   const r=await fetch('/api/clover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({companyId,action,...extra})});const d=await r.json() as {error?:string;url?:string;items?:Item[];nextOffset?:number|null;created?:number;held?:number};if(!r.ok)throw new Error(d.error||'Clover request failed.');
   if(d.url){window.location.assign(d.url);return;}
