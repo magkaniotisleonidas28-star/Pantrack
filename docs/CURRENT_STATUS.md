@@ -28,6 +28,20 @@ The owner made the four postponed M10 decisions
 Owner approval of over-cap supplier confirmations is now unblocked. No checkbox
 advances.
 
+## C2 screen-update review — 2026-10-27
+
+The [screen-update follow-up](SCREEN_UPDATE_REVIEW_20261027.md) resolves the
+70 inherited React lifecycle/dependency findings on a separate local branch
+based on readability integration `6dca570`. Scoped async reads, client recovery,
+rendered retry state and owned subscriptions preserve company/source binding,
+typed edits and exact uncertain-save requests. The sequential focused reviews
+pass; final frozen project-wide verification is recorded in that follow-up.
+
+This is a behavior-correctness follow-up, distinct from the earlier formatting
+preservation proof. JSX/visual formatting holds remain open. Local fake-response
+component checks do not establish provider, pilot or operational-gate acceptance.
+No API, schema, styling, purchasing gate or deployed configuration is changed.
+
 ## Latest local C4 permanent document copies in the app — 2026-10-27
 
 The [archive app controls](C4_DOCUMENT_ARCHIVE_APP_LOCAL_EVIDENCE.md) now let

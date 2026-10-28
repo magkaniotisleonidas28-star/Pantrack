@@ -1,7 +1,27 @@
 # Pantrack code readability cleanup tracker
 
 Created: 2026-10-26. Workstream: C2 maintainability / merge-owner coordination.
-Current outcome: **S23 integration with main `5f9df85` is committed locally as merge `b4208a7`.** All 158 suites and the normal local pipeline pass; lint matches main at 90 errors/92 warnings. Publication/remote CI remain unperformed; original cleanup history below is retained.
+Current outcome: **S24 screen-update follow-up is verified locally: all 70 targeted findings are resolved.** Its separate behavior fixes address the inherited React lifecycle group. S23 and the original cleanup evidence below describe their historical snapshots; their whole-tree equivalence/hash claims do not apply to changed S24 sources. Remaining formatting holds are not closed by lifecycle repairs.
+
+## S24 — Screen-update follow-up (2026-10-27)
+
+Workstream: C2 screen lifecycle correctness. Branch: `workstream-c/screen-update-lints-20261027`.
+Base: `6dca570`. Worktree: `/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027`.
+
+- [x] Inventory the 70 findings and retain failing lint and reversed-response evidence.
+- [x] Review/verify initialization, company/theme, inventory/waste, purchasing/delivery/archive and polling groups sequentially.
+- [x] Retain styling, API/security contracts, exact retry operations and owned resource cleanup.
+- [x] Complete frozen full pipeline, browser regressions, lint comparison and final review/handoff.
+
+The [task record](docs/SCREEN_UPDATE_REVIEW_20261027.md) tracks each group and
+verification. All 161 suites, 14 isolated component/browser cases, typecheck,
+database/build/local HTTP and all 19 supported format selections pass. Full
+lint retains exactly 53 errors/59 warnings from other inherited groups. One
+inherited intermittent privacy-test assertion is documented in the task record. The manifest adds scoped S24 hashes and retains earlier evidence
+and formatting dispositions. Lifecycle-fixed files with JSX/source-spelling
+formatting holds remain held for that separate work. No claim of compiler-
+equivalent behavior applies to this follow-up. No push, merge into main,
+deployment or operational-gate run is included.
 
 ## S23 — Current-main integration (2026-10-27)
 

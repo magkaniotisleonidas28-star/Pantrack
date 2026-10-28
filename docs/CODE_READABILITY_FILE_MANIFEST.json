@@ -1786,7 +1786,14 @@
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
       "reviewBaselineSha256": "36c3b2b6e6deef45028db4bd3a93a340e5ec01585e73825129222e07a562ef84",
       "priorPolicy": "receiving-handoff-required",
-      "integrationOnly": true
+      "integrationOnly": true,
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "1d12e376b896e536124a5a2770df618f7eaef9d64f557763f077885736484887",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "36c3b2b6e6deef45028db4bd3a93a340e5ec01585e73825129222e07a562ef84"
+      }
     },
     {
       "path": "docs/FORM_UI_LOCAL_EVIDENCE.md",
@@ -2276,6 +2283,22 @@
         "S21 documentation review: added codebase map, linked root/docs indexes and rewrapped CONTRIBUTING with identical words/command blocks. All other present S21 files unchanged, including 97 historical evidence and 73 managed artifacts. Final 209 Markdown documents/1,249 relative references have no missing targets; preservation and guard suite/diff check pass. Four receiving-owned documentation files remain held. No operational instruction, accepted decision, milestone checkbox or evidence claim changed."
       ],
       "cleanupSha256": "c2da8b4675cabe1237ead937067a03562f36ed2cf330f984a555d7d09bd92dc6"
+    },
+    {
+      "path": "docs/SCREEN_UPDATE_REVIEW_20261027.md",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "b563bac7e8ad2508bcfbce76fb4da0b25f3354c39e184dd6aa19de58810c6e4b",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
     },
     {
       "path": "docs/W1_LOCAL_EVIDENCE.md",
@@ -8994,7 +9017,14 @@
         "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
         "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
       ],
-      "cleanupSha256": "f9ca2e842ebbdcc8fb12d65fbd303205b803b57da600c7d7f3267463ee0b5f34"
+      "cleanupSha256": "f9ca2e842ebbdcc8fb12d65fbd303205b803b57da600c7d7f3267463ee0b5f34",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "06740e3ea8b6d6514e7fde8384bae6942543c6e02cec9e9bb7d4f22c37dc3987",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "f9ca2e842ebbdcc8fb12d65fbd303205b803b57da600c7d7f3267463ee0b5f34"
+      }
     },
     {
       "path": "src/components/workspace/clover-connection.tsx",
@@ -9007,7 +9037,14 @@
         "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "faae3dfac21ab41c2ed0005a149aa6268da2f41823bca02873d1220ee15715a7"
+      "reviewBaselineSha256": "faae3dfac21ab41c2ed0005a149aa6268da2f41823bca02873d1220ee15715a7",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "e216cf7fc58d170117ca8cf23577d40ad9bab9f35df7da4ec64e652d77ebdb67",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "faae3dfac21ab41c2ed0005a149aa6268da2f41823bca02873d1220ee15715a7"
+      }
     },
     {
       "path": "src/components/workspace/company-portal.tsx",
@@ -9020,7 +9057,14 @@
         "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
         "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
       ],
-      "cleanupSha256": "6a21d78ef846c2ef4e2da879fdc4167d079b5995038c24aabf9ac29487649f87"
+      "cleanupSha256": "6a21d78ef846c2ef4e2da879fdc4167d079b5995038c24aabf9ac29487649f87",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "30707e5b78f1fc04bd2c0093a315405e06e1a77376472261b9f42c351ab7bd9a",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "6a21d78ef846c2ef4e2da879fdc4167d079b5995038c24aabf9ac29487649f87"
+      }
     },
     {
       "path": "src/components/workspace/deliveries.css",
@@ -9050,7 +9094,14 @@
       "priorPolicy": "receiving-handoff-required",
       "integrationOnly": true,
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "5fc55062de32410e552d06dbfc88ba0b75739c19ca6fa3364d4e869238beaf6b"
+      "reviewBaselineSha256": "5fc55062de32410e552d06dbfc88ba0b75739c19ca6fa3364d4e869238beaf6b",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "60132f002b4c84067e8857a0582e30ed0f91bc82c03f45de158d97fae5100b85",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "5fc55062de32410e552d06dbfc88ba0b75739c19ca6fa3364d4e869238beaf6b"
+      }
     },
     {
       "path": "src/components/workspace/durable-cart-client.ts",
@@ -9078,7 +9129,14 @@
       "priorPolicy": "receiving-handoff-required",
       "integrationOnly": true,
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "bb56177c15ff855707813d59c53f7e94b08ad3afb13dac732ba559b49ec51b0e"
+      "reviewBaselineSha256": "bb56177c15ff855707813d59c53f7e94b08ad3afb13dac732ba559b49ec51b0e",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "54db6142e9e7f9e33a78768b1494e87ac93e67197e98026e8be918606e7492da",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "bb56177c15ff855707813d59c53f7e94b08ad3afb13dac732ba559b49ec51b0e"
+      }
     },
     {
       "path": "src/components/workspace/employee-workspace.tsx",
@@ -9145,7 +9203,14 @@
         "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "4e6a6f61a3ef50802f02443e408dbf02183f1b8a383b7055de156342a580b855"
+      "reviewBaselineSha256": "4e6a6f61a3ef50802f02443e408dbf02183f1b8a383b7055de156342a580b855",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "02d162fc0fba9cd94cff38f5ca8e3ebd66d41c31c777423986c89b8efe3e1366",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "4e6a6f61a3ef50802f02443e408dbf02183f1b8a383b7055de156342a580b855"
+      }
     },
     {
       "path": "src/components/workspace/manager-operations.tsx",
@@ -9158,7 +9223,14 @@
         "S17 safe source fully read before edits. Preserve cart pending intent/actor/company/order/replay scopes, current revisions, editor values/keys, cancellation/layout effect disposal, download formats/provenance and UI hooks/markup. No risky helper consolidation or component extraction.",
         "S17 eight safe components/models/clients fully read and formatted with 21 declaration/method boundaries. All eight match 7ac5be2 complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused baseline/final suites and all 139 suites, format/typecheck/db/build/diff pass. Scoped lint retains one error/two warnings. Eight refused JSX/source-pin modules and three receiving files remain held; see sectionReviews.S17."
       ],
-      "cleanupSha256": "4190c0bcab41f5e7a1264642a7f12be5ffe32adf290820b9a05bf5b97692564a"
+      "cleanupSha256": "4190c0bcab41f5e7a1264642a7f12be5ffe32adf290820b9a05bf5b97692564a",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "3b1c437f18f691857f4f9901bb569d1d22af215d7399948a04f8586ea4886a52",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "4190c0bcab41f5e7a1264642a7f12be5ffe32adf290820b9a05bf5b97692564a"
+      }
     },
     {
       "path": "src/components/workspace/members-panel.tsx",
@@ -9172,7 +9244,14 @@
         "S15 formatter refusal: JSX text such as Role-space becomes two adjacent React string children. Strict emitted-runtime comparison refuses this candidate before writes. Retain baseline bytes; a later manually verified JSX-preserving cleanup is required. Do not normalize away or weaken the guard."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "6817b8809da506c17548c09ba403106dc074b0a2e6c6933ef742444bac28aa74"
+      "reviewBaselineSha256": "6817b8809da506c17548c09ba403106dc074b0a2e6c6933ef742444bac28aa74",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "6db39e18c99304f6e08403612d0a17ce13d8e7931dabf01208f3c68657568237",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "6817b8809da506c17548c09ba403106dc074b0a2e6c6933ef742444bac28aa74"
+      }
     },
     {
       "path": "src/components/workspace/menu-waste-recorder.tsx",
@@ -9185,7 +9264,14 @@
         "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "f6b76fcee8c44d7dfed43b509924c9198f0dbd3daa492bd8f712f277e0795cc7"
+      "reviewBaselineSha256": "f6b76fcee8c44d7dfed43b509924c9198f0dbd3daa492bd8f712f277e0795cc7",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "e851eba522b5a14499a122de077126782134c0d914aed0ffe362be6e85947354",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "f6b76fcee8c44d7dfed43b509924c9198f0dbd3daa492bd8f712f277e0795cc7"
+      }
     },
     {
       "path": "src/components/workspace/payment-methods.tsx",
@@ -9198,7 +9284,14 @@
         "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/payment-methods.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "353453585dac5f6b8dd274ab488a10388c27c49d42be72d74fb2c1bff08e35b9"
+      "reviewBaselineSha256": "353453585dac5f6b8dd274ab488a10388c27c49d42be72d74fb2c1bff08e35b9",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "b94a20ca6223de280d746389bf7770225e1d996c1091374b4b9a26564746ed89",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "353453585dac5f6b8dd274ab488a10388c27c49d42be72d74fb2c1bff08e35b9"
+      }
     },
     {
       "path": "src/components/workspace/pos-connection-status.tsx",
@@ -9239,7 +9332,14 @@
       "reviewBaselineSha256": "b8a765dd0fb082f89ae1ed80e5ba10828dcb2f6431150a5069dd3f24181eaacb",
       "results": [
         "Adopted byte-identically from main 5f9df85. This integration verifies compatibility; separate readability review remains Pending. No formatting or feature change made."
-      ]
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "4f1ecdbee7f6cc39b236f774e3a30ff07002e479c55be7a03441541e8eff5f7d",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "b8a765dd0fb082f89ae1ed80e5ba10828dcb2f6431150a5069dd3f24181eaacb"
+      }
     },
     {
       "path": "src/components/workspace/purchase-order-downloads.tsx",
@@ -9278,7 +9378,14 @@
         "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/purchase-order-drafts.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "c8b00a659f5165cfa8740257b0f1c5e1d1244d146d4f0397330660f498b7fa9b"
+      "reviewBaselineSha256": "c8b00a659f5165cfa8740257b0f1c5e1d1244d146d4f0397330660f498b7fa9b",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "32712a7d2e5c5e3cd1a005720dede31166ebb6ba6e691501f7663f28ed4e873d",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "c8b00a659f5165cfa8740257b0f1c5e1d1244d146d4f0397330660f498b7fa9b"
+      }
     },
     {
       "path": "src/components/workspace/purchase-order-editor-model.ts",
@@ -9330,7 +9437,14 @@
         "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/purchasing-suppliers.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "293546e4810e3d735146af3fa4d49cf593ba7395d391c3f809d237e34eec8750"
+      "reviewBaselineSha256": "293546e4810e3d735146af3fa4d49cf593ba7395d391c3f809d237e34eec8750",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "b2310c8f5515139f29737c3359a3b28303555c6ab42feff5af741318ae67e091",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "293546e4810e3d735146af3fa4d49cf593ba7395d391c3f809d237e34eec8750"
+      }
     },
     {
       "path": "src/components/workspace/recipe-builder.tsx",
@@ -9382,7 +9496,14 @@
         "S16 safe source fully read before edits: inventory layout, recipe create/review/save, register provider/token and durable waste recovery. Preserve props/markup/hooks/state order, pending operation/storage scopes, decimal quantities, credentials and error behavior; full types/runtime/JSX comparison required.",
         "S16 safe component source fully read and formatted: inventory layout, recipe builder, register provider and waste recorder, with two declaration boundaries. All four match 8bf4d7d complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited error/three warnings. Ten refused JSX candidates remain byte-identical and Blocked; see sectionReviews.S16."
       ],
-      "cleanupSha256": "0085bdd36e6c6e9e95d2e46ec9ce917b4ab031bf7f8ccfd9086d4d4e6174f178"
+      "cleanupSha256": "0085bdd36e6c6e9e95d2e46ec9ce917b4ab031bf7f8ccfd9086d4d4e6174f178",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "f5455e8181fcffe4a03d7ad3497ea20943903ab0a79061a0a45dd725fa1813a0",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "0085bdd36e6c6e9e95d2e46ec9ce917b4ab031bf7f8ccfd9086d4d4e6174f178"
+      }
     },
     {
       "path": "src/components/workspace/sales-exceptions.tsx",
@@ -9395,7 +9516,14 @@
         "S16 strict formatting preflight refuses emitted JavaScript/JSX child changes. Preserve baseline bytes; manual JSX-child-preserving cleanup remains held. Guard/test policy is unchanged; candidate only, no source write."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "a957b3984cdf09060833837f4493f9c87923c39511313438007dbd340545d0cc"
+      "reviewBaselineSha256": "a957b3984cdf09060833837f4493f9c87923c39511313438007dbd340545d0cc",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "7e2def572b1a5464f7ea7424fe9dc3db109b06693c1baf2019886ede64f4c2da",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "a957b3984cdf09060833837f4493f9c87923c39511313438007dbd340545d0cc"
+      }
     },
     {
       "path": "src/components/workspace/setup-register.tsx",
@@ -9434,7 +9562,14 @@
         "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/spending-limits.tsx Also source-text pinned. Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "07fb99d97819a37d4f31b6ab970c48c5d52df7e354a6a597757cf173969df819"
+      "reviewBaselineSha256": "07fb99d97819a37d4f31b6ab970c48c5d52df7e354a6a597757cf173969df819",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "836ed4f360d330ca5832fa5fc033d3673a5128eec42281170fc33b4a714571e7",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "07fb99d97819a37d4f31b6ab970c48c5d52df7e354a6a597757cf173969df819"
+      }
     },
     {
       "path": "src/components/workspace/stock-entry.tsx",
@@ -9473,7 +9608,14 @@
         "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/supplier-confirmation.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "919bd181bd146dae81557f299d65857cfbc7bf29ae28e1a809a5d3be9a5dbffd"
+      "reviewBaselineSha256": "919bd181bd146dae81557f299d65857cfbc7bf29ae28e1a809a5d3be9a5dbffd",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "b00fd8d7df3e7d0b90c832a8b12975f44f44ce1c2eb9bb6879eac36d89367091",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "919bd181bd146dae81557f299d65857cfbc7bf29ae28e1a809a5d3be9a5dbffd"
+      }
     },
     {
       "path": "src/components/workspace/supplier-deliveries.tsx",
@@ -9488,7 +9630,14 @@
       "priorPolicy": "receiving-handoff-required",
       "integrationOnly": true,
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "49487b877baabdf32e4c78a2ebb28e1d22103dbedcf247e35c2f01e384a31a05"
+      "reviewBaselineSha256": "49487b877baabdf32e4c78a2ebb28e1d22103dbedcf247e35c2f01e384a31a05",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "9b176c378cc3d5427fb6f17abac7006f6c864404200264476476a5a4a86087fc",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "49487b877baabdf32e4c78a2ebb28e1d22103dbedcf247e35c2f01e384a31a05"
+      }
     },
     {
       "path": "src/components/workspace/task-form.css",
@@ -9527,7 +9676,14 @@
         "S17 strict preservation hold: Formatting changed emitted JavaScript or JSX children: src/components/workspace/vendor-automation.tsx Candidate only; retain baseline bytes. Guard/test policy unchanged; manual compatible cleanup remains held."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "fe035859189a3905405a2a40f678e92ae4b94ac6481569c4da38a46dccaa41d1"
+      "reviewBaselineSha256": "fe035859189a3905405a2a40f678e92ae4b94ac6481569c4da38a46dccaa41d1",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "fe6ab5ac75f365cb768811df16ce986eba1fcb2c8b1f7c40dceff716c7059228",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "fe035859189a3905405a2a40f678e92ae4b94ac6481569c4da38a46dccaa41d1"
+      }
     },
     {
       "path": "src/components/workspace/waste-recorder.tsx",
@@ -9540,7 +9696,14 @@
         "S16 safe source fully read before edits: inventory layout, recipe create/review/save, register provider/token and durable waste recovery. Preserve props/markup/hooks/state order, pending operation/storage scopes, decimal quantities, credentials and error behavior; full types/runtime/JSX comparison required.",
         "S16 safe component source fully read and formatted: inventory layout, recipe builder, register provider and waste recorder, with two declaration boundaries. All four match 8bf4d7d complete syntax/types/comments/literals/emitted runtime and JSX children. Seven focused suites before/after and all 139 suites, format/typecheck/db/build/diff pass; scoped lint retains one inherited error/three warnings. Ten refused JSX candidates remain byte-identical and Blocked; see sectionReviews.S16."
       ],
-      "cleanupSha256": "09ad476ebc3aa654891b45ffbc27d971d523856c2c22edc4ca69d696e5daabd2"
+      "cleanupSha256": "09ad476ebc3aa654891b45ffbc27d971d523856c2c22edc4ca69d696e5daabd2",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "0d9079d90566968ca0cc15be19b66daca34deb291020f558eb650ef5917d895c",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "09ad476ebc3aa654891b45ffbc27d971d523856c2c22edc4ca69d696e5daabd2"
+      }
     },
     {
       "path": "src/components/workspace/weekly-schedules.css",
@@ -9570,7 +9733,14 @@
       "reviewBaselineSha256": "e2686558b28c99cb0568e3ee351361ce95cba890daec45037fbbc9dd1c631575",
       "results": [
         "Adopted byte-identically from main 5f9df85. This integration verifies compatibility; separate readability review remains Pending. No formatting or feature change made."
-      ]
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "97a043d531257523edcc33dfcf279aa43fca7a6e6b96163ac3964d5a41d6e56c",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "e2686558b28c99cb0568e3ee351361ce95cba890daec45037fbbc9dd1c631575"
+      }
     },
     {
       "path": "src/components/workspace/workspace-navigation.ts",
@@ -9609,7 +9779,14 @@
         "S15 preparation: full present page/auth/shell/form/theme/navigation source read before edits. Preserve directive/server-client boundaries, JSX child values/DOM/text/classes, state/hook/effect/event order, company/dirty/replay identities and browser storage behavior. Employee shell handoff remains held.",
         "S15 full present source reviewed: 11 files formatted, compatibility re-export reviewed unchanged, five retained declaration boundaries. All 12 safe modules equivalent to 4886133 types/syntax/comments/literals/emitted runtime and JSX children. Three baseline/four final focused suites and full 139 suites, format/typecheck/db/build/local setup/apply/HTTP/diff pass. Scoped lint retains baseline 6 errors/3 warnings. Employee shell, members-panel JSX and workspace source pins remain untouched/held; see sectionReviews.S15."
       ],
-      "cleanupSha256": "3826ee637cd810acde74eeeda5a8555b184d5fa43548ca4f1ee5456c6836a9c3"
+      "cleanupSha256": "3826ee637cd810acde74eeeda5a8555b184d5fa43548ca4f1ee5456c6836a9c3",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "577b2de014a4a23fc928ece82855ce9cbd661cad8b9e387459770f39cab442b3",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "3826ee637cd810acde74eeeda5a8555b184d5fa43548ca4f1ee5456c6836a9c3"
+      }
     },
     {
       "path": "src/components/workspace/workspace.tsx",
@@ -9623,7 +9800,14 @@
         "S15 source-text hold: unchanged tests/spending-limits-screen.mjs pins three compact expressions in this shell. The full suite refused reformatted spelling despite runtime equivalence; annotations did not preserve all pinned JSX. All shell edits were restored to baseline bytes. Keep the original test and defer manual source-pin-compatible cleanup."
       ],
       "reviewBaselineCommit": "5f9df854072f391f8911af4b8919991595dc2e60",
-      "reviewBaselineSha256": "fdef19a89d3380655a906383e2ef561a77551638218abdc0570137ab9323bc2f"
+      "reviewBaselineSha256": "fdef19a89d3380655a906383e2ef561a77551638218abdc0570137ab9323bc2f",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "694c9ed9b5c712a2565764deb74a0c76ca89efda0805d34a590e7c828c9a1593",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "fdef19a89d3380655a906383e2ef561a77551638218abdc0570137ab9323bc2f"
+      }
     },
     {
       "path": "src/db/index.ts",
@@ -9665,6 +9849,38 @@
       "reviewBaselineSha256": "28a8404eeaa04788a623e7785f0fb11d7ed4ced33682fd376973126a234f6193"
     },
     {
+      "path": "src/hooks/use-browser-ready.ts",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "af50b9098584de833f052a8d79b3ccee5dd3b8a412aeabd2db552862bd20fb8b",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
+    },
+    {
+      "path": "src/hooks/use-clock.ts",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "be13778692fc2087a052d569a5567b8571bdc20015d42790e4bb56308e843a98",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
+    },
+    {
       "path": "src/hooks/use-mobile.ts",
       "section": "S14",
       "status": "Completed",
@@ -9688,6 +9904,22 @@
           "React.useEffect"
         ],
         "ownedConsumers": []
+      }
+    },
+    {
+      "path": "src/hooks/use-request-scope.ts",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "513796d9452fc6f215038d92b663d0f210fcf3c47fc283f1badcd383cf80eec0",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
       }
     },
     {
@@ -11139,6 +11371,22 @@
       "cleanupSha256": "323f94a7ff89cc060cd9d429a8547a0d870ab762d81e843ba2438bd5195bc911"
     },
     {
+      "path": "src/lib/request-scope.ts",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "ac59574689f9ddb34d112aab8a69c831c6a384dc4f44d723df530f1ee72bbf12",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
+    },
+    {
       "path": "src/lib/sales-ingestion.ts",
       "section": "S07",
       "status": "Completed",
@@ -11239,6 +11487,22 @@
       "cleanupSha256": "8b310be8830e60f226b1e2c6054f1eba1ce80de9ec42595650e5333b228dea5a"
     },
     {
+      "path": "src/lib/waste-browser-recovery.ts",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "a71b85907b46275f5ca78733e5e9256f3cb8879fb807a957951de42a1cafc0ec",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
+    },
+    {
       "path": "src/lib/waste-client.ts",
       "section": "S06",
       "status": "Completed",
@@ -11249,7 +11513,14 @@
         "S06 preparation: source/callers and existing contract boundaries reviewed before source edits; layout cleanup and verification still In Progress.",
         "S06 formatting and method/declaration separation reviewed. Exact semantics, SQL/binding/statement order and audit/replay identities match 230e3e9; only two reviewed batch-order comments added in d1-inventory-management.ts. Twelve focused suites, full 139 suites, format/typecheck/db/build/diff pass; scoped lint exits 0 retaining one inherited changes-helper warning. See sectionReviews.S06."
       ],
-      "cleanupSha256": "29ec02431fda257bf0dda79bad5c3178f00e81fdf437fab15119bc92fa77a77d"
+      "cleanupSha256": "29ec02431fda257bf0dda79bad5c3178f00e81fdf437fab15119bc92fa77a77d",
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "96f30d7ad98ce18a1bbc52baae56cf7065fce3ca0f78489e135400a05ab56786",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained.",
+        "predecessorSha256": "29ec02431fda257bf0dda79bad5c3178f00e81fdf437fab15119bc92fa77a77d"
+      }
     },
     {
       "path": "src/lib/waste-contract.ts",
@@ -11347,6 +11618,38 @@
         "S19: 144 test modules formatted with 340 declaration/method boundaries; two serialized lifecycle fixtures reviewed unchanged. Full syntax/types/comments/literals/emitted-runtime signatures and per-file assertion counts match 6263e2d; 5,640 static assertion call sites retained. Full baseline/final 139 suites, guard, format, typecheck, db, build and diff pass. Scoped lint has 29 inherited warnings and no errors. Four BigInt independent-debug-check failures and three receiving additions remain held; see sectionReviews.S19."
       ],
       "cleanupSha256": "4aa110cb4163cae913ad6bb0c8c4d3fd36224276aad94c402ee04e801eff47d0"
+    },
+    {
+      "path": "tests/browser/screen-update-fixture.tsx",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "d1e4a8025922ef2b7e3896086a4d2315e0cf767b582f8f2422a0b642a5265684",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
+    },
+    {
+      "path": "tests/browser/screen-updates.mjs",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "caf1c3a4b4a7c28c7d6b18cd0c83c42f80ad8b58175e270ca1a908965a921dc3",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
     },
     {
       "path": "tests/c4-a7-supplier-handoff.mjs",
@@ -13317,6 +13620,54 @@
         "S19: 144 test modules formatted with 340 declaration/method boundaries; two serialized lifecycle fixtures reviewed unchanged. Full syntax/types/comments/literals/emitted-runtime signatures and per-file assertion counts match 6263e2d; 5,640 static assertion call sites retained. Full baseline/final 139 suites, guard, format, typecheck, db, build and diff pass. Scoped lint has 29 inherited warnings and no errors. Four BigInt independent-debug-check failures and three receiving additions remain held; see sectionReviews.S19."
       ],
       "cleanupSha256": "46b22602fb4a2776306c88ee05a8a39a8d25dfae191b4a52ec605007d5339cad"
+    },
+    {
+      "path": "tests/screen-request-scope.mjs",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "766f7c34e40583c77d31427152b483a10e2335298cd900fa5c160b8cc05359ef",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
+    },
+    {
+      "path": "tests/screen-update-rules.mjs",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "e3d901f7c4e0a526dfff0113c716764a2e9921c8ab8dc815af3816679026cc0e",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
+    },
+    {
+      "path": "tests/screen-waste-recovery.mjs",
+      "section": "S24",
+      "status": "Completed",
+      "policy": "screen-lifecycle-followup",
+      "baselineTracked": false,
+      "results": [
+        "S24: focused screen lifecycle/recovery test or helper, reviewed within the isolated follow-up. No historical formatting-equivalence claim."
+      ],
+      "screenUpdateReview": {
+        "task": "S24",
+        "status": "Completed locally",
+        "sha256": "681a1eb9cbb57ed5b55a9e9168eab406c35857c3f67957be3f664e82a3b559f5",
+        "scope": "Lifecycle correctness only; prior formatting disposition retained."
+      }
     },
     {
       "path": "tests/spending-limits-screen.mjs",
@@ -16554,8 +16905,8 @@
     },
     "mergeCommit": "b4208a7a2161d20484d8979b69556a6d7f2e92cb"
   },
-  "currentTrackedFileCount": 969,
-  "currentManifestEntryCount": 967,
+  "currentTrackedFileCount": 980,
+  "currentManifestEntryCount": 978,
   "historicalActiveWorkReference": {
     "branch": "workstream-c/c4-receiving-counts",
     "protectedFiles": [
@@ -16586,5 +16937,315 @@
     "observedFeatureHead": "46f98d79d0f8323213b7a6ed59dc2e2a0f0e95d5",
     "observedState": "Committed on receiving branch; not yet merged into observed main"
   },
-  "historicalScopeNote": "Every baseline tracked file is assigned once. Thirteen additional files from receiving branch 46f98d7 are reserved for later integration and owner handoff; their contents are not copied into this worktree. That branch advanced independently during planning. Generated/private runtime state is outside cleanup scope. The two planning artifacts are tracked separately in S00."
+  "historicalScopeNote": "Every baseline tracked file is assigned once. Thirteen additional files from receiving branch 46f98d7 are reserved for later integration and owner handoff; their contents are not copied into this worktree. That branch advanced independently during planning. Generated/private runtime state is outside cleanup scope. The two planning artifacts are tracked separately in S00.",
+  "screenUpdateTask": {
+    "status": "Completed locally",
+    "branch": "workstream-c/screen-update-lints-20261027",
+    "baseCommit": "6dca570",
+    "worktree": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027",
+    "taskRecord": "docs/SCREEN_UPDATE_REVIEW_20261027.md",
+    "targetedFindings": 70,
+    "targetedErrors": 37,
+    "targetedWarnings": 33,
+    "scopeNote": "C2 behavior fixes; original cleanup and S23 equivalence/hashes remain historical. JSX/visual/source-spelling formatting holds stay open. No external acceptance or milestone advance.",
+    "paths": [
+      "docs/CURRENT_STATUS.md",
+      "docs/SCREEN_UPDATE_REVIEW_20261027.md",
+      "src/components/workspace/cart-preview.tsx",
+      "src/components/workspace/clover-connection.tsx",
+      "src/components/workspace/company-portal.tsx",
+      "src/components/workspace/delivery-count.tsx",
+      "src/components/workspace/durable-cart.tsx",
+      "src/components/workspace/inventory-panel.tsx",
+      "src/components/workspace/manager-operations.tsx",
+      "src/components/workspace/members-panel.tsx",
+      "src/components/workspace/menu-waste-recorder.tsx",
+      "src/components/workspace/payment-methods.tsx",
+      "src/components/workspace/purchase-order-archives.tsx",
+      "src/components/workspace/purchase-order-drafts.tsx",
+      "src/components/workspace/purchasing-suppliers.tsx",
+      "src/components/workspace/register-provider.tsx",
+      "src/components/workspace/sales-exceptions.tsx",
+      "src/components/workspace/spending-limits.tsx",
+      "src/components/workspace/supplier-confirmation.tsx",
+      "src/components/workspace/supplier-deliveries.tsx",
+      "src/components/workspace/vendor-automation.tsx",
+      "src/components/workspace/waste-recorder.tsx",
+      "src/components/workspace/weekly-schedules.tsx",
+      "src/components/workspace/workspace-theme.ts",
+      "src/components/workspace/workspace.tsx",
+      "src/hooks/use-browser-ready.ts",
+      "src/hooks/use-clock.ts",
+      "src/hooks/use-request-scope.ts",
+      "src/lib/request-scope.ts",
+      "src/lib/waste-browser-recovery.ts",
+      "src/lib/waste-client.ts",
+      "tests/browser/screen-update-fixture.tsx",
+      "tests/browser/screen-updates.mjs",
+      "tests/screen-request-scope.mjs",
+      "tests/screen-update-rules.mjs",
+      "tests/screen-waste-recovery.mjs"
+    ],
+    "sourceDigest": "434c350bec9066b4934a354a0076fabdc115830df7a8f2371158c03a75a90446",
+    "frozenFileCount": 977,
+    "mutableOutcomeRecords": [
+      "CODE_READABILITY_TODO.md",
+      "docs/CODE_READABILITY_FILE_MANIFEST.json",
+      "docs/SCREEN_UPDATE_REVIEW_20261027.md"
+    ],
+    "remainingTargetedFindings": 0,
+    "remainingOverallLint": {
+      "errors": 53,
+      "warnings": 59,
+      "otherInheritedDiagnosticsMatch": true
+    },
+    "executedSuites": 161,
+    "macPlatformSkips": 0,
+    "browserScenarios": 14,
+    "final": [
+      {
+        "command": "pnpm typecheck",
+        "exit": 0,
+        "seconds": 8.6,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-typecheck.log",
+        "sha256": "8366207267355d3e3d5bf3bf6e8c94c5f93f6078c34f08973fa2b38cdda6cc92"
+      },
+      {
+        "command": "pnpm test",
+        "exit": 0,
+        "seconds": 175.4,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-test.log",
+        "sha256": "572eeee3c9f175337bbe1182bb2aa40f9bd7a328881af188853ef3659ee64913"
+      },
+      {
+        "command": "pnpm db:check",
+        "exit": 0,
+        "seconds": 0.6,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-db-check.log",
+        "sha256": "4a3095c362b279325512ee2de12c3f5d70927ab1677176e35852d86f3d342b1a"
+      },
+      {
+        "command": "pnpm build",
+        "exit": 0,
+        "seconds": 6.0,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-build.log",
+        "sha256": "452aafea3fd3bf31eccf79f89e38db539889b78a45490445c083cd7711b49dc6"
+      },
+      {
+        "command": "pnpm local:setup",
+        "exit": 0,
+        "seconds": 0.2,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-local-setup.log",
+        "sha256": "12310241a36c6913163cf8e42aeae88fb74f8ae3b7a1a14bf7d49d208433acda"
+      },
+      {
+        "command": "pnpm db:migrate:local",
+        "exit": 0,
+        "seconds": 0.8,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-local-migrate.log",
+        "sha256": "b8c342c16ecde72207b1ad2a289f887502b035db05ebcb1d2cc844d9ea651fdf"
+      },
+      {
+        "command": "pnpm test:local",
+        "exit": 0,
+        "seconds": 3.3,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-local-http.log",
+        "sha256": "47dc3f36955b62e916f94bf001fa6fa44b4eefc66ba4268deae09133b6bdc978"
+      }
+    ],
+    "formatChecks": [
+      {
+        "section": "S01",
+        "exit": 0,
+        "seconds": 1.6,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S01.log"
+      },
+      {
+        "section": "S02",
+        "exit": 0,
+        "seconds": 0.8,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S02.log"
+      },
+      {
+        "section": "S03",
+        "exit": 0,
+        "seconds": 2.2,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S03.log"
+      },
+      {
+        "section": "S04",
+        "exit": 0,
+        "seconds": 0.7,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S04.log"
+      },
+      {
+        "section": "S05",
+        "exit": 0,
+        "seconds": 1.1,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S05.log"
+      },
+      {
+        "section": "S06",
+        "exit": 0,
+        "seconds": 2.4,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S06.log"
+      },
+      {
+        "section": "S07",
+        "exit": 0,
+        "seconds": 1.8,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S07.log"
+      },
+      {
+        "section": "S08",
+        "exit": 0,
+        "seconds": 1.6,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S08.log"
+      },
+      {
+        "section": "S09",
+        "exit": 0,
+        "seconds": 1.2,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S09.log"
+      },
+      {
+        "section": "S10",
+        "exit": 0,
+        "seconds": 1.0,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S10.log"
+      },
+      {
+        "section": "S11",
+        "exit": 0,
+        "seconds": 1.7,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S11.log"
+      },
+      {
+        "section": "S12",
+        "exit": 0,
+        "seconds": 0.7,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S12.log"
+      },
+      {
+        "section": "S13",
+        "exit": 0,
+        "seconds": 1.6,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S13.log"
+      },
+      {
+        "section": "S15",
+        "exit": 0,
+        "seconds": 0.8,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S15.log"
+      },
+      {
+        "section": "S16",
+        "exit": 0,
+        "seconds": 1.0,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S16.log"
+      },
+      {
+        "section": "S17",
+        "exit": 0,
+        "seconds": 0.9,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S17.log"
+      },
+      {
+        "section": "S18",
+        "exit": 0,
+        "seconds": 0.7,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S18.log"
+      },
+      {
+        "section": "S19",
+        "exit": 0,
+        "seconds": 5.1,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S19.log"
+      },
+      {
+        "section": "S20",
+        "exit": 0,
+        "seconds": 2.3,
+        "log": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/format-S20.log"
+      }
+    ],
+    "published": false,
+    "mainModified": false,
+    "remoteCIPerformed": false,
+    "ownerHead": "5f9df85",
+    "retainedFailureNote": "A new fixture typing failure was fixed; inherited menu-waste substring false positive reproduced in diagnostic copy; original failed payload unavailable. Subsequent unchanged focused/full passes retained. See task record.",
+    "supplementaryReceipts": [
+      {
+        "path": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-browser.log",
+        "sha256": "39e9edd190ba039935a87cadcc4b6259118d6ddbbca62118d6fe8bce3547e7c7"
+      },
+      {
+        "path": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-lint.log",
+        "sha256": "4d76d830d4bb9a66f19ef454b293b517c2b1201f1aac0b32a6f1260e09267b62"
+      },
+      {
+        "path": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-lint.json",
+        "sha256": "d541ce4dfe5e90d97d08cbf743781475412c9cfb0e6d730dc26657671a5e76e9"
+      },
+      {
+        "path": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/ui-static-review.json",
+        "sha256": "ce0b2757d25b516505da57c7dc04d8e09207dc723a7d2ecfce46ba5f0088ee1a"
+      },
+      {
+        "path": "/Users/peterpsimadas/Desktop/Pantrack-screen-updates-20261027/.sites-runtime/screen-updates-20261027/final-links.json",
+        "sha256": "d78ddf4d1dc0e579c598f0ac08bda8b4006c2dd0a32ec5508ddb3e9f1eaa465f"
+      }
+    ],
+    "sourceCommits": [
+      {
+        "commit": "20c2dcdad2c9cc63f95112946c467fd32c9393dd",
+        "title": "fix(ui): own screen reads and recover pending browser drafts",
+        "paths": [
+          "src/hooks/use-browser-ready.ts",
+          "src/hooks/use-clock.ts",
+          "src/hooks/use-request-scope.ts",
+          "src/lib/request-scope.ts",
+          "src/lib/waste-browser-recovery.ts",
+          "src/lib/waste-client.ts",
+          "src/components/workspace/company-portal.tsx",
+          "src/components/workspace/inventory-panel.tsx",
+          "src/components/workspace/manager-operations.tsx",
+          "src/components/workspace/members-panel.tsx",
+          "src/components/workspace/menu-waste-recorder.tsx",
+          "src/components/workspace/register-provider.tsx",
+          "src/components/workspace/sales-exceptions.tsx",
+          "src/components/workspace/vendor-automation.tsx",
+          "src/components/workspace/waste-recorder.tsx",
+          "src/components/workspace/workspace-theme.ts",
+          "src/components/workspace/workspace.tsx",
+          "tests/screen-request-scope.mjs",
+          "tests/screen-waste-recovery.mjs"
+        ]
+      },
+      {
+        "commit": "d73715db48942781138ab405cbfbea3af9788d9c",
+        "title": "fix(ui): preserve purchasing edits and dispose obsolete archive reads",
+        "paths": [
+          "src/components/workspace/delivery-count.tsx",
+          "src/components/workspace/purchase-order-archives.tsx",
+          "src/components/workspace/purchase-order-drafts.tsx",
+          "src/components/workspace/purchasing-suppliers.tsx",
+          "src/components/workspace/supplier-confirmation.tsx",
+          "src/components/workspace/supplier-deliveries.tsx",
+          "src/components/workspace/weekly-schedules.tsx"
+        ]
+      },
+      {
+        "commit": "0f44a633853d80bc113a55ae9c7a628841cf396e",
+        "title": "fix(ui): stabilize cart polling and protect payment and limit refreshes",
+        "paths": [
+          "src/components/workspace/cart-preview.tsx",
+          "src/components/workspace/clover-connection.tsx",
+          "src/components/workspace/durable-cart.tsx",
+          "src/components/workspace/payment-methods.tsx",
+          "src/components/workspace/spending-limits.tsx"
+        ]
+      }
+    ]
+  }
 }
