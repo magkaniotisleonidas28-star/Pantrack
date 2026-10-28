@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-27
+Updated: 2026-10-28
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,36 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Current local position — 2026-10-28
+
+The [status reconciliation](C4_STATUS_RECONCILIATION_20261028.md) corrects older
+next-step wording without repeating completed implementation. Signed-in draft
+and filtered-history PDF/Excel downloads, permanent saved copies, supplier
+confirmation, owner over-cap approval, delivery counts/approval/closure and weekly
+draft schedule screens are built and verified within their recorded local scope.
+The remaining document feature is read-only review of held saves and missing or
+corrupt copies. Closing the tab discards an interrupted save's browser recovery
+record; already-issued copies remain discoverable from the server catalog.
+
+[G5 passed all 21 steps](C4_FULL_OFFLINE_GATE_RUN_20261025.md) on its October 25
+frozen source with mocked AI and fake suppliers. The original timeout's cause
+remains unresolved. The newly merged [G6 rebinding](C4_FULL_OFFLINE_GATE_RUN_20261025.md#rebinding-for-g6)
+requires fresh preparation/gate evidence on current source before a separately
+authorized real-model run. **No merges from G6 preparation until that paid run
+finishes.** Preparation/run status must be checked with its operator; this
+documentation review does not establish it or start either run.
+
+Weekly scheduling logic and screens are local; Cloudflare Cron, hosted worker
+operations and alerts remain open. The deferred October 24 release packet covers
+only source `911fcb1` and migrations `0024`–`0034`. Current source has 45
+migrations, `0000`–`0044`; the old rehearsal does not cover the additions.
+Refresh the hosted ledger, backup, migration review and release candidate before
+an authorized release. No fresh hosted inspection is claimed here. C4/C5/M8,
+C6/M9 and C7/M10 remain open, and purchasing stays disabled.
+
+Dated sections below retain each slice's original evidence and test counts.
+Earlier next-step wording is historical where a later linked slice supersedes it.
 
 ## Owner money decisions — 2026-10-26
 
@@ -25,8 +55,9 @@ The owner made the four postponed M10 decisions
    automated access remains open, and any real Baldor session still needs
    separate explicit authorization.
 
-Owner approval of over-cap supplier confirmations is now unblocked. No checkbox
-advances.
+[Owner approval of over-cap supplier confirmations](C4_OVER_CAP_APPROVAL_LOCAL_EVIDENCE.md)
+was subsequently built and verified locally with migration `0044`. The decision
+and implementation do not close C4/C7 or their external acceptance gates.
 
 ## Latest local C4 permanent document copies in the app — 2026-10-27
 
@@ -95,10 +126,11 @@ Fresh/populated compatibility, lifecycle and actual local D1 runtime checks pass
 All six combined local checks passed: 135 executed suites plus twelve Windows
 skips, all 43 migration/schema checks, build, isolated apply and HTTP smoke.
 The migration checker now validates schema-declared CHECK constraints too.
-The root and hosted databases remain untouched, and the journal has no app
-route/UI or deployed R2 binding yet. The subsequent
-[private R2 adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md) now passes locally;
-authorized app save/read integration follows. C4/C5/M8 stay open and release paused.
+The root and hosted databases remained untouched. This journal slice added no
+app route/UI or deployed R2 binding. Subsequent slices completed the local
+[private R2 adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md) and
+[app save/read controls](C4_DOCUMENT_ARCHIVE_APP_LOCAL_EVIDENCE.md).
+C4/C5/M8 stay open and release paused.
 
 ## Latest local C4 document archive contract — 2026-10-26
 
@@ -118,7 +150,9 @@ local checks passed: 126 executed suites plus twelve Windows skips, typecheck,
 all 40 migration checks, build, isolated migration apply and HTTP smoke.
 Independent PDF/Excel readers passed. Storage integration remains separate.
 The subsequent [D1 journal](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md) now adds
-its application migration after receiving. Private R2 and app wiring follow separately.
+its application migration after receiving. The subsequent
+[R2 adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md) and
+[app controls](C4_DOCUMENT_ARCHIVE_APP_LOCAL_EVIDENCE.md) also pass locally.
 C4/C5/M8 remain open; hosted release stays paused.
 
 ## Latest local C4 product history filters — 2026-10-26
@@ -143,8 +177,10 @@ filter. Supplier-confirmation PR 17 merged upstream during final sync and was
 integrated cleanly, with its migration checked only in the isolated test database.
 The root and hosted databases were untouched. The subsequent
 [immutable private document contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md)
-now passes locally; persistence integration remains separate and requires a
-fresh migration-queue check. C4/C5/M8 remain open; hosted release stays paused.
+now passes locally; its subsequent
+[D1 journal](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md),
+[R2 adapter](C4_DOCUMENT_ARCHIVE_R2_LOCAL_EVIDENCE.md) and
+[app controls](C4_DOCUMENT_ARCHIVE_APP_LOCAL_EVIDENCE.md) complete local persistence. C4/C5/M8 remain open; hosted release stays paused.
 
 ## Latest local C4 history date filters — 2026-10-26
 
@@ -189,8 +225,9 @@ verified the actual downloads. Export reads preserved every application table.
 This feature adds no migration. Incoming owner-limit migrations `0035`/`0036`
 were checked only in the isolated test database; the root and hosted databases
 were untouched. The subsequent [creation-date filters](C4_HISTORY_DATE_FILTERS_LOCAL_EVIDENCE.md)
-now apply to the history list and complete exports. Issued artifacts, product filters and receiving
-remain separate. C4/C5/M8 remain open; the hosted release stays paused.
+now apply to the history list and complete exports. Later local slices also
+completed product filters, saved artifacts and receiving; see the current local
+position above for their scope. C4/C5/M8 remain open; the hosted release stays paused.
 
 ## Latest local C4 history filters — 2026-10-25
 
@@ -298,7 +335,7 @@ The follow-up Excel slice is recorded above; saved-draft integration remains sep
 ## Latest development-release preparation — 2026-10-24
 
 The [C2 release packet](C2_DEV_RELEASE_PREPARATION_20261024.md) is technically
-prepared for application commit `911fcb1`. Today's read-only inspection confirms
+prepared for application commit `911fcb1`. The October 24 read-only inspection confirmed
 the online Worker still runs `65373b3` and D1 still has `0000`–`0023`: all eleven
 `0024`–`0034` migrations remain pending. Windows and Ubuntu GitHub CI passed for
 `911fcb1`. Clover sync remains disabled, the expected nine secret-binding names
@@ -306,7 +343,7 @@ remain present, and no cron schedules are configured.
 
 A private hosted backup was restored and upgraded locally: all 66 original
 application/ledger tables and 474 rows were preserved, and 40 new tables stayed
-empty. The resulting schema matches current source. Fresh local Wrangler apply,
+empty. The resulting schema matched that frozen candidate. Fresh local Wrangler apply,
 focused tests, build, frozen deployment dry run, production-bundle local HTTP
 and maintenance-response checks passed. The packet records a file-import plan
 for the used `0027`/`0029` splitter grouping issues and coordinated `0034` fencing.
@@ -317,7 +354,8 @@ skip this release for now. The Builds report is owner attestation; API reads
 still return 403. Keep the prepared candidate and private backup, and perform no
 maintenance, remote migration or deployment until the owner requests resumption.
 Local work may continue independently. No supplier/model execution or milestone
-acceptance is advanced.
+acceptance is advanced. The retained packet does not cover later source or
+migrations `0035`–`0044`; refresh preparation before any authorized release.
 
 ## Latest desktop verification — 2026-10-22
 
@@ -383,14 +421,16 @@ open. B8/M6 remains on hold for Toast approval/testing access.
 | C4 weekly drafts, Part 3: screens | Owners and managers get a [Weekly drafts section](C4_WEEKLY_SCHEDULE_SCREENS_LOCAL_EVIDENCE.md). Each schedule shows its day and time, margin, responsible person, status, next run, and recent weeks with draft numbers or reasons (as cards on phones). New schedules offer only free supplier locations; edits keep the supplier; pause and resume apply from now. Opened drafts made by a schedule are labelled; the draft list is left to the teammate's history code. A route with the usual preview, loopback, company and CSRF gates serves the screen, and staff never see it. No migration, and the draft service is unchanged. 12 planted defects were caught. 151 suites and the full local pipeline passed, and the served browser check passed 3/3. In the served check the real weekly check runs through its token route; one earlier drafted week is seeded, because the preview keeps sales sync off. | The weekly drafts plan is complete locally. Cron is not wired (needs a deploy). No checkbox advances; C4/M8 and C6/M9 remain open. |
 | C4 supplier confirmation, Part 3: owner approval of over-cap totals | Per [decision 0006](decisions/0006-m10-payment-and-limits.md), [the owner reviews over-cap confirmations](C4_OVER_CAP_APPROVAL_LOCAL_EVIDENCE.md). The panel shows the overage and every limit it would exceed, with amounts. **Approval** (password confirmed within five minutes) raises the order's held amount to the confirmed total, counted even over a limit as the owner chose; adds incoming once; ends product holds; and opens the order for receiving and closure. **Leaving it held** records a note and changes nothing. Managers see it waiting. Migration `0044` is local only. 22 of 23 planted defects were caught (the other is a duplicate of a rule that still holds). 153 suites and the full local pipeline passed, and the served browser check passed 3/3 on AC power. | Practice sign-in cannot confirm a password, so served approval shows the prompt and saves nothing; approval is proved by the suites. Supplier confirmation Parts 1–3 are complete locally. No checkbox advances; C4/M8 and C7/M10 remain open. |
 | Hosted development code | A read-only Cloudflare deployment inspection still shows release `65373b3`, deployed at `2026-10-05T02:50:23Z`; active Worker version `ed5e9c65-31b7-432f-bff9-bf4df45e9b68`. | The merged PR #8/#9 work has not reached this Worker. |
-| Hosted development database | The read-only `d1_migrations` query returned 24 entries, `0000`–`0023`, with zero rows written and `changed_db=false`. Main contains 35 migrations. | All 11 migrations `0024`–`0034` are pending here. A release must review the entire ordered range, not just `0034`. This query did not inspect or validate all business data. |
+| Hosted development database | The read-only `d1_migrations` query returned 24 entries, `0000`–`0023`, with zero rows written and `changed_db=false`. At that inspection, main contained 35 migrations. | That source had 11 pending migrations, `0024`–`0034`; current source extends through `0044`, outside that rehearsal. A release must review the entire ordered range, not just `0034`. This query did not inspect or validate all business data. |
 | Runtime gates | Exact inventory preview is enabled; Clover sales sync is disabled. Supplier submission and automatic purchasing remain disabled. | Existing gate state is not approval to use real services or place orders. |
 | Cloudflare Git/build connection | The Workers Builds trigger and build APIs both returned `403` with the existing credential. | Automatic deployment configuration remains independently unverified. GitHub CI success does not prove Cloudflare Builds is configured. |
 
 Deployment, database, binding and schedule reads were refreshed on 2026-10-24.
 A private read-only export was used for the release rehearsal. No remote
 migration, deployment, supplier/POS call, purchase or historical stock repair
-was performed. Earlier supplier evidence retains its own dates and limitations.
+was performed. Earlier supplier evidence retains its own dates and limitations. The hosted
+ledger has not been rechecked for this October 28 documentation task; do not treat
+the old pending range as the complete current release plan.
 
 ## Current next-step checklist
 
@@ -412,8 +452,10 @@ hosted acceptance remain separate evidence.
    requires coordinated runtime/migration rollout with sales ingestion and
    recovery paused. See its
    [rollout limits](BUG02_SALES_OUTCOME_RECOVERY.md#compatibility-repair-and-rollback).
-   Technical preparation is complete. Leave execution on hold until the owner
-   requests it and authorizes that release.
+   That preparation covers the October 24 source only. Current source extends
+   through `0044`; refresh the hosted ledger, backup/restore rehearsal, ordered
+   migration review and frozen candidate before execution. Leave the release on
+   hold until the owner requests and authorizes it.
 2. **C2/A/B: validate the released fixes with fictional hosted data.** After an
    authorized development release, verify sign-in, inventory/history, sales
    recovery/readiness and count/planning regressions. Record results separately
@@ -421,144 +463,23 @@ hosted acceptance remain separate evidence.
 3. **A8: finish M7 acceptance.** Capture hosted manager/browser, end-to-end and
    concurrency/source-change evidence using the accepted B7 development inputs.
    Keep the accepted ten-minute freshness policy and purchasing disabled.
-4. **C3/C4: finish supplier preparation and controlled feasibility in parallel.**
-   Record permitted Baldor browser use, account/location/product mappings,
-   responsible owners and budgets. The AI reader/Metadata preparation is now
-   implemented. The historical full gate failed at reliability job 25; the
-   bounded follow-up passed twelve normal jobs without explaining it. The
-   [fresh full-gate attempt](C4_FULL_OFFLINE_GATE_20261014.md) then stopped at
-   reliability job 5 and retained a separate terminal-revocation audit defect.
-   The [source-only audit repair](C4_CREDENTIAL_AUDIT_REPAIR_20261015.md) now passes
-   repeated cleanup without replaying jobs. The [display-on investigation](C4_SECOND_ADDITION_DISPLAY_ON_20261015.md)
-   passed twelve delayed fresh jobs: not reproduced with display on; cause
-   unresolved. Its owned-resource cleanup passed; strict preservation found
-   seventeen changed cache/QuotaManager files in older browser profiles.
-   The [profile preservation preflight](C4_PROFILE_PRESERVATION_PREFLIGHT_20261015.md)
-   now blocks new execution before invocation consumption while historical
-   profiles are active or their evidence is unavailable. The
-   [single legacy maintenance attempt](C4_LEGACY_PROFILE_CLEANUP_20261015.md)
-   stopped during verification after SIGTERM to the first instance; nine
-   processes are gone, with 18 processes/three live lock references remaining.
-   The [source-only verification repair](C4_LEGACY_VERIFICATION_REPAIR_20261015.md)
-   now records named failures and tests exits between system snapshots; its
-   98-suite/full pipeline and preservation audit passed. No new cleanup ran.
-   The [single remaining-profile attempt](C4_REMAINING_PROFILE_CLEANUP_20261015.md)
-   passed eight focused suites and the 99-suite/full preparation pipeline, then
-   stopped after SIGTERM to 30082 when captured helper 30095 changed identity;
-   `observations/000006.json` retains the precise refusal. Nine processes rooted
-   at 30474 and one live lock reference remain. PID 4303 is absent, the stale lock
-   is unchanged, and task guards are cleared. No lock archive or idle baseline
-   exists. Separately scope read-only review of the identity-change evidence and
-   remaining disposition before a fresh complete gate. Both maintenance attempts
-   are consumed and must not be retried; paid validation remains blocked.
-   The [isolated shutdown diagnosis](C4_SHUTDOWN_OBSERVATION_DIAGNOSIS_20261015.md)
-   passed five focused suites and its three-command preparation (100 test
-   suites), then stopped in the first disposable case on changed executable
-   text with unchanged start times and a zombie transition. All fixture
-   processes are gone; historical resources and business state are preserved.
-   Its matrix is blocked and invocation consumed. Repair diagnostic
-   classification from retained field-level evidence before separately scoping
-   a new isolated matrix; no historical verifier repair or cleanup retry follows.
-   The [source-only observation repair](C4_SHUTDOWN_OBSERVATION_REPAIR_20261015.md)
-   now passes retained-transition replay and independent analysis, five focused
-   suites, type checking, 100 test suites and build. Observation continues through
-   text/zombie changes while start/topology/membership mismatches still block;
-   existing signal/disposal checks are unchanged. Historical evidence and the
-   consumed real diagnostic remain untouched. A fresh disposable matrix must be
-   separately scoped; no browser invocation or historical cleanup follows here.
-   The [fresh disposable matrix](C4_SHUTDOWN_OBSERVATION_MATRIX_20261015.md)
-   passed six focused suites, type checking, 101 test suites and build, then
-   stopped at `protocol-0-2` with `fixture_baseline_unverified`. Eight cases were
-   attempted, seven completed, four completed cases contain the signature and
-   four cases remain unstarted. The matrix is blocked and its new invocation
-   consumed. All fixture processes are gone; independent checks passed with
-   historical resources/business state preserved. No rejected startup population
-   was retained, so the baseline refusal's cause is unestablished. Separately
-   scope read-only review and, if needed, source-only startup evidence work;
-   no retry, historical cleanup, idle baseline or gate follows. C4/M8 remain open.
-   The [source-only lifecycle consolidation](C4_BROWSER_LIFECYCLE_SOURCE_REVIEW_20261015.md)
-   now passes 130 simulated trials, complete/partial actual-controller and
-   independent-auditor integration, seven focused suites, type checking,
-   102 test suites and build. Version-two startup samples are persisted before
-   admission decisions, and primary failures survive cleanup/report errors.
-   Historical resources/business state and all consumed attempts are preserved.
-   Existing admission, deadline and signal policies remain in force. No browser,
-   new allowance or real validation ran. Review the offline proof and limits
-   before separately scoping any fresh real validation; C4/M8 remain open.
-   The subsequent [single real lifecycle validation](C4_BROWSER_LIFECYCLE_VALIDATION_20261015.md)
-   passed eight focused suites and frozen type checking, 103 suites and build.
-   All twelve collected version-two Chrome cases completed; four protocol-close
-   cases contain the signature: **reproduced**, with all independent audits
-   passing. Historical resources, evidence, business rows, budgets and prior
-   consumed attempts are preserved; seven profile changes are confined to the
-   profile already active initially. This invocation is consumed. No historical
-   cause is resolved, and C4/M8 remain open. Next separately scope read-only
-   historical verification/disposition review; no retry, cleanup, idle baseline,
-   full gate or paid run follows from this pass.
-   The [read-only historical shutdown review](C4_HISTORICAL_SHUTDOWN_REVIEW_20261016.md)
-   now refreshes the nine original identities, canonical executable/profile
-   ownership, all 46 exact lock metadata records and PID-4303 absence. It
-   independently rechecks the retained twelve-case evidence: five protocol cases
-   contain the unchanged strict verifier's identity refusal, while four meet the
-   diagnostic signature. Historical helper 30095 lacks the start/command evidence
-   needed for a causal conclusion. Three simulated suites passed; source,
-   identities, locks and business state are preserved. Six profile differences
-   are confined to the profile already active initially. The next unblocked C4 task is source-only
-   separation of maintenance shutdown waiting from strict signal authorization,
-   followed by a separately scoped one-instance/stale-lock maintenance plan.
-   No cleanup or new invocation ran; no idle baseline or C4/M8 acceptance follows.
-   The [source-only maintenance observation refinement](C4_MAINTENANCE_OBSERVATION_REFINEMENT_20261016.md)
-   now passes 32 simulated actual lifecycles, independent auditing, five retained
-   transition replays and nine focused suites, followed by frozen type checking,
-   104 suites and build. Inputs are saved before decisions; bounded waiting
-   records terminal transitions while every individual signal retains fresh
-   strict verification. Historical processes, all 46 locks, protected evidence,
-   carts, business rows, budgets and consumed attempts are preserved; six profile
-   differences are confined to the profile already active initially. No cleanup,
-   new allowance, real maintenance or idle baseline followed. Next separately
-   scope the review's one-instance/stale-lock maintenance plan with collected
-   evidence and independent idle/stability/preservation gates. C4/M8 and
-   historical causes remain open.
-   The [maintenance plan](C4_SINGLE_INSTANCE_MAINTENANCE_PLAN_20261021.md) then
-   found the 30474 instance already gone and preflight `idle` without any
-   signal. The exit cause is unobserved. The owner retired the fixed runner
-   unexecuted and excluded stale-lock archival. The next unblocked C4
-   task is a source-only, signal-free observation-baseline entrypoint with
-   collected idle/stability/preservation audits, followed by one separately
-   authorized run. C4/M8 remain open.
-   That [observation-baseline source](C4_OBSERVATION_BASELINE_SOURCE_20261021.md)
-   now passes its focused offline suite, type checking, 109 suites and build,
-   with zero signal calls. The [authorized baseline run](C4_OBSERVATION_BASELINE_RUN_20261021.md)
-   then passed and published a fresh baseline with zero signals. The next C4
-   item is to separately scope a fresh full offline acceptance gate. C4/M8 and
-   historical causes remain open. That [gate scope](C4_FULL_OFFLINE_GATE_SCOPE_20261021.md)
-   now defines G1, source-only rebinding with corrected preservation and a power
-   guard, followed by G2, one separately authorized run. [G1](C4_FULL_GATE_REBINDING_20261021.md)
-   is complete with 110 passing suites. The owner chose an external `caffeinate -di`
-   for G2 instead of a power guard. [G2](C4_FULL_OFFLINE_GATE_RUN_20261021.md)
-   passed steps 1–14, including 30/30 reliability, then stopped at step 15 on a
-   harness cleanup regression; all final audits passed. Next is a source-only
-   repair of `finishOfflineFixture`, followed by a separately authorized fresh gate.
-   That repair is done. The next gate first needs rebinding, because G2's recorded
-   task profiles break the exact-baseline pre-check. That [rebinding](C4_FULL_GATE_REBINDING_20261022.md)
-   is done, accepting only drift recorded by audited gates. [G3](C4_FULL_OFFLINE_GATE_RUN_20261022.md)
-   then passed steps 1–20 and stopped at step 21, the launcher restart check, with
-   all audits passing. Its isolated reproduction found a harness restart race,
-   which is now repaired. The [G4 rebinding](C4_FULL_GATE_REBINDING_20261024.md)
-   accounts for the four worker locks that G3's deliberate crash scenarios left
-   and keeps safe failure summaries. [G4](C4_FULL_OFFLINE_GATE_RUN_20261024.md)
-   then passed steps 1–20 and stopped at step 21's final graceful stop: the check
-   revoked the supervisor's credential before stopping the launcher. That order is
-   repaired. [G5](C4_FULL_OFFLINE_GATE_RUN_20261025.md) then **passed all 21
-   steps and every final audit**; this is local mocked-provider evidence only. The
-   second-addition timeout's original cause stays unresolved. Next is an
-   owner-chosen C4 outcome that does not overlap the concurrent PDF/XLSX export
-   snapshot work.
-   Existing consumed allowances and unresolved carts stay retained. Hosted/model tests have their
-   own configuration, budget and authorization gates.
-5. **C5: finish and accept M8 after M7 and the supplier gates.** Complete verified
-   cart/human handoff, PDF/XLSX/history, confirmation and atomic receiving; then
-   run the separately authorized supplier cart-only and manager checkout tests.
+4. **C3/C4: coordinate the current gate and remaining local features.**
+   Record permitted supplier access, account/location/product mappings, owners
+   and budgets. [G5](C4_FULL_OFFLINE_GATE_RUN_20261025.md) passed all 21 steps on
+   October 25; the original timeout's cause remains unresolved. Later source
+   changes require the merged [G6 preparation and gate](C4_FULL_OFFLINE_GATE_RUN_20261025.md#rebinding-for-g6)
+   before any separately authorized paid matrix. Confirm the operator's current
+   status and keep merges paused from preparation until the paid run finishes.
+   Preserve consumed allowances and unresolved carts; no gate or paid run starts
+   from this documentation task. The next document implementation is read-only
+   review of held saves and missing/corrupt copies, after the merge restriction
+   clears. Reuse the completed archive, exports, confirmation, receiving, weekly
+   schedule screens and over-cap approval. Their evidence is local; hosted/model,
+   supplier and full-workflow acceptance remain separate.
+5. **C5: finish and accept M8 after M7 and the supplier gates.** Accept the complete
+   verified cart/human handoff using the locally built PDF/XLSX/history,
+   confirmation and atomic receiving. Hosted-fictional checks and separately
+   authorized supplier cart-only/manager checkout tests still need evidence.
 6. **Later: operations, controls, pilot and release.** Complete C6/M9 and C7/M10,
    resolve B8/M6 when approved Toast access arrives, then run the two reviewed
    M11 pilot cycles before M12 production readiness. M13/M14 stay deferred.
@@ -566,6 +487,11 @@ hosted acceptance remain separate evidence.
 No existing acceptance checkbox is advanced by this status refresh. The detailed
 milestone table and earlier implementation records below retain their evidence
 and scope.
+
+The historical [disposable shutdown matrix](C4_SHUTDOWN_OBSERVATION_MATRIX_20261015.md)
+and [source-only lifecycle consolidation](C4_BROWSER_LIFECYCLE_SOURCE_REVIEW_20261015.md)
+also remain retained evidence. Their then-next actions were superseded by the
+later lifecycle, baseline and G5/G6 records; they are not fresh execution requests.
 
 The initial documentation refresh ran `pnpm test:focused replenishment-proposal
 replenishment-lifecycle-contract replenishment-lifecycle-d1` and passed all three
@@ -735,7 +661,7 @@ environment until separately reviewed release evidence exists.
 | --- | --- | --- |
 | GitHub | New source `de970c8`/`12de73b` is preserved. Its missing-tool CI failure is repaired; Ubuntu/Windows checks pass at `456ad67`. PR #10 records the final checklist/portability follow-up. | Keep `main` as the only long-lived branch. Require passing checks on the final PR head before integration. |
 | Supabase | The owner accepted the development-provider manual walkthrough using fictional accounts and reports completing the authentication and migration review. The [C2 closeout](C2_M2_CLOSEOUT.md) records that report and an agent inspection. Automated provider tests remain separate. | Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
-| Cloudflare | Read-only checks on 2026-10-13 show Worker release `65373b3` and development D1 through `0023`; see the [C2 UI release](C2_UI_RELEASE_20261004.md). Workers Builds configuration is inaccessible with the current credential. | Prepare and separately authorize the code/`0024`–`0034` release, then record hosted checks. Keep Clover sync and purchasing disabled. Hosted signup/recovery callbacks and independent security review remain release follow-ups. |
+| Cloudflare | Read-only deployment/ledger checks last refreshed October 24 still showed release `65373b3` and D1 through `0023`; see the [retained release packet](C2_DEV_RELEASE_PREPARATION_20261024.md). The owner reports no Builds repository connected; its APIs returned 403. | Release remains deferred. Refresh hosted state and prepare the complete current migration range, backup and candidate before separately authorized execution; the old rehearsal covered only `0024`–`0034`. Keep Clover sync and purchasing disabled. Hosted signup/recovery and independent security review remain open. |
 | Custom domain | The user reports that the domain is already in Cloudflare. No Worker route has been verified. | Decide whether to attach the domain after the development `workers.dev` validation; the current hosted evidence uses that URL. |
 
 Never send, commit, or paste Supabase keys, Cloudflare API tokens, OAuth secrets,
