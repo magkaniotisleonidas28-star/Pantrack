@@ -1,7 +1,7 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-10-27 for permanent saved PDF/Excel copies in the local app. The historical verification table
-below retains its October 14 results. Detailed evidence is
+Updated: 2026-10-28 to reconcile completed local work and remaining gates.
+The historical verification table below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
 ## Where we are
@@ -14,18 +14,19 @@ accepted for development. Clover passed its approved, limited sandbox tests.
 Restocking calculations and proposal history are built locally. Purchase-order
 and practice-cart components are also built locally.
 
-The [online update is now prepared](C2_DEV_RELEASE_PREPARATION_20261024.md):
-the backup restored correctly, all eleven database updates preserved existing
-records in rehearsal, and the release files passed local checks. The online app
-is still on its old version. The owner confirmed test data and no connected
-automatic-build repository, then chose to defer the online update for now. The
-prepared files and backup are retained; no maintenance or database update ran.
+The [October 24 online-update rehearsal](C2_DEV_RELEASE_PREPARATION_20261024.md)
+passed for its old candidate and eleven updates, `0024`–`0034`. The source now
+has 45 database migrations through `0044`, so that rehearsal does not cover the
+latest changes. The owner confirmed test data and no connected automatic-build
+repository, then deferred the online update. The files and backup are retained;
+before resuming, refresh the online state, backup, rehearsal and release files.
+No new online inspection, maintenance, database update or deployment ran here.
 
 The [local draft PDF](C4_DRAFT_PDF_LOCAL_EVIDENCE.md) is now built and tested.
 The practice screen can download a readable supplier list with exact quantities,
 estimated prices and review warnings. Missing prices stay clearly unavailable.
-This works with fictional examples on this computer; adding it to the signed-in
-app remains separate work.
+This first slice used fictional examples; subsequent slices below completed
+saved-draft PDF/Excel downloads in the signed-in local app.
 
 The [Excel download](C4_DRAFT_XLSX_LOCAL_EVIDENCE.md) is now built and tested too.
 It includes a summary and a sortable/filterable item list, preserves exact values
@@ -63,8 +64,8 @@ Full local checks and actual downloads passed without a new database structure.
 The [private, permanent document-copy contract](C4_DOCUMENT_ARCHIVE_CONTRACT_LOCAL_EVIDENCE.md)
 is now built and tested locally. It keeps an exact saved copy, checks who can read
 it, detects damaged files and handles an interrupted save without creating a
-duplicate. Tests include recovery in a new process. It is not connected to the
-app yet. The [database record-keeping adapter](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md)
+duplicate. Tests include recovery in a new process. Subsequent slices below
+completed the local app connection. The [database record-keeping adapter](C4_DOCUMENT_ARCHIVE_D1_LOCAL_EVIDENCE.md)
 now has its real application migration after the other contributor's receiving
 work merged. It safely records saved-copy identity, permissions, retries and
 history, and its migration/lifecycle checks pass locally. The
@@ -77,15 +78,21 @@ does not change the online app or its database. The
 connected and tested in the local app too. Managers can save PDF/Excel copies
 from an order or matching history and download the original file later, even
 after the order changes or is canceled. Interrupted saves can be checked again
-without creating a duplicate. Next is a review screen for saves or files held
-because their outcome is uncertain or their contents cannot be verified.
+without creating a duplicate while the tab remains open, including after a
+reload. Closing the tab loses the pending-save recovery record; issued copies
+stay available in the server list. Next is a read-only review screen for saves
+or files held because their outcome is uncertain or their contents cannot be verified.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
 records of its completion checks. On October 25 the complete offline gate, including
 the AI safety run, [passed all 21 checks](C4_FULL_OFFLINE_GATE_RUN_20261025.md) with
 fake suppliers and mocked AI. The older second-item timeout's cause is still not
-explained, and real AI, supplier and café tests remain. C4/M8 therefore remain open.
+explained, and real AI, supplier and café tests remain. Since later changes
+altered the source, the newly merged [G6 plan](C4_FULL_OFFLINE_GATE_RUN_20261025.md#rebinding-for-g6)
+requires a fresh gate before the separately authorized real-model test. Check
+its operator's status before merging: no merges are allowed from preparation
+until the paid run finishes. This status update starts neither run. C4/M8 remain open.
 
 At the last inspection, the online development app was behind GitHub. The six
 bug fixes are merged, and the CI portability repair passed Windows/Linux checks
@@ -93,11 +100,13 @@ on its reviewed branch.
 Online release/testing are still needed. No real supplier order or café pilot is
 complete.
 
-This computer is now updated to the October 20 GitHub code, with a local startup
-fix. The [October 22 checks](C2_LOCAL_READINESS_20261022.md) passed the complete
+The [October 22 checks](C2_LOCAL_READINESS_20261022.md) verified October 20
+source plus the local startup fix and passed the complete
 local pipeline, including sign-in and company isolation. The test runner
 executed 98 suites successfully and explicitly skipped ten POSIX-specific suites
 on Windows. Existing stock/history and saved configuration were preserved.
+Those are dated results; the newer local features above have their own linked
+evidence and do not imply an online release.
 
 **A checked box means complete within its stated scope.** Local means tested on
 a computer with fictional data. Sandbox means tested with a provider's test
@@ -116,8 +125,8 @@ account. Neither means approved for real customers or production.
 | M6 | Connect a second register provider, Toast. | On hold awaiting Toast approval/testing access. |
 | M7 | Explain what needs restocking and let managers review it. | Built locally; A8 online acceptance remains open. |
 | M8 | Prepare exact supplier carts, let a manager check out, and record deliveries. | Partly built locally; the full offline gate (with mocked AI) passed on October 25. Supplier/full workflow acceptance remain open. |
-| M9 | Reliable schedules, reminders and background work. | Planned/prototype only; new hosting and scheduling are not provisioned. |
-| M10 | Spending limits and financial safeguards. | Partial local safeguards; full acceptance remains open. |
+| M9 | Reliable schedules, reminders and background work. | Weekly draft logic and settings screens are built/tested locally. Automatic Cron checks, hosted operations and alerts remain open. |
+| M10 | Spending limits and financial safeguards. | Owner limit controls and password-confirmed over-cap approval are built/tested locally. Payment responsibility is decided; full acceptance remains open. |
 | M11 | Prove the workflow in a real café. | Not started; requires two supervised count-to-delivery cycles. |
 | M12 | Make it ready for multiple real businesses. | Not started; requires the café pilot first. |
 | M13 | Add optional direct supplier APIs. | Deferred until production users exist. |
@@ -185,23 +194,35 @@ open**, although substantial C4 code has been merged.
 C4 already has local purchase-order drafts/revisions, supplier profiles,
 preparation permission and spending reservations, saved jobs, worker access,
 private practice-browser sessions, progress screens and uncertain-cart recovery.
-The new commits also add evaluation-only AI discovery/cart checks and private
-completion evidence. The latest 16-case fake completion-check matrix passed;
-the larger reliability run passed 24 jobs, then timed out on job 25. That is
-unfinished acceptance. Earlier real-model runs also stopped before the full
-matrix completed. No paid retry is authorized.
+The document downloads, filters and permanent saved copies above are complete
+locally. Later merged work also includes:
 
-Still open: resolve that reliability failure and pass the fresh full AI gate,
-then separately authorized real-model validation, hosted privacy/safety,
-permitted Baldor access, production mappings, signed-in PDF/Excel exports, confirmation
-and approved receiving.
+- [Supplier confirmation](C4_SUPPLIER_CONFIRMATION_LOCAL_EVIDENCE.md) and
+  [owner approval above the cap](C4_OVER_CAP_APPROVAL_LOCAL_EVIDENCE.md).
+- [Blind delivery counts and manager approval](C4_DELIVERY_RECEIVING_LOCAL_EVIDENCE.md),
+  followed by [order closure](C4_ORDER_CLOSURE_LOCAL_EVIDENCE.md).
+- [Suggestions per supplier](C4_SUPPLIER_SUGGESTIONS_LOCAL_EVIDENCE.md),
+  [weekly draft logic](C4_WEEKLY_SCHEDULES_LOCAL_EVIDENCE.md) and
+  [schedule settings/results screens](C4_WEEKLY_SCHEDULE_SCREENS_LOCAL_EVIDENCE.md).
+  Automatic Cron execution is not connected.
+
+[G5 passed the complete 21-step offline gate](C4_FULL_OFFLINE_GATE_RUN_20261025.md),
+including 30/30 reliability cases and 50 AI safety cases. All AI was mocked and
+suppliers were fictional; this does not explain the older timeout or prove real
+model/supplier acceptance. The merged G6 plan requires new evidence on current
+source before a separately authorized paid test, with no intervening merges.
+
+Still open: the held-document review screen; the current-source G6/real-model
+sequence; hosted privacy/safety and document acceptance; permitted supplier
+access and production mappings; and complete supplier/checkout/confirmation/
+delivery acceptance. Reuse the local features rather than rebuild them.
 
 Evidence: [C2 closeout](C2_M2_CLOSEOUT.md), [Baldor preparation](C3_BALDOR_PREPARATION.md),
 [latest local cart reconciliation](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md),
-[AI evaluation and remaining blocker](C4_PO_CART_AI_LOCAL_EVIDENCE.md)
+[earlier AI evaluation and its recorded limits](C4_PO_CART_AI_LOCAL_EVIDENCE.md)
 and [PO/cart integration checklist](PO_AI_CART_INTEGRATION_ROADMAP.md).
 
-## What was verified today
+## Historical verification — October 14
 
 | Check | Result on 2026-10-14 |
 | --- | --- |
@@ -215,9 +236,12 @@ and [PO/cart integration checklist](PO_AI_CART_INTEGRATION_ROADMAP.md).
 | Cloudflare automatic builds | Could not verify the Git/build settings: its read APIs denied access (`403`). |
 
 A migration is an ordered database update. Pushing commits to GitHub does not
-prove that the online code or database received them. Today's database check
-only read migration history and wrote no data. It did not validate every saved
-business record. No signed-in hosted/browser walkthrough was performed today.
+prove that the online code or database received them. The October 14 database
+check only read migration history and wrote no data; it did not validate every
+saved business record. No signed-in hosted/browser walkthrough was performed in
+that check. Later local startup and G5 passes supersede the failure/pending
+results above. Hosted reads were last refreshed October 24; the old 11-update
+range does not describe the complete current source through `0044`.
 
 The repair's [Windows/Linux CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/38508252498)
 passed for `456ad67`; [PR #10](https://github.com/magkaniotisleonidas28-star/Pantrack/pull/10)
@@ -230,26 +254,30 @@ the full login/recovery workflow. See the [sync verification record](C2_STATUS_S
 The local startup error is repaired within the recorded October 22 scope.
 Release preparation passed on October 24, but the owner deferred the online
 update. Independent local supplier/cart work can continue while it waits.
-The cart/browser acceptance gate remains unfinished.
+The October 25 mocked gate passed; the new G6 plan requires current-source
+evidence for a real-model test, whose status must be coordinated with its operator.
 
-1. **Online release is on hold.** The 11 updates and backup/recovery plan are
-   reviewed and rehearsed. Keep the preparation and resume only when the owner
-   requests it; independent local work can proceed meanwhile.
+1. **Keep the deferred online release on hold.** Its old eleven-update rehearsal
+   is retained. Refresh the online state, complete current migration range,
+   backup/recovery rehearsal and candidate when the owner requests resumption.
 2. **Authorize and perform that specific development release, then test it online.**
    Record the inventory, sales recovery/readiness and count/planning results with
    fictional data. The old stock history must stay intact.
 3. **Finish A8/M7.** Record the online proposal screens, complete sales-to-proposal
    flow and simultaneous-request/source-change tests.
-4. **Finish C4/C5 and M8.** The next C4 task is to review the retained second-item
-   timeout and resolve it safely before repeating the full offline gate. Paid
-   model validation needs separate approval after those checks pass. Resolve
-   supplier access/budgets, then complete hosted safety, documents, confirmation
-   and receiving. Supplier cart tests and real manager checkout need separate approval.
+4. **Finish C4/C5 and M8 without duplicating local features.** Coordinate the G6
+   preparation/gate and separately authorized real-model run. Merge no work
+   between preparation and the paid run's finish. After that restriction clears,
+   the next document feature is read-only review of held saves and missing or
+   damaged files. Finish supplier access/budgets and hosted/full-workflow
+   acceptance using the existing document, confirmation and receiving features.
+   Supplier cart tests and real manager checkout need separate authorization.
 5. **Finish operations and spending controls, then the café pilot.** Complete
    M9/M10 and resolve M6/Toast before M11; run two supervised delivery cycles.
 6. **Finish M12 production readiness.** Complete security, backup/restore,
    monitoring, support and onboarding checks after the pilot.
 
-Supplier decisions and bounded local C4 development can continue alongside
-release preparation and A8. Toast can resume when its approved access arrives.
+Supplier decisions and isolated local C4 development can continue alongside
+release preparation and A8; coordinate integration around the G6 merge restriction.
+Toast can resume when its approved access arrives.
 Supplier submission and automatic purchasing remain disabled.
