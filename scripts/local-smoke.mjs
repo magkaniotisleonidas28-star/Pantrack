@@ -115,6 +115,22 @@ try {
   );
   assert.equal(
     (
+      await fetch(
+        `${origin}/api/purchase-order-documents?` +
+          new URLSearchParams({
+            companyId,
+            id: crypto.randomUUID(),
+            kind: 'history',
+            view: 'continuation',
+          }),
+        { headers: { cookie, 'X-Pantrack-Archive-Viewer': 'local_seedy' } },
+      )
+    ).status,
+    404,
+    'Original-save continuation lookup default off',
+  );
+  assert.equal(
+    (
       await fetch(`${origin}/api/purchasing-suppliers?companyId=${companyId}`, {
         headers: { cookie },
       })

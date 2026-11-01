@@ -1,6 +1,15 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-01 for explicit saved-file checks and the G7 gate position.
+Updated: 2026-11-01 for original-request save continuation and the G8 gate position.
+
+Latest local addition: [Continue original save](C4_DOCUMENT_SAVE_CONTINUATION_LOCAL_EVIDENCE.md)
+can recover a document save from its server record after the browser loses it.
+Only the person who started it can continue it, with current manager/owner access.
+It keeps the same request and copy identity; changed sources or unsafe files stay
+held. Its feature/browser tests and all six local project checks pass, including
+the complete test run. Clean-machine checks are pending at publication.
+No new database structure or online changes are added. G8 is the latest separate
+testing plan; its protected merge window still applies.
 The historical verification table below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -97,8 +106,8 @@ retrieves that same check. Its local file-check and signed-in screen tests pass.
 Broader testing hit two existing worker-test failures, including a Windows file
 permission error; separate reruns passed. Clean-machine checks are still needed
 before merging. The evidence report keeps that caveat visible.
-The next document step is recovering an interrupted save from its server record
-for the person who originally started it. The policy itself changed no app behavior.
+That document step is now implemented in the continuation slice linked above.
+The policy itself changed no app behavior.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
@@ -106,10 +115,9 @@ records of its completion checks. On October 25 the complete offline gate, inclu
 the AI safety run, [passed all 21 checks](C4_FULL_OFFLINE_GATE_RUN_20261025.md) with
 fake suppliers and mocked AI. The older second-item timeout's cause is still not
 explained, and real AI, supplier and café tests remain. Since later changes
-altered the source, [G6 ran and G7 is now prepared in code](C4_FULL_OFFLINE_GATE_RUN_20261027.md).
-G6 passed its functional steps but failed its preservation audit after a local
-practice database was upgraded. G7 adds stricter preparation checks and still
-needs a fresh run before separately authorized real-model testing. Check its
+altered the source, [G7 subsequently passed every step and audit](C4_FULL_OFFLINE_GATE_RUN_20261031.md).
+The paid attempt stopped before any provider request. The merged G8 plan fixes
+that build boundary and requires fresh protected testing and authorization. Check its
 operator's status before merging: no merges are allowed from preparation until
 the paid run finishes. This update starts neither run. C4/M8 remain open.
 

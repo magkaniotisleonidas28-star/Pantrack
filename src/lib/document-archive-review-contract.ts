@@ -21,6 +21,6 @@ export const archiveReviewItem=z.object({id:z.string().uuid(),companyId:poId,for
 export type ArchiveReviewItem=z.infer<typeof archiveReviewItem>;
 export type ArchiveReviewSelection={companyId:string;kind:'draft'|'history';orderId?:string};
 export const archiveReviewPage=z.object({viewerId:poId,items:z.array(archiveReviewItem).max(20),hasMore:z.boolean()}).strict();
-export const archiveReviewDetail=z.object({viewerId:poId,item:archiveReviewItem,events:z.array(z.object({id:z.string().uuid(),at:z.string().datetime(),summary:z.string().min(1).max(200)}).strict()).max(20),hasMore:z.boolean()}).strict();
+export const archiveReviewDetail=z.object({viewerId:poId,item:archiveReviewItem,canContinue:z.boolean().optional(),events:z.array(z.object({id:z.string().uuid(),at:z.string().datetime(),summary:z.string().min(1).max(200)}).strict()).max(20),hasMore:z.boolean()}).strict();
 export type ArchiveReviewPage=z.infer<typeof archiveReviewPage>;
 export type ArchiveReviewDetail=z.infer<typeof archiveReviewDetail>;
