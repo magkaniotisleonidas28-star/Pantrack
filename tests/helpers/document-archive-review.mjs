@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 
-export async function checkArchiveReview({core,db,bucket,state,request,command,artifacts,tables,setUser,setAfterPut,setAfterGet,io}){
+export async function checkArchiveReview({core,db,bucket,state,request,command,artifacts,tables,setUser,setAfterPut,setAfterGet,setBeforeGet,io}){
   const orderId=command().source.orderId,query=(view='review',extra={})=>'?'+new URLSearchParams({companyId:'a',view,kind:'draft',orderId,...extra});
   const page=async(extra={})=>{const r=await request(query('review',extra));assert.equal(r.status,200,await r.clone().text());return r.json();};
   const detail=async(id,extra={})=>{const r=await request(query('review-detail',{id,...extra}));assert.equal(r.status,200,await r.clone().text());return r.json();};
@@ -54,7 +54,7 @@ export async function checkArchiveReview({core,db,bucket,state,request,command,a
   await bucket.put(missingKey,original);assert.equal((await request('?companyId=a&id='+missing.id)).status,200);
   const after=[...(await page()).items,...(await page({offset:'20'})).items];assert.ok(!after.some(i=>i.id===missing.id));
   assert.ok((await detail(missing.id)).events.some(e=>/not found/.test(e.summary)),'Recovery retains the old missing-file observation');
-  setAfterGet(async()=>{throw Error('PRIVATE_READ_ERROR');});assert.equal((await request('?companyId=a&id='+missing.id)).status,503);
+  setBeforeGet(async()=>{throw Error('PRIVATE_READ_ERROR');});assert.equal((await request('?companyId=a&id='+missing.id)).status,503);
   assert.equal((await detail(missing.id)).item.status,'unavailable');assert.equal((await request('?companyId=a&id='+missing.id)).status,200);
   const journal=new core.D1DocumentArchiveJournal(db),at=new Date().toISOString();
   // Same-timestamp events with descending UUIDs must still use insertion order.

@@ -176,6 +176,8 @@ export type ArchiveBegin =
   | { kind: 'busy' }
   | { kind: 'claim'; claim: ArchiveClaim };
 
+export type ArchiveReadObservationReceipt = { id: string; at: string };
+
 /** Server-only port. A production adapter must pass the conformance tests before it is connected.
  * begin/open/recheck authorize the current company owner/manager inside the metadata transaction.
  * prepare/publish additionally compare the complete current source (including filtered membership)
@@ -200,7 +202,7 @@ export interface DocumentArchiveJournal {
     artifact: DocumentArchiveArtifact,
     actorId: string,
     observation: ArchiveObservation,
-  ): Promise<void>;
+  ): Promise<void | ArchiveReadObservationReceipt>;
   recheck(artifact: DocumentArchiveArtifact, actorId: string): Promise<void>;
 }
 /** Atomic create-only storage: never overwrite, delete, list publicly or return signed/public URLs.

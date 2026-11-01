@@ -7,7 +7,7 @@ type Row={id:string;company_id:string;actor_id:string;request_json:string;state:
   active:number;manifest_json:string|null;artifact_json:string|null;last_check:string|null;last_checked_at:string|null};
 type Event={id:string;at:string;payload_json:string};
 // Append order determines the last retained check, even if two checks share a timestamp.
-const checkWhere="o.company_id=i.company_id AND o.document_id=i.id AND (i.state!='ready' OR o.token IS NULL) AND json_extract(o.payload_json,'$.kind') IN ('object','read_unknown','write_unknown')";
+const checkWhere="o.company_id=i.company_id AND o.document_id=i.id AND (i.state!='ready' OR o.token IS NULL) AND json_extract(o.payload_json,'$.kind') IN ('object','read_unknown','write_unknown') AND json_extract(o.payload_json,'$.check.contract') IS NOT 'pantrack.issued-file-check.v1'";
 const projection=`i.id,i.company_id,i.actor_id,i.request_json,i.state,i.reason,i.requested_at,i.updated_at,i.manifest_json,i.artifact_json,
   (i.lease_until>strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS active,
   (SELECT payload_json FROM document_archive_observations o WHERE ${checkWhere} ORDER BY o.rowid DESC LIMIT 1) AS last_check,
@@ -72,7 +72,8 @@ export class D1DocumentArchiveReview{
       this.db.prepare(`SELECT user_id FROM memberships WHERE ${member}`).bind(q.companyId,actorId),
       this.db.prepare(`SELECT ${projection} FROM document_archive_intents i WHERE ${scope} AND i.id=? AND EXISTS(SELECT 1 FROM memberships WHERE ${member})`).bind(...args),
       this.db.prepare(`SELECT o.id,o.at,o.payload_json FROM document_archive_observations o JOIN document_archive_intents i ON i.company_id=o.company_id AND i.id=o.document_id
-        WHERE ${scope} AND i.id=? AND EXISTS(SELECT 1 FROM memberships WHERE ${member}) ORDER BY o.rowid DESC LIMIT 21 OFFSET ?`).bind(...args,q.offset),
+        WHERE ${scope} AND i.id=? AND EXISTS(SELECT 1 FROM memberships WHERE ${member})
+        AND json_extract(o.payload_json,'$.check.contract') IS NOT 'pantrack.issued-file-check.v1' ORDER BY o.rowid DESC LIMIT 21 OFFSET ?`).bind(...args,q.offset),
     ]);
     if(!results[0].results.length)archiveFail('forbidden');const row=results[1].results[0] as Row|undefined;if(!row)archiveFail('missing');
     const {item,manifest}=capture(row),events=results[2].results as Event[];

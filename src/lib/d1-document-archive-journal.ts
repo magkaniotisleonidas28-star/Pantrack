@@ -152,11 +152,12 @@ export class D1DocumentArchiveJournal implements DocumentArchiveJournal{
   });}
   async observeRead(value:DocumentArchiveArtifact,actorId:string,observation:ArchiveObservation){return this.boundary(async()=>{
     const artifact=captureArchiveArtifact(value),parsed=observationSchema.safeParse(observation);if(!parsed.success||!poId.safeParse(actorId).success)archiveFail('invalid_request');
-    const id=crypto.randomUUID(),write=this.db.prepare(`INSERT INTO document_archive_observations(company_id,document_id,id,actor_id,token,payload_json,at)
+    const id=crypto.randomUUID(),at=this.now(),write=this.db.prepare(`INSERT INTO document_archive_observations(company_id,document_id,id,actor_id,token,payload_json,at)
       SELECT company_id,id,?,?,NULL,?,? FROM document_archive_intents WHERE company_id=? AND id=? AND artifact_json=?`)
-      .bind(id,actorId,JSON.stringify(parsed.data),this.now(),artifact.companyId,artifact.id,JSON.stringify(artifact));
+      .bind(id,actorId,JSON.stringify(parsed.data),at,artifact.companyId,artifact.id,JSON.stringify(artifact));
     const read=this.db.prepare('SELECT id FROM document_archive_observations WHERE company_id=? AND document_id=? AND id=?').bind(artifact.companyId,artifact.id,id);
     try{const result=await this.db.batch([write,read]);if(!result[1].results.length)archiveFail('integrity');}catch(error){if(error instanceof DocumentArchiveError)throw error;if(!await read.first())archiveFail('storage_unavailable');}
+    return {id,at};
   });}
   async recheck(value:DocumentArchiveArtifact,actorId:string){return this.boundary(async()=>{
     const artifact=captureArchiveArtifact(value),row=await this.row(artifact.companyId,artifact.id,actorId);

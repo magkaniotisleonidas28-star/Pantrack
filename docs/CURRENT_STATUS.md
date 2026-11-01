@@ -11,6 +11,28 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 explicit issued-file checks — 2026-11-01
+
+The [issued-file check](C4_ISSUED_FILE_CHECK_LOCAL_EVIDENCE.md) adds an explicit
+Check file now action for owners/managers reviewing a saved PDF/Excel copy.
+It verifies the exact old file, appends an audit result and safely retrieves the
+same result after an interrupted reply. New checks have distinct identities;
+Refresh still reads recorded history. It cannot create, replace or publish a file.
+No new schema, migration, dependency or hosted configuration is added. Native
+API/client and signed-in browser checks pass. Typecheck, build, migration/schema,
+isolated apply and HTTP checks pass; all 151 executable suites passed across
+recorded runs, with twelve Windows skips. Two full test invocations stopped in
+existing worker suites (one confirmed Windows file-permission error); both passed
+standalone. The handoff retains the failures. Clean-machine CI is still required.
+
+The draft document stack now includes main `6b21274` and preserves its screen
+lifecycle fixes. G6's functional steps passed but its preservation audit failed;
+[G7 rebinding](C4_FULL_OFFLINE_GATE_RUN_20261027.md#rebinding-for-g7) is merged.
+Check G7's operator status before any main merge; the preparation-to-paid-run
+freeze remains. No gate, paid run or hosted action is started here. The next
+bounded document slice is server-assisted original-actor continuation. Formal
+replacement roles remain undecided. C4/C5/M8 stay open and purchasing disabled.
+
 ## Latest C4 document recovery policy — 2026-11-01
 
 The [recovery policy and implementation handoff](C4_DOCUMENT_RECOVERY_POLICY_20261101.md)
@@ -23,10 +45,10 @@ is pending and is not recorded as an accepted decision.
 This is documentation only, built on review PR #29. Its separate GitHub checks
 passed for `1937c12`; that proves the local review implementation, not the future
 policy actions. No schema, migration, app behavior or hosted changes occur here.
-The next bounded document implementation is an explicit issued-file check using
-existing owner/manager read authority, with durable check identity and safe
-replay. It does not depend on the future replacement-role choice. G6's merge
-restriction, deferred hosted release and the open C4/C5/M8 gates remain in place.
+The subsequent [issued-file implementation](C4_ISSUED_FILE_CHECK_LOCAL_EVIDENCE.md)
+uses existing owner/manager read authority, durable check identity and safe replay.
+It does not depend on the future replacement-role choice. Deferred hosted release
+and the open C4/C5/M8 gates remain in place; see the newer G7 position above.
 
 ## Latest local C4 saved-document review — 2026-11-01
 
@@ -62,11 +84,11 @@ record; already-issued copies remain discoverable from the server catalog.
 
 [G5 passed all 21 steps](C4_FULL_OFFLINE_GATE_RUN_20261025.md) on its October 25
 frozen source with mocked AI and fake suppliers. The original timeout's cause
-remains unresolved. The newly merged [G6 rebinding](C4_FULL_OFFLINE_GATE_RUN_20261025.md#rebinding-for-g6)
-requires fresh preparation/gate evidence on current source before a separately
-authorized real-model run. **No merges from G6 preparation until that paid run
-finishes.** Preparation/run status must be checked with its operator; this
-documentation review does not establish it or start either run.
+remains unresolved. The subsequent [G6 result and G7 rebinding](C4_FULL_OFFLINE_GATE_RUN_20261027.md)
+record G6's failed preservation audit and require a fresh frozen-source gate
+before a separately authorized real-model run. **No merges from G7 preparation
+until that paid run finishes.** Preparation/run status must be checked with its
+operator; this document does not establish it or start either run.
 
 Weekly scheduling logic and screens are local; Cloudflare Cron, hosted worker
 operations and alerts remain open. The deferred October 24 release packet covers

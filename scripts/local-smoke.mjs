@@ -100,6 +100,21 @@ try {
   );
   assert.equal(
     (
+      await fetch(`${origin}/api/purchase-order-documents/check`, {
+        method: 'POST',
+        headers: { cookie, origin, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          companyId,
+          documentId: crypto.randomUUID(),
+          operationId: crypto.randomUUID(),
+        }),
+      })
+    ).status,
+    404,
+    'Explicit issued-file checks default off',
+  );
+  assert.equal(
+    (
       await fetch(`${origin}/api/purchasing-suppliers?companyId=${companyId}`, {
         headers: { cookie },
       })
