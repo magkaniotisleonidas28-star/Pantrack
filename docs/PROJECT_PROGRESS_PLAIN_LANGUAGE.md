@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-01 for read-only review of saved-document problems.
+Updated: 2026-11-01 for saved-document review and the recovery policy draft.
 The historical verification table below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -86,7 +86,13 @@ built and tested locally. It shows saves needing attention, their safe recorded
 reasons and older checks. Refresh reads that history without retrying a save or
 checking/changing a file. It handles waiting/unconfirmed saves and recorded
 missing/damaged files, and refuses access outside the current owner/manager's
-company. Next is deciding safe recovery/reissue rules that retain the originals.
+company. The [recovery policy](C4_DOCUMENT_RECOVERY_POLICY_20261101.md) now
+separates retrying the same save, checking an existing file and making a linked
+replacement. Originals and old failures stay recorded. Owner-only authorization
+for formal replacements is proposed; whether managers may also authorize them
+is still a pending choice. The next build is a **Check file now** button for
+issued copies. It will record a fresh result without creating or replacing a file;
+it is not implemented yet. The policy itself changes no app behavior or data.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
@@ -217,7 +223,8 @@ suppliers were fictional; this does not explain the older timeout or prove real
 model/supplier acceptance. The merged G6 plan requires new evidence on current
 source before a separately authorized paid test, with no intervening merges.
 
-Still open: document recovery/reissue policy; the current-source G6/real-model
+Still open: the explicit file-check feature, server-assisted continuation and
+the formal replacement-role choice/implementation; the current-source G6/real-model
 sequence; hosted privacy/safety and document acceptance; permitted supplier
 access and production mappings; and complete supplier/checkout/confirmation/
 delivery acceptance. Reuse the local features rather than rebuild them.
@@ -273,7 +280,9 @@ evidence for a real-model test, whose status must be coordinated with its operat
 4. **Finish C4/C5 and M8 without duplicating local features.** Coordinate the G6
    preparation/gate and separately authorized real-model run. Merge no work
    between preparation and the paid run's finish. After that restriction clears,
-   define recovery/reissue policy for the now-built local document review.
+   integrate the local document review and policy in order. The next isolated
+   document build is the explicit issued-file check; formal replacements wait
+   for their role choice and implementation.
    Finish supplier access/budgets and hosted/full-workflow
    acceptance using the existing document, confirmation and receiving features.
    Supplier cart tests and real manager checkout need separate authorization.
