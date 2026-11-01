@@ -590,9 +590,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   now connect authorized server save/list/read to the draft and filtered-history
   screens with local D1/R2 bindings. Persistent exact-request retries, current
   access at handoff, exact old bytes after edit/cancel and native PDF/Excel app
-  downloads pass. No new schema or hosted setup. Next add read-only review of
-  held saves and missing/corrupt copies; hosted bucket/privacy acceptance remains
-  separate.
+  downloads pass. No new schema or hosted setup. The subsequent
+  [read-only review](C4_DOCUMENT_ARCHIVE_REVIEW_LOCAL_EVIDENCE.md) now lists held
+  or unconfirmed saves and recorded missing/corrupt checks, with source-scoped
+  paging and retained history. Native D1/R2 and signed-in UI checks prove current
+  access, safe reasons, cancellation and zero review writes/file IO. No migration.
+  Next define recovery/reissue policy; hosted bucket/privacy acceptance remains
+  separate, and G6's merge restriction still applies.
   Issued artifacts and receiving now have local implementations recorded here;
   hosted document acceptance and supplier/full-workflow acceptance remain separate.
   Supplier email infrastructure is deferred.

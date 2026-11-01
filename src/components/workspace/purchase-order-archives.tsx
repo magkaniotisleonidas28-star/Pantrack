@@ -5,6 +5,7 @@ import {PurchaseOrderArchiveClient,type ArchiveSelection,type ArchiveClientState
 import {captureArchiveCatalog} from '@/lib/purchase-order-archive-app-contract';
 import {browserPurchaseOrderDownloads} from '@/lib/purchase-order-download';
 import type {DocumentArchiveArtifact} from '@/lib/purchase-order-document-archive-contract';
+import DocumentArchiveReview from './document-archive-review';
 
 type Props={selection:ArchiveSelection;disabled:boolean;allowSave:boolean;cancelRef:MutableRefObject<(()=>void)|null>;onReload:()=>void};
 export default function PurchaseOrderArchives(props:Props){return <ArchiveWorkspace key={JSON.stringify(props.selection)} {...props}/>;}
@@ -16,7 +17,9 @@ function ArchiveWorkspace({selection:initialSelection,disabled,allowSave,cancelR
   const [catalogView,setCatalogView]=useState<{key:string;artifacts:DocumentArchiveArtifact[];hasMore:boolean;error:string}|null>(null);
   const currentCatalog=catalogView?.key===requestKey?catalogView:null;
   const artifacts=currentCatalog?.artifacts??[],hasMore=currentCatalog?.hasMore??false,listError=currentCatalog?.error??'',loading=!currentCatalog;
-  const client=useRef<PurchaseOrderArchiveClient|null>(null),viewer=useRef('');
+  const client=useRef<PurchaseOrderArchiveClient|null>(null),viewer=useRef(''),reviewCancel=useRef<(()=>void)|null>(null);
+  const [reviewOpen,setReviewOpen]=useState(false);
+  const source=JSON.stringify(selection);
   const scope=JSON.stringify([selection.companyId,selection.source.kind,selection.source.kind==='draft'?selection.source.orderId:'history']);
   const blocked=disabled||loading||state.phase==='working';
   useLayoutEffect(()=>{
@@ -35,7 +38,7 @@ function ArchiveWorkspace({selection:initialSelection,disabled,allowSave,cancelR
     }).catch(error=>{if(live&&!abort.signal.aborted){client.current?.dispose();client.current=null;setVisible(true);setCatalogView({key:requestKey,artifacts:[],hasMore:false,error:error.message});}});
     return()=>{live=false;abort.abort();};
   },[selection,offset,refresh,requestKey]);
-  useLayoutEffect(()=>{const cancel=()=>client.current?.cancel();cancelRef.current=cancel;return()=>{client.current?.dispose();client.current=null;if(cancelRef.current===cancel)cancelRef.current=null;};},[scope,cancelRef]);
+  useLayoutEffect(()=>{const cancel=()=>{client.current?.cancel();reviewCancel.current?.();};cancelRef.current=cancel;return()=>{cancel();client.current?.dispose();client.current=null;if(cancelRef.current===cancel)cancelRef.current=null;};},[scope,cancelRef]);
   useLayoutEffect(()=>{if(disabled)client.current?.cancel();},[disabled]);
   const clientReady=!!currentCatalog&&!listError;
   if(!visible)return null;
@@ -55,5 +58,8 @@ function ArchiveWorkspace({selection:initialSelection,disabled,allowSave,cancelR
     <div className="po-actions"><Button type="button" variant="ghost" disabled={blocked} onClick={()=>{client.current?.cancel();setRefresh(n=>n+1);}}>Refresh saved copies</Button>
       {offset>0&&<Button type="button" variant="ghost" disabled={blocked} onClick={()=>{client.current?.cancel();setOffset(n=>Math.max(0,n-20));}}>Newer copies</Button>}
       {hasMore&&<Button type="button" variant="ghost" disabled={blocked} onClick={()=>{client.current?.cancel();setOffset(n=>n+20);}}>Older copies</Button>}</div>
+    <Button type="button" variant="outline" disabled={blocked} aria-expanded={reviewOpen} onClick={()=>setReviewOpen(open=>!open)}>{reviewOpen?'Close save review':'Review saves'}</Button>
+    {reviewOpen&&<DocumentArchiveReview key={source+'|'+viewer.current} selection={{companyId:selection.companyId,kind:selection.source.kind,...(selection.source.kind==='draft'?{orderId:selection.source.orderId}:{})}}
+      viewerId={viewer.current} disabled={disabled||loading||state.phase==='working'} cancelRef={reviewCancel}/>}
   </section>;
 }
