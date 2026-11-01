@@ -77,6 +77,6 @@ export class D1DocumentArchiveReview{
     ]);
     if(!results[0].results.length)archiveFail('forbidden');const row=results[1].results[0] as Row|undefined;if(!row)archiveFail('missing');
     const {item,manifest}=capture(row),events=results[2].results as Event[];
-    return {viewerId:actorId,item,events:events.slice(0,20).map(event=>({id:event.id,at:event.at,summary:eventSummary(event,manifest)})),hasMore:events.length>20};
+    return {viewerId:actorId,item,canContinue:!row.artifact_json&&row.actor_id===actorId,events:events.slice(0,20).map(event=>({id:event.id,at:event.at,summary:eventSummary(event,manifest)})),hasMore:events.length>20};
   });}
 }

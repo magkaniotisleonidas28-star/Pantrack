@@ -5,7 +5,7 @@ import {DocumentArchiveReviewClient,type ArchiveReviewState} from '@/lib/documen
 import {archiveReviewLabels,archiveReviewReasons,type ArchiveReviewSelection,type ArchiveReviewItem} from '@/lib/document-archive-review-contract';
 import IssuedFileCheckControl from './issued-file-check';
 
-type Props={selection:ArchiveReviewSelection;viewerId:string;disabled:boolean;cancelRef:MutableRefObject<(()=>void)|null>;documentId?:string};
+type Props={selection:ArchiveReviewSelection;viewerId:string;disabled:boolean;cancelRef:MutableRefObject<(()=>void)|null>;documentId?:string;continuationDisabled:boolean;onContinue:(item:ArchiveReviewItem)=>void};
 const time=(value:string)=>new Date(value).toLocaleString();
 function Summary({item}:{item:ArchiveReviewItem}){return <>
   <strong>{archiveReviewLabels[item.status]}</strong>{' · '}{item.format==='pdf'?'PDF':'Excel'}{' · '}
@@ -17,7 +17,7 @@ function Summary({item}:{item:ArchiveReviewItem}){return <>
   {item.issued&&item.status!=='issued'&&<p>The original copy remains recorded; its last file check needs attention.</p>}
 </>;}
 export default function DocumentArchiveReview(props:Props){return <ReviewWorkspace key={JSON.stringify([props.selection,props.viewerId,props.documentId])} {...props}/>;}
-function ReviewWorkspace({selection:initialSelection,viewerId,disabled,cancelRef,documentId}:Props){
+function ReviewWorkspace({selection:initialSelection,viewerId,disabled,cancelRef,documentId,continuationDisabled,onContinue}:Props){
   const [selection]=useState(initialSelection);
   const [state,setState]=useState<ArchiveReviewState>({loading:true,message:'',page:null,detail:null,offset:0,eventOffset:0});
   const client=useRef<DocumentArchiveReviewClient|null>(null),checkCancel=useRef<(()=>void)|null>(null);
@@ -38,6 +38,13 @@ function ReviewWorkspace({selection:initialSelection,viewerId,disabled,cancelRef
       {state.detail&&<Button type="button" variant="ghost" disabled={disabled} onClick={()=>{if(state.page)client.current?.closeDetail();else void client.current?.list();}}>Back to saves needing attention</Button>}</div>
     {state.detail?<article aria-label="Save history">
       <Summary item={state.detail.item}/><p className="break-all">Save reference: {state.detail.item.id}</p>
+      {!state.detail.item.issued&&<section aria-label="Continue original save">
+        {state.detail.canContinue?<>
+          <p>Continue the exact save you started. Existing file contents are checked; if generation never finished, the original source must still match before a file can be saved.</p>
+          {state.detail.item.status==='pending'&&<p>The save is still running. Refresh the review after its waiting period.</p>}
+          <Button type="button" variant="outline" disabled={blocked||continuationDisabled||state.detail.item.status==='pending'} onClick={()=>onContinue(state.detail!.item)}>Continue original save</Button>
+        </>:<p>Only the person who started this save can continue it, with current owner or manager access.</p>}
+      </section>}
       {state.detail.item.issued&&<IssuedFileCheckControl key={state.detail.item.id+'|'+state.detail.viewerId} companyId={selection.companyId} documentId={state.detail.item.id}
         viewerId={state.detail.viewerId} disabled={blocked} cancelRef={checkCancel} recorded={()=>void client.current?.detail(state.detail!.item.id)}/>}
       <h4>Recorded checks, newest first</h4>
