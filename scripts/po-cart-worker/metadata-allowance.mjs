@@ -2,11 +2,19 @@ import { mkdirSync, openSync, writeFileSync, fsyncSync, closeSync } from 'node:f
 import { dirname } from 'node:path';
 import { readPrivate, writePrivate, profileLock } from './private-files.mjs';
 import { gatePolicy, validateGate, fileHash } from './acceptance-gate.mjs';
+import { budgetFile } from '../cart-preview/ai-budget.mjs';
 
 export const priorPaidAllowanceFile =
-  '.sites-runtime/po-cart-workers/ai-reliability-acceptance-20261011/allowance.json';
-export const paidAllowanceFile =
   '.sites-runtime/po-cart-workers/metadata-repair-acceptance/allowance.json';
+export const paidAllowanceFile =
+  '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261101/allowance.json';
+// The prior allowance was authorized on 2026-11-01, but its run stopped before
+// any request and its pricing check expired. Only that exact file retires unused.
+export const retiredPriorAllowance = Object.freeze({
+  sha256: '0b2eb16de5e9d1032688519e0c527a807d3e0aa8f0af7b44e4f95663611ede27',
+  ledger: budgetFile,
+});
+const pricingWindowMs = 300000;
 
 export function validatePricing(p) {
   if (
@@ -16,16 +24,33 @@ export function validatePricing(p) {
     p.outputUsdPerMillion !== 4.5 ||
     p.source !== 'https://developers.openai.com/api/docs/models/gpt-5.4-mini' ||
     !Number.isFinite(Date.parse(p.checkedAt)) ||
-    Math.abs(Date.now() - Date.parse(p.checkedAt)) > 300000
+    Math.abs(Date.now() - Date.parse(p.checkedAt)) > pricingWindowMs
   )
     throw Error('Immediate official model/settings/pricing verification required.');
 }
 
-function priorFingerprint(path) {
-  const a = readPrivate(path);
-  if (a.version !== 1 || a.matrices !== 1 || a.state !== 'consumed' || !a.runId || !a.consumedAt)
-    throw Error('Prior consumed allowance required.');
-  return { path, sha256: fileHash(path) };
+// A prior allowance is consumed, or is the pinned one that can never validate:
+// authorized, never consumed, with its pricing check expired.
+function priorFingerprint(path, retired) {
+  const a = readPrivate(path),
+    sha256 = fileHash(path);
+  const consumed =
+    (a.version === 1 || a.version === 2) &&
+    a.matrices === 1 &&
+    a.state === 'consumed' &&
+    a.runId &&
+    a.consumedAt;
+  const unused =
+    sha256 === retired?.sha256 &&
+    a.version === 2 &&
+    a.matrices === 1 &&
+    a.state === 'authorized' &&
+    !a.runId &&
+    !a.consumedAt &&
+    Date.now() - Date.parse(a.pricing?.checkedAt) > pricingWindowMs &&
+    Number.isFinite(Date.parse(a.authorizedAt));
+  if (!consumed && !unused) throw Error('Prior consumed allowance required.');
+  return { path, sha256, retiredUnused: !consumed, authorizedAt: a.authorizedAt };
 }
 // Only invoke after separate explicit user authorization. Creation is single-use:
 // even a partial failed write is retained and cannot be replaced or reauthorized.
@@ -33,13 +58,25 @@ export function createMetadataAllowance(
   { gateReport, pricing, authorizationReference },
   path = paidAllowanceFile,
   priorPath = priorPaidAllowanceFile,
+  retired = retiredPriorAllowance,
 ) {
   if (typeof authorizationReference !== 'string' || !authorizationReference.trim())
     throw Error('Explicit matrix authorization reference required.');
   if (path === priorPath) throw Error('A separate new allowance is required.');
   const gate = validateGate(gateReport);
   validatePricing(pricing);
-  const previousAllowance = priorFingerprint(priorPath);
+  const { retiredUnused, authorizedAt, ...previousAllowance } = priorFingerprint(
+    priorPath,
+    retired,
+  );
+  // Nothing may have been reserved since an unused prior was authorized.
+  if (
+    retiredUnused &&
+    readPrivate(retired.ledger).reservations.some(
+      (r) => !(Date.parse(r.at) < Date.parse(authorizedAt)),
+    )
+  )
+    throw Error('Prior allowance has recorded spending.');
   const a = {
     version: 2,
     matrices: 1,
@@ -78,6 +115,7 @@ export function createMetadataAllowance(
 export function validateMetadataAllowance(
   path = paidAllowanceFile,
   priorPath = priorPaidAllowanceFile,
+  retired = retiredPriorAllowance,
 ) {
   const a = readPrivate(path);
   if (
@@ -94,7 +132,7 @@ export function validateMetadataAllowance(
     !a.authorizationReference.trim()
   )
     throw Error('paid_allowance_unavailable');
-  const previous = priorFingerprint(priorPath),
+  const previous = priorFingerprint(priorPath, retired),
     gate = validateGate(a.gateReport);
   validatePricing(a.pricing);
   if (
@@ -111,11 +149,12 @@ export function consumeMetadataAllowance(
   runId,
   path = paidAllowanceFile,
   priorPath = priorPaidAllowanceFile,
+  retired = retiredPriorAllowance,
 ) {
   if (typeof runId !== 'string' || !runId.trim()) throw Error('Run identifier required.');
   const release = profileLock(path + '.ownership');
   try {
-    const a = validateMetadataAllowance(path, priorPath);
+    const a = validateMetadataAllowance(path, priorPath, retired);
     writePrivate(path, { ...a, state: 'consumed', runId, consumedAt: new Date().toISOString() });
   } finally {
     release();

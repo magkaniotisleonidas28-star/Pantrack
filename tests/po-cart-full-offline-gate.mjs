@@ -37,7 +37,7 @@ try {
   assert.equal(gateAuditsPassed({ passed: true }), false);
   assert.equal(
     fullGateRoot,
-    '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031',
+    '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261101',
   );
   assert.equal(gateSteps.length, 21);
   // Every consumed gate root stays retained; the paid-allowance policy binding is unchanged.
@@ -48,6 +48,7 @@ try {
     '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024',
     '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025',
     '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027',
+    '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031',
   ]);
   assert.equal(gatePolicy, 'metadata-repair-real-matrix-v1');
   // A failed step's log gains fixed-shape facts only; message text and private values never pass.

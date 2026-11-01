@@ -9,6 +9,7 @@ import {
   closeSync,
   writeFileSync,
   unlinkSync,
+  existsSync,
 } from 'node:fs';
 import { execFileSync, spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -29,7 +30,13 @@ import {
   fileHash,
   validateGate,
 } from '../scripts/po-cart-worker/acceptance-gate.mjs';
-import { createMetadataAllowance } from '../scripts/po-cart-worker/metadata-allowance.mjs';
+import {
+  createMetadataAllowance,
+  validateMetadataAllowance,
+  consumeMetadataAllowance,
+  priorPaidAllowanceFile,
+  retiredPriorAllowance,
+} from '../scripts/po-cart-worker/metadata-allowance.mjs';
 await build({
   stdin: {
     contents:
@@ -190,7 +197,15 @@ try {
   const allowance = join(root, 'allowance.json');
   assert.equal(
     paidAllowanceFile,
+    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261101/allowance.json',
+  );
+  assert.equal(
+    priorPaidAllowanceFile,
     '.sites-runtime/po-cart-workers/metadata-repair-acceptance/allowance.json',
+  );
+  assert.equal(
+    retiredPriorAllowance.sha256,
+    '0b2eb16de5e9d1032688519e0c527a807d3e0aa8f0af7b44e4f95663611ede27',
   );
   writePrivate(allowance, {
     version: 1,
@@ -288,6 +303,85 @@ try {
   assert.throws(() => createMetadataAllowance(options, newAllowance, prior), /EEXIST/);
   assert.equal(fileHash(prior), original);
   if (process.platform !== 'win32') assert.equal(statSync(newAllowance).mode & 0o777, 0o600);
+  // A pinned prior that was authorized but never consumed retires only once its
+  // pricing check has expired and nothing was reserved after its authorization.
+  {
+    const ago = (ms) => new Date(Date.now() - ms).toISOString(),
+      unused = join(root, 'unused-prior.json'),
+      ledger = join(root, 'retired-ledger.json'),
+      unusedData = {
+        version: 2,
+        matrices: 1,
+        state: 'authorized',
+        authorizedAt: ago(600000),
+        pricing: { ...pricing, checkedAt: ago(600001) },
+      };
+    let next = 0;
+    const attempt = (data, reservations, pin = true) => {
+      writePrivate(unused, data);
+      writePrivate(ledger, { version: 1, reservations });
+      const retired = { sha256: pin ? fileHash(unused) : 'other', ledger },
+        target = join(root, 'after-unused-' + ++next + '.json');
+      return {
+        create: () => createMetadataAllowance(options, target, unused, retired),
+        target,
+        retired,
+      };
+    };
+    const earlier = [{ at: ago(86400000), micros: 1 }];
+    const accepted = attempt(unusedData, earlier);
+    accepted.create();
+    const created = validateMetadataAllowance(accepted.target, unused, accepted.retired);
+    assert.deepEqual(created.previousAllowance, { path: unused, sha256: fileHash(unused) });
+    consumeMetadataAllowance('after-unused', accepted.target, unused, accepted.retired);
+    assert.equal(readPrivate(accepted.target).state, 'consumed');
+    assert.throws(() => validateMetadataAllowance(accepted.target, unused, accepted.retired));
+    for (const [label, data, reservations, pin, error] of [
+      ['unpinned', unusedData, earlier, false, /consumed/],
+      [
+        'pricing still fresh',
+        { ...unusedData, pricing: { ...pricing, checkedAt: ago(1000) } },
+        earlier,
+        true,
+        /consumed/,
+      ],
+      ['run recorded', { ...unusedData, runId: 'started' }, earlier, true, /consumed/],
+      ['consumption recorded', { ...unusedData, consumedAt: ago(1000) }, earlier, true, /consumed/],
+      ['older version', { ...unusedData, version: 1 }, earlier, true, /consumed/],
+      [
+        'no authorization time',
+        { ...unusedData, authorizedAt: undefined },
+        earlier,
+        true,
+        /consumed/,
+      ],
+      [
+        'reserved after',
+        unusedData,
+        [...earlier, { at: ago(1000), micros: 1 }],
+        true,
+        /recorded spending/,
+      ],
+      [
+        'reserved at authorization',
+        unusedData,
+        [{ at: unusedData.authorizedAt, micros: 1 }],
+        true,
+        /recorded spending/,
+      ],
+      [
+        'unreadable reservation time',
+        unusedData,
+        [{ at: 'unknown', micros: 1 }],
+        true,
+        /recorded spending/,
+      ],
+    ]) {
+      const refused = attempt(data, reservations, pin);
+      assert.throws(refused.create, error, label);
+      assert.equal(existsSync(refused.target), false, label);
+    }
+  }
   const fresh = readPrivate(newAllowance);
   for (const [label, mutate, restore] of [
     [
