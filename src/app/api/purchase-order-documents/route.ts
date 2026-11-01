@@ -5,6 +5,8 @@ import {getChatGPTUser} from '@/lib/chatgpt-auth';
 import {PurchaseOrderDocumentArchive} from '@/lib/purchase-order-document-archive';
 import {D1DocumentArchiveJournal} from '@/lib/d1-document-archive-journal';
 import {D1DocumentArchiveCatalog} from '@/lib/d1-document-archive-catalog';
+import {D1DocumentArchiveReview} from '@/lib/d1-document-archive-review';
+import {archiveReviewQuery,archiveReviewDetailQuery} from '@/lib/document-archive-review-contract';
 import {D1DocumentArchiveSources,renderDocumentArchive} from '@/lib/purchase-order-document-archive-sources';
 import {R2DocumentArchiveObjects} from '@/lib/r2-document-archive-objects';
 import {archiveCatalogQuery,archiveReadQuery,archiveFilename} from '@/lib/purchase-order-archive-app-contract';
@@ -24,6 +26,17 @@ async function font(request:Request){
 async function handle(req:Request){
   if(bindings().PANTRACK_DOCUMENT_ARCHIVE_PREVIEW!=='enabled')return Response.json({error:'Saved copies are unavailable.'},{status:404});
   try{
+    if(req.method==='GET'){
+      if(req.url.length>8192)archiveFail('invalid_request');const params=new URL(req.url).searchParams;
+      if([...params.keys()].some(key=>params.getAll(key).length!==1))archiveFail('invalid_request');
+      const view=params.get('view');
+      if(view==='review'||view==='review-detail'){
+        params.delete('view');const parsed=(view==='review'?archiveReviewQuery:archiveReviewDetailQuery).safeParse(Object.fromEntries(params));
+        if(!parsed.success)archiveFail('invalid_request');const viewerId=await actor(),review=new D1DocumentArchiveReview(database());
+        const result=view==='review'?await review.list(parsed.data,viewerId):await review.detail(parsed.data,viewerId);
+        if(await actor()!==viewerId)archiveFail('forbidden');return Response.json(result);
+      }
+    }
     const bucket=bindings().DOCUMENT_ARCHIVE;if(!bucket)archiveFail('storage_unavailable');
     const db=database(),journal=new D1DocumentArchiveJournal(db);
     const saveIdentity=async()=>{const user=await identity();if(req.method==='POST'&&(!user||req.headers.get('X-Pantrack-Archive-Viewer')!==user))archiveFail('forbidden');return user;};

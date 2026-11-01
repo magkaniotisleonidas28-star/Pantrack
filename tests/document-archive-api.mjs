@@ -6,6 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {build} from 'esbuild';
 import {unstable_splitSqlQuery} from 'wrangler';
 import {readXlsx,lineRecords} from './helpers/xlsx-reader.mjs';
+import {checkArchiveReview} from './helpers/document-archive-review.mjs';
 const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare');
 mkdirSync('.sites-runtime/archive-api',{recursive:true});const folder=mkdtempSync(resolve('.sites-runtime/archive-api/run-'));
 const mf=new Miniflare({modules:true,script:'export default {fetch(){return new Response(null)}}',compatibilityDate:'2026-05-15',
@@ -15,7 +16,7 @@ const state={db,env:{PANTRACK_DOCUMENT_ARCHIVE_PREVIEW:'enabled',DOCUMENT_ARCHIV
   get:async(...args)=>{gets++;const result=await bucket.get(...args);const hook=afterGet;afterGet=null;if(hook)await hook();return result;}},
   ASSETS:{fetch:async request=>{assert.equal(request.url,'http://app.test/fonts/NotoSans-Regular.ttf');assert.equal([...request.headers].length,0);return new Response(readFileSync('public/fonts/NotoSans-Regular.ttf'));}}},get user(){return user;}};
 globalThis.__archiveApi=state;
-await build({stdin:{contents:"export {GET,POST} from './src/app/api/purchase-order-documents/route.ts';"+['d1-purchase-order-drafts','d1-purchase-order-history-exports','purchase-order-archive-client','purchase-order-document-archive-contract','document-byte-digest'].map(n=>`export * from './src/lib/${n}.ts';`).join(''),resolveDir:process.cwd()},
+await build({stdin:{contents:"export {GET,POST} from './src/app/api/purchase-order-documents/route.ts';"+['d1-purchase-order-drafts','d1-purchase-order-history-exports','purchase-order-archive-client','purchase-order-document-archive-contract','document-byte-digest','d1-document-archive-journal','purchase-order-history-export-contract'].map(n=>`export * from './src/lib/${n}.ts';`).join(''),resolveDir:process.cwd()},
   bundle:true,packages:'external',platform:'node',format:'esm',outfile:folder+'/core.mjs',plugins:[{name:'archive-api-fixture',setup(b){
     b.onResolve({filter:/^(cloudflare:workers|@\/db\/raw|@\/lib\/(chatgpt-auth|auth))$/},args=>({path:args.path,namespace:'archive-api'}));
     b.onLoad({filter:/.*/,namespace:'archive-api'},args=>({contents:args.path==='cloudflare:workers'?'export const env=globalThis.__archiveApi.env;':
@@ -76,6 +77,7 @@ try{
   const beforeClient=puts;await client.save('xlsx');assert.equal(states.at(-1).pending,true);assert.equal(stored.size,1);client.dispose();
   const restarted=new core.PurchaseOrderArchiveClient(selection,'manager',deps,s=>states.push(s));await restarted.retry();assert.deepEqual(posted[0],posted[1]);assert.equal(puts,beforeClient+1);assert.equal(stored.size,0);assert.equal(states.at(-1).phase,'success');
   await restarted.download(target);assert.equal(downloaded,1);restarted.dispose();
+  await checkArchiveReview({core,db,bucket,state,request,command,artifacts,tables,setUser:value=>user=value,setAfterPut:hook=>afterPut=hook,setAfterGet:hook=>afterGet=hook,io:()=>({puts,gets})});
   const edited=await drafts.edit({...input(),action:'edit',orderId:order.snapshot.id,expectedRevision:order.revision,reason:'Later edit',notes:'Edited source'});
   await drafts.cancel({action:'cancel',companyId:'a',operationId:crypto.randomUUID(),orderId:order.snapshot.id,expectedRevision:edited.revision,reason:'Later cancellation'});
   assert.equal((await request(targetUrl)).status,200);assert.ok((await (await list('draft',20)).json()).artifacts.some(a=>a.id===target.id));

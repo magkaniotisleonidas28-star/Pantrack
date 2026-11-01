@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-10-28
+Updated: 2026-11-01
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -11,15 +11,35 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
-## Current local position — 2026-10-28
+## Latest local C4 saved-document review — 2026-11-01
+
+The [read-only review screen](C4_DOCUMENT_ARCHIVE_REVIEW_LOCAL_EVIDENCE.md) now
+lists saves needing attention and their retained checks for current company
+owners/managers. It distinguishes active/unconfirmed saves, holds and recorded
+missing, mismatched or unavailable file checks. List/detail paging, safe reasons,
+access refusal and request cancellation pass native-resource and signed-in local
+browser checks. Review changes no application/archive records and makes no R2
+calls; refresh reads recorded evidence rather than scanning files again.
+All six local pipeline checks passed with 146 executed suites, twelve existing
+Windows skips and all 45 existing migrations. Desktop/390px/keyboard checks and
+the draft/history empty state passed in the signed-in local app.
+
+No migration, schema, dependency or hosted binding is added. The feature uses
+the existing archive preview gate and remains local. This branch builds on
+documentation PR #28 and stays out of main while G6 operator status is unknown.
+Next document outcome: define recovery/reissue policy while retaining originals.
+Administrative repair/deletion and hosted acceptance remain separate. C4/C5/M8
+stay open and purchasing disabled.
+
+## Reconciled local position — 2026-10-28
 
 The [status reconciliation](C4_STATUS_RECONCILIATION_20261028.md) corrects older
 next-step wording without repeating completed implementation. Signed-in draft
 and filtered-history PDF/Excel downloads, permanent saved copies, supplier
 confirmation, owner over-cap approval, delivery counts/approval/closure and weekly
 draft schedule screens are built and verified within their recorded local scope.
-The remaining document feature is read-only review of held saves and missing or
-corrupt copies. Closing the tab discards an interrupted save's browser recovery
+The subsequent review slice above covers held saves and recorded missing/corrupt
+copies locally. Closing the tab discards an interrupted save's browser recovery
 record; already-issued copies remain discoverable from the server catalog.
 
 [G5 passed all 21 steps](C4_FULL_OFFLINE_GATE_RUN_20261025.md) on its October 25
@@ -96,8 +116,9 @@ evidence boundaries.
 No new schema, migration, dependency or hosted binding is added. Only the isolated
 fictional PO preview enables these controls; ordinary/hosted configurations stay
 off. Root and hosted databases are untouched. Next document slice: read-only
-review of held saves and missing/corrupt copies. C4/C5/M8 remain open, purchasing
-disabled and hosted release paused.
+review of held saves and missing/corrupt copies, now implemented in the
+[subsequent local review](C4_DOCUMENT_ARCHIVE_REVIEW_LOCAL_EVIDENCE.md).
+C4/C5/M8 remain open, purchasing disabled and hosted release paused.
 
 ## Latest local C4 private R2 document storage — 2026-10-26
 
@@ -487,10 +508,10 @@ hosted acceptance remain separate evidence.
    before any separately authorized paid matrix. Confirm the operator's current
    status and keep merges paused from preparation until the paid run finishes.
    Preserve consumed allowances and unresolved carts; no gate or paid run starts
-   from this documentation task. The next document implementation is read-only
-   review of held saves and missing/corrupt copies, after the merge restriction
-   clears. Reuse the completed archive, exports, confirmation, receiving, weekly
-   schedule screens and over-cap approval. Their evidence is local; hosted/model,
+   from these local changes. The read-only document review is now implemented
+   locally; after the restriction clears, define recovery/reissue rules before
+   adding administrative actions. Reuse the archive, exports, confirmation,
+   receiving, weekly schedule screens and over-cap approval. Their evidence is local; hosted/model,
    supplier and full-workflow acceptance remain separate.
 5. **C5: finish and accept M8 after M7 and the supplier gates.** Accept the complete
    verified cart/human handoff using the locally built PDF/XLSX/history,
