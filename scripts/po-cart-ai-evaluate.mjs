@@ -1,7 +1,7 @@
-import { build } from 'esbuild';
 import { randomUUID } from 'node:crypto';
 import { loadAiConfig, modelConfig } from './cart-preview/ai-config.mjs';
 import { writePrivate } from './po-cart-worker/private-files.mjs';
+import { buildEvaluation } from './po-cart-worker/evaluation-build.mjs';
 if (!process.argv.includes('--ai'))
   throw Error('Real AI requires the dedicated --ai evaluation command.');
 try {
@@ -24,17 +24,9 @@ try {
   process.exitCode = 1;
 }
 if (!process.exitCode) {
-  await build({
-    entryPoints: ['scripts/po-cart-worker/ai-evaluate.ts'],
-    bundle: true,
-    platform: 'node',
-    format: 'esm',
-    packages: 'external',
-    outfile: '.sites-runtime/po-cart-workers/ai-evaluate.mjs',
-    logLevel: 'silent',
-  });
-  // Keep the filesystem/CLI seeder unbundled: sites-env resolves the repository
-  // relative to its own source URL and must not run from the generated module.
+  // The build keeps the filesystem/CLI seeder and sites-env unbundled: they
+  // resolve the repository relative to their own source URL.
+  await buildEvaluation();
   const { seedLocalBrowserJob } = await import('./po-cart-worker/local-browser-fixture.mjs');
   const { runEvaluation } = await import('../.sites-runtime/po-cart-workers/ai-evaluate.mjs');
   await runEvaluation(seedLocalBrowserJob);
