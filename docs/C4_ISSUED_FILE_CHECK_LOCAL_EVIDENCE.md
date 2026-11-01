@@ -65,10 +65,60 @@ are in [the focused suite](../tests/issued-file-check-client.mjs).
 The [signed-in browser walkthrough](../scripts/issued-file-check-ui-check.mjs)
 uses isolated fictional local D1/R2 and blocks other network origins.
 
-Verification of the final source is pending. Preliminary focused tests and two
-signed-in walkthroughs passed before integration; those results alone do not
-prove the updated combined source. The final command results and browser root
-will be recorded here before publication.
+Frozen combined source: `820e1d32f4d89fa809b8e25b142605f70abf740d`, Git tree
+`2cdbd1f946dee23ab131714afe2a3633057831f7`. Intended additions were committed
+before checking; the source/index stayed unchanged throughout. Only documentation
+was completed afterward. `frozen-source.json` and `checks.json` retain provenance.
+
+| Command | Current-worktree result and evidence |
+| --- | --- |
+| `pnpm typecheck` | Passed; `pipeline-1.log`. |
+| `pnpm test` | Failed twice; `pipeline-2.log` and `pipeline-2-repeat.log`. See the caveat below. |
+| `pnpm db:check` | Passed; all 45 ordered migrations match the schema and apply fresh; `pipeline-3.log`. |
+| `pnpm build` | Passed; `pipeline-4.log`. |
+| `pnpm db:migrate:local` | Passed; all 45 existing migrations applied only to this worktree's isolated database; `pipeline-5.log`. |
+| `pnpm test:local` | Passed; sign-in, tenant isolation, ordinary default-off guards including the new POST, and sign-out; `pipeline-6.log`. |
+
+**Full-suite caveat:** the first run stopped at `po-cart-worker-processes` when
+neither competing worker exited successfully. Its exact cause is unknown.
+The repeat stopped at `po-cart-human-browser-client` with Windows `EPERM` while
+atomically renaming a temporary journal over its previous file. Both existing
+suites passed standalone on unchanged source (`worker-process-recheck.log` and
+`human-client-recheck.log`). Do not infer the first failure's cause from the second,
+or claim an underlying worker/file-lock defect was fixed. No worker/journal
+implementation was changed to force a pass.
+
+The continuation ran the 51 suites after the first stop successfully
+(`remaining-suites.log`). `aggregate-tests.json` maps every suite to its completed
+run: **163 selected, 151 passed across recorded runs, 12 Windows POSIX skips**.
+This is aggregate completion evidence, **not a successful full `pnpm test`
+invocation**. Clean-machine Windows/Linux CI remains pending and is required
+before integration. Native new-feature route/client/resource cases passed in
+both the focused work and the frozen-source runs before those unrelated stops.
+
+The integrated signed-in browser walkthrough passed at
+`C:/Users/Leo/Project/Pantrack/work/c4-issued-file-check-20261101/.sites-runtime/issued-check-browser/run-8f7ab8ac-b14f-4894-8c2c-bc20ec01071e`.
+It created seven durable check receipts and proved new versus replay identity,
+lost HTTP reply/reopen, stop/retry, PDF/Excel checks, final role-loss refusal,
+journal-only Refresh, later edit/cancellation, unchanged business/archive rows,
+no page errors, keyboard access and desktop/390px layout without overflow.
+Both screenshots were inspected. The owned browser and preview were closed;
+port 5179 was confirmed free. `final-browser-result.json` retains its result.
+
+The actual React archive-switch regression also passed using installed headless
+Edge (`archive-switch-edge.log`), preserving main's obsolete-request protections.
+The unmodified generic browser script first requested an unavailable downloaded
+Chromium; an external launcher selected Edge without changing project source.
+An initial app walkthrough started before Vite was ready and refused the local
+connection; the recorded passing attempt followed its readiness message.
+
+During integration, screen rules caught three effect dependencies/cleanup
+findings. Selection-bound remounting and owned cancellation corrected them;
+the focused rule/recovery rerun and final 51-suite continuation passed. Locked
+offline installation lacked registry policy metadata; normal frozen-lockfile
+installation passed. All preliminary failures remain in the evidence root.
+Whitespace, relative links, section targets and unchanged A/B/C acceptance
+checkboxes are checked again with the completed documentation before publishing.
 
 Our draft PR stack was rebased onto main `6b21274`, including the other
 contributor's readability, screen-lifecycle and G7 changes. Archive selection

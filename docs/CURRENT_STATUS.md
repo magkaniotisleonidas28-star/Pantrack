@@ -18,8 +18,12 @@ Check file now action for owners/managers reviewing a saved PDF/Excel copy.
 It verifies the exact old file, appends an audit result and safely retrieves the
 same result after an interrupted reply. New checks have distinct identities;
 Refresh still reads recorded history. It cannot create, replace or publish a file.
-No new schema, migration, dependency or hosted configuration is added. Final
-combined-source verification is pending and will be recorded before publication.
+No new schema, migration, dependency or hosted configuration is added. Native
+API/client and signed-in browser checks pass. Typecheck, build, migration/schema,
+isolated apply and HTTP checks pass; all 151 executable suites passed across
+recorded runs, with twelve Windows skips. Two full test invocations stopped in
+existing worker suites (one confirmed Windows file-permission error); both passed
+standalone. The handoff retains the failures. Clean-machine CI is still required.
 
 The draft document stack now includes main `6b21274` and preserves its screen
 lifecycle fixes. G6's functional steps passed but its preservation audit failed;

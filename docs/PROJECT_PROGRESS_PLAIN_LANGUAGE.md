@@ -93,7 +93,10 @@ for formal replacements is proposed; whether managers may also authorize them
 is still a pending choice. The [**Check file now** button](C4_ISSUED_FILE_CHECK_LOCAL_EVIDENCE.md)
 is now implemented for saved copies. It checks the original file and records a
 result without creating or replacing it. If the reply is interrupted, retry
-retrieves that same check. Final checks on the combined source are pending.
+retrieves that same check. Its local file-check and signed-in screen tests pass.
+Broader testing hit two existing worker-test failures, including a Windows file
+permission error; separate reruns passed. Clean-machine checks are still needed
+before merging. The evidence report keeps that caveat visible.
 The next document step is recovering an interrupted save from its server record
 for the person who originally started it. The policy itself changed no app behavior.
 The online release remains paused, and C4/M8 still have other open work.

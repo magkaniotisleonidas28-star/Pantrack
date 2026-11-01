@@ -600,8 +600,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   with retained originals. Formal replacement authority is proposed owner-only,
   pending the role choice. The subsequent
   [issued-file check](C4_ISSUED_FILE_CHECK_LOCAL_EVIDENCE.md) adds current
-  owner/manager verification, durable check identity and safe replay. Final
-  combined-source verification is pending. No replacement action is added.
+  owner/manager verification, durable check identity and safe replay. Native/API,
+  client and signed-in checks pass. All executable suites passed across runs,
+  but two full test invocations stopped in existing worker suites; the linked
+  handoff records the Windows verification caveat. Clean-machine CI is required
+  before integration. No replacement action is added.
   Next separately scope original-actor server-assisted save continuation.
   Hosted bucket/privacy acceptance remains separate; check the
   [G7 operator position](C4_FULL_OFFLINE_GATE_RUN_20261027.md#next-g7-then-the-separately-authorized-paid-matrix)
