@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-01 for saved-document review and the recovery policy draft.
+Updated: 2026-11-01 for explicit saved-file checks and the G7 gate position.
 The historical verification table below retains its October 14 results. Detailed evidence is
 in [current status](CURRENT_STATUS.md) and the [full roadmap](PANTRACK_MILESTONES.md).
 
@@ -90,9 +90,12 @@ company. The [recovery policy](C4_DOCUMENT_RECOVERY_POLICY_20261101.md) now
 separates retrying the same save, checking an existing file and making a linked
 replacement. Originals and old failures stay recorded. Owner-only authorization
 for formal replacements is proposed; whether managers may also authorize them
-is still a pending choice. The next build is a **Check file now** button for
-issued copies. It will record a fresh result without creating or replacing a file;
-it is not implemented yet. The policy itself changes no app behavior or data.
+is still a pending choice. The [**Check file now** button](C4_ISSUED_FILE_CHECK_LOCAL_EVIDENCE.md)
+is now implemented for saved copies. It checks the original file and records a
+result without creating or replacing it. If the reply is interrupted, retry
+retrieves that same check. Final checks on the combined source are pending.
+The next document step is recovering an interrupted save from its server record
+for the person who originally started it. The policy itself changed no app behavior.
 The online release remains paused, and C4/M8 still have other open work.
 
 The new commits add an optional AI reader for practice supplier carts and private
@@ -100,10 +103,12 @@ records of its completion checks. On October 25 the complete offline gate, inclu
 the AI safety run, [passed all 21 checks](C4_FULL_OFFLINE_GATE_RUN_20261025.md) with
 fake suppliers and mocked AI. The older second-item timeout's cause is still not
 explained, and real AI, supplier and café tests remain. Since later changes
-altered the source, the newly merged [G6 plan](C4_FULL_OFFLINE_GATE_RUN_20261025.md#rebinding-for-g6)
-requires a fresh gate before the separately authorized real-model test. Check
-its operator's status before merging: no merges are allowed from preparation
-until the paid run finishes. This status update starts neither run. C4/M8 remain open.
+altered the source, [G6 ran and G7 is now prepared in code](C4_FULL_OFFLINE_GATE_RUN_20261027.md).
+G6 passed its functional steps but failed its preservation audit after a local
+practice database was upgraded. G7 adds stricter preparation checks and still
+needs a fresh run before separately authorized real-model testing. Check its
+operator's status before merging: no merges are allowed from preparation until
+the paid run finishes. This update starts neither run. C4/M8 remain open.
 
 At the last inspection, the online development app was behind GitHub. The six
 bug fixes are merged, and the CI portability repair passed Windows/Linux checks

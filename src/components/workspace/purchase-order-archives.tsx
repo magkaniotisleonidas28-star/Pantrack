@@ -18,7 +18,7 @@ function ArchiveWorkspace({selection:initialSelection,disabled,allowSave,cancelR
   const currentCatalog=catalogView?.key===requestKey?catalogView:null;
   const artifacts=currentCatalog?.artifacts??[],hasMore=currentCatalog?.hasMore??false,listError=currentCatalog?.error??'',loading=!currentCatalog;
   const client=useRef<PurchaseOrderArchiveClient|null>(null),viewer=useRef(''),reviewCancel=useRef<(()=>void)|null>(null);
-  const [reviewOpen,setReviewOpen]=useState(false);
+  const [reviewOpen,setReviewOpen]=useState(false),[reviewDocumentId,setReviewDocumentId]=useState('');
   const source=JSON.stringify(selection);
   const scope=JSON.stringify([selection.companyId,selection.source.kind,selection.source.kind==='draft'?selection.source.orderId:'history']);
   const blocked=disabled||loading||state.phase==='working';
@@ -54,12 +54,13 @@ function ArchiveWorkspace({selection:initialSelection,disabled,allowSave,cancelR
     {loading?<p role="status">Loading saved copies…</p>:!listError&&artifacts.length===0?<p>No saved copies yet.</p>:<ul>{artifacts.map(artifact=><li key={artifact.id}>
       <span>{artifact.source.kind==='draft'?`Revision ${artifact.source.records[0].revision}`:`History · ${artifact.source.records.length} ${artifact.source.records.length===1?'record':'records'}`} · {artifact.format==='pdf'?'PDF':'Excel'} · <time dateTime={artifact.issuedAt}>{new Date(artifact.issuedAt).toLocaleString()}</time></span>{' '}
       <Button type="button" variant="ghost" disabled={blocked||!!listError||!clientReady||state.pending&&!state.retryable} onClick={()=>void client.current?.download(artifact)}>Download saved {artifact.format==='pdf'?'PDF':'Excel'}<span className="sr-only"> from {new Date(artifact.issuedAt).toLocaleString()}</span></Button>
+      <Button type="button" variant="ghost" disabled={blocked||!!listError} onClick={()=>{setReviewDocumentId(artifact.id);setReviewOpen(true);}}>Review saved {artifact.format==='pdf'?'PDF':'Excel'}<span className="sr-only"> reference {artifact.id}</span></Button>
     </li>)}</ul>}
     <div className="po-actions"><Button type="button" variant="ghost" disabled={blocked} onClick={()=>{client.current?.cancel();setRefresh(n=>n+1);}}>Refresh saved copies</Button>
       {offset>0&&<Button type="button" variant="ghost" disabled={blocked} onClick={()=>{client.current?.cancel();setOffset(n=>Math.max(0,n-20));}}>Newer copies</Button>}
       {hasMore&&<Button type="button" variant="ghost" disabled={blocked} onClick={()=>{client.current?.cancel();setOffset(n=>n+20);}}>Older copies</Button>}</div>
-    <Button type="button" variant="outline" disabled={blocked} aria-expanded={reviewOpen} onClick={()=>setReviewOpen(open=>!open)}>{reviewOpen?'Close save review':'Review saves'}</Button>
-    {reviewOpen&&<DocumentArchiveReview key={source+'|'+viewer.current} selection={{companyId:selection.companyId,kind:selection.source.kind,...(selection.source.kind==='draft'?{orderId:selection.source.orderId}:{})}}
-      viewerId={viewer.current} disabled={disabled||loading||state.phase==='working'} cancelRef={reviewCancel}/>}
+    <Button type="button" variant="outline" disabled={blocked} aria-expanded={reviewOpen} onClick={()=>{setReviewDocumentId('');setReviewOpen(open=>!open);}}>{reviewOpen?'Close save review':'Review saves'}</Button>
+    {reviewOpen&&<DocumentArchiveReview key={source+'|'+viewer.current+'|'+reviewDocumentId} selection={{companyId:selection.companyId,kind:selection.source.kind,...(selection.source.kind==='draft'?{orderId:selection.source.orderId}:{})}}
+      documentId={reviewDocumentId||undefined} viewerId={viewer.current} disabled={disabled||loading||state.phase==='working'} cancelRef={reviewCancel}/>}
   </section>;
 }

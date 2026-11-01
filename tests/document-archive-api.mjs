@@ -7,16 +7,18 @@ import {build} from 'esbuild';
 import {unstable_splitSqlQuery} from 'wrangler';
 import {readXlsx,lineRecords} from './helpers/xlsx-reader.mjs';
 import {checkArchiveReview} from './helpers/document-archive-review.mjs';
+import {checkIssuedFileApi} from './helpers/issued-file-check-api.mjs';
 const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare');
 mkdirSync('.sites-runtime/archive-api',{recursive:true});const folder=mkdtempSync(resolve('.sites-runtime/archive-api/run-'));
 const mf=new Miniflare({modules:true,script:'export default {fetch(){return new Response(null)}}',compatibilityDate:'2026-05-15',
   d1Databases:{DB:'00000000-0000-4000-8000-000000000001'},r2Buckets:{DOCUMENT_ARCHIVE:'fictional-documents'}});
-const db=await mf.getD1Database('DB'),bucket=await mf.getR2Bucket('DOCUMENT_ARCHIVE');let user='manager',puts=0,gets=0,afterPut=null,afterGet=null;
+const db=await mf.getD1Database('DB'),bucket=await mf.getR2Bucket('DOCUMENT_ARCHIVE');let user='manager',puts=0,gets=0,afterPut=null,afterGet=null,beforeGet=null;
 const state={db,env:{PANTRACK_DOCUMENT_ARCHIVE_PREVIEW:'enabled',DOCUMENT_ARCHIVE:{put:async(...args)=>{puts++;const result=await bucket.put(...args);const hook=afterPut;afterPut=null;if(hook)await hook();return result;},
-  get:async(...args)=>{gets++;const result=await bucket.get(...args);const hook=afterGet;afterGet=null;if(hook)await hook();return result;}},
+  get:async(...args)=>{gets++;const before=beforeGet;beforeGet=null;if(before)await before();const result=await bucket.get(...args);const hook=afterGet;afterGet=null;
+    try{if(hook)await hook();return result;}catch(error){await result?.body?.cancel('injected-read-failure').catch(()=>{});throw error;}}},
   ASSETS:{fetch:async request=>{assert.equal(request.url,'http://app.test/fonts/NotoSans-Regular.ttf');assert.equal([...request.headers].length,0);return new Response(readFileSync('public/fonts/NotoSans-Regular.ttf'));}}},get user(){return user;}};
 globalThis.__archiveApi=state;
-await build({stdin:{contents:"export {GET,POST} from './src/app/api/purchase-order-documents/route.ts';"+['d1-purchase-order-drafts','d1-purchase-order-history-exports','purchase-order-archive-client','purchase-order-document-archive-contract','document-byte-digest','d1-document-archive-journal','purchase-order-history-export-contract'].map(n=>`export * from './src/lib/${n}.ts';`).join(''),resolveDir:process.cwd()},
+await build({stdin:{contents:"export {GET,POST} from './src/app/api/purchase-order-documents/route.ts';export {POST as checkPOST} from './src/app/api/purchase-order-documents/check/route.ts';"+['d1-purchase-order-drafts','d1-purchase-order-history-exports','purchase-order-archive-client','purchase-order-document-archive-contract','document-byte-digest','d1-document-archive-journal','purchase-order-history-export-contract','issued-file-check-client','issued-file-check-contract'].map(n=>`export * from './src/lib/${n}.ts';`).join(''),resolveDir:process.cwd()},
   bundle:true,packages:'external',platform:'node',format:'esm',outfile:folder+'/core.mjs',plugins:[{name:'archive-api-fixture',setup(b){
     b.onResolve({filter:/^(cloudflare:workers|@\/db\/raw|@\/lib\/(chatgpt-auth|auth))$/},args=>({path:args.path,namespace:'archive-api'}));
     b.onLoad({filter:/.*/,namespace:'archive-api'},args=>({contents:args.path==='cloudflare:workers'?'export const env=globalThis.__archiveApi.env;':
@@ -25,7 +27,7 @@ await build({stdin:{contents:"export {GET,POST} from './src/app/api/purchase-ord
   }}]});
 const core=await import(pathToFileURL(folder+'/core.mjs').href);
 const request=async(path,body,headers={})=>{
-  const response=await core[body?'POST':'GET'](new Request('http://app.test/api/purchase-order-documents'+path,body?{method:'POST',headers:{origin:'http://app.test','content-type':'application/json','X-Pantrack-Archive-Viewer':user??'',...headers},body:JSON.stringify(body)}:{headers}));
+  const response=await core[path.startsWith('/check')?'checkPOST':body?'POST':'GET'](new Request('http://app.test/api/purchase-order-documents'+path,body?{method:'POST',headers:{origin:'http://app.test','content-type':'application/json','X-Pantrack-Archive-Viewer':user??'',...headers},body:JSON.stringify(body)}:{headers}));
   assert.equal(response.headers.get('cache-control'),'private, no-store');assert.equal(response.headers.get('x-content-type-options'),'nosniff');return response;
 };
 const save=body=>request('',body),list=(kind='draft',offset=0,companyId='a')=>request('?'+new URLSearchParams({companyId,view:'list',kind,offset:String(offset),...(kind==='draft'?{orderId:order.snapshot.id}:{})}));
@@ -77,9 +79,11 @@ try{
   const beforeClient=puts;await client.save('xlsx');assert.equal(states.at(-1).pending,true);assert.equal(stored.size,1);client.dispose();
   const restarted=new core.PurchaseOrderArchiveClient(selection,'manager',deps,s=>states.push(s));await restarted.retry();assert.deepEqual(posted[0],posted[1]);assert.equal(puts,beforeClient+1);assert.equal(stored.size,0);assert.equal(states.at(-1).phase,'success');
   await restarted.download(target);assert.equal(downloaded,1);restarted.dispose();
-  await checkArchiveReview({core,db,bucket,state,request,command,artifacts,tables,setUser:value=>user=value,setAfterPut:hook=>afterPut=hook,setAfterGet:hook=>afterGet=hook,io:()=>({puts,gets})});
+  await checkArchiveReview({core,db,bucket,state,request,command,artifacts,tables,setUser:value=>user=value,setAfterPut:hook=>afterPut=hook,setAfterGet:hook=>afterGet=hook,setBeforeGet:hook=>beforeGet=hook,io:()=>({puts,gets})});
+  const checkHistorical=await checkIssuedFileApi({core,db,bucket,state,request,command,tables,setUser:value=>user=value,setAfterGet:hook=>afterGet=hook,setBeforeGet:hook=>beforeGet=hook,io:()=>({puts,gets})});
   const edited=await drafts.edit({...input(),action:'edit',orderId:order.snapshot.id,expectedRevision:order.revision,reason:'Later edit',notes:'Edited source'});
   await drafts.cancel({action:'cancel',companyId:'a',operationId:crypto.randomUUID(),orderId:order.snapshot.id,expectedRevision:edited.revision,reason:'Later cancellation'});
+  await checkHistorical();
   assert.equal((await request(targetUrl)).status,200);assert.ok((await (await list('draft',20)).json()).artifacts.some(a=>a.id===target.id));
   const row=await db.prepare('SELECT manifest_json FROM document_archive_intents WHERE id=?').bind(target.id).first(),key=await core.archiveObjectKey(JSON.parse(row.manifest_json));await bucket.put(key,new Uint8Array(target.size));
   const corrupt=await request(targetUrl);assert.equal(corrupt.status,409);assert.equal((await corrupt.json()).code,'integrity');
