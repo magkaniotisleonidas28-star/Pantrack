@@ -1,6 +1,15 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-01 for original-request save continuation and the G8 gate position.
+Updated: 2026-11-01 for prepared-file evidence review and the G8 gate position.
+
+Latest addition: [Prepared file evidence](C4_PREPARED_FILE_EVIDENCE_LOCAL_EVIDENCE.md)
+shows the original details and recorded checks for copies that never finished
+being issued. It distinguishes no preparation record from a prepared file and
+explains when a stored check matched or remained uncertain. Opening/refreshing it
+does not inspect storage, issue a copy or change records. Signed-in desktop/phone
+and all six complete local project checks passed. Final-head Windows/Linux CI
+remains an integration requirement. This is separate from continuing a save or
+checking a file now.
 
 Latest local addition: [Continue original save](C4_DOCUMENT_SAVE_CONTINUATION_LOCAL_EVIDENCE.md)
 can recover a document save from its server record after the browser loses it.

@@ -21,6 +21,11 @@ now retrieves the original request from the journal for its original current
 owner/manager, including after losing the tab's recovery record. The implementation
 reuses the existing save engine and adds no replacement authority or schema.
 
+The later [prepared-file evidence view](C4_PREPARED_FILE_EVIDENCE_LOCAL_EVIDENCE.md)
+now exposes retained preparation details and storage observations without reading
+objects or changing rows. Fresh prepared-object verification remains a separate
+future action; this metadata view never issues, retries or replaces a save.
+
 ## Reuse the existing behavior
 
 The [archive lifecycle](../src/lib/purchase-order-document-archive.ts),

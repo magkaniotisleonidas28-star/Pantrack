@@ -1,4 +1,5 @@
 import {poId} from './purchase-order-contract';
+import {archivePreparationEvidence} from './document-archive-preparation-contract';
 import {archiveReviewQuery,archiveReviewDetailQuery,archiveReviewItem,archiveReviewReasons,type ArchiveReviewItem} from './document-archive-review-contract';
 import {documentArchiveRequest,captureArchiveArtifact,captureArchiveManifest,DocumentArchiveError,archiveFail,type DocumentArchiveManifest} from './purchase-order-document-archive-contract';
 
@@ -18,7 +19,7 @@ const attention=`state!='ready' OR (last_check IS NOT NULL AND (json_extract(las
   OR json_extract(last_check,'$.byteLength') IS NOT json_extract(artifact_json,'$.size')
   OR json_extract(last_check,'$.sha256') IS NOT json_extract(artifact_json,'$.sha256')))`;
 const scope="i.company_id=? AND json_extract(i.request_json,'$.source.kind')=? AND (?='history' OR json_extract(i.request_json,'$.source.orderId')=?)";
-function checkStatus(payload:unknown,manifest?:DocumentArchiveManifest):ArchiveReviewItem['status']{
+function checkStatus(payload:unknown,manifest?:DocumentArchiveManifest):'issued'|'missing'|'damaged'|'unavailable'{
   const p=payload as {kind?:unknown;present?:unknown;reportedSize?:unknown;byteLength?:unknown;sha256?:unknown}|null;
   if(p?.kind!=='object')return 'unavailable';if(p.present===false)return 'missing';
   if(p.present!==true||!manifest)return 'unavailable';
@@ -50,6 +51,17 @@ function eventSummary(event:Event,manifest?:DocumentArchiveManifest){
   if(p.kind==='hold')return typeof p.reason==='string'&&Object.hasOwn(archiveReviewReasons,p.reason)?archiveReviewReasons[p.reason as keyof typeof archiveReviewReasons]:'The save was held for review.';
   return 'A saved-document observation was recorded.';
 }
+function preparationEvidence(row:Row,item:ArchiveReviewItem,manifest?:DocumentArchiveManifest){
+  if(item.issued)return archivePreparationEvidence.parse({state:'issued'});
+  if(!manifest)return archivePreparationEvidence.parse({state:'not_recorded'});
+  let latestStorageEvidence=null;
+  if(row.last_check){
+    const payload=JSON.parse(row.last_check) as {kind?:unknown},status=checkStatus(payload,manifest);
+    latestStorageEvidence={at:row.last_checked_at,outcome:payload.kind==='write_unknown'?'write_unconfirmed':status==='issued'?'matched':status};
+  }
+  return archivePreparationEvidence.parse({state:'prepared',expected:{format:manifest.format,template:manifest.template,size:manifest.size,sha256:manifest.sha256,
+    requestedAt:manifest.requestedAt,sourceKind:manifest.source.kind,sourceFingerprint:manifest.source.fingerprint,sourceRecordCount:manifest.source.records.length},latestStorageEvidence});
+}
 /** Read-only projection of retained evidence. Never reads R2, retries a save or changes an observation. */
 export class D1DocumentArchiveReview{
   constructor(private readonly db:D1Database){}
@@ -77,6 +89,6 @@ export class D1DocumentArchiveReview{
     ]);
     if(!results[0].results.length)archiveFail('forbidden');const row=results[1].results[0] as Row|undefined;if(!row)archiveFail('missing');
     const {item,manifest}=capture(row),events=results[2].results as Event[];
-    return {viewerId:actorId,item,canContinue:!row.artifact_json&&row.actor_id===actorId,events:events.slice(0,20).map(event=>({id:event.id,at:event.at,summary:eventSummary(event,manifest)})),hasMore:events.length>20};
+    return {viewerId:actorId,item,canContinue:!row.artifact_json&&row.actor_id===actorId,preparation:preparationEvidence(row,item,manifest),events:events.slice(0,20).map(event=>({id:event.id,at:event.at,summary:eventSummary(event,manifest)})),hasMore:events.length>20};
   });}
 }
