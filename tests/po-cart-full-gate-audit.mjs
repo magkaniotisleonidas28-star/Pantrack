@@ -24,9 +24,15 @@ if (process.platform === 'win32') {
 const auditPath = resolve('scripts/po-cart-worker/full-gate-audit.py');
 // The real gate root legitimately exists during gate preparation and its own
 // test step; this suite must leave it and both consumed roots exactly as it found them.
-const gateRoots = ['20261014', '20261021', '20261022', '20261024', '20261025', '20261027'].map(
-  (day) => '.sites-runtime/po-cart-workers/full-offline-acceptance-task-' + day,
-);
+const gateRoots = [
+  '20261014',
+  '20261021',
+  '20261022',
+  '20261024',
+  '20261025',
+  '20261027',
+  '20261031',
+].map((day) => '.sites-runtime/po-cart-workers/full-offline-acceptance-task-' + day);
 const gateListing = () =>
   gateRoots.map((root) =>
     existsSync(root)
@@ -47,12 +53,15 @@ s=importlib.util.spec_from_file_location('audit',sys.argv[1]);a=importlib.util.m
 base=pathlib.Path(sys.argv[2]);mode=sys.argv[3];step=sys.argv[4]
 a.root=base/'root';a.DATABASE_BASES=[base/'state'];a.PROTECTED_BASES=[base/'workers',base/'budget',base/'evaluation']
 a.PROTECTED_EXTRA=[base/'cart-browser-results.json',base/'evaluation'/'state.json'];a.BASELINE=base/'baseline'
+a.MIGRATED_STATES=[base/'state'/'wrangler',base/'state'/'cart-review-state'];a.MIGRATIONS=base/'migrations'
 def db(path,rows,wal=False):
     path.parent.mkdir(parents=True,exist_ok=True);c=sqlite3.connect(path)
     if wal:c.execute('PRAGMA journal_mode=WAL')
     c.execute('CREATE TABLE items(name)');c.executemany('INSERT INTO items VALUES (?)',[(r,) for r in rows]);c.commit()
     if wal:c.execute('PRAGMA wal_checkpoint(TRUNCATE)')
     c.close()
+def migrated(path,names):
+    c=sqlite3.connect(path);c.execute('CREATE TABLE d1_migrations(name)');c.executemany('INSERT INTO d1_migrations VALUES (?)',[(n,) for n in names]);c.commit();c.close()
 def setup():
     for d in ['root','workers/evidence','workers/modules','workers/browser-profiles/p','budget','evaluation']:(base/d).mkdir(parents=True,exist_ok=True)
     (base/'workers/evidence/report.json').write_text('{"passed":false}');(base/'workers/modules/generated.mjs').write_text('x')
@@ -61,12 +70,26 @@ def setup():
     db(base/'state/wrangler/main.sqlite',['a','b']);db(base/'state/cart-review-state/v3/review.sqlite',['h1','h2','h3'])
     db(base/'state/live.sqlite',['w'],wal=True);(base/'state/backups').mkdir(parents=True,exist_ok=True)
     shutil.copyfile(base/'state/live.sqlite',base/'state/backups/copy.sqlite')
+    # Both migrated states carry every source migration; the other databases are not checked.
+    (base/'migrations').mkdir();applied=['0000_first.sql','0001_second.sql']
+    for name in applied:(base/'migrations'/name).write_text('SELECT 1;')
+    migrated(base/'state/wrangler/main.sqlite',applied);migrated(base/'state/cart-review-state/v3/review.sqlite',applied)
 def run(fn):
     try:return fn()
     except Exception as error:return dict(passed=False,error=str(error))
 if step=='capture':
     setup()
     if mode=='invoked':(a.root/'task.json').write_text('{}')
+    # A source migration a migrated state lacks, a state with no migration record, one the source lacks, or no migrations at all.
+    if mode=='schema_behind':(base/'migrations'/'0002_third.sql').write_text('SELECT 1;')
+    if mode=='schema_unrecorded':
+        c=sqlite3.connect(base/'state/cart-review-state/v3/review.sqlite');c.execute('DROP TABLE d1_migrations');c.commit();c.close()
+    if mode=='schema_extra':
+        c=sqlite3.connect(base/'state/wrangler/main.sqlite');c.execute("INSERT INTO d1_migrations VALUES ('0002_third.sql')");c.commit();c.close()
+    if mode=='schema_empty':
+        for f in (base/'migrations').iterdir():f.unlink()
+        for path in ['wrangler/main.sqlite','cart-review-state/v3/review.sqlite']:
+            c=sqlite3.connect(base/'state'/path);c.execute('DELETE FROM d1_migrations');c.commit();c.close()
     if mode.startswith('consumed'):a.root=a.CONSUMED[int(mode[-1])]
     result=run(a.capture)
     if mode=='twice':result=run(a.capture)
@@ -108,10 +131,14 @@ function audit(mode, step) {
   return run(mode, 'finish');
 }
 const before = `
-import importlib.util,json,os,pathlib,sys,types
+import importlib.util,json,os,pathlib,sqlite3,sys,types
 s=importlib.util.spec_from_file_location('audit',sys.argv[1]);a=importlib.util.module_from_spec(s);s.loader.exec_module(a)
 s=importlib.util.spec_from_file_location('observation',pathlib.Path(sys.argv[1]).with_name('observation-baseline-audit.py'));real=importlib.util.module_from_spec(s);s.loader.exec_module(real)
 base=pathlib.Path(sys.argv[2]);mode=sys.argv[3];a.BASELINE=base;a.root=base/'root';a.root.mkdir()
+a.MIGRATED_STATES=[base/'state'];a.MIGRATIONS=base/'migrations';(base/'state').mkdir();(base/'migrations').mkdir()
+(base/'migrations'/'0000_first.sql').write_text('SELECT 1;')
+if mode=='schema_behind':(base/'migrations'/'0001_second.sql').write_text('SELECT 1;')
+c=sqlite3.connect(base/'state'/'d1.sqlite');c.execute('CREATE TABLE d1_migrations(name)');c.execute("INSERT INTO d1_migrations VALUES ('0000_first.sql')");c.commit();c.close()
 profiles=base/'browser-profiles';profiles.mkdir()
 REUSED,NEW,FAILED,OTHER,ACTIVE='a'*64,'d'*64,'b'*64,'e'*64,'c'*64
 entries={'p/Preferences':dict(sha256='kept'),'p':dict(mode=16832),REUSED:dict(mode=16832),REUSED+'/Cookies':dict(sha256='old'),
@@ -123,21 +150,25 @@ if mode=='tampered':second['entries']={**entries,'p/Extra':{}}
 (base/'fresh-baseline.json').write_text(json.dumps(dict(profiles=dict(sha256=fingerprint(entries)['sha256']))))
 (base/'report.json').write_text(json.dumps(dict(status='complete' if mode!='unpublished' else 'blocked',passed=mode!='unpublished')))
 (base/'verification-summary.json').write_text(json.dumps(dict(passed=True,baselinePublished=True)))
-def gate(name,records,passed=True,invoked=True,count=None,pid=1000):
+def gate(name,records,passed=True,invoked=True,count=None,pid=1000,failed=(),clear=True):
     g=base/name;(g/'profiles').mkdir(parents=True)
     if invoked:(g/'task.json').write_text('{}')
-    (g/'process-audit.json').write_text(json.dumps(dict(passed=True,profilesClear=True,profiles=len(records) if count is None else count)))
-    (g/'preservation.json').write_text(json.dumps(dict(passed=True)))
+    (g/'process-audit.json').write_text(json.dumps(dict(passed=True,profilesClear=clear,profiles=len(records) if count is None else count)))
+    (g/'preservation.json').write_text(json.dumps(dict(passed=True) if 'preservationVerified' not in failed else dict(passed=False,category='finish_failed')))
     for i,r in enumerate(records):(g/'profiles'/(str(i)+'.json')).write_text(json.dumps(dict(path=r if r.startswith('/') else str(profiles.resolve()/r),workerPid=pid+i)))
-    audits={k:True for k in a.GATE_AUDITS};audits['passed']=passed
+    audits={k:k not in failed for k in a.GATE_AUDITS};audits['passed']=passed and 'passed' not in failed
     audits['references']=[dict(path=str(g/f),sha256=a.filehash(g/f)) for f in ['process-audit.json','preservation.json']]
     (g/'final-audit.json').write_text(json.dumps(audits));return g
 records=[REUSED,NEW]+([ACTIVE] if mode=='active_record' else [])+(['/elsewhere/'+'f'*64] if mode=='outside_record' else [])+(['g'*64+'.lock'] if mode=='lock_record' else [])
-latest=gate('latest',records,invoked=mode!='not_invoked',count=5 if mode=='count_mismatch' else None)
+# A reviewed gate failed only preservation; it accounts only while pinned exactly and its other audits passed.
+failed=('preservationVerified','passed')+(('cleanupVerified',) if mode=='reviewed_cleanup_failed' else ()) if mode.startswith('reviewed') else ()
+latest=gate('latest',records,invoked=mode!='not_invoked',count=5 if mode=='count_mismatch' else None,failed=failed,clear=mode!='reviewed_process')
+a.PRESERVATION_REVIEWED={str(latest):(a.filehash(latest/'final-audit.json'),a.filehash(latest/'preservation.json'))} if mode.startswith('reviewed') and mode!='reviewed_unpinned' else {}
+if mode=='reviewed_tampered':(latest/'final-audit.json').write_text(json.dumps({**json.loads((latest/'final-audit.json').read_text()),'extra':1}))
 a.CONSUMED=[gate('failed',[FAILED],passed=False,pid=2000),latest]
 if mode=='tampered_gate':(latest/'preservation.json').write_text(json.dumps(dict(passed=True,extra=1)))
 current=dict(entries)
-if mode in ['gate_drift','not_invoked']:
+if mode in ['gate_drift','not_invoked'] or mode.startswith('reviewed'):
     del current[REUSED+'/Cookies'];current.update({REUSED:dict(mode=16832,mtimeNs=2),REUSED+'/Preferences':dict(sha256='new'),NEW:dict(mode=16832),NEW+'/Preferences':dict(sha256='new')})
 drift=dict(drift=('p/Preferences',dict(sha256='drifted')),unrecorded=(OTHER+'/Preferences',dict(sha256='new')),failed_drift=(FAILED+'/Preferences',dict(sha256='new')),
            lock_drift=(REUSED+'.lock',dict(sha256='rewritten')),active_drift=(ACTIVE+'/Preferences',dict(sha256='drifted')))
@@ -191,7 +222,7 @@ try {
   const captured = audit('pass', 'capture');
   assert.equal(captured.passed, true);
   assert.equal(captured.databases, 4);
-  assert.equal(captured.historicalDatabaseRows, 7);
+  assert.equal(captured.historicalDatabaseRows, 11);
   assert.deepEqual(captured.paths, [
     'backups/copy.sqlite',
     'cart-review-state/v3/review.sqlite',
@@ -208,11 +239,19 @@ try {
     const r = audit(mode, 'capture');
     assert.equal(r.passed, false, mode);
   }
+  // Capture refuses before writing anything when a migrated state is not exactly at the source's migrations.
+  for (const mode of ['schema_behind', 'schema_unrecorded', 'schema_extra', 'schema_empty']) {
+    assert.deepEqual(
+      audit(mode, 'capture'),
+      { passed: false, error: 'Gate database missing migrations' },
+      mode,
+    );
+  }
 
   // The finish audit allows classified additions and refuses any historical loss.
   const clean = audit('pass', 'finish');
   assert.equal(clean.passed, true);
-  assert.equal(clean.historicalDatabaseRows, 7);
+  assert.equal(clean.historicalDatabaseRows, 11);
   assert.equal(clean.added, 0);
   const added = audit('added_rows', 'finish');
   assert.equal(added.passed, true);
@@ -256,6 +295,11 @@ try {
   assert.equal(accounted.passed, true);
   assert.equal(accounted.gateChangedProfiles, 2);
   assert.equal(accounted.gateChangedEntries, 5);
+  // So is drift from an owner-reviewed gate whose only failed audit is preservation, pinned exactly.
+  const reviewed = baselineCheck('reviewed');
+  assert.equal(reviewed.passed, true);
+  assert.equal(reviewed.gateChangedProfiles, 2);
+  assert.equal(reviewed.gateChangedEntries, 5);
   for (const [mode, error] of [
     ['drift', 'Profiles changed since the baseline'],
     ['unrecorded', 'Profiles changed since the baseline'],
@@ -284,6 +328,11 @@ try {
     ['historical_lock_removed', 'Worker locks/guards added or removed'],
     ['direct_unaccounted', 'Worker locks/guards added or removed'],
     ['direct_historical', 'Worker locks/guards added or removed'],
+    ['schema_behind', 'Gate database missing migrations'],
+    ['reviewed_unpinned', 'Profiles changed since the baseline'],
+    ['reviewed_tampered', 'Profiles changed since the baseline'],
+    ['reviewed_cleanup_failed', 'Profiles changed since the baseline'],
+    ['reviewed_process', 'Gate audit evidence changed'],
   ]) {
     assert.deepEqual(baselineCheck(mode), { passed: false, error }, mode);
   }
@@ -293,11 +342,20 @@ try {
   assert.match(source, /DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
   assert.match(
     source,
-    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\)/,
+    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\)/,
   );
   assert.match(
     source,
-    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\)\]/,
+    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\)\]/,
+  );
+  // Only G6 is owner-reviewed, pinned to its exact final and preservation audits.
+  assert.match(
+    source,
+    /PRESERVATION_REVIEWED=\{'\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027':\n {23}\('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2'\)\}\n/,
+  );
+  assert.match(
+    source,
+    /MIGRATED_STATES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime\/cart-review-state'\)\]\nMIGRATIONS=Path\('drizzle'\)/,
   );
   assert.doesNotMatch(source, /sqlite3\.connect\(/);
   // Only fixed operations run, never optimized.
@@ -315,7 +373,7 @@ try {
   assert.match(optimized.stderr, /Optimized gate audit execution is not accepted/);
   assert.deepEqual(gateListing(), gateBefore, 'Real gate roots changed');
   console.log(
-    'PASS full gate audit: complete database capture, WAL copies, classified additions, historical-loss refusal and baseline pre-check with gate-recorded profiles and accounted gate worker locks; no real root written.',
+    'PASS full gate audit: complete database capture, WAL copies, classified additions, historical-loss refusal, migrated-state refusal and baseline pre-check with gate-recorded profiles and accounted gate worker locks; no real root written.',
   );
 } finally {
   rmSync(sandbox, { recursive: true, force: true });

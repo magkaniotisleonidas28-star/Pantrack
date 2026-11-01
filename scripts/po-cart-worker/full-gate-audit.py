@@ -1,16 +1,25 @@
 """Independent read-only preservation audit; never emits business rows or secrets."""
 import json,hashlib,sqlite3,collections,os,re,sys,subprocess,importlib.util
 from pathlib import Path
-root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027')
+root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031')
 # Consumed gate roots stay retained; one whose final audits all passed accounts for the profiles it recorded.
 CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),
-          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025')]
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025'),
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027')]
 GATE_AUDITS=['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified','passed']
+# Owner-reviewed gates whose only failed audit was database preservation, for a cause unrelated to
+# browser profiles: their exact final-audit.json and preservation.json hashes.
+PRESERVATION_REVIEWED={'.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027':
+                       ('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2')}
 # Every local database is captured, including cart-review and other review states.
 DATABASE_BASES=[Path('.wrangler/state'),Path('.sites-runtime')]
 PROTECTED_BASES=[Path('.sites-runtime/po-cart-workers'),Path('.sites-runtime/cart-ai-budget'),Path('.sites-runtime/cart-ai-evaluation')]
 PROTECTED_EXTRA=[Path('.sites-runtime/cart-browser-results.json'),Path('.sites-runtime/cart-ai-evaluation/state.json')]
 BASELINE=Path('.sites-runtime/po-cart-workers/observation-baseline-task-20261021')
+# The gate migrates these local states (db:migrate:local and the cart preview). Capture and the
+# pre-check refuse one missing a migration, so no upgrade rewrites captured rows inside the run.
+MIGRATED_STATES=[Path('.wrangler/state'),Path('.sites-runtime/cart-review-state')]
+MIGRATIONS=Path('drizzle')
 def module(name,filename):
  spec=importlib.util.spec_from_file_location(name,Path(__file__).with_name(filename));value=importlib.util.module_from_spec(spec);spec.loader.exec_module(value);return value
 legacy=module('gate_legacy_audit','legacy-profile-audit.py')
@@ -21,8 +30,20 @@ def save(name,value):
  p=root/name;p.write_text(json.dumps(value)+'\n');p.chmod(0o600)
 def database_paths():return sorted(str(p) for base in DATABASE_BASES for p in base.rglob('*.sqlite'))
 def table_rows(c,name):return [digest(json.dumps(r,separators=(',',':'),default=str).encode()) for r in c.execute('SELECT * FROM "'+name.replace('"','""')+'"')]
+def schema_current():
+ expected=sorted(p.name for p in MIGRATIONS.glob('*.sql'))
+ for base in MIGRATED_STATES:
+  found=0
+  for p in sorted(base.rglob('*.sqlite')):
+   c=legacy.open_readonly(p)
+   try:
+    if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='d1_migrations'").fetchone():
+     found+=1;assert sorted(r[0] for r in c.execute('SELECT name FROM d1_migrations'))==expected,'Gate database missing migrations'
+   finally:c.close()
+  assert expected and found,'Gate database missing migrations'
 def capture():
  assert all(root.resolve()!=c.resolve() for c in CONSUMED) and root.is_dir() and not os.path.lexists(root/'task.json'),'Gate root not prepared or already invoked'
+ schema_current()
  for name in ['baseline.json','storefront-before.json','database-before.json','database-inventory.json','source-before.json','rollback-manifest.json']:
   assert not os.path.lexists(root/name),'Before-images already captured'
  protected=[]
@@ -51,18 +72,26 @@ def capture():
  save('source-before.json',[dict(path=p,sha256=filehash(p)) for p in files])
  save('rollback-manifest.json',dict(restore=[],remove=[]))
  return dict(passed=True,protectedArtifacts=len(protected),historicalCarts=len(store),databases=len(entries),historicalDatabaseRows=rows,sourceFiles=len(files))
+def reviewed(gate,audits):
+ """The gate's only failed audit is preservation, and both audit files are exactly the owner-reviewed ones."""
+ pinned=PRESERVATION_REVIEWED.get(str(gate))
+ return pinned is not None and audits.get('preservationVerified') is False and audits.get('passed') is False and \
+  all(audits.get(k) is True for k in GATE_AUDITS if k not in ['preservationVerified','passed']) and \
+  (filehash(gate/'final-audit.json'),filehash(gate/'preservation.json'))==pinned
 def gate_profiles(obs):
- """Profile directories, with their recorded worker PIDs, from consumed gates whose retained final audits all passed."""
+ """Profile directories, with their recorded worker PIDs, from consumed gates whose retained final audits all passed,
+ or whose only failed audit is an owner-reviewed preservation failure."""
  names={}
  for gate in CONSUMED:
   audits=json.loads((gate/'final-audit.json').read_text()) if (gate/'task.json').is_file() and (gate/'final-audit.json').is_file() else {}
-  # A gate without complete passing audits accounts for nothing; its profiles must stay exact.
-  if not all(audits.get(k) is True for k in GATE_AUDITS):continue
+  # A gate without complete passing audits accounts for nothing unless reviewed; its profiles must stay exact.
+  accepted=reviewed(gate,audits)
+  if not (all(audits.get(k) is True for k in GATE_AUDITS) or accepted):continue
   for ref in audits['references']:
    assert Path(ref['path']).parent.resolve()==gate.resolve() and filehash(ref['path'])==ref['sha256'],'Gate audit evidence changed'
   process=json.loads((gate/'process-audit.json').read_text());preservation=json.loads((gate/'preservation.json').read_text())
   records=sorted((gate/'profiles').glob('*.json')) if (gate/'profiles').is_dir() else []
-  assert process['passed'] is True and process['profilesClear'] is True and preservation['passed'] is True and process['profiles']==len(records),'Gate audit evidence changed'
+  assert process['passed'] is True and process['profilesClear'] is True and (preservation['passed'] is True or accepted) and process['profiles']==len(records),'Gate audit evidence changed'
   for record in records:
    value=json.loads(record.read_text());path=Path(value['path'])
    assert path.parent==obs.PROFILES.resolve() and re.fullmatch('[0-9a-f]{64}',path.name) and path.name!=obs.PROFILE,'Unexpected gate profile record'
@@ -84,6 +113,7 @@ def gate_locks(obs,gates):
   accounted.add(path.name)
  return accounted
 def baseline_holds():
+ schema_current()
  obs=module('gate_observation_audit','observation-baseline-audit.py')
  report=json.loads((BASELINE/'report.json').read_text());summary=json.loads((BASELINE/'verification-summary.json').read_text())
  fresh=json.loads((BASELINE/'fresh-baseline.json').read_text());second=json.loads((BASELINE/'profiles-stability-second.json').read_text())
