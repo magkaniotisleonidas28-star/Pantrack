@@ -127,7 +127,13 @@ flowchart TD
 
 The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md), [integration guide](PO_AI_CART_INTEGRATION_ROADMAP.md) and [2026-10-09 decision](decisions/0005-po-backed-ai-cart-preparation.md) supersede the 2026-10-03 email-first direction. Historical local evidence and completion records remain intact. Supplier email dispatch is deferred; notification email remains. M13/M14 do not block the manager-controlled launch. Unrelated POS prerequisites, including the pending M6 gate, remain explicit.
 
-### Current checklist position — 2026-10-14
+### Historical checklist snapshot — 2026-10-14
+
+This dated snapshot retains the source and hosted observations available then.
+For current local completion, the G5 pass/G6 preparation requirement and the
+source changes through `0044`, use [current status](CURRENT_STATUS.md) and the
+[plain-language checklist](PROJECT_PROGRESS_PLAIN_LANGUAGE.md). Earlier failed
+gates and the old eleven-migration range are not the current next-step list.
 
 | Workstream | Recorded completion | Next open steps |
 | --- | --- | --- |
@@ -169,8 +175,8 @@ remains unverified because its read APIs return `403`.
 
 Use the [dated status/evidence snapshot](CURRENT_STATUS.md#verified-snapshot--2026-10-14)
 and [simple milestone checklist](PROJECT_PROGRESS_PLAIN_LANGUAGE.md) for the
-current release order. These updates do not close A8, C3–C9, M6–M12 or the
-deferred M13/M14 gates.
+dated evidence and current release order respectively. These updates do not
+close A8, C3–C9, M6–M12 or the deferred M13/M14 gates.
 
 ---
 
@@ -488,6 +494,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   connected Builds repository, then deferred the entire release on October 24.
   Retain preparation and continue only independent local work until the owner
   requests resumption; no hosted migration/deployment or acceptance advanced.
+  This packet covers only its frozen source and `0024`–`0034`; current source
+  extends through `0044`. Refresh hosted state, backup/rehearsal, ordered migration
+  review and candidate before an authorized release.
 - [ ] **C3 — Obtain external decisions while A/B build.** Coordinate the Clover
   sandbox and second-POS selection needed by B. Record the first supplier,
   permitted browser use, café/account/location authorization, exact SKUs/packs,
@@ -584,8 +593,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   downloads pass. No new schema or hosted setup. Next add read-only review of
   held saves and missing/corrupt copies; hosted bucket/privacy acceptance remains
   separate.
-  Application-issued artifacts remain separate, as do cart execution and receiving;
-  supplier email infrastructure is deferred.
+  Issued artifacts and receiving now have local implementations recorded here;
+  hosted document acceptance and supplier/full-workflow acceptance remain separate.
+  Supplier email infrastructure is deferred.
   Supplier acceptance, scheduler/job, alerts and production budget
   policy also remain open. The [PO-first rollout](PURCHASE_ORDER_ROLLOUT.md) adds durable
   manager drafts, supplier profiles/mappings, preparation authorization, PDF/XLSX,
@@ -596,7 +606,8 @@ For every numbered item, the assigned person follows the same delivery loop:
   floor; migration `0037`, local only). [Part 2](C4_SUPPLIER_CONFIRMATION_LOCAL_EVIDENCE.md)
   records manager-entered supplier confirmations. Within the cap they become incoming
   exactly once; over the cap they are held for owner review (migration `0038`, local
-  only). Over-cap approval remains open. Receiving follows a
+  only). [Owner over-cap approval](C4_OVER_CAP_APPROVAL_LOCAL_EVIDENCE.md) was
+  subsequently built and verified locally with migration `0044`. Receiving follows a
   [three-part plan](C4_RECEIVING_PLAN_20261026.md) with blind staff counts and manager
   approval. [Part 1](C4_ORDER_RECEIPT_PORT_LOCAL_EVIDENCE.md) builds A's receipt
   posting port at the owner's request. It accepts, releases or adds excess per line
@@ -931,7 +942,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   and 3/3 isolated real-check passes. [G5](C4_FULL_OFFLINE_GATE_RUN_20261025.md)
   then passed all 21 steps and every final audit. That is local mocked-provider
   evidence only; the second-addition original cause stays unresolved and C4/M8
-  remain open.
+  remain open. The subsequently merged
+  [G6 rebinding](C4_FULL_OFFLINE_GATE_RUN_20261025.md#rebinding-for-g6) requires
+  fresh preparation and a gate on current source before a separately authorized
+  real-model matrix. Confirm the operator's status; no merges are allowed from
+  preparation until the paid run finishes. Do not repeat the original timeout
+  investigation as if G5 had never passed, or treat G5 as current-source evidence.
 - [ ] **C5 — Implement and accept M8.** After A accepts M7, consume its immutable
   quantities; accept the complete authorized PO-to-verified-cart-to-manager-checkout
   flow with supplier confirmation, PDF/native XLSX/history and staff-recorded,
@@ -955,8 +971,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   adds owner-only, audited per-order, per-day, optional per-month and in-progress
   limits with a café time zone. Loosening needs password confirmation, and an
   atomic local-day and local-month reservation guard enforces them (migration
-  `0035`, local only). Payment responsibility and setup, final-price
-  reconciliation and pilot evidence remain open, so no checkbox advances.
+  `0035`, local only). The later owner decisions below settle payment
+  responsibility and cap-based accounting; supplier-specific account terms and
+  full hosted/pilot acceptance remain open, so no checkbox advances.
   [Part 2](C7_OWNER_SPENDING_LIMITS_SCREEN_LOCAL_EVIDENCE.md) adds the owner screen.
   It also repairs `0035` for D1's 50-byte LIKE/GLOB limit through migration `0036`,
   with a suite that fails any over-limit pattern.
@@ -971,7 +988,8 @@ For every numbered item, the assigned person follows the same delivery loop:
 
   [Over-cap owner approval](C4_OVER_CAP_APPROVAL_LOCAL_EVIDENCE.md) is built locally:
   password-confirmed, it raises the held amount to the confirmed total (migration
-  `0044`, local only). Acceptance evidence is still pending.
+  `0044`, local only). The focused suites and served local check passed within
+  the linked evidence limits; full hosted/workflow acceptance is still pending.
 - [ ] **C8 — Coordinate M11 and execute C's slice.** Prepare the runbook and
   evidence report; supervise verified cart preparation, manager checkout,
   supplier confirmation, delivery reconciliation,

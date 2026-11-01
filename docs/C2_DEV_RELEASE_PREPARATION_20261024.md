@@ -2,10 +2,19 @@
 
 ## Outcome and authorization boundary
 
-The technical preparation for the next `pantrack-dev` release is complete.
-The application candidate is frozen, the current hosted state has been read,
-the backup has been restored locally, and all eleven pending migrations have
-passed a populated-data rehearsal. **The online release has not been executed.**
+The October 24 technical preparation completed for the specific candidate
+recorded below. Its application files were frozen, hosted state was read, the
+backup was restored locally, and its eleven pending migrations passed a
+populated-data rehearsal. **The online release has not been executed.**
+
+**Scope clarification — 2026-10-28:** this packet covers source `911fcb1` and
+migrations `0024`–`0034`, not later source. The repository now contains 45
+migrations, `0000`–`0044`. The old backup/rehearsal and frozen bundle do not
+validate those additions. No new hosted state was read for this clarification;
+the current pending range cannot be inferred from the old ledger alone.
+Before any authorized release, refresh the hosted deployment/ledger, complete
+ordered migration review, fresh backup/restore and populated-data rehearsal,
+and frozen candidate checks. Preserve this packet as historical evidence.
 
 **Owner decision: defer the entire online release for now.** The owner confirmed
 on October 24 that the app still contains test data and no repository is
@@ -22,7 +31,7 @@ this preparation. A8/M7 and C3–C5/M8 acceptance remain separate.
 | Website | <https://pantrack-dev.christospsimadas25.workers.dev>. |
 | D1 | `pantrack-dev-db`, `9b50014b-f929-4f03-a187-599df6e438b1`. |
 | Active Worker | `ed5e9c65-31b7-432f-bff9-bf4df45e9b68`, 100% traffic; deployed `2026-10-05T02:50:23Z`, release `65373b3`. |
-| Remote ledger | 24 entries, exactly `0000`–`0023`; `0024`–`0034` remain pending. |
+| Remote ledger observed October 24 | 24 entries, exactly `0000`–`0023`; that candidate had `0024`–`0034` pending. Not a current hosted read or complete current release range. |
 | Runtime gates | Exact inventory enabled; Clover sync disabled; PO/cart preview gates absent. Supplier submission and automatic purchasing stay server-blocked. |
 | Bindings and scheduling | Expected D1 binding and nine secret-binding names present; no cron schedules. Secret values were not fetched or replaced. |
 | Automatic builds | The owner reports no repository connected. Worker-tag trigger/build API reads returned 403, so this is owner attestation rather than independent API verification. |
