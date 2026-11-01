@@ -595,7 +595,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   or unconfirmed saves and recorded missing/corrupt checks, with source-scoped
   paging and retained history. Native D1/R2 and signed-in UI checks prove current
   access, safe reasons, cancellation and zero review writes/file IO. No migration.
-  Next define recovery/reissue policy; hosted bucket/privacy acceptance remains
+  The [recovery policy](C4_DOCUMENT_RECOVERY_POLICY_20261101.md) now separates
+  same-request continuation, explicit file checks and future linked replacements
+  with retained originals. Formal replacement authority is proposed owner-only,
+  pending the role choice. Next build the issued-file check with current
+  owner/manager access, durable check identity and safe replay; no replacement
+  action is added by the policy. Hosted bucket/privacy acceptance remains
   separate, and G6's merge restriction still applies.
   Issued artifacts and receiving now have local implementations recorded here;
   hosted document acceptance and supplier/full-workflow acceptance remain separate.

@@ -11,6 +11,23 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest C4 document recovery policy — 2026-11-01
+
+The [recovery policy and implementation handoff](C4_DOCUMENT_RECOVERY_POLICY_20261101.md)
+now distinguish existing same-request continuation from fresh verification and
+future linked replacements. Original records/bytes remain immutable, uncertainty
+stays visible and replacements need a new identity with retained lineage. Formal
+replacement authority is proposed as owner-only; the owner/manager role choice
+is pending and is not recorded as an accepted decision.
+
+This is documentation only, built on review PR #29. Its separate GitHub checks
+passed for `1937c12`; that proves the local review implementation, not the future
+policy actions. No schema, migration, app behavior or hosted changes occur here.
+The next bounded document implementation is an explicit issued-file check using
+existing owner/manager read authority, with durable check identity and safe
+replay. It does not depend on the future replacement-role choice. G6's merge
+restriction, deferred hosted release and the open C4/C5/M8 gates remain in place.
+
 ## Latest local C4 saved-document review — 2026-11-01
 
 The [read-only review screen](C4_DOCUMENT_ARCHIVE_REVIEW_LOCAL_EVIDENCE.md) now
@@ -27,7 +44,8 @@ the draft/history empty state passed in the signed-in local app.
 No migration, schema, dependency or hosted binding is added. The feature uses
 the existing archive preview gate and remains local. This branch builds on
 documentation PR #28 and stays out of main while G6 operator status is unknown.
-Next document outcome: define recovery/reissue policy while retaining originals.
+The subsequent [recovery policy](C4_DOCUMENT_RECOVERY_POLICY_20261101.md) now
+defines the next issued-file check slice and future replacement constraints.
 Administrative repair/deletion and hosted acceptance remain separate. C4/C5/M8
 stay open and purchasing disabled.
 
@@ -509,8 +527,10 @@ hosted acceptance remain separate evidence.
    status and keep merges paused from preparation until the paid run finishes.
    Preserve consumed allowances and unresolved carts; no gate or paid run starts
    from these local changes. The read-only document review is now implemented
-   locally; after the restriction clears, define recovery/reissue rules before
-   adding administrative actions. Reuse the archive, exports, confirmation,
+   locally, and the recovery policy is written with a pending replacement-role
+   choice. Next implement the explicit issued-file check on an isolated branch;
+   respect the merge restriction and leave administrative actions separate.
+   Reuse the archive, exports, confirmation,
    receiving, weekly schedule screens and over-cap approval. Their evidence is local; hosted/model,
    supplier and full-workflow acceptance remain separate.
 5. **C5: finish and accept M8 after M7 and the supplier gates.** Accept the complete

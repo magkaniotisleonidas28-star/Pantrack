@@ -112,3 +112,8 @@ repair or migration rewrite is needed. After the G6 merge restriction clears,
 the next bounded document outcome is a recovery/reissue policy defining who may
 act and how original evidence is retained. No administrative recovery, reissue
 or deletion is implemented or authorized by this read-only slice.
+
+The subsequent [recovery policy](C4_DOCUMENT_RECOVERY_POLICY_20261101.md) now
+defines the next explicit issued-file check and the constraints for later
+continuation/replacement work. The replacement-role choice remains pending;
+the policy adds no runtime action or permission.
