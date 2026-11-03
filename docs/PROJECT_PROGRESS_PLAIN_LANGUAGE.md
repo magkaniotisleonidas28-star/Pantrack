@@ -1,6 +1,15 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-01 for prepared-file evidence review and the G8 gate position.
+Updated: 2026-11-02 for fresh prepared-file checks and the G8 gate position.
+
+Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
+checks the current file for an unfinished save and records what it found. It can
+recover the same result after a lost reply or stop/retry. It does not issue,
+generate, replace or approve a copy. A new local migration adds safe check-history
+entries while preserving save rules; no hosted database was changed. Native,
+signed-in desktop/phone and all six complete local project checks passed.
+Final-head Windows/Linux CI remains an integration requirement. Formal replacement
+copies still need the owner/manager role decision.
 
 Latest addition: [Prepared file evidence](C4_PREPARED_FILE_EVIDENCE_LOCAL_EVIDENCE.md)
 shows the original details and recorded checks for copies that never finished

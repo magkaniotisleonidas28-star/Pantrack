@@ -5,6 +5,7 @@ import {DocumentArchiveReviewClient,type ArchiveReviewState} from '@/lib/documen
 import {archiveReviewLabels,archiveReviewReasons,type ArchiveReviewSelection,type ArchiveReviewItem} from '@/lib/document-archive-review-contract';
 import IssuedFileCheckControl from './issued-file-check';
 import DocumentPreparationEvidence from './document-preparation-evidence';
+import PreparedFileCheckControl from './prepared-file-check';
 
 type Props={selection:ArchiveReviewSelection;viewerId:string;disabled:boolean;cancelRef:MutableRefObject<(()=>void)|null>;documentId?:string;continuationDisabled:boolean;onContinue:(item:ArchiveReviewItem)=>void};
 const time=(value:string)=>new Date(value).toLocaleString();
@@ -40,6 +41,8 @@ function ReviewWorkspace({selection:initialSelection,viewerId,disabled,cancelRef
     {state.detail?<article aria-label="Save history">
       <Summary item={state.detail.item}/><p className="break-all">Save reference: {state.detail.item.id}</p>
       {!state.detail.item.issued&&state.detail.preparation&&<DocumentPreparationEvidence evidence={state.detail.preparation} disabled={blocked} onRefresh={()=>void client.current?.detail(state.detail!.item.id)}/>}
+      {!state.detail.item.issued&&state.detail.preparation?.state==='prepared'&&<PreparedFileCheckControl key={state.detail.item.id+'|'+state.detail.viewerId} selection={selection} documentId={state.detail.item.id}
+        viewerId={state.detail.viewerId} disabled={blocked} cancelRef={checkCancel} recorded={()=>void client.current?.detail(state.detail!.item.id)}/>}
       {!state.detail.item.issued&&<section aria-label="Continue original save">
         {state.detail.canContinue?<>
           <p>Continue the exact save you started. Existing file contents are checked; if generation never finished, the original source must still match before a file can be saved.</p>

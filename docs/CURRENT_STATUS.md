@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-01
+Updated: 2026-11-02
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,26 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Latest local C4 fresh prepared-file checks — 2026-11-02
+
+[Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md) explicitly
+verifies an unfinished save's exact original file and retains its result. Current
+company owners/managers may inspect another actor's prepared file without gaining
+continuation authority. Stable requests recover lost replies and stop/retry;
+read inputs survive refusal, and a matching check cannot issue a copy. Refresh
+still reads stored evidence only. A concurrent publication keeps prepared-check
+diagnostics out of issued-file health.
+
+Focused native/API, client, migration, type/schema and signed-in desktop/phone/
+keyboard checks pass, as do all six frozen-source commands: 155 executed suites,
+twelve existing Windows skips, all 46 migrations, build and HTTP smoke. Final-head
+Windows/Linux CI remains an integration requirement. New local migration `0045`
+adds an admitted, tokenless check-event protocol to the existing
+observation guard; it changes no table or column and preserves existing save rules.
+No old migration, business record, save lease or file is changed by a check.
+No hosted database, gate, paid run, deployment or main merge ran. Keep the G8
+freeze and schema merge queue. C4/C5/M8 remain open and replacement roles undecided.
 
 ## Latest local C4 prepared-file evidence review — 2026-11-01
 
@@ -26,8 +46,8 @@ Windows skips, all 45 existing migrations, build and local HTTP smoke. Final-hea
 Windows/Linux CI remains required before integration. No schema, migration,
 dependency, hosted change or data mutation is introduced by review.
 C4/C5/M8 stay open, purchasing disabled and G8's protected
-merge window preserved. Next separately scope fresh prepared-object verification;
-formal replacement roles remain undecided.
+merge window preserved. Fresh prepared-object verification is now implemented
+in the subsequent slice above; formal replacement roles remain undecided.
 
 ## Latest local C4 original-request save continuation — 2026-11-01
 
