@@ -125,8 +125,8 @@ review wrote nothing, and all original manifests, observations and objects remai
 Mixed older strict clients may refuse the extra response field safely, so keep the
 matching UI/API bundle together. No journal or save-command contract is rewritten.
 
-Next unblocked document slice: explicitly scope fresh verification of a prepared
-object, with stable check identity, retained audit inputs and no publication,
-generation or object writes. It must remain distinct from this stored-evidence
-view and original-actor continuation. Formal linked replacements additionally
-need the pending owner-only versus owner/manager role choice and lineage contract.
+The subsequent [fresh prepared-file check](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
+now implements explicit verification with stable check identity, retained audit
+inputs and no publication, generation or object writes. It remains distinct from
+this stored-evidence view and original-actor continuation. Formal linked replacements
+still need the pending owner-only versus owner/manager role choice and lineage contract.

@@ -26,6 +26,14 @@ now exposes retained preparation details and storage observations without readin
 objects or changing rows. Fresh prepared-object verification remains a separate
 future action; this metadata view never issues, retries or replaces a save.
 
+Subsequent implementation: [fresh prepared-file checks](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
+now verify an unissued manifest's exact object with stable admitted check identity.
+Current company owners/managers may inspect it, including another actor's save,
+without gaining continuation/replacement authority. Migration `0045` enables only
+the new tokenless check-event protocol; original save/publication rules remain.
+Only retained check events append; no file or business state changes. This is a
+separate explicit action from refreshing the stored evidence above.
+
 ## Reuse the existing behavior
 
 The [archive lifecycle](../src/lib/purchase-order-document-archive.ts),
