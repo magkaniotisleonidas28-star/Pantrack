@@ -1,11 +1,12 @@
 """Independent read-only preservation audit; never emits business rows or secrets."""
 import json,hashlib,sqlite3,collections,os,re,sys,subprocess,importlib.util
 from pathlib import Path
-root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104')
+root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105')
 # Consumed gate roots stay retained; one whose final audits all passed accounts for the profiles it recorded.
 CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025'),
-          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261101')]
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261101'),
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104')]
 GATE_AUDITS=['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified','passed']
 # Owner-reviewed gates whose only failed audit was database preservation, for a cause unrelated to
 # browser profiles: their exact final-audit.json and preservation.json hashes.

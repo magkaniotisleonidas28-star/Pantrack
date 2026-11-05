@@ -35,6 +35,7 @@ const gateRoots = [
   '20261031',
   '20261101',
   '20261104',
+  '20261105',
 ].map((day) => '.sites-runtime/po-cart-workers/full-offline-acceptance-task-' + day);
 const gateListing = () =>
   gateRoots.map((root) =>
@@ -364,11 +365,11 @@ try {
   assert.match(source, /DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
   assert.match(
     source,
-    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\)/,
+    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261105'\)/,
   );
   assert.match(
     source,
-    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\)\]/,
+    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\)\]/,
   );
   // Only G6 is owner-reviewed, pinned to its exact final and preservation audits.
   assert.match(
