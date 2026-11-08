@@ -616,11 +616,20 @@ For every numbered item, the assigned person follows the same delivery loop:
   client, type, screen-rule and signed-in browser checks pass, as do all six
   frozen-source commands (153 executed suites, twelve existing Windows skips,
   all 45 migrations). Final-head Windows/Linux CI is required before integration.
-  Next separately scope fresh prepared-object verification; formal replacement
-  authority remains undecided.
+  [Fresh prepared-object checks](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md) now add
+  explicit owner/manager verification, stable audited replay and stop/retry while
+  preserving files, save leases and business rows. Only admitted check events
+  append. Local trigger-only migration `0045` preserves the original save rules;
+  no table or column changes. Native/API, client, migration, signed-in browser and
+  all six frozen-source checks pass (155 executed suites, twelve Windows skips,
+  all 46 migrations). Final-head Windows/Linux CI is required before integration.
+  Preserve the schema merge
+  queue and G8 freeze. Formal replacement authority remains undecided.
   Hosted bucket/privacy acceptance remains separate; check the
-  [G8 operator position](C4_FULL_OFFLINE_GATE_RUN_20261031.md#next-g8-then-the-separately-authorized-paid-matrix)
-  before main merges and preserve its preparation-to-paid-run freeze.
+  [current G10 operator position](C4_FULL_OFFLINE_GATE_RUN_20261104.md#next)
+  and the [November 8 integration](C4_PR_STACK_INTEGRATION_20261108.md).
+  Prepare/freeze the resulting merged source before a later G10 invocation;
+  preserve its preparation-to-paid-run freeze once that preparation begins.
   Issued artifacts and receiving now have local implementations recorded here;
   hosted document acceptance and supplier/full-workflow acceptance remain separate.
   Supplier email infrastructure is deferred.

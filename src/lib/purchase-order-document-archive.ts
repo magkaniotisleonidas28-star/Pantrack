@@ -3,7 +3,7 @@ import { poId } from './purchase-order-contract';
 import { frozenCopy, canonicalJson } from './supplier-simulation-contract';
 import { historyExportFingerprint } from './purchase-order-history-export-contract';
 import { documentByteDigest } from './document-byte-digest';
-import { documentFileOutcome } from './document-file-observation';
+import { documentFileOutcome, observeDocumentFile as observeObject } from './document-file-observation';
 export { documentByteDigest } from './document-byte-digest';
 import {
   captureArchiveSource,
@@ -62,21 +62,6 @@ function errorCode(error: unknown, phase: string): DocumentArchiveErrorCode {
       return 'source_changed';
   }
   return phase === 'render' ? 'generation_failed' : 'storage_unavailable';
-}
-async function observeObject(objects: PrivateDocumentObjects, manifest: DocumentArchiveManifest) {
-  const object = await objects.read(await archiveObjectKey(manifest), DOCUMENT_ARCHIVE_MAX_BYTES);
-  const bytes =
-    object?.bytes instanceof Uint8Array && object.bytes.byteLength <= DOCUMENT_ARCHIVE_MAX_BYTES
-      ? new Uint8Array(object.bytes)
-      : null;
-  const observation: ArchiveObservation = {
-    kind: 'object',
-    present: !!object,
-    reportedSize: object && Number.isSafeInteger(object.size) ? object.size : null,
-    byteLength: object?.bytes instanceof Uint8Array ? object.bytes.byteLength : null,
-    sha256: bytes ? await documentByteDigest(bytes) : null,
-  };
-  return { bytes, observation };
 }
 function verifiedBytes(
   manifest: DocumentArchiveManifest,

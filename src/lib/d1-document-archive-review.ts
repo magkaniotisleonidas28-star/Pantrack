@@ -8,10 +8,10 @@ type Row={id:string;company_id:string;actor_id:string;request_json:string;state:
   active:number;manifest_json:string|null;artifact_json:string|null;last_check:string|null;last_checked_at:string|null};
 type Event={id:string;at:string;payload_json:string};
 // Append order determines the last retained check, even if two checks share a timestamp.
-const checkWhere="o.company_id=i.company_id AND o.document_id=i.id AND (i.state!='ready' OR o.token IS NULL) AND json_extract(o.payload_json,'$.kind') IN ('object','read_unknown','write_unknown') AND json_extract(o.payload_json,'$.check.contract') IS NOT 'pantrack.issued-file-check.v1'";
+const checkWhere="o.company_id=i.company_id AND o.document_id=i.id AND ((i.state!='ready' AND json_extract(o.payload_json,'$.kind')='prepared_check' AND json_extract(o.payload_json,'$.stage')='observed') OR ((i.state!='ready' OR o.token IS NULL) AND json_extract(o.payload_json,'$.kind') IN ('object','read_unknown','write_unknown') AND json_extract(o.payload_json,'$.check.contract') IS NOT 'pantrack.issued-file-check.v1'))";
 const projection=`i.id,i.company_id,i.actor_id,i.request_json,i.state,i.reason,i.requested_at,i.updated_at,i.manifest_json,i.artifact_json,
   (i.lease_until>strftime('%Y-%m-%dT%H:%M:%fZ','now')) AS active,
-  (SELECT payload_json FROM document_archive_observations o WHERE ${checkWhere} ORDER BY o.rowid DESC LIMIT 1) AS last_check,
+  (SELECT CASE WHEN json_extract(o.payload_json,'$.kind')='prepared_check' THEN json_extract(o.payload_json,'$.observation') ELSE payload_json END FROM document_archive_observations o WHERE ${checkWhere} ORDER BY o.rowid DESC LIMIT 1) AS last_check,
   (SELECT at FROM document_archive_observations o WHERE ${checkWhere} ORDER BY o.rowid DESC LIMIT 1) AS last_checked_at`;
 const attention=`state!='ready' OR (last_check IS NOT NULL AND (json_extract(last_check,'$.kind')!='object'
   OR json_extract(last_check,'$.present') IS NOT 1
@@ -42,6 +42,8 @@ function capture(row:Row){
   return {item,manifest};
 }
 function eventSummary(event:Event,manifest?:DocumentArchiveManifest){
+  const raw=JSON.parse(event.payload_json) as {kind?:unknown;observation?:unknown};
+  if(raw.kind==='prepared_check')return ({issued:'The prepared file matched its original details at this check; no copy was issued.',missing:'The prepared file was not found at this check.',damaged:'The prepared file contents did not match at this check.',unavailable:'The prepared file check could not confirm the file.'})[checkStatus(raw.observation,manifest)];
   const p=JSON.parse(event.payload_json) as {kind?:unknown;reason?:unknown;signature?:unknown;size?:unknown};
   if(p.kind==='object')return ({issued:'The recorded file matched its saved contents.',missing:'The file was not found at this check.',damaged:'The file contents did not match at this check.',unavailable:'The file check did not return usable evidence.'})[checkStatus(p,manifest) as 'issued'|'missing'|'damaged'|'unavailable'];
   if(p.kind==='write_unknown')return 'Storage did not confirm whether the file was saved.';
@@ -85,7 +87,8 @@ export class D1DocumentArchiveReview{
       this.db.prepare(`SELECT ${projection} FROM document_archive_intents i WHERE ${scope} AND i.id=? AND EXISTS(SELECT 1 FROM memberships WHERE ${member})`).bind(...args),
       this.db.prepare(`SELECT o.id,o.at,o.payload_json FROM document_archive_observations o JOIN document_archive_intents i ON i.company_id=o.company_id AND i.id=o.document_id
         WHERE ${scope} AND i.id=? AND EXISTS(SELECT 1 FROM memberships WHERE ${member})
-        AND json_extract(o.payload_json,'$.check.contract') IS NOT 'pantrack.issued-file-check.v1' ORDER BY o.rowid DESC LIMIT 21 OFFSET ?`).bind(...args,q.offset),
+        AND json_extract(o.payload_json,'$.check.contract') IS NOT 'pantrack.issued-file-check.v1'
+        AND (json_extract(o.payload_json,'$.kind')!='prepared_check' OR json_extract(o.payload_json,'$.stage')='observed') ORDER BY o.rowid DESC LIMIT 21 OFFSET ?`).bind(...args,q.offset),
     ]);
     if(!results[0].results.length)archiveFail('forbidden');const row=results[1].results[0] as Row|undefined;if(!row)archiveFail('missing');
     const {item,manifest}=capture(row),events=results[2].results as Event[];
