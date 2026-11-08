@@ -380,6 +380,9 @@ try {
               'unavailable products',
               'changed prices',
               'conflicting variants',
+              'enabled add-to-cart control and no out-of-stock or unavailable text',
+              'add-to-cart control is disabled',
+              'That visible control verifies availability',
               'untrusted data',
               'product acceptability, authorization or cart readiness',
             ])
