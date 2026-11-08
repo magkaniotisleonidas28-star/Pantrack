@@ -11,6 +11,29 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 original-request save continuation — 2026-11-01
+
+The [server-assisted continuation](C4_DOCUMENT_SAVE_CONTINUATION_LOCAL_EVIDENCE.md)
+lets the person who originally started an unissued document save retrieve its
+exact request from review, even when the browser recovery record is gone. It
+keeps the original operation/document identity, reuses the fenced save engine,
+refuses other actors and changed sources, and preserves stop/retry/reload safety.
+Prepared files are only checked; an unprepared expired save can generate once
+only under the original source and current authorization. Native/API/client and
+signed-in browser checks pass. All six frozen-source pipeline commands passed,
+including one complete test invocation: 153 executed suites, twelve existing
+Windows skips and all 45 migrations. The previous local worker failures did not
+recur; no cause or repair is inferred. Clean-machine CI is pending at publication.
+No new schema, migration, dependency or hosted setup is added. Only existing
+archive state and a permitted original object may change; business rows stay intact.
+
+The draft stack includes main `5ffc088`. The other contributor's G7 gate passed
+all steps/audits and its first paid attempt stopped before any provider request;
+[G8 rebinding](C4_FULL_OFFLINE_GATE_RUN_20261031.md) is now merged. Check its
+operator status before main merges and preserve the preparation-to-paid-run
+freeze. No gate, paid or hosted action ran here. C4/C5/M8 remain open, purchasing
+disabled, and formal replacement roles still undecided.
+
 ## Latest local C4 explicit issued-file checks — 2026-11-01
 
 The [issued-file check](C4_ISSUED_FILE_CHECK_LOCAL_EVIDENCE.md) adds an explicit
@@ -23,15 +46,18 @@ API/client and signed-in browser checks pass. Typecheck, build, migration/schema
 isolated apply and HTTP checks pass; all 151 executable suites passed across
 recorded runs, with twelve Windows skips. Two full test invocations stopped in
 existing worker suites (one confirmed Windows file-permission error); both passed
-standalone. The handoff retains the failures. Clean-machine CI is still required.
+standalone. The handoff retains the failures. Subsequent
+[Windows/Linux CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/41278683678)
+passed the complete workflows for `5a14d80`; that does not explain or repair the
+earlier local failures. The new continuation slice above has its own verification.
 
-The draft document stack now includes main `6b21274` and preserves its screen
+The original file-check verification included main `6b21274` and preserves its screen
 lifecycle fixes. G6's functional steps passed but its preservation audit failed;
 [G7 rebinding](C4_FULL_OFFLINE_GATE_RUN_20261027.md#rebinding-for-g7) is merged.
-Check G7's operator status before any main merge; the preparation-to-paid-run
-freeze remains. No gate, paid run or hosted action is started here. The next
-bounded document slice is server-assisted original-actor continuation. Formal
-replacement roles remain undecided. C4/C5/M8 stay open and purchasing disabled.
+The latest G8 position above supersedes that original merge boundary. No gate,
+paid run or hosted action was started by this document slice. Server-assisted
+original-actor continuation is now implemented above. Formal replacement roles
+remain undecided. C4/C5/M8 stay open and purchasing disabled.
 
 ## Latest C4 document recovery policy — 2026-11-01
 

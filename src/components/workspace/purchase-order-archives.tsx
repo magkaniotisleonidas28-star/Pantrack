@@ -33,7 +33,7 @@ function ArchiveWorkspace({selection:initialSelection,disabled,allowSave,cancelR
       if(catalog.artifacts.some(a=>a.companyId!==selection.companyId||a.source.kind!==selection.source.kind||a.source.kind==='draft'&&selection.source.kind==='draft'&&a.source.records[0].id!==selection.source.orderId))throw Error('The saved copies did not match this selection.');
       if(!client.current||viewer.current!==catalog.viewerId){client.current?.dispose();viewer.current=catalog.viewerId;
         client.current=new PurchaseOrderArchiveClient(selection,catalog.viewerId,{fetch:(...args)=>fetch(...args),storage:sessionStorage,uuid:()=>crypto.randomUUID(),
-          download:browserPurchaseOrderDownloads.download,saved:()=>{setOffset(0);setRefresh(n=>n+1);}},setState);}
+          download:browserPurchaseOrderDownloads.download,saved:()=>{setReviewOpen(false);setReviewDocumentId('');setOffset(0);setRefresh(n=>n+1);}},setState);}
       setCatalogView({key:requestKey,artifacts:catalog.artifacts,hasMore:catalog.hasMore,error:''});
     }).catch(error=>{if(live&&!abort.signal.aborted){client.current?.dispose();client.current=null;setVisible(true);setCatalogView({key:requestKey,artifacts:[],hasMore:false,error:error.message});}});
     return()=>{live=false;abort.abort();};
@@ -61,6 +61,7 @@ function ArchiveWorkspace({selection:initialSelection,disabled,allowSave,cancelR
       {hasMore&&<Button type="button" variant="ghost" disabled={blocked} onClick={()=>{client.current?.cancel();setOffset(n=>n+20);}}>Older copies</Button>}</div>
     <Button type="button" variant="outline" disabled={blocked} aria-expanded={reviewOpen} onClick={()=>{setReviewDocumentId('');setReviewOpen(open=>!open);}}>{reviewOpen?'Close save review':'Review saves'}</Button>
     {reviewOpen&&<DocumentArchiveReview key={source+'|'+viewer.current+'|'+reviewDocumentId} selection={{companyId:selection.companyId,kind:selection.source.kind,...(selection.source.kind==='draft'?{orderId:selection.source.orderId}:{})}}
-      documentId={reviewDocumentId||undefined} viewerId={viewer.current} disabled={disabled||loading||state.phase==='working'} cancelRef={reviewCancel}/>}
+      documentId={reviewDocumentId||undefined} viewerId={viewer.current} disabled={disabled||loading||state.phase==='working'} cancelRef={reviewCancel}
+      continuationDisabled={state.pending||!clientReady} onContinue={item=>void client.current?.continueSave(item)}/>}
   </section>;
 }

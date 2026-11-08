@@ -4,6 +4,8 @@ import {documentByteDigest} from './document-byte-digest';
 import {purchaseOrderHistoryDownloadFlow} from './purchase-order-history-download';
 import {DownloadRefusal} from './purchase-order-download';
 import type {PurchaseOrderHistoryFilters} from './purchase-order-history-contract';
+import {archiveReviewItem,type ArchiveReviewItem} from './document-archive-review-contract';
+import {archiveContinuationResponse,archiveContinuationStored} from './document-archive-continuation-contract';
 
 export type ArchiveSelection={companyId:string;source:{kind:'draft';orderId:string;revision:number}|{kind:'history';filters:PurchaseOrderHistoryFilters}};
 export type ArchiveClientState={phase:'idle'|'working'|'success'|'error'|'held';message:string;pending:boolean;retryable?:boolean;reload?:boolean};
@@ -32,6 +34,7 @@ export class PurchaseOrderArchiveClient{
   private active:AbortController|null=null;
   private disposed=false;
   private request:DocumentArchiveRequest|null=null;
+  private expectedDocumentId:string|null=null;
   private recoveryBlocked=false;
   readonly storageKey:string;
   constructor(private readonly selection:ArchiveSelection,private readonly viewerId:string,private readonly dependencies:Dependencies,
@@ -39,7 +42,9 @@ export class PurchaseOrderArchiveClient{
     this.storageKey=`pantrack.saved-copy.v1:${JSON.stringify([viewerId,selection.companyId,selection.source.kind,selection.source.kind==='draft'?selection.source.orderId:'history'])}`;
     try{
       const stored=dependencies.storage.getItem(this.storageKey);
-      if(stored){const request=documentArchiveRequest.parse(JSON.parse(stored));this.checkScope(request);this.request=request;}
+      if(stored){const value=JSON.parse(stored),envelope=archiveContinuationStored.safeParse(value);
+        const request=envelope.success?envelope.data.request:documentArchiveRequest.parse(value);this.checkScope(request);this.request=request;
+        if(envelope.success)this.expectedDocumentId=envelope.data.documentId;}
       this.state('idle',this.request?'An earlier save needs verification. Retry that save to check its result.':'');
     }catch{this.recoveryBlocked=true;this.state('held','Saved-copy recovery information is unavailable. Ask an owner to review before saving another copy.');}
   }
@@ -57,7 +62,7 @@ export class PurchaseOrderArchiveClient{
       if(!current())return;
       if(error instanceof DownloadRefusal&&!this.request){this.state(error.held?'held':'error',error.message,error.reload);return;}
       const code=error instanceof Refusal?error.code:'storage_unavailable';
-      if(code==='source_changed'&&this.request){try{this.dependencies.storage.removeItem(this.storageKey);this.request=null;}catch{this.recoveryBlocked=true;}}
+      if(code==='source_changed'&&this.request){try{this.dependencies.storage.removeItem(this.storageKey);this.request=null;this.expectedDocumentId=null;}catch{this.recoveryBlocked=true;}}
       const messages:Record<string,string>={forbidden:'Your session or company access changed. Sign in with owner or manager access before continuing.',
         integrity:'The saved file could not be verified. It is held for review.',held:'The save needs review. Retry this save to verify its outcome.',
         busy:'This save is still in progress. Retry this save to check it.',source_changed:'The saved source changed. Reload it before saving another copy.',
@@ -79,13 +84,42 @@ export class PurchaseOrderArchiveClient{
     await this.submit(signal,current);
   });}
   async retry(){if(!this.request)return;return this.run((signal,current)=>this.submit(signal,current));}
+  async continueSave(value:ArchiveReviewItem){
+    if(this.request){this.state('held','An earlier save needs confirmation. Retry that save before continuing another.');return;}
+    return this.run(async(signal,current)=>{
+      const item=archiveReviewItem.parse(value);
+      if(item.issued||item.companyId!==this.selection.companyId||item.source.kind!==this.selection.source.kind||
+        item.source.kind==='draft'&&this.selection.source.kind==='draft'&&item.source.orderId!==this.selection.source.orderId)throw new Refusal('integrity');
+      const params=new URLSearchParams({companyId:this.selection.companyId,id:item.id,view:'continuation',kind:this.selection.source.kind,
+        ...(this.selection.source.kind==='draft'?{orderId:this.selection.source.orderId}:{})});
+      const response=await this.dependencies.fetch('/api/purchase-order-documents?'+params,{method:'GET',credentials:'same-origin',cache:'no-store',redirect:'error',
+        headers:{'X-Pantrack-Archive-Viewer':this.viewerId},signal});
+      if(!current()){await response.body?.cancel();return;}
+      const context=archiveContinuationResponse.parse(await json(response));if(!current())return;
+      const request=context.request;this.checkScope(request);
+      if(context.viewerId!==this.viewerId||context.documentId!==item.id||request.format!==item.format||
+        request.source.kind==='draft'&&item.source.kind==='draft'&&request.source.revision!==item.source.revision)throw new Refusal('integrity');
+      // Own the parent's existing pending slot; never overwrite another uncertain save.
+      if(this.dependencies.storage.getItem(this.storageKey)!==null)throw new Refusal('conflict');
+      const stored=archiveContinuationStored.parse({contract:'pantrack.document-save-continuation.v1',documentId:item.id,request});
+      this.dependencies.storage.setItem(this.storageKey,JSON.stringify(stored));this.request=request;this.expectedDocumentId=item.id;
+      await this.submit(signal,current);
+    });
+  }
   private async submit(signal:AbortSignal,current:()=>boolean){
     const request=this.request!;const body=await json(await this.dependencies.fetch('/api/purchase-order-documents',{method:'POST',credentials:'same-origin',
       cache:'no-store',redirect:'error',headers:{'content-type':'application/json','X-Pantrack-Archive-Viewer':this.viewerId},body:JSON.stringify(request),signal}));
     if(!current())return;const artifact=captureArchiveArtifact(body?.artifact);
+    if(this.expectedDocumentId&&artifact.id!==this.expectedDocumentId)throw new Refusal('integrity');
     if(artifact.companyId!==request.companyId||artifact.actorId!==this.viewerId||artifact.format!==request.format||artifact.source.kind!==request.source.kind||
       (request.source.kind==='draft'?(artifact.source.records[0].id!==request.source.orderId||artifact.source.records[0].revision!==request.source.revision):artifact.source.fingerprint!==request.source.fingerprint))throw new Refusal('integrity');
-    this.dependencies.storage.removeItem(this.storageKey);this.request=null;this.state('success','Permanent copy saved. You can download it from Saved copies.');this.dependencies.saved();
+    if(this.expectedDocumentId){
+      const response=await this.dependencies.fetch('/api/purchase-order-documents?'+new URLSearchParams({companyId:request.companyId,id:this.expectedDocumentId,view:'metadata'}),
+        {method:'GET',credentials:'same-origin',cache:'no-store',redirect:'error',signal});
+      if(!current()){await response.body?.cancel();return;}const checked=await json(response);if(!current())return;
+      if(checked.viewerId!==this.viewerId||JSON.stringify(captureArchiveArtifact(checked.artifact))!==JSON.stringify(artifact))throw new Refusal('forbidden');
+    }
+    this.dependencies.storage.removeItem(this.storageKey);this.request=null;this.expectedDocumentId=null;this.state('success','Permanent copy saved. You can download it from Saved copies.');this.dependencies.saved();
   }
   async download(value:DocumentArchiveArtifact){return this.run(async(signal,current)=>{
     const artifact=captureArchiveArtifact(value);if(artifact.companyId!==this.selection.companyId)throw new Refusal('integrity');

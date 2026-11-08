@@ -8,6 +8,7 @@ import {unstable_splitSqlQuery} from 'wrangler';
 import {readXlsx,lineRecords} from './helpers/xlsx-reader.mjs';
 import {checkArchiveReview} from './helpers/document-archive-review.mjs';
 import {checkIssuedFileApi} from './helpers/issued-file-check-api.mjs';
+import {checkArchiveContinuation} from './helpers/document-archive-continuation.mjs';
 const require=createRequire(import.meta.url),{Miniflare}=createRequire(require.resolve('wrangler'))('miniflare');
 mkdirSync('.sites-runtime/archive-api',{recursive:true});const folder=mkdtempSync(resolve('.sites-runtime/archive-api/run-'));
 const mf=new Miniflare({modules:true,script:'export default {fetch(){return new Response(null)}}',compatibilityDate:'2026-05-15',
@@ -81,6 +82,7 @@ try{
   await restarted.download(target);assert.equal(downloaded,1);restarted.dispose();
   await checkArchiveReview({core,db,bucket,state,request,command,artifacts,tables,setUser:value=>user=value,setAfterPut:hook=>afterPut=hook,setAfterGet:hook=>afterGet=hook,setBeforeGet:hook=>beforeGet=hook,io:()=>({puts,gets})});
   const checkHistorical=await checkIssuedFileApi({core,db,bucket,state,request,command,tables,setUser:value=>user=value,setAfterGet:hook=>afterGet=hook,setBeforeGet:hook=>beforeGet=hook,io:()=>({puts,gets})});
+  await checkArchiveContinuation({core,db,bucket,state,request,command,tables,setUser:value=>user=value,setAfterPut:hook=>afterPut=hook,setBeforeGet:hook=>beforeGet=hook,io:()=>({puts,gets}),drafts,input});
   const edited=await drafts.edit({...input(),action:'edit',orderId:order.snapshot.id,expectedRevision:order.revision,reason:'Later edit',notes:'Edited source'});
   await drafts.cancel({action:'cancel',companyId:'a',operationId:crypto.randomUUID(),orderId:order.snapshot.id,expectedRevision:edited.revision,reason:'Later cancellation'});
   await checkHistorical();

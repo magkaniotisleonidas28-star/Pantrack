@@ -605,9 +605,15 @@ For every numbered item, the assigned person follows the same delivery loop:
   but two full test invocations stopped in existing worker suites; the linked
   handoff records the Windows verification caveat. Clean-machine CI is required
   before integration. No replacement action is added.
-  Next separately scope original-actor server-assisted save continuation.
+  [Server-assisted continuation](C4_DOCUMENT_SAVE_CONTINUATION_LOCAL_EVIDENCE.md)
+  now recovers the exact original request from review for its current authorized
+  original actor. Native/API/client, signed-in browser and all six frozen-source
+  pipeline checks pass, including 153 executed suites and twelve Windows skips.
+  Clean-machine CI is required before integration. No new schema or hosted change.
+  Next separately scope prepared-unissued evidence inspection; formal replacement
+  authority remains undecided.
   Hosted bucket/privacy acceptance remains separate; check the
-  [G7 operator position](C4_FULL_OFFLINE_GATE_RUN_20261027.md#next-g7-then-the-separately-authorized-paid-matrix)
+  [G8 operator position](C4_FULL_OFFLINE_GATE_RUN_20261031.md#next-g8-then-the-separately-authorized-paid-matrix)
   before main merges and preserve its preparation-to-paid-run freeze.
   Issued artifacts and receiving now have local implementations recorded here;
   hosted document acceptance and supplier/full-workflow acceptance remain separate.

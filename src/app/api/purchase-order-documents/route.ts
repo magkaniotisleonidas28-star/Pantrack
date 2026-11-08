@@ -6,6 +6,7 @@ import {PurchaseOrderDocumentArchive} from '@/lib/purchase-order-document-archiv
 import {D1DocumentArchiveJournal} from '@/lib/d1-document-archive-journal';
 import {D1DocumentArchiveCatalog} from '@/lib/d1-document-archive-catalog';
 import {D1DocumentArchiveReview} from '@/lib/d1-document-archive-review';
+import {D1DocumentArchiveContinuation} from '@/lib/d1-document-archive-continuation';
 import {archiveReviewQuery,archiveReviewDetailQuery} from '@/lib/document-archive-review-contract';
 import {D1DocumentArchiveSources,renderDocumentArchive} from '@/lib/purchase-order-document-archive-sources';
 import {R2DocumentArchiveObjects} from '@/lib/r2-document-archive-objects';
@@ -30,6 +31,12 @@ async function handle(req:Request){
       if(req.url.length>8192)archiveFail('invalid_request');const params=new URL(req.url).searchParams;
       if([...params.keys()].some(key=>params.getAll(key).length!==1))archiveFail('invalid_request');
       const view=params.get('view');
+      if(view==='continuation'){
+        params.delete('view');const viewerId=await actor();
+        if(req.headers.get('X-Pantrack-Archive-Viewer')!==viewerId)archiveFail('forbidden');
+        const result=await new D1DocumentArchiveContinuation(database()).read(Object.fromEntries(params),viewerId);
+        if(await actor()!==viewerId)archiveFail('forbidden');return Response.json(result);
+      }
       if(view==='review'||view==='review-detail'){
         params.delete('view');const parsed=(view==='review'?archiveReviewQuery:archiveReviewDetailQuery).safeParse(Object.fromEntries(params));
         if(!parsed.success)archiveFail('invalid_request');const viewerId=await actor(),review=new D1DocumentArchiveReview(database());

@@ -16,6 +16,11 @@ now implements the first slice below using the existing observation store, with
 no schema change. This policy retains its original requirements and evidence;
 the linked handoff records the implementation's separate current verification.
 
+The subsequent [server-assisted continuation](C4_DOCUMENT_SAVE_CONTINUATION_LOCAL_EVIDENCE.md)
+now retrieves the original request from the journal for its original current
+owner/manager, including after losing the tab's recovery record. The implementation
+reuses the existing save engine and adds no replacement authority or schema.
+
 ## Reuse the existing behavior
 
 The [archive lifecycle](../src/lib/purchase-order-document-archive.ts),
