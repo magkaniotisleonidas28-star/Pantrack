@@ -1,6 +1,14 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-02 for fresh prepared-file checks and the G8 gate position.
+Updated: 2026-11-08 for document-stack integration and the current G10 gate position.
+
+The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) have been refreshed
+with the latest main changes and are being checked for the owner's requested
+merge. They cover save-history review, exact-request continuation and explicit
+checks of issued and unfinished files. Their automatic merges are conflict-free.
+The other contributor's G10 work is preserved. The next gate needs preparation
+on the resulting merged source; merging these PRs does not deploy the app, run
+the gate or change the hosted database.
 
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can

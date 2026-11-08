@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-02
+Updated: 2026-11-08
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,24 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## C4 document stack and current G10 position — 2026-11-08
+
+The [document-stack integration](C4_PR_STACK_INTEGRATION_20261108.md) combines
+PRs 28/29/30/32/34/35/36 with current main `a545d06`, preserving the merged G8
+paid-run record, availability-evidence rule, G9 outcome and G10 binding. All seven
+original heads and their automatic merges were reviewed; no textual conflicts
+were found. Current refreshed-head CI and combined local checks are required
+before merging, with actual results retained in the linked integration record.
+
+The [latest gate record](C4_FULL_OFFLINE_GATE_RUN_20261104.md) supersedes the
+historical G8-only merge holds below. G9 stopped at step 15 with all final audits
+passing; the catalog-stage cause remains unresolved. G10 is next. The owner's
+November 8 merge request authorizes this integration window; prepare and freeze
+the resulting merged source before a later G10 invocation and preserve that
+freeze once preparation starts. No gate or paid action is authorized by a merge.
+Migration `0045` is the stack's only new migration; hosted application remains
+separate. C4/C5/M8 remain open and replacement roles remain undecided.
 
 ## Latest local C4 fresh prepared-file checks — 2026-11-02
 
