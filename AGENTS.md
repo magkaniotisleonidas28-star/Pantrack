@@ -43,6 +43,8 @@ this file concise; detailed workflow and prompt templates live in
   patterns into `--glob` arguments.
 - Use absolute paths for evidence outside the current worktree; main-checkout
   runtime paths must not resolve relative to a feature worktree.
+- For D1 data comparisons, use the application snapshot's table inventory;
+  do not query Cloudflare-reserved `_cf_` tables.
 - Use complete current lines as patch context; reread the target block after
   a context mismatch before retrying.
 - Prefer a focused module and focused test over unrelated refactoring. Identify
