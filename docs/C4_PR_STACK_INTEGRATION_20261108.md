@@ -3,6 +3,9 @@
 Checklist: C4. One integration outcome: inspect every open PR, preserve current
 main changes, refresh compatible branches and merge the document stack in order
 after current validation. The owner explicitly requested these merges on November 8.
+**Outcome: all seven PRs merged into main; no open PR remained at the final merge
+audit.** Stack merge `d0cd3d8517cc0e4b9e36cdf6bb664d2998f1c278` has tree
+`909701ef02aa85aed4a56bdc55f75249cab58981`, exactly the validated combined tip.
 
 ## Reviewed source and merge order
 
@@ -31,6 +34,32 @@ are preserved. Source changes from those merged PRs remain byte-identical; the
 status documents combine their evidence with the document features above.
 No new feature behavior is introduced by this integration. The new status notes
 make the current gate position explicit without rewriting dated local evidence.
+
+## Completed integration evidence
+
+| PR | Merge commit | Refreshed Windows/Linux CI |
+| --- | --- | --- |
+| 28 | `ccdd6bb` | [Passed](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/42456528827) |
+| 29 | `a56b956` | [Passed](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/42456528379) |
+| 30 | `a16300a` | [Passed](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/42456528671) |
+| 32 | `15eeee5` | [Passed](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/42456528191) |
+| 34 | `ae602be` | [Passed](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/42456529238) |
+| 35 | `3957c74` | [Passed](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/42456528463) |
+| 36 | `d0cd3d8` | [Passed](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/42456528547) |
+
+All fourteen platform jobs passed all six validation steps. Each PR was made
+ready, retargeted to main after its predecessor and merged with its exact checked
+head SHA. Each resulting tree was checked against the tested PR tree. No branch
+deletion, force-push or unreviewed conflict resolution was performed.
+
+The combined local run in `work/c4-prepared-file-check-20261102` passed
+`pnpm typecheck`, `pnpm test` (167 selected; 155 executed and twelve existing
+Windows POSIX skips), `pnpm db:check` (46 migrations), `pnpm build`,
+`pnpm db:migrate:local` and `pnpm test:local`. Source and Git inventory remained
+frozen throughout. All 533 changed-document relative links and 22 heading targets
+resolved, with all 29 A/B/C states agreeing and acceptance checkboxes unchanged.
+Only this completion/status documentation was updated after merging; the tested
+runtime source remains identical. Final main push CI is recorded separately.
 
 ## Current gate boundary
 

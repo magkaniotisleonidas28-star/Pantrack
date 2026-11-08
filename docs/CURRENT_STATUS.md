@@ -13,12 +13,14 @@ For the short milestone and A/B/C checklists, use the
 
 ## C4 document stack and current G10 position — 2026-11-08
 
-The [document-stack integration](C4_PR_STACK_INTEGRATION_20261108.md) combines
-PRs 28/29/30/32/34/35/36 with current main `a545d06`, preserving the merged G8
-paid-run record, availability-evidence rule, G9 outcome and G10 binding. All seven
-original heads and their automatic merges were reviewed; no textual conflicts
-were found. Current refreshed-head CI and combined local checks are required
-before merging, with actual results retained in the linked integration record.
+The [document-stack integration](C4_PR_STACK_INTEGRATION_20261108.md) merged all
+seven PRs (28/29/30/32/34/35/36) into main in dependency order, ending at stack
+merge `d0cd3d8`. The merged G8 paid-run record, availability-evidence rule, G9
+outcome and G10 binding are preserved. No textual conflicts were found. Every
+refreshed head passed Windows/Linux CI, and the combined six-command local run
+passed: 155 executed suites, twelve existing Windows skips and all 46 migrations.
+The final stack tree exactly matches the tested tip. No open PR remained after
+the merge audit. Final-main push CI is verified separately from those head checks.
 
 The [latest gate record](C4_FULL_OFFLINE_GATE_RUN_20261104.md) supersedes the
 historical G8-only merge holds below. G9 stopped at step 15 with all final audits
