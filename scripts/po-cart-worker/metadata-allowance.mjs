@@ -4,12 +4,13 @@ import { readPrivate, writePrivate, profileLock } from './private-files.mjs';
 import { gatePolicy, validateGate, fileHash } from './acceptance-gate.mjs';
 import { budgetFile } from '../cart-preview/ai-budget.mjs';
 
+// The prior is the allowance consumed by the 2026-11-04 matrix.
 export const priorPaidAllowanceFile =
-  '.sites-runtime/po-cart-workers/metadata-repair-acceptance/allowance.json';
-export const paidAllowanceFile =
   '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261101/allowance.json';
-// The prior allowance was authorized on 2026-11-01, but its run stopped before
-// any request and its pricing check expired. Only that exact file retires unused.
+export const paidAllowanceFile =
+  '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261104/allowance.json';
+// The 2026-11-01 allowance was authorized, but its run stopped before any request
+// and its pricing check expired. Only that exact file could retire unused.
 export const retiredPriorAllowance = Object.freeze({
   sha256: '0b2eb16de5e9d1032688519e0c527a807d3e0aa8f0af7b44e4f95663611ede27',
   ledger: budgetFile,

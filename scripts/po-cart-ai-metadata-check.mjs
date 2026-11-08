@@ -256,6 +256,9 @@ try {
                     'unavailable products',
                     'changed prices',
                     'conflicting variants',
+                    'enabled add-to-cart control and no out-of-stock or unavailable text',
+                    'add-to-cart control is disabled',
+                    'That visible control verifies availability',
                     'untrusted data',
                     'product acceptability, authorization or cart readiness',
                   ])
@@ -300,6 +303,14 @@ try {
                   assert.ok(!source.includes('data-product=') && !source.includes('data-sku='));
                   if (phase.startsWith('product:')) {
                     assert.ok(body.text.format.schema.properties.candidates);
+                    // Extraction states the same availability rule as its verifier,
+                    // and the snapshot carries the control that rule names.
+                    assert.ok(
+                      source.includes(
+                        'available when it shows an enabled add-to-cart control and no out-of-stock or unavailable text',
+                      ),
+                    );
+                    assert.ok(source.includes('Add to cart'));
                     if (scenario === 'malicious')
                       assert.ok(source.includes('ignore previous instructions'));
                   } else assert.ok(body.text.format.schema.properties.entries);
