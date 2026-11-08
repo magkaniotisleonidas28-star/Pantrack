@@ -13,6 +13,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 // POSIX-only: exercises the python3 preservation auditor with SQLite fixtures.
 if (process.platform === 'win32') {
@@ -33,6 +34,8 @@ const gateRoots = [
   '20261027',
   '20261031',
   '20261101',
+  '20261104',
+  '20261105',
 ].map((day) => '.sites-runtime/po-cart-workers/full-offline-acceptance-task-' + day);
 const gateListing = () =>
   gateRoots.map((root) =>
@@ -174,6 +177,14 @@ if mode in ['gate_drift','not_invoked'] or mode.startswith('reviewed'):
 drift=dict(drift=('p/Preferences',dict(sha256='drifted')),unrecorded=(OTHER+'/Preferences',dict(sha256='new')),failed_drift=(FAILED+'/Preferences',dict(sha256='new')),
            lock_drift=(REUSED+'.lock',dict(sha256='rewritten')),active_drift=(ACTIVE+'/Preferences',dict(sha256='drifted')))
 if mode in drift:current[drift[mode][0]]=drift[mode][1]
+# A profile changed outside any gate is accounted only while the owner-reviewed pin of every entry under it holds.
+a.PROFILES_REVIEWED={}
+if mode.startswith('profile_reviewed'):
+    name=ACTIVE if mode=='profile_reviewed_active' else OTHER
+    current.update({name:dict(mode=16832),name+'/Preferences':dict(sha256='reviewed')});a.PROFILES_REVIEWED={name:a.profile_digest(current,name)}
+    if mode=='profile_reviewed_tampered':current[name+'/Preferences']=dict(sha256='changed')
+    if mode=='profile_reviewed_added':current[name+'/Extra']=dict(sha256='added')
+    if mode=='profile_reviewed_other':current['f'*64+'/Preferences']=dict(sha256='new')
 # Real historical locks, including the retained stale lock, through the real lock checks.
 HISTORICAL=['e151abec389352a225974f0bb7057ad3df9b6f2b30f6c4fdd16bba2a55a06bcf.lock',REUSED+'.lock']
 (profiles/HISTORICAL[0]).write_bytes(b'4303');(profiles/HISTORICAL[1]).write_bytes(b'7')
@@ -183,6 +194,7 @@ real.PROFILES,real.LOCK_HISTORY,real.LOCK_COUNT=profiles,base/'locks.json',2;rea
 locks=dict(gate_lock=(NEW,b'1001'),lock_entry_only=None,lock_unrecorded=(OTHER,b'1001'),lock_failed_gate=(FAILED,b'2000'),lock_pid_mismatch=(NEW,b'4242'),
            lock_bytes=(NEW,b'1001\\n'),direct_unaccounted=(NEW,b'1001'),lock_owner_alive=(NEW,b'1001'),lock_owner_reappeared=(NEW,b'1001'))
 if mode in locks and locks[mode]:(profiles/(locks[mode][0]+'.lock')).write_bytes(locks[mode][1])
+if mode=='profile_reviewed_lock':(profiles/(OTHER+'.lock')).write_bytes(b'1001')
 if mode=='lock_guard':(profiles/(NEW+'.lock.reclaim')).write_bytes(b'')
 if mode=='lock_symlink':os.symlink('elsewhere',profiles/(NEW+'.lock'))
 if mode=='historical_lock_removed':(profiles/HISTORICAL[1]).unlink()
@@ -301,6 +313,11 @@ try {
   assert.equal(reviewed.passed, true);
   assert.equal(reviewed.gateChangedProfiles, 2);
   assert.equal(reviewed.gateChangedEntries, 5);
+  // So is a profile changed outside any gate while it matches its owner-reviewed pin exactly.
+  const reviewedProfile = baselineCheck('profile_reviewed');
+  assert.equal(reviewedProfile.passed, true);
+  assert.equal(reviewedProfile.reviewedProfiles, 1);
+  assert.equal(reviewedProfile.gateChangedEntries, 2);
   for (const [mode, error] of [
     ['drift', 'Profiles changed since the baseline'],
     ['unrecorded', 'Profiles changed since the baseline'],
@@ -334,6 +351,11 @@ try {
     ['reviewed_tampered', 'Profiles changed since the baseline'],
     ['reviewed_cleanup_failed', 'Profiles changed since the baseline'],
     ['reviewed_process', 'Gate audit evidence changed'],
+    ['profile_reviewed_tampered', 'Profiles changed since the baseline'],
+    ['profile_reviewed_added', 'Profiles changed since the baseline'],
+    ['profile_reviewed_other', 'Profiles changed since the baseline'],
+    ['profile_reviewed_active', 'Profiles changed since the baseline'],
+    ['profile_reviewed_lock', 'Worker locks/guards added or removed'],
   ]) {
     assert.deepEqual(baselineCheck(mode), { passed: false, error }, mode);
   }
@@ -343,17 +365,28 @@ try {
   assert.match(source, /DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
   assert.match(
     source,
-    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\)/,
+    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261105'\)/,
   );
   assert.match(
     source,
-    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\)\]/,
+    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\)\]/,
   );
   // Only G6 is owner-reviewed, pinned to its exact final and preservation audits.
   assert.match(
     source,
     /PRESERVATION_REVIEWED=\{'\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027':\n {23}\('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2'\)\}\n/,
   );
+  // Only the 30 profiles reviewed on 2026-11-04, each pinned to an exact fingerprint.
+  const reviewedProfiles = source.match(
+    /^PROFILES_REVIEWED=\{\n((?: {19}'[0-9a-f]{64}':'[0-9a-f]{64}',\n)* {19}'[0-9a-f]{64}':'[0-9a-f]{64}')\}$/m,
+  );
+  assert.ok(reviewedProfiles);
+  assert.equal(reviewedProfiles[1].split('\n').length, 30);
+  assert.equal(
+    createHash('sha256').update(reviewedProfiles[0]).digest('hex'),
+    '57d8cc7dba6d31e346872e823f8b7be07cff3ef24fbc97e9d9a6f5e5963f9d4c',
+  );
+  assert.match(source, /n!=obs\.PROFILE and profile_digest\(current\['entries'\],n\)==pin/);
   assert.match(
     source,
     /MIGRATED_STATES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime\/cart-review-state'\)\]\nMIGRATIONS=Path\('drizzle'\)/,
