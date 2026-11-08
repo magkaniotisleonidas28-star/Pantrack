@@ -610,7 +610,13 @@ For every numbered item, the assigned person follows the same delivery loop:
   original actor. Native/API/client, signed-in browser and all six frozen-source
   pipeline checks pass, including 153 executed suites and twelve Windows skips.
   Clean-machine CI is required before integration. No new schema or hosted change.
-  Next separately scope prepared-unissued evidence inspection; formal replacement
+  [Prepared-unissued evidence inspection](C4_PREPARED_FILE_EVIDENCE_LOCAL_EVIDENCE.md)
+  now exposes original expected details and retained storage outcomes while
+  preserving every application/archive row and avoiding R2 calls. Focused native,
+  client, type, screen-rule and signed-in browser checks pass, as do all six
+  frozen-source commands (153 executed suites, twelve existing Windows skips,
+  all 45 migrations). Final-head Windows/Linux CI is required before integration.
+  Next separately scope fresh prepared-object verification; formal replacement
   authority remains undecided.
   Hosted bucket/privacy acceptance remains separate; check the
   [G8 operator position](C4_FULL_OFFLINE_GATE_RUN_20261031.md#next-g8-then-the-separately-authorized-paid-matrix)

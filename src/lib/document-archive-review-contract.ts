@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {poId} from './purchase-order-contract';
 import {archiveCatalogQuery} from './purchase-order-archive-app-contract';
+import {archivePreparationEvidence} from './document-archive-preparation-contract';
 
 export const archiveReviewQuery=archiveCatalogQuery;
 export const archiveReviewDetailQuery=z.object({companyId:poId,kind:z.enum(['draft','history']),orderId:poId.optional(),
@@ -21,6 +22,10 @@ export const archiveReviewItem=z.object({id:z.string().uuid(),companyId:poId,for
 export type ArchiveReviewItem=z.infer<typeof archiveReviewItem>;
 export type ArchiveReviewSelection={companyId:string;kind:'draft'|'history';orderId?:string};
 export const archiveReviewPage=z.object({viewerId:poId,items:z.array(archiveReviewItem).max(20),hasMore:z.boolean()}).strict();
-export const archiveReviewDetail=z.object({viewerId:poId,item:archiveReviewItem,canContinue:z.boolean().optional(),events:z.array(z.object({id:z.string().uuid(),at:z.string().datetime(),summary:z.string().min(1).max(200)}).strict()).max(20),hasMore:z.boolean()}).strict();
+export const archiveReviewDetail=z.object({viewerId:poId,item:archiveReviewItem,canContinue:z.boolean().optional(),preparation:archivePreparationEvidence.optional(),events:z.array(z.object({id:z.string().uuid(),at:z.string().datetime(),summary:z.string().min(1).max(200)}).strict()).max(20),hasMore:z.boolean()}).strict().superRefine((value,context)=>{
+  const preparation=value.preparation;if(!preparation)return;
+  if((preparation.state==='issued')!==value.item.issued||preparation.state==='prepared'&&(preparation.expected.format!==value.item.format||preparation.expected.sourceKind!==value.item.source.kind||
+    preparation.expected.requestedAt!==value.item.requestedAt||(preparation.latestStorageEvidence?.at??null)!==value.item.lastCheckedAt))context.addIssue({code:'custom',message:'Prepared evidence did not match this save.'});
+});
 export type ArchiveReviewPage=z.infer<typeof archiveReviewPage>;
 export type ArchiveReviewDetail=z.infer<typeof archiveReviewDetail>;

@@ -11,6 +11,24 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Latest local C4 prepared-file evidence review — 2026-11-01
+
+The [prepared-file evidence panel](C4_PREPARED_FILE_EVIDENCE_LOCAL_EVIDENCE.md)
+shows whether an unissued save has a durable preparation record, its original
+expected file/source details and its latest stored storage outcome/time. It
+distinguishes uncertain writes from missing/mismatched/unknown reads and never
+turns a stored match into an issued copy or a claim about current file health.
+Current company owners/managers can review it; continuing another person's save
+remains forbidden. Refresh reads stored evidence without scanning or changing files.
+Native/API/client, type, screen-rule and signed-in desktop/phone browser checks
+pass, as do all six frozen-source commands: 153 executed suites, twelve existing
+Windows skips, all 45 existing migrations, build and local HTTP smoke. Final-head
+Windows/Linux CI remains required before integration. No schema, migration,
+dependency, hosted change or data mutation is introduced by review.
+C4/C5/M8 stay open, purchasing disabled and G8's protected
+merge window preserved. Next separately scope fresh prepared-object verification;
+formal replacement roles remain undecided.
+
 ## Latest local C4 original-request save continuation — 2026-11-01
 
 The [server-assisted continuation](C4_DOCUMENT_SAVE_CONTINUATION_LOCAL_EVIDENCE.md)
@@ -23,7 +41,10 @@ only under the original source and current authorization. Native/API/client and
 signed-in browser checks pass. All six frozen-source pipeline commands passed,
 including one complete test invocation: 153 executed suites, twelve existing
 Windows skips and all 45 migrations. The previous local worker failures did not
-recur; no cause or repair is inferred. Clean-machine CI is pending at publication.
+recur; no cause or repair is inferred. Subsequent
+[Windows/Linux CI](https://github.com/magkaniotisleonidas28-star/Pantrack/actions/runs/41286002256)
+passed the complete workflows for `06ccd49`. The evidence-panel slice above has
+its own current verification.
 No new schema, migration, dependency or hosted setup is added. Only existing
 archive state and a permitted original object may change; business rows stay intact.
 
