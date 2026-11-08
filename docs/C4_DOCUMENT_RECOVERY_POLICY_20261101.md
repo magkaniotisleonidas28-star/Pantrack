@@ -11,6 +11,11 @@ The next issued-file verification slice can proceed without that choice because
 it uses the existing owner/manager read permission and creates no replacement.
 C4/C5/M8 remain open.
 
+Subsequent implementation: the [explicit issued-file check](C4_ISSUED_FILE_CHECK_LOCAL_EVIDENCE.md)
+now implements the first slice below using the existing observation store, with
+no schema change. This policy retains its original requirements and evidence;
+the linked handoff records the implementation's separate current verification.
+
 ## Reuse the existing behavior
 
 The [archive lifecycle](../src/lib/purchase-order-document-archive.ts),

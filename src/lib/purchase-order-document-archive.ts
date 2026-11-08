@@ -3,6 +3,7 @@ import { poId } from './purchase-order-contract';
 import { frozenCopy, canonicalJson } from './supplier-simulation-contract';
 import { historyExportFingerprint } from './purchase-order-history-export-contract';
 import { documentByteDigest } from './document-byte-digest';
+import { documentFileOutcome } from './document-file-observation';
 export { documentByteDigest } from './document-byte-digest';
 import {
   captureArchiveSource,
@@ -62,6 +63,67 @@ function errorCode(error: unknown, phase: string): DocumentArchiveErrorCode {
   }
   return phase === 'render' ? 'generation_failed' : 'storage_unavailable';
 }
+async function observeObject(objects: PrivateDocumentObjects, manifest: DocumentArchiveManifest) {
+  const object = await objects.read(await archiveObjectKey(manifest), DOCUMENT_ARCHIVE_MAX_BYTES);
+  const bytes =
+    object?.bytes instanceof Uint8Array && object.bytes.byteLength <= DOCUMENT_ARCHIVE_MAX_BYTES
+      ? new Uint8Array(object.bytes)
+      : null;
+  const observation: ArchiveObservation = {
+    kind: 'object',
+    present: !!object,
+    reportedSize: object && Number.isSafeInteger(object.size) ? object.size : null,
+    byteLength: object?.bytes instanceof Uint8Array ? object.bytes.byteLength : null,
+    sha256: bytes ? await documentByteDigest(bytes) : null,
+  };
+  return { bytes, observation };
+}
+function verifiedBytes(
+  manifest: DocumentArchiveManifest,
+  observed: Awaited<ReturnType<typeof observeObject>>,
+) {
+  const observation = observed.observation;
+  if (observation.kind !== 'object' || !observation.present) archiveFail('held');
+  if (!observed.bytes || documentFileOutcome(manifest, observation) !== 'verified')
+    archiveFail('integrity');
+  return observed.bytes;
+}
+export type ArchiveReaderDependencies = {
+  identity: () => Promise<string | null>;
+  objects: PrivateDocumentObjects;
+  journal: Pick<DocumentArchiveJournal, 'open' | 'observeRead' | 'recheck'>;
+};
+/** The same bounded, audited reader is used by downloads and explicit issued-file checks. */
+export async function readArchivedDocument(
+  dependencies: ArchiveReaderDependencies,
+  value: unknown,
+) {
+  try {
+    const parsed = z.object({ companyId: poId, id: z.string().uuid() }).strict().safeParse(value);
+    if (!parsed.success) archiveFail('invalid_request');
+    const { companyId, id } = parsed.data,
+      actorId = await dependencies.identity();
+    if (!actorId) archiveFail('forbidden');
+    const artifact = captureArchiveArtifact(
+      await dependencies.journal.open(companyId, id, actorId),
+    );
+    if (artifact.companyId !== companyId || artifact.id !== id) archiveFail('integrity');
+    let observed: Awaited<ReturnType<typeof observeObject>>;
+    try {
+      observed = await observeObject(dependencies.objects, artifact);
+    } catch {
+      await dependencies.journal.observeRead(artifact, actorId, { kind: 'read_unknown' });
+      archiveFail('storage_unavailable');
+    }
+    await dependencies.journal.observeRead(artifact, actorId, observed.observation);
+    if ((await dependencies.identity()) !== actorId) archiveFail('forbidden');
+    await dependencies.journal.recheck(artifact, actorId);
+    return { artifact, bytes: new Uint8Array(verifiedBytes(artifact, observed)) };
+  } catch (error) {
+    if (error instanceof DocumentArchiveError) throw error;
+    archiveFail('storage_unavailable');
+  }
+}
 /** Archive lifecycle only. It is intentionally not an HTTP route, production journal or R2 binding. */
 export class PurchaseOrderDocumentArchive {
   constructor(private readonly dependencies: Dependencies) {}
@@ -82,37 +144,13 @@ export class PurchaseOrderDocumentArchive {
     if ((await this.actor()) !== actorId) archiveFail('forbidden');
   }
   private async objectObservation(manifest: DocumentArchiveManifest) {
-    const object = await this.dependencies.objects.read(
-      await archiveObjectKey(manifest),
-      DOCUMENT_ARCHIVE_MAX_BYTES,
-    );
-    const bytes =
-      object?.bytes instanceof Uint8Array && object.bytes.byteLength <= DOCUMENT_ARCHIVE_MAX_BYTES
-        ? new Uint8Array(object.bytes)
-        : null;
-    const observation: ArchiveObservation = {
-      kind: 'object',
-      present: !!object,
-      reportedSize: object && Number.isSafeInteger(object.size) ? object.size : null,
-      byteLength: object?.bytes instanceof Uint8Array ? object.bytes.byteLength : null,
-      sha256: bytes ? await documentByteDigest(bytes) : null,
-    };
-    return { bytes, observation };
+    return observeObject(this.dependencies.objects, manifest);
   }
   private verified(
     manifest: DocumentArchiveManifest,
     observed: Awaited<ReturnType<PurchaseOrderDocumentArchive['objectObservation']>>,
   ) {
-    const o = observed.observation;
-    if (o.kind !== 'object' || !o.present) archiveFail('held');
-    if (
-      !observed.bytes ||
-      o.reportedSize !== manifest.size ||
-      o.byteLength !== manifest.size ||
-      o.sha256 !== manifest.sha256
-    )
-      archiveFail('integrity');
-    return observed.bytes;
+    return verifiedBytes(manifest, observed);
   }
   async save(value: unknown) {
     return this.boundary(() => this.saveCommand(value));
@@ -260,27 +298,6 @@ export class PurchaseOrderDocumentArchive {
       archiveFail('integrity');
   }
   async read(value: unknown) {
-    return this.boundary(() => this.readCommand(value));
-  }
-  private async readCommand(value: unknown) {
-    const parsed = z.object({ companyId: poId, id: z.string().uuid() }).strict().safeParse(value);
-    if (!parsed.success) archiveFail('invalid_request');
-    const { companyId, id } = parsed.data,
-      actorId = await this.actor(),
-      artifact = captureArchiveArtifact(
-        await this.dependencies.journal.open(companyId, id, actorId),
-      );
-    if (artifact.companyId !== companyId || artifact.id !== id) archiveFail('integrity');
-    let observed: Awaited<ReturnType<PurchaseOrderDocumentArchive['objectObservation']>>;
-    try {
-      observed = await this.objectObservation(artifact);
-    } catch {
-      await this.dependencies.journal.observeRead(artifact, actorId, { kind: 'read_unknown' });
-      archiveFail('storage_unavailable');
-    }
-    await this.dependencies.journal.observeRead(artifact, actorId, observed.observation);
-    await this.sameActor(actorId);
-    await this.dependencies.journal.recheck(artifact, actorId);
-    return { artifact, bytes: new Uint8Array(this.verified(artifact, observed)) };
+    return readArchivedDocument(this.dependencies, value);
   }
 }
