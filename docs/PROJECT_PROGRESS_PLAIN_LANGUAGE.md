@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-09 for the G11 result, the paid test and the G12 gate position.
+Updated: 2026-11-09 for the G12 result, the second paid test and the AI practice round.
 
 The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) are merged into main.
 They cover save-history review, exact-request continuation and explicit checks
@@ -22,8 +22,15 @@ paid test with the real AI model then stopped safely at its first practice case.
 After adding two items correctly, the AI's own checker called the cups label
 "sleeve of 50" incomplete because it has no size like "× 1 lb", so the worker held
 the job for review. It cost about one cent. The AI now gets one shared rule:
-a pack label copied exactly as shown is complete, whatever its form. G12 is the
-next single-use gate, then one more paid test needs a fresh go-ahead.
+a pack label copied exactly as shown is complete, whatever its form.
+
+[G12](C4_VERIFIER_REHEARSAL_20261109.md) also passed everything. Its paid test
+stopped at the first case again: the AI's checker looked for a field literally
+called "pack label" and missed `unitLabel`. The instructions now name every field
+exactly. To stop finding these one hour-long cycle at a time, a new practice round
+sends only the AI's checking step the saved readings for every practice case, for
+a few cents and with a separate go-ahead. Only if every check comes back complete
+does G13 run, followed by one more paid test with a fresh go-ahead.
 
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can

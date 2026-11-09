@@ -57,10 +57,14 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
     diagnosticMode?: 'off' | 'passive' | 'form';
     diagnosticStream?: ReturnType<typeof browserDiagnostics>;
     retainFailureMessage?: boolean;
+    // Offline recorders use a private root; the shared root is the default.
+    profileRoot?: string;
   }) {
     super(options);
     this.fixtureFile = options.fixtureFile;
-    this.profileRoot = resolve('.sites-runtime/po-cart-workers/browser-profiles');
+    this.profileRoot = resolve(
+      options.profileRoot ?? '.sites-runtime/po-cart-workers/browser-profiles',
+    );
     this.headless = options.headless ?? true;
     this.reader = options.reader;
     this.retainFailureMessage = gateActive() ? false : (options.retainFailureMessage ?? true);

@@ -38,6 +38,7 @@ const gateRoots = [
   '20261105',
   '20261108',
   '20261109',
+  '20261110',
 ].map((day) => '.sites-runtime/po-cart-workers/full-offline-acceptance-task-' + day);
 const gateListing = () =>
   gateRoots.map((root) =>
@@ -77,9 +78,21 @@ def setup():
     db(base/'state/live.sqlite',['w'],wal=True);(base/'state/backups').mkdir(parents=True,exist_ok=True)
     shutil.copyfile(base/'state/live.sqlite',base/'state/backups/copy.sqlite')
     # Both migrated states carry every source migration; the other databases are not checked.
-    (base/'migrations').mkdir();applied=['0000_first.sql','0001_second.sql']
+    (base/'migrations'/'meta').mkdir(parents=True);applied=['0000_first.sql','0001_second.sql']
     for name in applied:(base/'migrations'/name).write_text('SELECT 1;')
+    # The application inventory is the latest snapshot's tables.
+    (base/'migrations'/'meta'/'0001_snapshot.json').write_text(json.dumps(dict(tables={'items':dict(name='items')})))
     migrated(base/'state/wrangler/main.sqlite',applied);migrated(base/'state/cart-review-state/v3/review.sqlite',applied)
+    if mode.startswith('reserved'):
+        for path in ['wrangler/main.sqlite','live.sqlite']:
+            c=sqlite3.connect(base/'state'/path);c.execute('CREATE TABLE _cf_METADATA(key,value)');c.execute("INSERT INTO _cf_METADATA VALUES ('sentinel',1)");c.commit();c.close()
+# Every read of a reserved table is recorded through SQLite's own authorizer.
+reads=[];opened=a.legacy.open_readonly
+def watched(p):
+    c=opened(p)
+    c.set_authorizer(lambda action,table,*_:(reads.append(table) if action==sqlite3.SQLITE_READ and str(table).startswith('_cf_') else None) or sqlite3.SQLITE_OK)
+    return c
+a.legacy.open_readonly=watched
 def run(fn):
     try:return fn()
     except Exception as error:return dict(passed=False,error=str(error))
@@ -93,15 +106,21 @@ if step=='capture':
     if mode=='schema_extra':
         c=sqlite3.connect(base/'state/wrangler/main.sqlite');c.execute("INSERT INTO d1_migrations VALUES ('0002_third.sql')");c.commit();c.close()
     if mode=='schema_empty':
-        for f in (base/'migrations').iterdir():f.unlink()
+        for f in (base/'migrations').glob('*.sql'):f.unlink()
         for path in ['wrangler/main.sqlite','cart-review-state/v3/review.sqlite']:
             c=sqlite3.connect(base/'state'/path);c.execute('DELETE FROM d1_migrations');c.commit();c.close()
     if mode.startswith('consumed'):a.root=a.CONSUMED[int(mode[-1])]
+    # A migrated state must hold exactly the application's tables; other databases may differ.
+    if mode=='tables_missing':
+        c=sqlite3.connect(base/'state/wrangler/main.sqlite');c.execute('DROP TABLE items');c.commit();c.close()
+    if mode in ['tables_unknown','tables_other_db']:
+        c=sqlite3.connect(base/'state'/('cart-review-state/v3/review.sqlite' if mode=='tables_unknown' else 'live.sqlite'));c.execute('CREATE TABLE stray(x)');c.commit();c.close()
     result=run(a.capture)
     if mode=='twice':result=run(a.capture)
     if result.get('passed'):
         inventory=json.loads((a.root/'database-inventory.json').read_text());protected=json.loads((a.root/'baseline.json').read_text())['protectedFiles']
-        result.update(paths=[pathlib.Path(p).relative_to(base/'state').as_posix() for p in inventory['paths']],
+        result.update(reservedReads=len(reads),reservedEntries=[t for e in json.loads((a.root/'database-before.json').read_text())['entries'] for t in e['tables'] if t['name'].startswith('_cf_')],
+                      paths=[pathlib.Path(p).relative_to(base/'state').as_posix() for p in inventory['paths']],
                       protected=sorted(pathlib.Path(f['path']).relative_to(base).as_posix()+('' if f['sha256'] else ':absent') for f in protected))
 else:
     def change(path,sql):
@@ -116,7 +135,16 @@ else:
     if mode=='inventory':
         value=json.loads((a.root/'database-inventory.json').read_text());value['paths']=value['paths'][1:];(a.root/'database-inventory.json').write_text(json.dumps(value))
     if mode=='modules_changed':(base/'workers/modules/generated.mjs').write_text('regenerated')
+    if mode=='old_capture':
+        value=json.loads((a.root/'database-before.json').read_text());(a.root/'database-before.json').write_text(json.dumps(value['entries']))
+    if mode=='old_version':
+        value=json.loads((a.root/'database-before.json').read_text());(a.root/'database-before.json').write_text(json.dumps({**value,'version':1}))
+    if mode=='reserved_changed':
+        c=sqlite3.connect(base/'state/live.sqlite');c.execute("UPDATE _cf_METADATA SET value=2");c.commit();c.close()
+    if mode=='reserved_dropped':
+        c=sqlite3.connect(base/'state/live.sqlite');c.execute('DROP TABLE _cf_METADATA');c.commit();c.close()
     result=run(a.audit)
+    result['reservedReads']=len(reads)
     if result.get('passed'):
         delta=json.loads((a.root/'database-delta.json').read_text());result['added']=sum(t['added'] for d in delta for t in d['tables'])
 print(json.dumps(result))
@@ -133,7 +161,7 @@ function audit(mode, step) {
     return JSON.parse(r.stdout.trim().split('\n').pop());
   };
   if (step === 'capture') return run(mode, 'capture');
-  assert.equal(run('pass', 'capture').passed, true);
+  assert.equal(run(mode.startsWith('reserved') ? mode : 'pass', 'capture').passed, true);
   return run(mode, 'finish');
 }
 const before = `
@@ -143,6 +171,7 @@ s=importlib.util.spec_from_file_location('observation',pathlib.Path(sys.argv[1])
 base=pathlib.Path(sys.argv[2]);mode=sys.argv[3];a.BASELINE=base;a.root=base/'root';a.root.mkdir()
 a.MIGRATED_STATES=[base/'state'];a.MIGRATIONS=base/'migrations';(base/'state').mkdir();(base/'migrations').mkdir()
 (base/'migrations'/'0000_first.sql').write_text('SELECT 1;')
+(base/'migrations'/'meta').mkdir();(base/'migrations'/'meta'/'0000_snapshot.json').write_text('{"tables":{}}')
 if mode=='schema_behind':(base/'migrations'/'0001_second.sql').write_text('SELECT 1;')
 c=sqlite3.connect(base/'state'/'d1.sqlite');c.execute('CREATE TABLE d1_migrations(name)');c.execute("INSERT INTO d1_migrations VALUES ('0000_first.sql')");c.commit();c.close()
 profiles=base/'browser-profiles';profiles.mkdir()
@@ -269,6 +298,41 @@ try {
     );
   }
 
+  // Migrated states hold exactly the application snapshot's tables.
+  for (const mode of ['tables_missing', 'tables_unknown'])
+    assert.deepEqual(
+      audit(mode, 'capture'),
+      { passed: false, error: 'Gate database tables differ from the application snapshot' },
+      mode,
+    );
+  assert.equal(audit('tables_other_db', 'capture').passed, true);
+  // Reserved tables are listed by name only and never read, even when they change.
+  const reserved = audit('reserved', 'capture');
+  assert.equal(reserved.passed, true);
+  assert.equal(reserved.reservedReads, 0);
+  assert.deepEqual(reserved.reservedEntries, [
+    { name: '_cf_METADATA', reserved: true },
+    { name: '_cf_METADATA', reserved: true },
+  ]);
+  for (const mode of ['reserved', 'reserved_changed']) {
+    const r = audit(mode, 'finish');
+    assert.equal(r.passed, true, mode);
+    assert.equal(r.reservedTablesUninspected, 2);
+    assert.equal(r.reservedReads, 0);
+  }
+  assert.deepEqual(audit('reserved_dropped', 'finish'), {
+    passed: false,
+    error: 'Captured database table removed',
+    reservedReads: 0,
+  });
+  // A capture from before this rule is never reinterpreted.
+  for (const mode of ['old_capture', 'old_version'])
+    assert.deepEqual(audit(mode, 'finish'), {
+      passed: false,
+      error: 'Incompatible database capture',
+      reservedReads: 0,
+    });
+
   // The finish audit allows classified additions and refuses any historical loss.
   const clean = audit('pass', 'finish');
   assert.equal(clean.passed, true);
@@ -383,26 +447,26 @@ try {
   assert.match(source, /DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
   assert.match(
     source,
-    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261109'\)/,
+    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261110'\)/,
   );
   assert.match(
     source,
-    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261105'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261108'\)\]/,
+    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261105'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261108'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261109'\)\]/,
   );
   // Only G6 is owner-reviewed, pinned to its exact final and preservation audits.
   assert.match(
     source,
     /PRESERVATION_REVIEWED=\{'\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027':\n {23}\('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2'\)\}\n/,
   );
-  // Only the 30 profiles reviewed on 2026-11-04 and the one from 2026-11-09, each pinned to an exact fingerprint.
+  // Only the 30 profiles reviewed on 2026-11-04 and one from each 2026-11-09 paid matrix, each pinned exactly.
   const reviewedProfiles = source.match(
     /^PROFILES_REVIEWED=\{\n((?: {19}'[0-9a-f]{64}':'[0-9a-f]{64}',\n)* {19}'[0-9a-f]{64}':'[0-9a-f]{64}')\}$/m,
   );
   assert.ok(reviewedProfiles);
-  assert.equal(reviewedProfiles[1].split('\n').length, 31);
+  assert.equal(reviewedProfiles[1].split('\n').length, 32);
   assert.equal(
     createHash('sha256').update(reviewedProfiles[0]).digest('hex'),
-    '49c2ad95189dc0e68add830bc46b75bafdb80f6778c2df71e5514a7a5ac82408',
+    'e9409876fba9588aee9995e89284fb8c090c6d79531371b4dc0927d0d6e38360',
   );
   // Only the three historical locks G11 removed on 2026-11-09 are reviewed, and only while absent.
   assert.match(

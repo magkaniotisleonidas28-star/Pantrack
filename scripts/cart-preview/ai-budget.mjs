@@ -6,6 +6,7 @@ import { readPrivate, writePrivate, profileLock } from '../po-cart-worker/privat
 export const budgetFile = resolve('.sites-runtime/cart-ai-budget/ledger.json');
 export const legacyBudgetFile = resolve('.sites-runtime/cart-ai-evaluation/state.json');
 const ceiling = 5_000_000;
+export const budgetCeilingMicros = ceiling;
 const count = (n) => Number.isSafeInteger(n) && n >= 0;
 
 // Both evaluators use this one ledger. Reservations are never refunded, even on
@@ -73,11 +74,14 @@ export class AiBudgetLedger {
     });
   }
 
-  async reserve(micros, metadata = {}) {
+  // `minimumRemainingMicros` must stay unreserved after this call; zero by default.
+  async reserve(micros, metadata = {}, { minimumRemainingMicros = 0 } = {}) {
+    if (!count(minimumRemainingMicros)) throw Error('Invalid AI budget floor.');
     return this.locked(() => {
       const s = this.read();
       if (!count(micros) || micros === 0 || this.total(s) + micros > ceiling)
         throw Error('The cumulative $5 AI evaluation budget cannot cover another call.');
+      if (this.total(s) + micros + minimumRemainingMicros > ceiling) throw Error('AI_BUDGET_FLOOR');
       const reservation = {
         ...metadata,
         id: randomUUID(),

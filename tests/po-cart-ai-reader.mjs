@@ -35,7 +35,32 @@ const {
   cartSchema,
   browserDiagnostics,
   recordMetadataVerdict,
+  extractionFields,
+  productFields,
+  cartFields,
+  metadataCompletionFor,
 } = await import('../.sites-runtime/ai-reader-test.mjs');
+// The catalog verifier names each product field and the availability rule, and no
+// cart-only field.
+{
+  const catalog = metadataCompletionFor('catalog');
+  for (const field of productFields)
+    assert.ok(catalog.includes(field + ' (' + extractionFields[field] + ')'), field);
+  for (const text of [
+    'enabled add-to-cart control and no out-of-stock or unavailable text',
+    'add-to-cart control is disabled',
+    'That visible control verifies availability',
+    'candidates, each with exactly these fields',
+    'A requested fact present under its field name is not missing',
+  ])
+    assert.ok(catalog.includes(text), text);
+  assert.ok(!catalog.includes('packs ('));
+}
+// Every schema field has one plain name, and every named field is in a schema.
+assert.deepEqual(
+  Object.keys(extractionFields).sort(),
+  [...new Set([...productFields, ...cartFields])].sort(),
+);
 const root = mkdtempSync(join(tmpdir(), 'pantrack-ai-'));
 Object.assign(process.env, {
   OPENAI_API_KEY: 'fictional-test-only',
@@ -380,9 +405,6 @@ try {
               'unavailable products',
               'changed prices',
               'conflicting variants',
-              'enabled add-to-cart control and no out-of-stock or unavailable text',
-              'add-to-cart control is disabled',
-              'That visible control verifies availability',
               'exact visible label text',
               'a count alone',
               'labels need not share one structure',
@@ -391,6 +413,13 @@ try {
               'product acceptability, authorization or cart readiness',
             ])
               assert.ok(prompt.includes(text), 'Missing completion instruction: ' + text);
+            // The cart verifier names each cart field, and no catalog-only field or rule.
+            assert.equal(prompt, metadataCompletionFor('cart'));
+            for (const field of cartFields)
+              assert.ok(prompt.includes(field + ' (' + extractionFields[field] + ')'), field);
+            for (const field of ['index', 'available'])
+              assert.ok(!prompt.includes(field + ' ('), 'Cart prompt names ' + field);
+            assert.ok(!prompt.includes('add-to-cart'));
             const source = callbackParams
               .at(-2)
               .messages.flatMap((m) => m.content.map((c) => c.text))
