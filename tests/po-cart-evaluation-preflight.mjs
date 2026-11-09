@@ -197,11 +197,11 @@ try {
   const allowance = join(root, 'allowance.json');
   assert.equal(
     paidAllowanceFile,
-    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261104/allowance.json',
+    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261109/allowance.json',
   );
   assert.equal(
     priorPaidAllowanceFile,
-    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261101/allowance.json',
+    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261104/allowance.json',
   );
   assert.equal(
     retiredPriorAllowance.sha256,

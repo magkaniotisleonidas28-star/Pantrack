@@ -37,6 +37,7 @@ const gateRoots = [
   '20261104',
   '20261105',
   '20261108',
+  '20261109',
 ].map((day) => '.sites-runtime/po-cart-workers/full-offline-acceptance-task-' + day);
 const gateListing = () =>
   gateRoots.map((root) =>
@@ -199,6 +200,12 @@ if mode=='profile_reviewed_lock':(profiles/(OTHER+'.lock')).write_bytes(b'1001')
 if mode=='lock_guard':(profiles/(NEW+'.lock.reclaim')).write_bytes(b'')
 if mode=='lock_symlink':os.symlink('elsewhere',profiles/(NEW+'.lock'))
 if mode=='historical_lock_removed':(profiles/HISTORICAL[1]).unlink()
+# An owner-reviewed removed historical lock is accepted only while absent, and only that one.
+a.REMOVED_HISTORICAL_LOCKS=frozenset({'f'*64+'.lock'} if mode=='lock_reviewed_unknown' else {HISTORICAL[1]} if mode.startswith('lock_reviewed') else ())
+if mode in ['lock_reviewed','lock_reviewed_entry']:(profiles/HISTORICAL[1]).unlink()
+if mode=='lock_reviewed_other':(profiles/HISTORICAL[0]).unlink()
+if mode=='lock_reviewed':del current[REUSED+'.lock']
+if mode=='lock_reviewed_entry':current[REUSED+'.lock']=dict(sha256='rewritten')
 if mode in ['gate_lock','lock_entry_only']:current[NEW+'.lock']=dict(sha256='gate-lock')
 running={1:dict(parent=0,group=1,command='/sbin/launchd')};rows=[]
 def process_rows():
@@ -208,7 +215,7 @@ calls=[]
 obs=types.SimpleNamespace(PROFILES=profiles,PROFILE=ACTIVE,preflight=lambda:dict(passed=mode!='not_idle',status='idle' if mode!='not_idle' else 'historical_profiles_active'),
     processes=lambda:calls.append('processes') if mode!='reappeared' else (_ for _ in ()).throw(AssertionError('Historical PID present')),
     LOCK_HISTORY=real.LOCK_HISTORY,lock_fields=real.lock_fields,process_rows=process_rows,
-    worker_locks=lambda accounted=frozenset():(calls.append('locks'),real.worker_locks(accounted)),singleton=lambda:calls.append('singleton'),
+    worker_locks=lambda accounted=frozenset(),removed=frozenset():(calls.append('locks'),real.worker_locks(accounted,removed)),singleton=lambda:calls.append('singleton'),
     fingerprint=lambda:fingerprint(current))
 a.module=lambda name,filename:obs
 # The observation auditor's own exact-set check backs up gate_locks.
@@ -319,6 +326,12 @@ try {
   assert.equal(reviewedProfile.passed, true);
   assert.equal(reviewedProfile.reviewedProfiles, 1);
   assert.equal(reviewedProfile.gateChangedEntries, 2);
+  // So is a historical lock absent while it is owner-reviewed as removed; the others stay exact.
+  const removedLock = baselineCheck('lock_reviewed');
+  assert.equal(removedLock.passed, true);
+  assert.equal(removedLock.removedLocks, 1);
+  assert.equal(removedLock.workerLocks, 45);
+  assert.equal(removedLock.gateChangedEntries, 1);
   for (const [mode, error] of [
     ['drift', 'Profiles changed since the baseline'],
     ['unrecorded', 'Profiles changed since the baseline'],
@@ -345,6 +358,10 @@ try {
     ['lock_owner_reappeared', 'Gate worker lock owner present'],
     ['lock_symlink', 'Unsafe worker lock'],
     ['historical_lock_removed', 'Worker locks/guards added or removed'],
+    ['lock_reviewed_present', 'Worker locks/guards added or removed'],
+    ['lock_reviewed_other', 'Worker locks/guards added or removed'],
+    ['lock_reviewed_unknown', 'Worker locks/guards added or removed'],
+    ['lock_reviewed_entry', 'Profiles changed since the baseline'],
     ['direct_unaccounted', 'Worker locks/guards added or removed'],
     ['direct_historical', 'Worker locks/guards added or removed'],
     ['schema_behind', 'Gate database missing migrations'],
@@ -366,27 +383,33 @@ try {
   assert.match(source, /DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
   assert.match(
     source,
-    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261108'\)/,
+    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261109'\)/,
   );
   assert.match(
     source,
-    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261105'\)\]/,
+    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261105'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261108'\)\]/,
   );
   // Only G6 is owner-reviewed, pinned to its exact final and preservation audits.
   assert.match(
     source,
     /PRESERVATION_REVIEWED=\{'\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027':\n {23}\('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2'\)\}\n/,
   );
-  // Only the 30 profiles reviewed on 2026-11-04, each pinned to an exact fingerprint.
+  // Only the 30 profiles reviewed on 2026-11-04 and the one from 2026-11-09, each pinned to an exact fingerprint.
   const reviewedProfiles = source.match(
     /^PROFILES_REVIEWED=\{\n((?: {19}'[0-9a-f]{64}':'[0-9a-f]{64}',\n)* {19}'[0-9a-f]{64}':'[0-9a-f]{64}')\}$/m,
   );
   assert.ok(reviewedProfiles);
-  assert.equal(reviewedProfiles[1].split('\n').length, 30);
+  assert.equal(reviewedProfiles[1].split('\n').length, 31);
   assert.equal(
     createHash('sha256').update(reviewedProfiles[0]).digest('hex'),
-    '57d8cc7dba6d31e346872e823f8b7be07cff3ef24fbc97e9d9a6f5e5963f9d4c',
+    '49c2ad95189dc0e68add830bc46b75bafdb80f6778c2df71e5514a7a5ac82408',
   );
+  // Only the three historical locks G11 removed on 2026-11-09 are reviewed, and only while absent.
+  assert.match(
+    source,
+    /\nREMOVED_HISTORICAL_LOCKS=frozenset\(\['5caa81aa652a6f95175164c4fcf9fcb7c233822adb8b3ef19b7409783c38766c\.lock',\n {36}'9d2a3df075ad7c3e6b231b97532c8a8f324105bafefd9e82a24c219fa43c9c6f\.lock',\n {36}'ceb5e52a45c32cf937a818f56ac093af26263f8bc0868c27862c54f7487db32b\.lock'\]\)\n/,
+  );
+  assert.equal(source.match(/REMOVED_HISTORICAL_LOCKS/g).length, 2);
   assert.match(source, /n!=obs\.PROFILE and profile_digest\(current\['entries'\],n\)==pin/);
   assert.match(
     source,
