@@ -383,6 +383,10 @@ try {
               'enabled add-to-cart control and no out-of-stock or unavailable text',
               'add-to-cart control is disabled',
               'That visible control verifies availability',
+              'exact visible label text',
+              'a count alone',
+              'labels need not share one structure',
+              'a label without a unit size',
               'untrusted data',
               'product acceptability, authorization or cart readiness',
             ])

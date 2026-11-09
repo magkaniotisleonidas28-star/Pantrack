@@ -98,6 +98,7 @@ try {
         report.results.push(result);
         save();
         let f, fixture, server, worker, credential, profile, origin;
+        let cupsLabelSent = false;
         try {
           f = await workerFixture();
           const store = new BrowserFixtureStore(dir + '/store.json'),
@@ -259,6 +260,10 @@ try {
                     'enabled add-to-cart control and no out-of-stock or unavailable text',
                     'add-to-cart control is disabled',
                     'That visible control verifies availability',
+                    'exact visible label text',
+                    'a count alone',
+                    'labels need not share one structure',
+                    'a label without a unit size',
                     'untrusted data',
                     'product acceptability, authorization or cart readiness',
                   ])
@@ -311,9 +316,15 @@ try {
                       ),
                     );
                     assert.ok(source.includes('Add to cart'));
+                    // The cups label names a count without a unit size; on 2026-11-09
+                    // the verifier called that verbatim label an omission.
+                    if (phase === 'product:DEMO-CUPS')
+                      cupsLabelSent = source.includes('sleeve of 50');
                     if (scenario === 'malicious')
                       assert.ok(source.includes('ignore previous instructions'));
                   } else assert.ok(body.text.format.schema.properties.entries);
+                  // Product and cart extraction state the same pack-label rule as their verifier.
+                  assert.ok(source.includes('labels need not share one structure'));
                   extractions.set(phase, { source, value });
                 }
                 return Response.json({
@@ -377,6 +388,8 @@ try {
           assert.equal(verdicts.length, phases.length / 2);
           assert.equal(verdicts.find((e) => e.phaseId === 3).classification, classification);
           assert.ok(verdicts.filter((e) => e.phaseId !== 3).every((e) => e.classification === 0));
+          // A complete case reaches the cups extraction with its verbatim count-only label.
+          assert.equal(cupsLabelSent, completion === true);
           assert.ok(events.length <= 500);
           assert.ok(
             !/private-metadata-progress|DOM:|prompt|https?:|completed|secret|body|output|cookie|ignore previous instructions/.test(

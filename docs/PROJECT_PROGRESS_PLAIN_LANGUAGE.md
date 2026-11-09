@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-08 for document-stack integration, the G10 result and the G11 gate position.
+Updated: 2026-11-09 for the G11 result, the paid test and the G12 gate position.
 
 The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) are merged into main.
 They cover save-history review, exact-request continuation and explicit checks
@@ -15,8 +15,15 @@ G9, with every safety audit passing. Testing outside the real project folder
 found the cause: a browser tab occasionally freezes, while a new tab still works.
 The worker now switches once to a fresh tab for pages that only show information.
 After adding an item, it switches only when the store has confirmed that addition,
-and it never adds the item again. G11 is the next single-use gate and the final
-test of this change.
+and it never adds the item again.
+
+[G11](C4_PACK_LABEL_EVIDENCE_20261109.md) passed every step and safety audit. The
+paid test with the real AI model then stopped safely at its first practice case.
+After adding two items correctly, the AI's own checker called the cups label
+"sleeve of 50" incomplete because it has no size like "× 1 lb", so the worker held
+the job for review. It cost about one cent. The AI now gets one shared rule:
+a pack label copied exactly as shown is complete, whatever its form. G12 is the
+next single-use gate, then one more paid test needs a fresh go-ahead.
 
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can

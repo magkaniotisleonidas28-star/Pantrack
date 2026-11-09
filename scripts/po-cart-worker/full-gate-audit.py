@@ -1,19 +1,20 @@
 """Independent read-only preservation audit; never emits business rows or secrets."""
 import json,hashlib,sqlite3,collections,os,re,sys,subprocess,importlib.util
 from pathlib import Path
-root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261108')
+root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261109')
 # Consumed gate roots stay retained; one whose final audits all passed accounts for the profiles it recorded.
 CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261101'),
-          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105')]
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261108')]
 GATE_AUDITS=['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified','passed']
 # Owner-reviewed gates whose only failed audit was database preservation, for a cause unrelated to
 # browser profiles: their exact final-audit.json and preservation.json hashes.
 PRESERVATION_REVIEWED={'.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027':
                        ('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2')}
 # Owner-reviewed profiles changed outside any gate on 2026-11-04 (the paid matrix and offline checks of its
-# follow-up, one reusing a historical name): the exact fingerprint of every entry under each.
+# follow-up, one reusing a historical name) and the one 2026-11-09 paid-matrix profile: the exact fingerprint
+# of every entry under each.
 PROFILES_REVIEWED={
                    '0aa12d101f3f64d251934fc0f0b422651822551b34cf9586761d50ee2bdadaad':'0b9151af046811c808bc3cf1568fb7c134cabb7f2ac4d95a9fff8cb5a52beb55',
                    '1720e08ab735e9292230068d5685cce1dea9cba3dc4c725875d8595975d0a544':'b577a238e5875cd243af1f8c1814d5ee4c510b1734d181308563752c2e447bef',
@@ -24,6 +25,7 @@ PROFILES_REVIEWED={
                    '3043a51412e47d90740e45496dbb1544e56d4e29a539f9ae20c2c27be5005a04':'e05068fb7f0ae1f7b9a8b3ee9ef85c78f055fc7c56e2cfd54970937f54bfbb99',
                    '31fe1771aff9f6f7f2cd0947b7fc5a9d869e2c00f882021befddf1d172af5e91':'78581ccde3a10989a8266b213b5191f6e311371d1883b15ee6c6f729359ed08d',
                    '3c71043b35d7263eda16d1fadf46b5e8a884deed77348c285ae35a1a42b1dd8c':'8996867ba51135a75bfc963bec15412503a45f45740a2860d7a8c04d6b7d666d',
+                   '47e700bc70ac9e4b138b5514da954e157d977a66caaaf885130b25e3fc546d12':'944cdd06b10bbdb961bb1a71e1c40ddb8fe1879df2f0617c664ff4cb2ce39f2a',
                    '52e99e1938cf92f6aec083f183925be7debc486e8d3dfcc5f1ff769d825aeb28':'b473d033b7c4722bdf1eb5b576da2507ef47e2da56047ad4cce7cdc3c93b25e7',
                    '54ac7496e0282ceee47e7d2d9d18391d4d29d6fe06dbc1530e3796662934f8ae':'99119b57ca4e69676b031338f5fcc596c443c20e05bcb4c19ebdd23d064d9699',
                    '61dae016bfee50fc2a7d269311ae9bfe523fcd9db42a6064470c87eb7f4c9711':'163df684e74a5a52244dc356bfda63f822e27523132ed5a2e3d461b9e9b1fdfc',
@@ -45,6 +47,11 @@ PROFILES_REVIEWED={
                    'ea5675a34231122696f2cd705276a0d0fac37d9ee6e0977cad69d35fc51ebaef':'11d5b93a4de99df670a47b299a1598df6fc86d190cd51369b7c65858392cea6b',
                    'ed8ce108d8e98478a0381ee05dec5e2845e17cfc9a6bfadf6ea03e989c945ab0':'5092a377eb999a048e1910ece8bb56bd9208c794e81573f6ef52da8306bab699',
                    'fa5a2cdeb71a47fe76ef415e6415874d17e4b82467a948808372b718b29cc047':'c1ca9732be9aab235a7663dd9f473bdeada99b05f605a6b57f340c0a5eb7fcfd'}
+# Owner-reviewed historical locks removed during G11 on 2026-11-09, when its checks' profile names matched
+# October profiles (a recycled random port) and reclaimed their stale locks: accepted only while absent.
+REMOVED_HISTORICAL_LOCKS=frozenset(['5caa81aa652a6f95175164c4fcf9fcb7c233822adb8b3ef19b7409783c38766c.lock',
+                                    '9d2a3df075ad7c3e6b231b97532c8a8f324105bafefd9e82a24c219fa43c9c6f.lock',
+                                    'ceb5e52a45c32cf937a818f56ac093af26263f8bc0868c27862c54f7487db32b.lock'])
 # Every local database is captured, including cart-review and other review states.
 DATABASE_BASES=[Path('.wrangler/state'),Path('.sites-runtime')]
 PROTECTED_BASES=[Path('.sites-runtime/po-cart-workers'),Path('.sites-runtime/cart-ai-budget'),Path('.sites-runtime/cart-ai-evaluation')]
@@ -157,20 +164,21 @@ def baseline_holds():
  expected=digest(json.dumps(second['entries'],sort_keys=True,separators=(',',':')).encode())
  assert second['sha256']==expected==fresh['profiles']['sha256'],'Baseline fingerprint changed'
  preflight=obs.preflight();assert preflight['passed'] is True and preflight['status']=='idle','Profiles are not idle'
- gates=gate_profiles(obs);locks=gate_locks(obs,gates)
- obs.processes();obs.worker_locks(locks);obs.singleton()
+ gates=gate_profiles(obs);locks=gate_locks(obs,gates);removed=REMOVED_HISTORICAL_LOCKS
+ obs.processes();obs.worker_locks(locks,removed);obs.singleton()
  current=obs.fingerprint()
  changed=sorted(k for k in current['entries'].keys()|second['entries'].keys() if current['entries'].get(k)!=second['entries'].get(k))
  # An owner-reviewed profile is accounted only while every entry under it is exactly as pinned.
  reviewed_profiles={n for n,pin in PROFILES_REVIEWED.items() if n!=obs.PROFILE and profile_digest(current['entries'],n)==pin}
  # Only entries inside a passing gate's recorded profile directories or a reviewed profile, and
- # that gate's accounted new lock files, may differ; historical locks, the active profile and
- # every other profile stay exact.
- assert all(k.split('/')[0] in gates or k.split('/')[0] in reviewed_profiles or (k in locks and k not in second['entries']) for k in changed),'Profiles changed since the baseline'
+ # that gate's accounted new lock files, may differ, and a reviewed removed lock may be absent;
+ # other historical locks, the active profile and every other profile stay exact.
+ assert all(k.split('/')[0] in gates or k.split('/')[0] in reviewed_profiles or (k in locks and k not in second['entries']) or
+            (k in removed and k not in current['entries']) for k in changed),'Profiles changed since the baseline'
  assert gate_locks(obs,gates)==locks,'Worker locks changed during the check'
- obs.processes();obs.worker_locks(locks);obs.singleton()
+ obs.processes();obs.worker_locks(locks,removed);obs.singleton()
  return dict(passed=True,baseline=fresh['profiles']['sha256'],profileEntries=len(current['entries']),gateProfiles=len(gates),gateChangedEntries=len(changed),gateLocks=len(locks),
-             gateChangedProfiles=len({k.split('/')[0] for k in changed if k not in locks}),reviewedProfiles=len(reviewed_profiles),preflight='idle',workerLocks=46)
+             gateChangedProfiles=len({k.split('/')[0] for k in changed if k not in locks}),reviewedProfiles=len(reviewed_profiles),removedLocks=len(removed),preflight='idle',workerLocks=46-len(removed))
 def audit():
  baseline=read('baseline.json')
  for f in baseline['protectedFiles']:
