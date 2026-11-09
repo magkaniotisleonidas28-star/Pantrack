@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdtempSync, rmSync, readdirSync, readFileSync, existsSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { readPrivate } from '../scripts/po-cart-worker/private-files.mjs';
 import { recordWorkerRequests, freePort } from '../scripts/po-cart-worker/rehearsal-recorder.mjs';
 import { validateRecording } from '../scripts/po-cart-worker/rehearsal-manifest.mjs';
@@ -126,7 +126,7 @@ try {
   assert.equal(ok.error, undefined);
   assert.equal(ok.result.recording.captures.length, 36);
   assert.equal(validateRecording(ok.result.recording), ok.result.recording);
-  assert.deepEqual(ok.files, [ok.result.path.split('/').pop()]);
+  assert.deepEqual(ok.files, [basename(ok.result.path)]);
   assert.equal(
     createHash('sha256').update(readFileSync(ok.result.path)).digest('hex'),
     ok.result.sha256,
