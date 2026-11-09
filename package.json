@@ -45,6 +45,8 @@
     "cart:browser-worker:check:ai:metadata": "node scripts/po-cart-ai-metadata-check.mjs",
     "cart:browser-worker:check:ai:http": "node scripts/po-cart-ai-worker-served-check.mjs",
     "cart:browser-worker:evaluate": "node scripts/po-cart-ai-evaluate.mjs --ai",
+    "cart:ai:rehearsal:record": "node scripts/po-cart-ai-rehearsal.mjs record",
+    "cart:ai:rehearsal": "node scripts/po-cart-ai-rehearsal.mjs",
     "cart:browser-worker:gate:ai": "node scripts/po-cart-ai-gate.mjs",
     "dev:cart-manager": "node scripts/po-cart-manager-preview.mjs",
     "cart:manager:check": "node scripts/po-cart-manager-check.mjs",

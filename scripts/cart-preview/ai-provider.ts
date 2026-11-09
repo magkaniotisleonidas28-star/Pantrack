@@ -1,5 +1,10 @@
 import { AiBudgetLedger } from './ai-budget.mjs';
 import { modelConfig } from './ai-config.mjs';
+import {
+  inputCeiling as boundInput,
+  outputCeiling as boundOutput,
+  reservationMicros,
+} from './ai-request-budget.mjs';
 import { performance } from 'node:perf_hooks';
 import type { Diagnostic } from '../po-cart-worker/browser-diagnostics';
 
@@ -30,10 +35,13 @@ export const providerPhases = [
 ];
 
 export class BoundedAiProvider {
+  // A positive floor keeps that much of the cumulative budget unreserved, checked
+  // under the ledger lock for each request.
   constructor(
     readonly ledger = new AiBudgetLedger(),
     readonly transport: typeof fetch = fetch,
     readonly timeoutMs = 45000,
+    readonly minimumRemainingMicros = 0,
   ) {}
 
   async request(request: StructuredRequest, context: AiContext) {
@@ -51,13 +59,11 @@ export class BoundedAiProvider {
       }
     };
     const config = modelConfig(),
-      outputCeiling = 2048;
-    // One UTF-8 byte per token plus envelope overhead is conservative for text.
-    const inputCeiling = Buffer.byteLength(JSON.stringify(request), 'utf8') + 4096;
-    if (inputCeiling > 24000) throw Error('AI_INPUT_TOO_LARGE');
+      outputCeiling = boundOutput,
+      inputCeiling = boundInput(request);
     context.signal?.throwIfAborted();
     const id = await this.ledger.reserve(
-      Math.ceil(inputCeiling * config.inputRate + outputCeiling * config.outputRate),
+      reservationMicros(request, config.inputRate, config.outputRate),
       {
         caseId: context.caseId,
         phase: context.phase,
@@ -65,6 +71,7 @@ export class BoundedAiProvider {
         inputCeiling,
         outputCeiling,
       },
+      { minimumRemainingMicros: this.minimumRemainingMicros },
     );
     emit('provider_reserved');
     // No SDK/provider retries. Reserve and fsync precede every possible request.

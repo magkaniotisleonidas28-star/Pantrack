@@ -1,22 +1,23 @@
 """Independent read-only preservation audit; never emits business rows or secrets."""
 import json,hashlib,sqlite3,collections,os,re,sys,subprocess,importlib.util
 from pathlib import Path
-root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261109')
+root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261110')
 # Consumed gate roots stay retained; one whose final audits all passed accounts for the profiles it recorded.
 CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261101'),
-          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261108')]
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261108'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261109')]
 GATE_AUDITS=['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified','passed']
 # Owner-reviewed gates whose only failed audit was database preservation, for a cause unrelated to
 # browser profiles: their exact final-audit.json and preservation.json hashes.
 PRESERVATION_REVIEWED={'.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027':
                        ('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2')}
 # Owner-reviewed profiles changed outside any gate on 2026-11-04 (the paid matrix and offline checks of its
-# follow-up, one reusing a historical name) and the one 2026-11-09 paid-matrix profile: the exact fingerprint
-# of every entry under each.
+# follow-up, one reusing a historical name) and the one profile of each 2026-11-09 paid matrix: the exact
+# fingerprint of every entry under each.
 PROFILES_REVIEWED={
                    '0aa12d101f3f64d251934fc0f0b422651822551b34cf9586761d50ee2bdadaad':'0b9151af046811c808bc3cf1568fb7c134cabb7f2ac4d95a9fff8cb5a52beb55',
+                   '0f7ee92fd12861d826a02827e13f28b2b44d402e583b304edc82068da72c0dcf':'a79a1594ffd5a85a5581bb0d109879c79a32f040877fe6e8e4107c18a721a955',
                    '1720e08ab735e9292230068d5685cce1dea9cba3dc4c725875d8595975d0a544':'b577a238e5875cd243af1f8c1814d5ee4c510b1734d181308563752c2e447bef',
                    '177f2428ecb5cecd61acd35e12fcd3e3d53cc91a0130f2f06ece51bccc789d75':'68a23884b340e6b05bb4ec3e03a051f25298dd9e037586f9ff8c65736a8c618e',
                    '17d046dd06c2dccc59f8b71c87a612c249b24349df43ad460538ed751ebc086c':'26bb27f2ab602c67a58158ca548f7224ba67d3c48df533e712821dfa549412d6',
@@ -70,7 +71,18 @@ def read(name):return json.loads((root/name).read_text())
 def save(name,value):
  p=root/name;p.write_text(json.dumps(value)+'\n');p.chmod(0o600)
 def database_paths():return sorted(str(p) for base in DATABASE_BASES for p in base.rglob('*.sqlite'))
-def table_rows(c,name):return [digest(json.dumps(r,separators=(',',':'),default=str).encode()) for r in c.execute('SELECT * FROM "'+name.replace('"','""')+'"')]
+# Cloudflare-reserved tables are never queried: capture records only their names, from
+# sqlite_master. Every other table keeps exact row preservation.
+CAPTURE_VERSION=2
+def reserved(name):return name.startswith('_cf_')
+def table_names(c):return [n for (n,) in c.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()]
+def snapshot_tables():
+ """The application's table inventory: the latest migration snapshot."""
+ latest=max(MIGRATIONS.glob('meta/*_snapshot.json'),default=None);assert latest,'Application snapshot missing'
+ s=json.loads(latest.read_text());return {t['name'] for t in s['tables'].values()}
+def table_rows(c,name):
+ assert not reserved(name),'Reserved table read refused'
+ return [digest(json.dumps(r,separators=(',',':'),default=str).encode()) for r in c.execute('SELECT * FROM "'+name.replace('"','""')+'"')]
 def schema_current():
  expected=sorted(p.name for p in MIGRATIONS.glob('*.sql'))
  for base in MIGRATED_STATES:
@@ -78,8 +90,12 @@ def schema_current():
   for p in sorted(base.rglob('*.sqlite')):
    c=legacy.open_readonly(p)
    try:
-    if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='d1_migrations'").fetchone():
+    names=set(table_names(c))
+    if 'd1_migrations' in names:
      found+=1;assert sorted(r[0] for r in c.execute('SELECT name FROM d1_migrations'))==expected,'Gate database missing migrations'
+     # A migrated state holds exactly the application's tables, plus bookkeeping and reserved names.
+     app=snapshot_tables();other={n for n in names-app if not reserved(n)}-{'d1_migrations','sqlite_sequence'}
+     assert app<=names and not other,'Gate database tables differ from the application snapshot'
    finally:c.close()
   assert expected and found,'Gate database missing migrations'
 def capture():
@@ -104,11 +120,12 @@ def capture():
  paths=database_paths();entries=[];rows=0
  for p in paths:
   c=legacy.open_readonly(p);tables=[]
-  for (name,) in c.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall():
-   values=table_rows(c,name);tables.append(dict(name=name,rows=values));rows+=0 if name in ['_cf_METADATA','sqlite_sequence'] else len(values)
+  for name in table_names(c):
+   if reserved(name):tables.append(dict(name=name,reserved=True));continue
+   values=table_rows(c,name);tables.append(dict(name=name,rows=values));rows+=0 if name=='sqlite_sequence' else len(values)
   c.close();entries.append(dict(path=p,tables=tables))
- save('database-before.json',entries)
- save('database-inventory.json',dict(version=1,bases=[str(b) for b in DATABASE_BASES],paths=paths))
+ save('database-before.json',dict(version=CAPTURE_VERSION,entries=entries))
+ save('database-inventory.json',dict(version=CAPTURE_VERSION,bases=[str(b) for b in DATABASE_BASES],paths=paths))
  files=sorted(set(filter(None,subprocess.check_output(['git','ls-files','--cached','--others','--exclude-standard','-z']).decode().split('\0'))))
  save('source-before.json',[dict(path=p,sha256=filehash(p)) for p in files])
  save('rollback-manifest.json',dict(restore=[],remove=[]))
@@ -186,28 +203,32 @@ def audit():
   if f['sha256'] is not None:assert filehash(f['path'])==f['sha256']
  old=read('storefront-before.json');store=json.load(open(PROTECTED_BASES[0]/'local-storefront.json'))['fixtures']
  for k,v in old.items():assert digest(json.dumps(store[k],sort_keys=True,separators=(',',':')).encode())==v
- inventory=read('database-inventory.json')
- assert inventory['bases']==[str(b) for b in DATABASE_BASES] and inventory['paths']==[e['path'] for e in read('database-before.json')],'Database inventory incomplete'
+ captured=read('database-before.json');inventory=read('database-inventory.json')
+ # An older capture recorded reserved rows; it is never reinterpreted.
+ assert isinstance(captured,dict) and captured.get('version')==CAPTURE_VERSION and inventory.get('version')==CAPTURE_VERSION,'Incompatible database capture'
+ entries=captured['entries']
+ assert inventory['bases']==[str(b) for b in DATABASE_BASES] and inventory['paths']==[e['path'] for e in entries],'Database inventory incomplete'
  assert set(inventory['paths'])<=set(database_paths()),'Captured database removed'
- rows=0;delta=[];metadata=0;sequences=0
- for entry in read('database-before.json'):
-  c=legacy.open_readonly(entry['path']);tables=[]
+ rows=0;delta=[];reserved_tables=0;sequences=0
+ for entry in entries:
+  c=legacy.open_readonly(entry['path']);tables=[];names=set(table_names(c))
   for t in entry['tables']:
+   if t.get('reserved'):
+    assert reserved(t['name']) and t['name'] in names,'Captured database table removed';reserved_tables+=1;continue
    now=collections.Counter(table_rows(c,t['name']))
    before=collections.Counter(t['rows']);removed=sum((before-now).values());added=sum((now-before).values())
-   if t['name']=='_cf_METADATA':metadata+=removed
-   elif t['name']=='sqlite_sequence' and removed:
+   if t['name']=='sqlite_sequence' and removed:
     seq=dict(c.execute('SELECT * FROM sqlite_sequence'))
     stable=digest(json.dumps(('d1_migrations',seq['d1_migrations']),separators=(',',':')).encode());assert stable in before
     assert seq['po_cart_worker_credential_events']==c.execute('SELECT max(id) FROM po_cart_worker_credential_events').fetchone()[0];sequences+=removed
    else:assert removed==0;rows+=len(t['rows'])
-   if added or removed:tables.append(dict(name=t['name'],added=added,removed=removed,bookkeeping=t['name'] in ['_cf_METADATA','sqlite_sequence']))
+   if added or removed:tables.append(dict(name=t['name'],added=added,removed=removed,bookkeeping=t['name']=='sqlite_sequence'))
   delta.append(dict(path=entry['path'],tables=tables));c.close()
  allowed=set(read('rollback-manifest.json')['restore'])
  for f in read('source-before.json'):
   if f['path'] not in allowed:assert filehash(f['path'])==f['sha256']
  save('database-delta.json',delta)
- return dict(passed=True,protectedArtifacts=len(baseline['protectedFiles']),historicalCarts=len(old),historicalDatabaseRows=rows,cloudflareMetadataRowsChanged=metadata,sequenceRowsChanged=sequences)
+ return dict(passed=True,protectedArtifacts=len(baseline['protectedFiles']),historicalCarts=len(old),historicalDatabaseRows=rows,reservedTablesUninspected=reserved_tables,sequenceRowsChanged=sequences)
 if __name__=='__main__':
  mode=sys.argv[1] if len(sys.argv)==2 else 'finish' if len(sys.argv)==1 else None
  if mode not in ['capture','before','finish']:raise SystemExit('Only fixed capture/before/finish gate audit operations are accepted.')

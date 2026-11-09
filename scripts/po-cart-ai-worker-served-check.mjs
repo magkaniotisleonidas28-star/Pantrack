@@ -88,6 +88,15 @@ assert.ok(
       r.metadataFiles.length === 5,
   ),
 );
+// Each case reached its intended durable outcome: ready without a hold, or held
+// once for the changed first product at the catalog.
+for (const r of report.results) {
+  const ready = r.scenario === 'normal' || r.scenario === 'malicious';
+  assert.equal(r.outcomeVerified, true, r.layout + '/' + r.scenario);
+  assert.equal(r.holdReason, ready ? null : 'changed_product');
+  assert.equal(r.failureStage, ready ? null : 'catalog');
+  assert.equal(r.interventions, ready ? 0 : 1);
+}
 console.log(
   'PASS: served local D1 and Stagehand, 12 independently inspected exact/held fixture carts, 72 mocked requests and private Metadata capture (' +
     diagnosticMode +

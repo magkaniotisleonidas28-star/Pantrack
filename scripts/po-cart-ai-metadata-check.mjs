@@ -257,13 +257,12 @@ try {
                     'unavailable products',
                     'changed prices',
                     'conflicting variants',
-                    'enabled add-to-cart control and no out-of-stock or unavailable text',
-                    'add-to-cart control is disabled',
-                    'That visible control verifies availability',
                     'exact visible label text',
                     'a count alone',
                     'labels need not share one structure',
                     'a label without a unit size',
+                    'unitLabel (pack label)',
+                    'A requested fact present under its field name is not missing',
                     'untrusted data',
                     'product acceptability, authorization or cart readiness',
                   ])
@@ -277,6 +276,30 @@ try {
                     ),
                     'SDK chunk conditions must not reach Metadata',
                   );
+                  // Each kind's verifier names only its own fields; only products
+                  // carry the availability rule.
+                  const product = phase.startsWith('product:'),
+                    availability = [
+                      'enabled add-to-cart control and no out-of-stock or unavailable text',
+                      'add-to-cart control is disabled',
+                      'That visible control verifies availability',
+                    ];
+                  for (const text of [
+                    ...(product ? availability : []),
+                    product
+                      ? 'candidates, each with exactly these fields: index ('
+                      : 'entries, each with exactly these fields: sku (',
+                  ])
+                    assert.ok(
+                      body.instructions.includes(text),
+                      'Missing kind instruction: ' + text,
+                    );
+                  if (!product)
+                    assert.ok(
+                      availability.every((text) => !body.instructions.includes(text)) &&
+                        !body.instructions.includes('available ('),
+                    );
+                  else assert.ok(!body.instructions.includes('packs ('));
                   const extraction = extractions.get(phase);
                   assert.ok(extraction);
                   assert.deepEqual(
@@ -323,8 +346,10 @@ try {
                     if (scenario === 'malicious')
                       assert.ok(source.includes('ignore previous instructions'));
                   } else assert.ok(body.text.format.schema.properties.entries);
-                  // Product and cart extraction state the same pack-label rule as their verifier.
+                  // Product and cart extraction state the same pack-label rule as their verifier,
+                  // and name the pack label by its schema field.
                   assert.ok(source.includes('labels need not share one structure'));
+                  assert.ok(source.includes('unitLabel (pack label)'));
                   extractions.set(phase, { source, value });
                 }
                 return Response.json({

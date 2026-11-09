@@ -26,6 +26,7 @@ import {
 } from './metadata-evidence';
 import { assertGateSource } from './full-gate-runtime.mjs';
 import { verifyAdditionAttempts } from './second-addition-case.mjs';
+import { caseOutcome } from './evaluation-case-verdict.mjs';
 const sdkVersion = (name: string) => {
   let path = fileURLToPath(import.meta.resolve(name));
   for (let i = 0; i < 5; i++) {
@@ -312,6 +313,16 @@ export async function runEvaluation(
               required.map((p) => p + ':Metadata'),
             );
           result.state = current.job.state;
+          result.holdReason =
+            current.events.filter((e: any) => e.kind === 'hold').at(-1)?.reason ?? null;
+          result.failureStage = stopped.state.browserFailure?.stage ?? null;
+          result.outcomeVerified = caseOutcome({
+            scenario,
+            state: current.job.state,
+            events: current.events,
+            failureStage: result.failureStage,
+            interventions: result.interventions,
+          });
           result.exactFixtureCart = exact;
           result.modelCalls = calls.length;
           result.completedModelCalls = calls.filter((c: any) => c.status === 'completed').length;
@@ -326,7 +337,7 @@ export async function runEvaluation(
           );
           result.reservationUnchanged = equal(current.authorization.reservation, f.reservation);
           result.passed =
-            current.job.state === (ready ? 'ready' : 'review_needed') &&
+            result.outcomeVerified &&
             exact &&
             realCalls &&
             calls.length === (ready ? 10 : 4) &&
