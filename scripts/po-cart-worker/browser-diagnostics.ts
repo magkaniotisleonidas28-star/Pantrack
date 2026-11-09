@@ -31,6 +31,7 @@ const events = new Set([
   'click_dispatch',
   'heartbeat_start',
   'heartbeat_ok',
+  'fresh_tab',
   'heartbeat_failed',
   'ownership_ok',
   'ownership_lost',

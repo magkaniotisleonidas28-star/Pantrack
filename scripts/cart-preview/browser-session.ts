@@ -329,28 +329,33 @@ export async function openLocalCartBrowser(
     network.pageIntercepted = true;
     publish();
     diagnostic('interception_ready');
-    const page = context.pages()[0] ?? (await context.newPage());
-    page.setDefaultTimeout(10000);
-    page.on('close', () => diagnostic('page_closed'));
-    page.on('crash', () => diagnostic('page_crashed'));
     const isAdd = (r: { url(): string; method(): string }) =>
       r.url() === origin + '/add' && r.method() === 'POST';
-    page.on('request', (r) => {
-      if (isAdd(r)) diagnostic('add_request');
-    });
-    page.on('response', (r) => {
-      if (isAdd(r.request())) diagnostic('add_response', { status: r.status() });
-    });
-    page.on('requestfinished', (r) => {
-      if (isAdd(r)) diagnostic('add_finished');
-    });
-    page.on('requestfailed', (r) => {
-      if (isAdd(r)) diagnostic('add_failed');
-    });
+    const watch = (page: Page) => {
+      page.setDefaultTimeout(10000);
+      page.on('close', () => diagnostic('page_closed'));
+      page.on('crash', () => diagnostic('page_crashed'));
+      page.on('request', (r) => {
+        if (isAdd(r)) diagnostic('add_request');
+      });
+      page.on('response', (r) => {
+        if (isAdd(r.request())) diagnostic('add_response', { status: r.status() });
+      });
+      page.on('requestfinished', (r) => {
+        if (isAdd(r)) diagnostic('add_finished');
+      });
+      page.on('requestfailed', (r) => {
+        if (isAdd(r)) diagnostic('add_failed');
+      });
+    };
+    const page = context.pages()[0] ?? (await context.newPage());
+    watch(page);
     return {
       browser,
       driver,
       page,
+      watch,
+      freshTabUsed: false,
       proxy: proxy.server,
       network,
       diagnostic,
@@ -371,8 +376,48 @@ export async function openLocalCartBrowser(
   }
 }
 
+type TabSession = { page: Page; watch(page: Page): void; freshTabUsed: boolean };
+
+// A Chrome tab can freeze: it stops reporting page loads while the same browser
+// still loads pages in a new tab. A session may move once to a fresh tab; cookies
+// and request interception belong to the shared context.
+export async function freshTab(session: TabSession) {
+  if (session.freshTabUsed) return false;
+  session.freshTabUsed = true;
+  const frozen = session.page,
+    page = await frozen.context().newPage();
+  session.watch(page);
+  session.page = page;
+  frozen.close({ runBeforeUnload: false }).catch(() => {});
+  return true;
+}
+
+// Only pages that display information are opened again.
+export async function openReadOnly(session: TabSession, url: string, onRecover = () => {}) {
+  try {
+    await session.page.goto(url, { waitUntil: 'networkidle', timeout: 10000 });
+  } catch (e) {
+    if ((e as Error)?.name !== 'TimeoutError' || !(await freshTab(session))) throw e;
+    onRecover();
+    await session.page.goto(url, { waitUntil: 'networkidle', timeout: 10000 });
+  }
+}
+
+export async function readCartIn(
+  session: TabSession,
+  origin: string,
+  onRecover?: () => void,
+): Promise<CartEntry[]> {
+  await openReadOnly(session, origin + '/cart', onRecover);
+  return cartEntries(session.page);
+}
+
 export async function readCart(page: Page, origin: string): Promise<CartEntry[]> {
   await page.goto(origin + '/cart', { waitUntil: 'networkidle', timeout: 10000 });
+  return cartEntries(page);
+}
+
+async function cartEntries(page: Page): Promise<CartEntry[]> {
   if (await page.locator('[data-login]').count()) throw Error('LOGIN_REQUIRED');
   return page.evaluate(() =>
     Array.from(document.querySelectorAll<HTMLElement>('[data-cart-item]')).map((e) => ({
