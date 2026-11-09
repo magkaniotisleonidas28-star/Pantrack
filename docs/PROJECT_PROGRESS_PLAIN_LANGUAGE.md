@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-08 for document-stack integration and the current G10 gate position.
+Updated: 2026-11-08 for document-stack integration, the G10 result and the G11 gate position.
 
 The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) are merged into main.
 They cover save-history review, exact-request continuation and explicit checks
@@ -9,6 +9,14 @@ complete combined local pipeline passed. No merge conflicts were found, and the
 other contributor's G10 work is preserved. The next gate needs preparation on
 the merged source; these merges did not deploy the app, run the gate or change
 the hosted database.
+
+[G10](C4_FULL_OFFLINE_GATE_RUN_20261105.md) stopped at the same browser step as
+G9, with every safety audit passing. Testing outside the real project folder
+found the cause: a browser tab occasionally freezes, while a new tab still works.
+The worker now switches once to a fresh tab for pages that only show information.
+After adding an item, it switches only when the store has confirmed that addition,
+and it never adds the item again. G11 is the next single-use gate and the final
+test of this change.
 
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can

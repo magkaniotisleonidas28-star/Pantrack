@@ -24,8 +24,9 @@ export const consumedGateRoots = Object.freeze([
   '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031',
   '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261101',
   '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104',
+  '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105',
 ]);
-export const fullGateRoot = '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105';
+export const fullGateRoot = '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261108';
 export const gateSteps = [
   ['metadata', ['cart:browser-worker:check:ai:metadata']],
   ['reliability', ['cart:browser-worker:check:reliability', '--acceptance']],

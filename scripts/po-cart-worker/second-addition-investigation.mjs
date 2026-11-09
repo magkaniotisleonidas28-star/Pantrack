@@ -32,7 +32,7 @@ const events = new Set(
   (
     'proxy_created interception_ready cleanup_failed launch connected disconnected page_closed page_crashed closing closed stop ' +
     'provider_reserved provider_start provider_headers provider_complete provider_failed provider_aborted metadata_verdict ' +
-    'catalog_ready quantity_filled attempt_ack ownership_check click_dispatch heartbeat_start heartbeat_ok heartbeat_failed ' +
+    'catalog_ready quantity_filled attempt_ack ownership_check click_dispatch heartbeat_start heartbeat_ok fresh_tab heartbeat_failed ' +
     'ownership_ok ownership_lost inspection_start inspection_ok form_ready click_start click_done click_failed form_events ' +
     'add_request add_response add_finished add_failed proxy_add proxy_forward proxy_response proxy_end proxy_aborted proxy_error failure'
   ).split(' '),

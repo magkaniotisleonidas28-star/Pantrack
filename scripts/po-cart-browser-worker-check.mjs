@@ -268,6 +268,54 @@ try {
     console.log('PASS recovery ' + action);
     await stop();
   }
+  // A page answered after the 10 s wait looks like a frozen tab. Read-only pages
+  // move once to a fresh tab; after a confirmed addition only the cart is read
+  // again. A second stall in the same job is held, and nothing is resubmitted.
+  for (const stall of ['launch', 'catalog', 'addition', 'twice']) {
+    const { j, session, initial } = await start();
+    let catalogs = 0,
+      adds = 0,
+      added = false,
+      stalled = 0;
+    fixture.prependListener('request', (req, res) => {
+      if (req.method === 'POST' && req.url === '/add') (adds++, (added = true));
+      if (req.method !== 'GET') return;
+      if (req.url === '/catalog') catalogs++;
+      const late =
+        (req.url === '/catalog' &&
+          ((stall === 'launch' && catalogs === 1) ||
+            (stall === 'catalog' && catalogs === 3) ||
+            // The fresh tab's own catalog is the second; the fourth is the second line's.
+            (stall === 'twice' && (catalogs === 1 || catalogs === 4)))) ||
+        (stall === 'addition' && req.url === '/cart' && added && !stalled);
+      if (!late) return;
+      stalled++;
+      const end = res.end;
+      res.end = function (...args) {
+        const timer = setTimeout(() => end.apply(this, args), 11000);
+        timer.unref();
+        return this;
+      };
+    });
+    const w = launch('stall-' + stall);
+    await w.done;
+    const journal = readPrivate(w.journalFile),
+      held = stall === 'twice';
+    assert.equal(stalled, held ? 2 : 1);
+    assert.deepEqual(journal.freshTabs, [
+      { jobId: j.id, stage: stall === 'twice' ? 'launch' : stall },
+    ]);
+    assert.equal(status(), held ? 'review_needed' : 'ready');
+    assert.equal(calls([w]).length, held ? 1 : 3);
+    assert.equal(adds, held ? 1 : 3);
+    assert.equal(session.entries.length, held ? 2 : 4);
+    for (const l of j.inputs.preflight.lines.slice(0, held ? 1 : 3))
+      assert.equal(session.entries.find((e) => e.sku === l.sku)?.packs, l.packs);
+    if (held) assert.equal(journal.browserFailure.stage, 'catalog');
+    assert.equal(effects(), initial);
+    console.log('PASS fresh tab after ' + stall + ' stall: ' + status());
+    await stop();
+  }
   // Crash before first attempt can resume; pending begin is never a reusable call grant.
   for (const phase of ['before_attempt', 'after_attempt', 'known_result']) {
     const { j, session, initial } = await start();

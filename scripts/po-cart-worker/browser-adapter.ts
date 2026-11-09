@@ -8,7 +8,9 @@ import { cleanupTaskBrowser } from './second-addition-cleanup.mjs';
 import {
   openLocalCartBrowser,
   closeLocalCartBrowser,
-  readCart,
+  readCartIn,
+  openReadOnly,
+  freshTab,
   readProducts,
   exactProduct,
 } from '../cart-preview/browser-session';
@@ -185,11 +187,25 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
         },
       );
       this.activeSession = session;
-      const { page } = session;
-      await page.goto(origin + '/session/' + fixture.token, {
-        waitUntil: 'networkidle',
-        timeout: 10000,
-      });
+      let { page } = session;
+      const recovered = (at: string) => () => {
+        emit('fresh_tab');
+        this.state.freshTabs ??= [];
+        this.state.freshTabs.push({ jobId, stage: at });
+        this.save();
+      };
+      // Recovery may move the session to a fresh tab; later steps use that tab.
+      const openPage = async (url: string) => {
+        await openReadOnly(session!, url, recovered(stage));
+        page = session!.page;
+      };
+      const cartNow = async () => {
+        const cart = await readCartIn(session!, origin, recovered(stage));
+        page = session!.page;
+        return cart;
+      };
+      // The practice session link only sets its cookie and shows the catalog.
+      await openPage(origin + '/session/' + fixture.token);
       const aiContext = (phase: string) => ({
         caseId: jobId,
         phase,
@@ -198,12 +214,12 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
       });
       const readWithAi = async (phase: string) => {
         emit('inspection_start');
-        const observed = await readCart(page, origin);
+        const observed = await cartNow();
         emit('inspection_ok', { count: observed.length });
         if (!this.reader) return observed;
         const ai = await this.reader.cart(session!, aiContext(phase));
         await fresh();
-        const trusted = await readCart(page, origin);
+        const trusted = await cartNow();
         agreeCart(ai, trusted);
         agreeCart({ entries: observed }, trusted);
         this.state.aiReads ??= [];
@@ -230,9 +246,9 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
       for (const line of current.lines as CartLine[]) {
         current = await fresh();
         stage = 'catalog';
-        const before = await readCart(page, origin);
+        const before = await cartNow();
         verifyCart(baseline, current.lines, before, attempted);
-        await page.goto(origin + '/catalog', { waitUntil: 'networkidle', timeout: 10000 });
+        await openPage(origin + '/catalog');
         if (await page.locator('[data-login]').count()) throw Error('LOGIN_REQUIRED');
         emit('catalog_ready');
         // Even unsafe fixtures reach the model; a deterministic early stop is
@@ -242,8 +258,8 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
           : undefined;
         await fresh();
         if (this.reader) {
-          verifyCart(baseline, current.lines, await readCart(page, origin), attempted);
-          await page.goto(origin + '/catalog', { waitUntil: 'networkidle', timeout: 10000 });
+          verifyCart(baseline, current.lines, await cartNow(), attempted);
+          await openPage(origin + '/catalog');
           if (await page.locator('[data-login]').count()) throw Error('LOGIN_REQUIRED');
           emit('catalog_ready');
         }
@@ -346,9 +362,24 @@ export class LocalBrowserCartWorker extends FakeCartWorker {
         } finally {
           clearTimeout(timer);
         }
-        await page.waitForURL(origin + '/cart', { waitUntil: 'networkidle', timeout: 10000 });
+        try {
+          await page.waitForURL(origin + '/cart', { waitUntil: 'networkidle', timeout: 10000 });
+        } catch (e) {
+          // The store confirmed this one addition by redirecting to the cart, but
+          // the tab froze before reporting the page. Never resubmit: the exact
+          // cart read below, in a fresh tab, decides.
+          if (
+            (e as Error)?.name !== 'TimeoutError' ||
+            response.status() !== 303 ||
+            new URL(response.headers().location ?? '', origin).href !== origin + '/cart' ||
+            !(await freshTab(session))
+          )
+            throw e;
+          page = session.page;
+          recovered('addition')();
+        }
         stage = 'verify_line';
-        const cart = await readCart(page, origin);
+        const cart = await cartNow();
         attempted.push(line.sku);
         verifyCart(baseline, current.lines, cart, attempted);
         if (!cart.some((e) => exactEntry(e, line))) throw Error('VERIFICATION_FAILED');
