@@ -49,6 +49,14 @@ chance. A paid test needs about 36 checks to all come back complete, so the next
 practice round checks each page four times, to measure how often this happens,
 before G14.
 
+That practice round came back 48 of 48 complete, and G14 passed everything. The
+paid test then passed 11 of 12 cases for about nine cents. In the last one, the AI
+read both identical coffee listings correctly. But the checker said "not complete"
+because an oat-milk product appeared after them, so the job was safely held for
+review. The checker is now told that other products before, between or after the
+requested ones never make a reading incomplete. The next steps are another
+practice round, a budget settlement, G15, and a fresh go-ahead for the paid test.
+
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can
 recover the same result after a lost reply or stop/retry. It does not issue,

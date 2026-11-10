@@ -57,7 +57,9 @@ const packLabelEvidence =
 // Extraction and its verifier share how an index is counted and which entries are
 // requested. On 2026-11-10 the verifier returned incomplete for two same-SKU
 // products, saying their indices still needed checking; after that rule, one
-// rehearsal check called a single requested product "a partial candidate set".
+// rehearsal check called a single requested product "a partial candidate set",
+// and a paid check called two correct indices incomplete because of a later
+// product with another SKU.
 const productIndexEvidence =
   "A product entry is one displayed product, such as one article or card with its own add-to-cart control. The index field is a product entry's zero-based position among all product entries of any SKU, in snapshot order; bracketed DOM node identifiers are not indices. Products that share a SKU, label and price are separate product entries, each with its own index. Candidates hold only product entries with the requested SKU; entries with other SKUs count toward index positions but are not requested records.";
 // Instructions name each fact by its schema field. On 2026-11-09 the verifier
@@ -92,7 +94,7 @@ export function metadataCompletionFor(kind: 'catalog' | 'cart') {
     ...(kind === 'catalog'
       ? [
           `${availabilityEvidence} That visible control verifies availability from the snapshot; its lack of stock text alone does not make availability unverifiable.`,
-          `${productIndexEvidence} Leaving out entries with other SKUs is not an omission. Verify each index by counting product entries in the snapshot. When several product entries show the requested SKU, even identical ones, each is a requested record; listing each with its own index is complete.`,
+          `${productIndexEvidence} Leaving out entries with other SKUs is not an omission, and entries with other SKUs shown before, between or after the requested entries never make the requested records incomplete or their indices incorrect. Verify each index by counting product entries in the snapshot. When several product entries show the requested SKU, even identical ones, each is a requested record; listing each with its own index is complete.`,
         ]
       : []),
     `${fieldContract[kind]} A requested fact present under its field name is not missing; its value must still match the snapshot.`,

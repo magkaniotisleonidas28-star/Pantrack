@@ -56,6 +56,7 @@ const {
     'Candidates hold only product entries with the requested SKU',
     'entries with other SKUs count toward index positions but are not requested records',
     'Leaving out entries with other SKUs is not an omission',
+    'shown before, between or after the requested entries never make the requested records incomplete',
     'bracketed DOM node identifiers are not indices',
     'separate product entries, each with its own index',
     'Verify each index by counting product entries',
