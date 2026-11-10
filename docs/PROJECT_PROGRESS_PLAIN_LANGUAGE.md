@@ -40,8 +40,14 @@ so a future failure shows its cause, and the practice round now covers every
 problem case in both page layouts. The budget counter reserves a cautious maximum
 for every AI request and showed $3.41 used, while real use is about $0.22. After
 the owner compares OpenAI's billing page, a recorded settlement will set it to the real
-amount, keeping the $5 limit. Then come one practice round, G14 and one more paid
-test, each with its own go-ahead.
+amount, keeping the $5 limit. That settlement is done: $0.22 used, $4.78 free.
+
+The practice round that followed read every real page correctly, including the one
+that failed. But in 2 of 24 checks of saved readings, the checker wrongly said "not
+complete". One was a wording slip in the new rule, now fixed. The other looked like
+chance. A paid test needs about 36 checks to all come back complete, so the next
+practice round checks each page four times, to measure how often this happens,
+before G14.
 
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can

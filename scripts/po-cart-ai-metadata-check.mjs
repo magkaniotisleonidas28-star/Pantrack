@@ -286,6 +286,8 @@ try {
                       // On 2026-11-10 the verifier left two same-SKU indices unchecked.
                       'bracketed DOM node identifiers are not indices',
                       'listing each with its own index is complete',
+                      // One rehearsal check then called a single requested product partial.
+                      'Leaving out entries with other SKUs is not an omission',
                     ];
                   for (const text of [
                     ...(product ? availability : []),
@@ -344,6 +346,11 @@ try {
                     assert.ok(source.includes('Add to cart'));
                     // Extraction counts indices by the same product-entry rule.
                     assert.ok(source.includes('bracketed DOM node identifiers are not indices'));
+                    assert.ok(
+                      source.includes(
+                        'Candidates hold only product entries with the requested SKU',
+                      ),
+                    );
                     // The cups label names a count without a unit size; on 2026-11-09
                     // the verifier called that verbatim label an omission.
                     if (phase === 'product:DEMO-CUPS')
