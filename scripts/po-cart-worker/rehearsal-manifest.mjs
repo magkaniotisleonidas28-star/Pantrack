@@ -24,7 +24,9 @@ export const replayPairs = [
     ]),
   ),
 ];
-export const repeatsPerGroup = 2;
+// Four checks per group measure the verifier's false-negative rate; on 2026-11-10
+// two checks per group returned 22 of 24 complete.
+export const repeatsPerGroup = 4;
 const sha = (value) => createHash('sha256').update(value).digest('hex');
 export const requestHash = (request) => sha(JSON.stringify(request));
 
@@ -113,8 +115,8 @@ export function validateRecording(recording) {
   return recording;
 }
 
-// Deterministic: every group is sent twice, using another raw variant when one
-// exists, and each pair replays real extraction into the same Metadata.
+// Deterministic: every group is sent four times, rotating raw variants when they
+// exist, and each pair replays real extraction into the same Metadata.
 export function planRehearsal(recording, { recordingSha256, model, inputRate, outputRate }) {
   validateRecording(recording);
   const groups = new Map();

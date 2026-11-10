@@ -249,27 +249,95 @@ includes an unanswered reservation carrying usage.
 The complete six-command pipeline then passed on the staged source, on AC power with the display
 held awake: 173 suites, with the database check, build and local migration clean.
 
+## Settlement applied
+
+After PR #43 merged as `52898ea`, the owner reported $0.21 used on the provider's
+billing page ($4.79 credit balance), then authorized the settlement: "you have
+permission to apply the settlement".
+
+- **Billing check time:** 03:36:52Z.
+- **Pricing:** the official model page was rechecked just before; the rates were
+  unchanged.
+- **Covered:** all 212 reservations, 2026-10-12 to 2026-11-10 01:36Z. They held
+  $3.41 reserved against $0.2248 recorded usage.
+- **Settled at the recorded $0.2248,** the greater of the two figures. The ledger
+  went from $3.41 to $0.22 reserved, leaving $4.78 free.
+- **Record:** settlement `a00781d2…` is in the ledger, and every reservation stays
+  listed.
+
+## Rehearsal after settlement
+
+**Preparation:**
+- The feature worktree was synced to `52898ea`; its source matched main (809
+  files, `fa4f4dda…`).
+- `record` captured 36 worker requests offline, with the display awake.
+- `plan`, read-only against the main ledger, produced manifest `26798671…`: 46
+  requests, at most 935,016 micros, fitting with the matrix reserve.
+
+**Authorization:** the owner authorized that exact manifest ("I authorize the
+rehearsal"). `authorize` and `run --ai` then ran once in main (run `7e4c9341…`).
+
+**Result: incomplete, so G14 did not start.**
+
+- **Real readings:** all 11 real Extraction→Metadata pairs were correct and
+  complete, including rows/ambiguous. Both same-SKU products were extracted at
+  indices 0 and 1, and the verifier returned complete.
+- **Grouped checks:** 22 of 24 were complete. The two false verdicts were both on
+  correct recorded extractions:
+  - **price_changed coffee:** "one DEMO-COFFEE product present and extracted, but
+    only a partial candidate set is provided." Its other check of the same group
+    reasoned that other SKUs are not requested, and returned complete. The new
+    index rule's "of every SKU" wording likely prompted the doubt; this is
+    inferred.
+  - **malicious coffee:** "Verified against snapshot; one DEMO-COFFEE product
+    present in index order", yet `completed: false`. Its other check returned
+    complete. No instruction cause is apparent.
+- **Cost:** about $0.07 recorded usage; the ledger stands at $1.07 reserved and
+  $3.93 free.
+
+**Implication:**
+- Across both rehearsals, about 2 of 35 verifier calls on correct extractions
+  returned false.
+- A paid matrix needs about 36 verifier calls, all complete. At that rate, a full
+  pass is unlikely, about one in nine. This is consistent with the three paid
+  matrices each stopping at a different place. It is an estimate from small
+  samples.
+
+## Verifier scope and measurement
+
+By owner decision ("Fix wording, then measure"), the strict rule stays and no gate
+runs until the rate is measured.
+
+- **Scope wording:** the shared index rule now says that candidates hold only
+  product entries with the requested SKU. Entries with other SKUs count toward
+  index positions but are not requested records. The catalog verifier is told
+  that leaving them out is not an omission.
+- **Measurement:** each Metadata group is checked four times instead of twice,
+  rotating its raw variants. A manifest then holds 70 requests: 48 grouped checks
+  and 11 pairs.
+- **Tests:**
+  - the reader test and `cart:browser-worker:check:ai:metadata` require the new
+    phrases;
+  - the rehearsal test requires four checks per group, with each of two variants
+    sent twice;
+  - 5 of 5 planted defects were caught.
+- **Checks:** both served matrices, the metadata check (16 cases) and the
+  AI-safety check (50 cases) passed in the worktree.
+
 ## Next
 
-1. **After this merges:**
-   - sync a feature worktree to merged main and confirm both source snapshots
-     match;
-   - `record` there, with the display awake;
-   - `plan` against the main ledger, read-only.
-2. **Settlement** (after 02:37Z, when all 212 calls are past the lag):
-   - the owner reads the provider's billed total for 2026-10-12 to 2026-11-10;
-   - after a separate explicit authorization, run `apply` in the main checkout.
-3. **Rehearsal:** the owner authorizes the exact manifest hash, request count and
-   maximum reservation; then run `authorize` and `run --ai` once, in main.
-4. **If every verdict is complete and every extraction correct:**
-   - G14 preparation on the frozen merged source;
-   - the owner's single invocation;
-   - the loopback services, with both variables set, and the paid-build check;
-   - fresh explicit authorization for the matrix.
+1. **After the scope change merges,** in a worktree synced to merged main:
+   `record` with the display awake, then `plan` read-only.
+2. **The owner authorizes** that manifest; then run `authorize` and `run --ai` once,
+   in main.
+3. **Decide by the measured rate:**
+   - **every verdict complete:** G14 preparation, the owner's single invocation,
+     the loopback services (with both variables), the paid-build check and fresh
+     explicit authorization;
+   - **otherwise:** the owner decides on the completion rule, for example one
+     bounded second verifier opinion, before any gate.
 
    No merges from preparation until the paid run finishes.
-5. **Otherwise,** diagnose the whole rehearsal report, now with each extraction,
-   before another gate.
 
 **Rollback:** revert the functional changes separately from the accounting
 bindings (consumed roots, allowances, pins and the removed lock). Those stay, so
