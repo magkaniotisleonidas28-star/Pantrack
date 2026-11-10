@@ -16,6 +16,7 @@
     "test": "node scripts/test.mjs",
     "test:focused": "node scripts/test.mjs",
     "test:local": "node scripts/local-smoke.mjs",
+    "a8:check:browser": "node scripts/a8-browser-check.mjs",
     "local:setup": "node scripts/local-setup.mjs",
     "db:migrate:local": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 migrations apply DB --local --config wrangler.local.jsonc --persist-to .wrangler/state",
     "db:reset:local": "node scripts/reset-local-db.mjs",

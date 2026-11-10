@@ -338,6 +338,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   evidence. The owner accepted the ten-minute development sales-freshness
   policy on 2026-09-30 in [decision 0004](decisions/0004-m7-development-sales-freshness.md).
   Hosted browser, end-to-end, and concurrency evidence remain open.
+  The [repeatable local browser command](M7_A8_BROWSER_CHECK_20261110.md) captures
+  the manager's recovery, invalidation, cancellation and access flow in its own
+  fictional app/database. Two fresh browser runs and all six frozen-source local
+  commands passed (162 executed suites, twelve Windows skips, 46 migrations).
+  Hold the separate branch through Peter's gate freeze and require final-head
+  Windows/Linux CI. This does not close hosted A8 or enter the cart gate.
   **2026-10-13 follow-up:** PR #9 includes the [BUG-03 unresolved-sales guard](BUG03_UNRESOLVED_SALES_READINESS.md).
   Its local tests and main CI pass, but the released development Worker remains
   older. Record hosted sales-readiness/recovery and source-change results after
