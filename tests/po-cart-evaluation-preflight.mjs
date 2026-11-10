@@ -126,6 +126,7 @@ try {
     'matrix_budget_unavailable',
     'diagnostic_setup_unavailable',
     'metadata_setup_unavailable',
+    'extraction_setup_unavailable',
     'paid_allowance_unavailable',
   ]) {
     const ledger = new AiBudgetLedger(join(root, reason + '.json'), join(root, 'absent.json'));
@@ -150,6 +151,13 @@ try {
         ...(reason === 'metadata_setup_unavailable'
           ? {
               metadataEvidence: () => {
+                throw Error('private setup failure');
+              },
+            }
+          : {}),
+        ...(reason === 'extraction_setup_unavailable'
+          ? {
+              extractionEvidence: () => {
                 throw Error('private setup failure');
               },
             }
@@ -197,11 +205,11 @@ try {
   const allowance = join(root, 'allowance.json');
   assert.equal(
     paidAllowanceFile,
-    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261110/allowance.json',
+    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261111/allowance.json',
   );
   assert.equal(
     priorPaidAllowanceFile,
-    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261109/allowance.json',
+    '.sites-runtime/po-cart-workers/metadata-repair-acceptance-20261110/allowance.json',
   );
   assert.equal(
     retiredPriorAllowance.sha256,

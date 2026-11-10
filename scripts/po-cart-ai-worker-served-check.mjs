@@ -36,7 +36,7 @@ const report = await runEvaluation(seedLocalBrowserJob, {
   offline: true,
   ledger,
   diagnosticMode,
-  reader: (f, evidence) =>
+  reader: (f, evidence, extraction) =>
     new StagehandCartReader(
       {
         request: async (request, context) => {
@@ -71,6 +71,7 @@ const report = await runEvaluation(seedLocalBrowserJob, {
         },
       },
       evidence,
+      extraction,
     ),
 });
 assert.equal(report.matrixPassed, true);
@@ -85,8 +86,17 @@ assert.ok(
       r.credentialsRevoked &&
       r.diagnosticsComplete &&
       r.metadataComplete &&
-      r.metadataFiles.length === 5,
+      r.metadataFiles.length === 5 &&
+      r.extractionComplete &&
+      r.extractionFiles.length === 5,
   ),
+);
+// The reader's parsed extraction is retained for each requested phase; the
+// ambiguous catalog read keeps both same-SKU products with their indices.
+const ambiguous = report.results.find((r) => r.layout === 'rows' && r.scenario === 'ambiguous');
+assert.deepEqual(
+  readPrivate(ambiguous.extractionFiles[1]).value.candidates.map((c) => c.index),
+  [0, 1],
 );
 // Each case reached its intended durable outcome: ready without a hold, or held
 // once for the changed first product at the catalog.
@@ -98,7 +108,7 @@ for (const r of report.results) {
   assert.equal(r.interventions, ready ? 0 : 1);
 }
 console.log(
-  'PASS: served local D1 and Stagehand, 12 independently inspected exact/held fixture carts, 72 mocked requests and private Metadata capture (' +
+  'PASS: served local D1 and Stagehand, 12 independently inspected exact/held fixture carts, 72 mocked requests and private Metadata and Extraction capture (' +
     diagnosticMode +
     '); real-AI acceptance remains pending.',
 );

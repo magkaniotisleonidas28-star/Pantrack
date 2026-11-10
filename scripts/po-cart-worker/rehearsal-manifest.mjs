@@ -10,13 +10,19 @@ export const rehearsalCases = ['rows', 'compact'].flatMap((layout) =>
 // Each ready case reads five snapshots; each review case reads the baseline and
 // its changed first product before the deterministic hold.
 export const caseMetadataCount = 36;
-// Real extraction replays: the field-name, label-shape, duplicate/availability
-// and whole-cart cases.
+// Real extraction replays: the field-name, label-shape and whole-cart cases, and
+// every review case's changed product in both layouts. On 2026-11-10 the paid
+// matrix held rows/ambiguous, which only the compact pair had replayed.
 export const replayPairs = [
   ['rows/normal', 'product:DEMO-COFFEE'],
   ['rows/normal', 'product:DEMO-CUPS'],
-  ['compact/ambiguous', 'product:DEMO-COFFEE'],
   ['compact/normal', 'final'],
+  ...['rows', 'compact'].flatMap((layout) =>
+    ['unavailable', 'price_changed', 'wrong_pack', 'ambiguous'].map((scenario) => [
+      layout + '/' + scenario,
+      'product:DEMO-COFFEE',
+    ]),
+  ),
 ];
 export const repeatsPerGroup = 2;
 const sha = (value) => createHash('sha256').update(value).digest('hex');
@@ -108,7 +114,7 @@ export function validateRecording(recording) {
 }
 
 // Deterministic: every group is sent twice, using another raw variant when one
-// exists, and the four pairs replay real extraction into the same Metadata.
+// exists, and each pair replays real extraction into the same Metadata.
 export function planRehearsal(recording, { recordingSha256, model, inputRate, outputRate }) {
   validateRecording(recording);
   const groups = new Map();

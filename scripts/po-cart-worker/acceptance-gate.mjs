@@ -27,8 +27,9 @@ export const consumedGateRoots = Object.freeze([
   '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105',
   '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261108',
   '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261109',
+  '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261110',
 ]);
-export const fullGateRoot = '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261110';
+export const fullGateRoot = '.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261111';
 export const gateSteps = [
   ['metadata', ['cart:browser-worker:check:ai:metadata']],
   ['reliability', ['cart:browser-worker:check:reliability', '--acceptance']],
@@ -271,6 +272,7 @@ export function inspectGateStep(id, output, source, references) {
         !r.matrixPassed ||
         r.acceptanceComplete ||
         !r.metadataEvidenceRequired ||
+        !r.extractionEvidenceRequired ||
         r.results.length !== 12 ||
         r.requests.length !== 72 ||
         r.requests.some((v) => v.status !== 'completed') ||
@@ -282,7 +284,9 @@ export function inspectGateStep(id, output, source, references) {
             !v.networkCoverageComplete ||
             !v.diagnosticsComplete ||
             !v.metadataComplete ||
-            v.metadataFiles?.length !== 5,
+            v.metadataFiles?.length !== 5 ||
+            !v.extractionComplete ||
+            v.extractionFiles?.length !== 5,
         ) ||
         r.diagnosticMode !== (id === 'served-off' ? 'off' : 'passive')
       )
@@ -290,7 +294,8 @@ export function inspectGateStep(id, output, source, references) {
       for (const c of r.results) {
         if (c.diagnosticFile)
           references.push({ path: c.diagnosticFile, sha256: fileHash(c.diagnosticFile) });
-        for (const p of c.metadataFiles) references.push({ path: p, sha256: fileHash(p) });
+        for (const p of [...c.metadataFiles, ...c.extractionFiles])
+          references.push({ path: p, sha256: fileHash(p) });
       }
     }
   }

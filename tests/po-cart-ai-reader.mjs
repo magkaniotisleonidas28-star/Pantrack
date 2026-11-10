@@ -52,9 +52,15 @@ const {
     'That visible control verifies availability',
     'candidates, each with exactly these fields',
     'A requested fact present under its field name is not missing',
+    'counts product entries of every SKU in snapshot order, starting at 0',
+    'bracketed DOM node identifiers are not indices',
+    'separate product entries, each with its own index',
+    'Verify each index by counting product entries',
+    'listing each with its own index is complete',
   ])
     assert.ok(catalog.includes(text), text);
   assert.ok(!catalog.includes('packs ('));
+  assert.ok(!metadataCompletionFor('cart').includes('product entr'));
 }
 // Every schema field has one plain name, and every named field is in a schema.
 assert.deepEqual(
