@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-09 for the G12 result, the second paid test and the AI practice round.
+Updated: 2026-11-10 for the G13 result, the third paid test and the budget settlement.
 
 The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) are merged into main.
 They cover save-history review, exact-request continuation and explicit checks
@@ -29,8 +29,19 @@ stopped at the first case again: the AI's checker looked for a field literally
 called "pack label" and missed `unitLabel`. The instructions now name every field
 exactly. To stop finding these one hour-long cycle at a time, a new practice round
 sends only the AI's checking step the saved readings for every practice case, for
-a few cents and with a separate go-ahead. Only if every check comes back complete
-does G13 run, followed by one more paid test with a fresh go-ahead.
+a few cents and with a separate go-ahead. That practice round passed.
+
+[G13](C4_DUPLICATE_INDEX_20261110.md) passed everything. Its paid test passed five
+practice cases, then stopped safely at the sixth. There, two products share the
+same code, and the AI's checker said it still needed to check their position
+numbers, so the worker held the job. It cost about four cents. The AI now gets one
+shared rule for counting product positions. Each AI reading is now kept privately,
+so a future failure shows its cause, and the practice round now covers every
+problem case in both page layouts. The budget counter reserves a cautious maximum
+for every AI request and showed $3.41 used, while real use is about $0.22. After
+the owner compares OpenAI's billing page, a recorded settlement will set it to the real
+amount, keeping the $5 limit. Then come one practice round, G14 and one more paid
+test, each with its own go-ahead.
 
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can

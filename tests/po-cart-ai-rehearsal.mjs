@@ -183,12 +183,24 @@ try {
   assert.deepEqual(derived.input[0], template.input[0]);
   assert.throws(() => metadataForExtraction(template, real, real), /exactly once/);
 
-  // Every group twice, plus four replay pairs; totals are exact.
+  // Every group twice, plus eleven replay pairs; totals are exact.
   const manifest = plan();
   assert.equal(manifest.groups, 12);
   assert.equal(manifest.operations.filter((o) => o.kind === 'metadata').length, 24);
-  assert.equal(manifest.operations.filter((o) => o.kind === 'pair').length, 4);
-  assert.equal(manifest.requests, 32);
+  assert.equal(manifest.operations.filter((o) => o.kind === 'pair').length, 11);
+  assert.equal(manifest.requests, 46);
+  // Each review case's changed product is replayed in both layouts.
+  for (const layout of ['rows', 'compact'])
+    for (const scenario of ['unavailable', 'price_changed', 'wrong_pack', 'ambiguous'])
+      assert.ok(
+        manifest.operations.some(
+          (o) =>
+            o.kind === 'pair' &&
+            o.phase === 'product:DEMO-COFFEE' &&
+            o.cases[0] === layout + '/' + scenario,
+        ),
+        layout + '/' + scenario,
+      );
   assert.equal(
     manifest.maxReservationMicros,
     manifest.operations.reduce(
@@ -242,14 +254,20 @@ try {
   // one-use authorization consumed.
   const pass = await rehearse();
   assert.equal(pass.error, undefined);
-  assert.equal(pass.sent.length, 32);
+  assert.equal(pass.sent.length, 46);
   assert.equal(pass.saved.passed, true);
   assert.equal(pass.saved.metadataComplete, 24);
-  assert.equal(pass.saved.pairExtractionCorrect, 4);
-  assert.equal(pass.saved.pairMetadataComplete, 4);
+  assert.equal(pass.saved.pairExtractionCorrect, 11);
+  assert.equal(pass.saved.pairMetadataComplete, 11);
+  // Each pair keeps the extraction it sent to the verifier.
+  for (const r of pass.saved.results.filter((x) => x.kind === 'pair'))
+    assert.deepEqual(
+      r.extraction,
+      manifest.operations.find((o) => o.ordinal === r.ordinal).expected,
+    );
   assert.equal(pass.saved.acceptanceComplete, false);
   assert.ok(pass.ledger.reservedMicros <= manifest.maxReservationMicros);
-  assert.equal(pass.ledger.reservations.length, 32);
+  assert.equal(pass.ledger.reservations.length, 46);
   assert.ok(pass.saved.results.every((r) => r.metadataStatus === 'completed'));
   assert.equal(readPrivate(pass.authorizationPath).state, 'consumed');
   // The replayed Metadata carries the real extraction, not the recorded oracle.
@@ -277,7 +295,7 @@ try {
         ? op.expected
         : { completed: n !== 3, progress: 'checked ' + n },
   });
-  assert.equal(incomplete.sent.length, 32);
+  assert.equal(incomplete.sent.length, 46);
   assert.equal(incomplete.saved.passed, false);
   assert.deepEqual(
     incomplete.saved.incomplete.map((r) => [r.ordinal, r.progress]),
@@ -300,7 +318,8 @@ try {
       .filter((r) => r.kind === 'pair')
       .every((r) => r.metadataStatus === 'skipped_invalid_extraction'),
   );
-  assert.equal(invalid.sent.length, 28);
+  assert.equal(invalid.sent.length, 35);
+  assert.ok(invalid.saved.results.every((r) => r.extraction === undefined));
   // A provider failure stops at once, recorded, without retry.
   const failed = await rehearse({ status: 500 });
   assert.equal(failed.error, 'AI_READER_FAILED');

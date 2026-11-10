@@ -5,6 +5,7 @@ import type { openLocalCartBrowser } from '../cart-preview/browser-session';
 import type { CartEntry, CartLine } from '../../src/lib/cart-preview-contract';
 import { BoundedAiProvider, providerPhases, type AiContext } from '../cart-preview/ai-provider';
 import type { MetadataEvidenceSink } from './metadata-evidence';
+import type { ExtractionEvidenceSink } from './extraction-evidence';
 
 export type CartBrowserSession = Awaited<ReturnType<typeof openLocalCartBrowser>>;
 
@@ -53,10 +54,15 @@ const availabilityEvidence =
 // label that named a count without a unit size.
 const packLabelEvidence =
   'A pack label, the unitLabel field, is the exact visible label text shown for that product or cart row, in whatever form the supplier uses: a count with a unit size, a count alone, or a single unit name. A verbatim visible label is the complete pack label; labels need not share one structure.';
+// Extraction and its verifier share how an index is counted. On 2026-11-10 the
+// verifier returned incomplete for two same-SKU products, saying their indices
+// still needed checking.
+const productIndexEvidence =
+  'A product entry is one displayed product, such as one article or card with its own add-to-cart control. The index field counts product entries of every SKU in snapshot order, starting at 0 for the first; bracketed DOM node identifiers are not indices. Products that share a SKU, label and price are separate product entries, each with its own index.';
 // Instructions name each fact by its schema field. On 2026-11-09 the verifier
 // called a present unitLabel a missing "pack label" field.
 export const extractionFields = {
-  index: 'zero-based position among ALL catalog products',
+  index: 'zero-based position among ALL catalog product entries',
   sku: 'exact SKU',
   unitLabel: 'pack label',
   unitMinor: 'price per pack in integer US cents',
@@ -85,6 +91,7 @@ export function metadataCompletionFor(kind: 'catalog' | 'cart') {
     ...(kind === 'catalog'
       ? [
           `${availabilityEvidence} That visible control verifies availability from the snapshot; its lack of stock text alone does not make availability unverifiable.`,
+          `${productIndexEvidence} Verify each index by counting product entries in the snapshot. When several product entries show the requested SKU, even identical ones, each is a requested record; listing each with its own index is complete.`,
         ]
       : []),
     `${fieldContract[kind]} A requested fact present under its field name is not missing; its value must still match the snapshot.`,
@@ -150,6 +157,7 @@ export class StagehandCartReader implements CartReader {
   constructor(
     readonly provider = new BoundedAiProvider(),
     readonly metadataEvidence?: MetadataEvidenceSink,
+    readonly extractionEvidence?: ExtractionEvidenceSink,
   ) {}
 
   async extract(
@@ -238,6 +246,15 @@ export class StagehandCartReader implements CartReader {
           },
           { ...active.context, phase: active.context.phase + ':' + name },
         );
+        if (name === 'Extraction' && this.extractionEvidence) {
+          const parsed = (active.kind === 'catalog' ? discoverySchema : cartSchema).safeParse(
+            result.value,
+          );
+          this.extractionEvidence.capture(
+            parsed.success ? parsed.data : undefined,
+            active.context.phase + ':' + name,
+          );
+        }
         if (name === 'Metadata') {
           this.metadataEvidence?.capture(result.value, active.context.phase + ':' + name);
           recordMetadataVerdict(result.value, {
@@ -297,6 +314,8 @@ export class StagehandCartReader implements CartReader {
       untrusted +
         ` Extract ALL displayed products with SKU ${JSON.stringify(line.sku)}, including unavailable products and conflicting variants. Preserve duplicates. Return these fields for each product: ${fields(productFields)}. ` +
         availabilityEvidence +
+        ' ' +
+        productIndexEvidence +
         ' ' +
         packLabelEvidence +
         ` Do not filter by expected price or pack. Return an empty candidates array if absent.`,

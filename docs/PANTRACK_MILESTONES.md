@@ -626,9 +626,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   Preserve the schema merge
   queue and G8 freeze. Formal replacement authority remains undecided.
   Hosted bucket/privacy acceptance remains separate; check the
-  [current rehearsal and G13 operator position](C4_VERIFIER_REHEARSAL_20261109.md#next)
+  [current settlement, rehearsal and G14 operator position](C4_DUPLICATE_INDEX_20261110.md#next)
   and the [November 8 integration](C4_PR_STACK_INTEGRATION_20261108.md).
-  Prepare/freeze the resulting merged source before the G13 invocation;
+  Prepare/freeze the resulting merged source before the G14 invocation;
   preserve its preparation-to-paid-run freeze once that preparation begins.
   Issued artifacts and receiving now have local implementations recorded here;
   hosted document acceptance and supplier/full-workflow acceptance remain separate.

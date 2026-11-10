@@ -24,6 +24,11 @@ import {
   verifyMetadataEvidence,
   type MetadataEvidenceSink,
 } from './metadata-evidence';
+import {
+  extractionEvidence,
+  verifyExtractionEvidence,
+  type ExtractionEvidenceSink,
+} from './extraction-evidence';
 import { assertGateSource } from './full-gate-runtime.mjs';
 import { verifyAdditionAttempts } from './second-addition-case.mjs';
 import { caseOutcome } from './evaluation-case-verdict.mjs';
@@ -47,11 +52,16 @@ export async function runEvaluation(
   offline?: {
     offline: true;
     ledger: AiBudgetLedger;
-    reader: (f: Awaited<ReturnType<Seeder>>, evidence: MetadataEvidenceSink) => CartReader;
+    reader: (
+      f: Awaited<ReturnType<Seeder>>,
+      evidence: MetadataEvidenceSink,
+      extraction: ExtractionEvidenceSink,
+    ) => CartReader;
     readinessTransport?: typeof fetch;
     diagnosticMode?: 'off' | 'passive';
     diagnostics?: typeof browserDiagnostics;
     metadataEvidence?: typeof metadataEvidence;
+    extractionEvidence?: typeof extractionEvidence;
     allowanceCheck?: () => void;
     allowanceConsume?: (runId: string) => void;
   },
@@ -80,7 +90,8 @@ export async function runEvaluation(
   const source = sourceSnapshot(),
     diagnosticMode = offline?.diagnosticMode ?? (offline ? 'off' : 'passive'),
     streams = new Map<string, ReturnType<typeof browserDiagnostics>>();
-  const metadataStreams = new Map<string, MetadataEvidenceSink>();
+  const metadataStreams = new Map<string, MetadataEvidenceSink>(),
+    extractionStreams = new Map<string, ExtractionEvidenceSink>();
   let preflight: any = { passed: false, reason: 'not_run' };
   const equal = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   async function report() {
@@ -93,6 +104,8 @@ export async function runEvaluation(
       requests.every((r: any) => r.status === 'completed') &&
       metadataStreams.size === 12 &&
       [...metadataStreams.values()].every((s) => s.healthy()) &&
+      extractionStreams.size === 12 &&
+      [...extractionStreams.values()].every((s) => s.healthy()) &&
       !stopping &&
       sourceSnapshot().sha256 === source.sha256;
     const manualSeconds = Number(process.env.PANTRACK_CART_MANUAL_SECONDS) || null;
@@ -117,6 +130,7 @@ export async function runEvaluation(
       source,
       diagnosticMode,
       metadataEvidenceRequired: true,
+      extractionEvidenceRequired: true,
       preflight,
       results,
       requests,
@@ -178,6 +192,15 @@ export async function runEvaluation(
       } catch {
         throw new EvaluationPreflightError('metadata_setup_unavailable');
       }
+      try {
+        for (const key of metadataStreams.keys())
+          extractionStreams.set(
+            key,
+            (offline?.extractionEvidence ?? extractionEvidence)(root + '/' + key + '/extraction'),
+          );
+      } catch {
+        throw new EvaluationPreflightError('extraction_setup_unavailable');
+      }
       if (!offline) consumePaidAllowance(runId);
       else offline.allowanceConsume?.(runId);
     } catch (e) {
@@ -226,16 +249,18 @@ export async function runEvaluation(
           const baseline = structuredClone(f.readSession().entries);
           const diagnosticFile = f.root + '/diagnostics.jsonl',
             stream = streams.get(layout + '-' + scenario);
-          const metadata = metadataStreams.get(layout + '-' + scenario)!;
+          const metadata = metadataStreams.get(layout + '-' + scenario)!,
+            extraction = extractionStreams.get(layout + '-' + scenario)!;
           result.metadataFiles = metadata.files();
+          result.extractionFiles = extraction.files();
           worker = new LocalBrowserCartWorker({
             credentialFile: f.credentialFiles[0],
             journalFile: f.root + '/journal.json',
             fixtureFile: f.fixtureFile,
             origin: f.origin,
             reader: offline
-              ? offline.reader(f, metadata)
-              : new StagehandCartReader(undefined, metadata),
+              ? offline.reader(f, metadata, extraction)
+              : new StagehandCartReader(undefined, metadata, extraction),
             headless: !process.argv.includes('--visible'),
             diagnosticMode,
             diagnosticFile,
@@ -312,6 +337,13 @@ export async function runEvaluation(
               metadata.files(),
               required.map((p) => p + ':Metadata'),
             );
+          extraction.close();
+          result.extractionComplete =
+            extraction.healthy() &&
+            verifyExtractionEvidence(
+              extraction.files(),
+              required.map((p) => p + ':Extraction'),
+            );
           result.state = current.job.state;
           result.holdReason =
             current.events.filter((e: any) => e.kind === 'hold').at(-1)?.reason ?? null;
@@ -348,6 +380,7 @@ export async function runEvaluation(
             result.reservationUnchanged &&
             result.diagnosticsComplete &&
             result.metadataComplete &&
+            result.extractionComplete &&
             result.networkCoverageComplete &&
             result.cleanupVerified &&
             result.attemptsVerified;
@@ -363,6 +396,7 @@ export async function runEvaluation(
             worker = undefined;
           }
           metadataStreams.get(layout + '-' + scenario)?.close();
+          extractionStreams.get(layout + '-' + scenario)?.close();
           result.credentialsRevoked = Boolean(f);
           if (f)
             for (const file of f.credentialFiles) {
@@ -409,6 +443,7 @@ export async function runEvaluation(
   } finally {
     for (const stream of streams.values()) stream.close();
     for (const stream of metadataStreams.values()) stream.close();
+    for (const stream of extractionStreams.values()) stream.close();
     process.off('SIGINT', stop);
     process.off('SIGTERM', stop);
     release();

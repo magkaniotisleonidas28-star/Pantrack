@@ -128,6 +128,8 @@ export async function runRehearsal({
         ),
         parsed = schemas[op.phase.startsWith('product:') ? 'catalog' : 'cart'].safeParse(value);
       result.extractionValid = parsed.success;
+      // Private evidence of what the reader returned, so a false verdict can be judged.
+      if (parsed.success) result.extraction = parsed.data;
       result.extractionCorrect =
         parsed.success && isDeepStrictEqual(canonical(parsed.data), canonical(op.expected));
       if (!parsed.success) {
