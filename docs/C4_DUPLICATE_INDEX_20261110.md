@@ -215,8 +215,8 @@ usage, about $0.22 in total.
   profile with that October name and reclaimed its stale lock at about 01:02Z,
   during its fault steps; the timing is inferred from timestamps. This is the
   recycled-port name match G11 showed.
-- **Pending decision:** it is added to `REMOVED_HISTORICAL_LOCKS`, accepted only
-  while absent, pending the owner's acceptance. Profile-name collision prevention
+- **Owner decision:** the owner accepted it in the session ("Accept it"). It is
+  added to `REMOVED_HISTORICAL_LOCKS`, accepted only while absent. Profile-name collision prevention
   remains a deferred follow-up.
 
 ## G14 binding
