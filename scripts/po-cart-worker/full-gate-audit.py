@@ -1,23 +1,24 @@
 """Independent read-only preservation audit; never emits business rows or secrets."""
 import json,hashlib,sqlite3,collections,os,re,sys,subprocess,importlib.util
 from pathlib import Path
-root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261111')
+root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261112')
 # Consumed gate roots stay retained; one whose final audits all passed accounts for the profiles it recorded.
 CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261101'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261108'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261109'),
-          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261110')]
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261110'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261111')]
 GATE_AUDITS=['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified','passed']
 # Owner-reviewed gates whose only failed audit was database preservation, for a cause unrelated to
 # browser profiles: their exact final-audit.json and preservation.json hashes.
 PRESERVATION_REVIEWED={'.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027':
                        ('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2')}
 # Owner-reviewed profiles changed outside any gate on 2026-11-04 (the paid matrix and offline checks of its
-# follow-up, one reusing a historical name), the one profile of each 2026-11-09 paid matrix and the six of the
-# 2026-11-10 paid matrix: the exact fingerprint of every entry under each.
+# follow-up, one reusing a historical name), the one profile of each 2026-11-09 paid matrix, the six of the
+# first 2026-11-10 paid matrix and the twelve of the second: the exact fingerprint of every entry under each.
 PROFILES_REVIEWED={
                    '0aa12d101f3f64d251934fc0f0b422651822551b34cf9586761d50ee2bdadaad':'0b9151af046811c808bc3cf1568fb7c134cabb7f2ac4d95a9fff8cb5a52beb55',
+                   '0eb0f1b6f6338bc2019cdfcc4ffabe61bd33caf1922bb2220a5d1c59fad2782f':'c82aa612da7177db398124b130abf8691576b73fe5f41f81f2f61ddf3d55b4c0',
                    '0f7ee92fd12861d826a02827e13f28b2b44d402e583b304edc82068da72c0dcf':'a79a1594ffd5a85a5581bb0d109879c79a32f040877fe6e8e4107c18a721a955',
                    '1720e08ab735e9292230068d5685cce1dea9cba3dc4c725875d8595975d0a544':'b577a238e5875cd243af1f8c1814d5ee4c510b1734d181308563752c2e447bef',
                    '177f2428ecb5cecd61acd35e12fcd3e3d53cc91a0130f2f06ece51bccc789d75':'68a23884b340e6b05bb4ec3e03a051f25298dd9e037586f9ff8c65736a8c618e',
@@ -28,16 +29,25 @@ PROFILES_REVIEWED={
                    '31fe1771aff9f6f7f2cd0947b7fc5a9d869e2c00f882021befddf1d172af5e91':'78581ccde3a10989a8266b213b5191f6e311371d1883b15ee6c6f729359ed08d',
                    '3c71043b35d7263eda16d1fadf46b5e8a884deed77348c285ae35a1a42b1dd8c':'8996867ba51135a75bfc963bec15412503a45f45740a2860d7a8c04d6b7d666d',
                    '3dd8eff74cdbff8030bff831f4cdaa2f75488633f15ba346697c02ed1f3ab161':'f7b0cccca5365753750a6494b07127c4c6e2bdcdadc6c3144ce950d4d8ca4bfa',
+                   '3f8c2017821b28fdb81c0d813b41466ec5bac846c3c14f10b374bc210b13ed24':'caf6776a4d1dfbfdffaa4da71019fe6d668998da4f4dfd8b45dd210da1cccff7',
                    '47e700bc70ac9e4b138b5514da954e157d977a66caaaf885130b25e3fc546d12':'944cdd06b10bbdb961bb1a71e1c40ddb8fe1879df2f0617c664ff4cb2ce39f2a',
+                   '4b41e19802bedefdc6b2fc430aec236c45527a3c76343376508176e3950fb40d':'33633f42bef0bb41aa243982e44b7721d03cb40c6d48fc83b5ca062376cdbd70',
+                   '52aa164fade77cf17fdb2cdfd655dd083e3370ec99997586320224b75343d2c1':'69cbbed638c7db189a6deae97e459c900a827488642a0f06f3c6b6717ba9f84c',
                    '52e99e1938cf92f6aec083f183925be7debc486e8d3dfcc5f1ff769d825aeb28':'b473d033b7c4722bdf1eb5b576da2507ef47e2da56047ad4cce7cdc3c93b25e7',
+                   '549bbadfa622e6d10a68f067beb26c8fd67001092af48013f6462f90a3cd6d7e':'9869a3dcae2aceb03266fa8625ce777051f3c0f156f459ef8a2c7994788731ac',
                    '54ac7496e0282ceee47e7d2d9d18391d4d29d6fe06dbc1530e3796662934f8ae':'99119b57ca4e69676b031338f5fcc596c443c20e05bcb4c19ebdd23d064d9699',
+                   '59e2f9c2e9877c95b8df54f9201ae1294b234234a4ab4fb9a5f973fbeea335fb':'e667cf8ca75f4bf74b334562e71c2d49a971e7af99e49e180a5e691368e64682',
+                   '5d40ea666c9921a0716e67438ecfc51c3b35f0778a0f7a284ff219052bf5b867':'120840e7c92063a6b4fc23740e2b44ed82a9d7019eb927c6d3787e61333fa2e4',
+                   '6025658c5456c74065db987856640d69ac8b2cd03484303b89b7d7b7f9e46674':'8c0a5413b13a07d61f99fb0321258f27980f0744f7d2ea55c33e5480315550a3',
                    '61dae016bfee50fc2a7d269311ae9bfe523fcd9db42a6064470c87eb7f4c9711':'163df684e74a5a52244dc356bfda63f822e27523132ed5a2e3d461b9e9b1fdfc',
                    '6e49c9b00b1c059fc7865b4302caff05385da4166c54b9f90395d9e76b56f7c0':'a34584e54d1d81d0b97f2ecf34e54a47d9c9289722486f5faafe9e30a36ad24a',
                    '76e48fa3b7fbdbccc67c6b8c6d7864f2b7bbeae566e12fac9fbe3bcb93478c21':'e85528e46edd15a32d977075aaa2820fa6d44d3522198ef3f4e76b97a7d5276d',
                    '7e722e20834e1b30a58c4bb717dd3f5d6dcbb45aaa904f1404f0db72f691f2d8':'b57872242507109c1e2fab93342ddedbfe391e4fdb12c548928628e381f6c765',
+                   '82e4923137984e13d9921616cbae4dec5282bd0fd24d6b649ccba62925d7ff88':'d0c714f5c08fa9964072374fcaef90e1f53d98672dcc92e82f9170c943f87388',
                    '848b0c450cce24180941b75e29d5ee6f8aadbaae6ba688ffd28c0aade3384841':'4f6e2d575b86c831bf456fac7a711c5911a17ae76a6da72c83b09c54de4a4d17',
                    '8511524c20c01acf02f8fee29aa72c25dcea5bd1af15586a7b1d6d1e7aae349d':'82a8ab0397dae43c794e24cef4851318dbd7a828db0a5b1eaa10a84e595dca9a',
                    '861c3bbd96d520b8c92765b481434467280a909cf42dd5bf2dde88a2425d0556':'304e00d63c98b6b2118ec23756912264e1406b55942b323f41930f2b1d9cbeb9',
+                   '8e155d671d4e248e346669f31f3329b59759c00f19306ed13e4fb2d9333ed0f5':'bae0eb13a66160050d35b0491d0309cce0f4e1f5b42b40cda912b8503d451042',
                    '9c2d1d55139564c573d1b19573db2b85f87debb5fb92d4504f82329b46636aea':'fc77f1e9f09558f07455d477fc28c2f7620a3157d016c84289677703bb785421',
                    '9f985ac28ac948eab1a47e2a8515b80136ae4d651715e200b9e6b53e46433996':'f4497cc4f04f529c7251b60c5d70c6b5e9cdbfabe97726379da83108ee61a84d',
                    'a5c664e64e672b3d6e3e5af2e4edb13d233baeef347887ebda3d8d9b1166bef7':'497f46c9132ebefd5da5259e62c0deb3d749e4d07443e572bf970f88cbde9773',
@@ -45,6 +55,7 @@ PROFILES_REVIEWED={
                    'ab8c355cdfb3e67c15fb92726d66bdafb7452fa558f4b5dd65c97fb5b69d2e54':'36081aeafd8732b394cca5fe6fa497e1554cb5c7532ca90c4b3e11dfe78401af',
                    'af0c6745e4b3545093080a87fa10092d3b70c3d3b73a07c5a5782b37a43b1e0e':'631cb340fbb7edf1ecd05f6c2d7cfefb12735ba972db691155409ce30d3bbae7',
                    'b1bffe93adf9b7a4e8ce775d94bd2f8efba985873eacb65b4bb0273b428cc257':'395198203c894fe9068afb7ac9f15fd27bd4bf3f9dee7923525fc515b1ea80b4',
+                   'b75115baa6ec90f53dc2805b218e27e4f4e4d0af43e5f280b83604520ce665b1':'54642cd6c6e6c50132e3db90593d6b9c043a541e276bd2a3cc285a71c1516ba8',
                    'ca73a2093e11c46b9c1e38e2c1c6d777b8f7d62976efb42f8b5bae73bcca0478':'81612d4e4fc4c6f9ea14ecf369698d0da36dc99011c6a3fc979527e2ab4c2805',
                    'cbddc56228a8baed55bd71242ba201f408a10ade5c512ba3bd036dd9a259dca2':'26755f852ab5ab8ff09bdc6ee89c10fc904757bc540c2ea8bdd93cdbe3e435c2',
                    'da24fc3cbb045889135477f7103c6080a19d9fbaac7149a3ab367384d401a75e':'814d63e001606f50059973e46fe5923caf3420a654b800bdb2f9649f79c2af6d',
@@ -54,11 +65,13 @@ PROFILES_REVIEWED={
                    'ea5675a34231122696f2cd705276a0d0fac37d9ee6e0977cad69d35fc51ebaef':'11d5b93a4de99df670a47b299a1598df6fc86d190cd51369b7c65858392cea6b',
                    'eac316e64fc01ac338b0772cdb33e691a933735f3d99b537ded4d13a174a930e':'5d4b5eb32341fd6cdaabb7f2a8c71dde22af5e5b39a5164f9cf4edcc3a216d5a',
                    'ed8ce108d8e98478a0381ee05dec5e2845e17cfc9a6bfadf6ea03e989c945ab0':'5092a377eb999a048e1910ece8bb56bd9208c794e81573f6ef52da8306bab699',
-                   'fa5a2cdeb71a47fe76ef415e6415874d17e4b82467a948808372b718b29cc047':'c1ca9732be9aab235a7663dd9f473bdeada99b05f605a6b57f340c0a5eb7fcfd'}
-# Owner-reviewed historical locks removed during G11 on 2026-11-09 and G13 on 2026-11-10, when their checks'
+                   'fa5a2cdeb71a47fe76ef415e6415874d17e4b82467a948808372b718b29cc047':'c1ca9732be9aab235a7663dd9f473bdeada99b05f605a6b57f340c0a5eb7fcfd',
+                   'fed92a3b334d415882d7924f64eb4f9e1b0f47f54334009fa8ae538ef0843d03':'1b6e14b57b4af5801796048805c7fc8c8aaa97fea52a3d125d21160d78c9d1bc'}
+# Owner-reviewed historical locks removed during G11 on 2026-11-09 and G13 and G14 on 2026-11-10, when their checks'
 # profile names matched October profiles (a recycled random port) and reclaimed their stale locks: accepted
 # only while absent.
 REMOVED_HISTORICAL_LOCKS=frozenset(['5caa81aa652a6f95175164c4fcf9fcb7c233822adb8b3ef19b7409783c38766c.lock',
+                                    '6df48a4bd9c4e1cf03b8caab8534b527875b9e7fd144662ac7ff518bb06f2fe7.lock',
                                     '9d2a3df075ad7c3e6b231b97532c8a8f324105bafefd9e82a24c219fa43c9c6f.lock',
                                     'b2f67b0c7da678430aeb811a6cc1c2b8e451d8edd827a63c691c30cafd501e9d.lock',
                                     'ceb5e52a45c32cf937a818f56ac093af26263f8bc0868c27862c54f7487db32b.lock'])

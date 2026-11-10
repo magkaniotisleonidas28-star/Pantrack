@@ -324,18 +324,110 @@ runs until the rate is measured.
 - **Checks:** both served matrices, the metadata check (16 cases) and the
   AI-safety check (50 cases) passed in the worktree.
 
+## Measured rehearsal
+
+The scope change merged as `19d57a1`. The owner authorized one rehearsal of
+manifest `0044f9ab…`, which holds 70 requests.
+
+- **Run `26909fa0…`** passed: 48 of 48 grouped checks complete and 11 of 11 pairs
+  read correctly. It cost about $0.12.
+- **Measured rate:** 0 incomplete verdicts in 59 calls. G14 preparation followed,
+  under a merge freeze.
+
+## G14 outcome
+
+**Source:** merged main `19d57a1`, frozen at 809 files, `eb8441ba…`.
+
+- **Preparation:** all six commands passed (173 suites).
+- **Capture:** 78,447 protected artifacts, 1,441 carts and 1,605 databases. The 134
+  reserved tables were listed by name only.
+- **Scratch finish dry run:** passed.
+- **`before` check:** passed with 38 reviewed profiles and 4 removed locks.
+
+The owner ran it from 2026-11-10 04:42:43Z to 05:35:27Z, with the display held
+awake.
+
+- **All 21 steps passed,** including 30/30 reliability and 50 AI-safety cases.
+- **Both served matrices** reached every case's intended outcome. All 24 cases
+  were `extractionComplete` with 5 extraction files.
+- **Fresh-tab recovery:** only the four staged-stall journals record a fresh tab.
+  All 136 step-15 evidence files match their hashes.
+- **Final audits, all passed:**
+  - 179 credentials revoked;
+  - 202 task profiles clear;
+  - preservation: 78,447 artifacts and 1,441 carts unchanged, with one sequence
+    row changed.
+
+## Fourth paid matrix
+
+**Pre-check:**
+- the allowance `…-20261111` was absent and the prior one consumed;
+- the ledger had $2.60 free;
+- the key line was present with mode 600;
+- both loopback endpoints answered 401.
+
+**Authorization:** the owner authorized it ("I authorize the paid matrix"). Pricing
+was rechecked at $0.75 / $4.50 per million.
+
+**Run `300301ee…`** (06:28:17Z to 06:31:50Z) passed 11 of 12. The failing case was
+**compact/ambiguous**, held as `verification_failed` at the catalog:
+- **Extraction was correct:** indices 0 and 1, both `DEMO-COFFEE`.
+- **The verifier returned `completed:false`:** "two DEMO-COFFEE entries match
+  visible products, but a later DEMO-OAT product means requested indices are
+  incomplete/incorrect?".
+- **Other calls:** the 35 other verifier calls were complete.
+- **Safety:** nothing was added and the job held as designed.
+
+**Measured rate:** 1 in 95 calls so far, so a 36-call matrix passes about 2 times
+in 3.
+
+**Cost:** about $0.09 recorded against $1.23 reserved. The ledger shows $3.63
+reserved, so the next matrix needs another settlement first.
+
+The allowance `…-20261111` is consumed. M8 and C4 stay open.
+
+## Later-SKU wording
+
+By owner decision ("Fix wording again"), the strict rule stays. The catalog
+verifier adds one sentence: entries with other SKUs shown before, between or after
+the requested entries never make the requested records incomplete or their indices
+incorrect.
+
+- **Checks:** the reader test and `cart:browser-worker:check:ai:metadata` require
+  it.
+- **Coverage:** the rehearsal already replays compact/ambiguous's coffee product
+  four times. A rehearsal measures the rate; it cannot prove the rate is zero.
+
+## Owner-reviewed profiles and lock (G14)
+
+The owner accepted both:
+- **The paid run's 12 profiles,** created 06:28–06:31Z, one per case. Each is
+  pinned to its exact entry fingerprint, for 50 reviewed profiles.
+- **Lock `6df48a4b….lock`:** G14 reclaimed this October 11 lock at 05:19Z when
+  one of its recorded profiles matched that name. It is accepted only while
+  absent, for 5 removed locks.
+
+Collision prevention stays deferred.
+
+## G15 binding
+
+- **Bindings:** the gate root is `full-offline-acceptance-task-20261112` and the
+  allowance `metadata-repair-acceptance-20261112`, with prior `…-20261111`.
+- **Consumed roots** add `…-20261111`.
+- **Read-only `before` check** against the new audit passed: 2,374 gate profiles,
+  50 reviewed, 5 removed locks, preflight idle.
+
 ## Next
 
-1. **After the scope change merges,** in a worktree synced to merged main:
-   `record` with the display awake, then `plan` read-only.
+1. **After this merges,** in a worktree synced to merged main: `record` with the
+   display awake, then `plan` read-only.
 2. **The owner authorizes** that manifest; then run `authorize` and `run --ai` once,
    in main.
-3. **Decide by the measured rate:**
-   - **every verdict complete:** G14 preparation, the owner's single invocation,
-     the loopback services (with both variables), the paid-build check and fresh
-     explicit authorization;
-   - **otherwise:** the owner decides on the completion rule, for example one
-     bounded second verifier opinion, before any gate.
+3. **If every verdict is complete:**
+   - settle the ledger to the owner's billed total;
+   - prepare G15, which the owner invokes once;
+   - then the loopback services (with both variables), the paid-build check and
+     fresh explicit authorization.
 
    No merges from preparation until the paid run finishes.
 

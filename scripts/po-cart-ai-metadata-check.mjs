@@ -288,6 +288,8 @@ try {
                       'listing each with its own index is complete',
                       // One rehearsal check then called a single requested product partial.
                       'Leaving out entries with other SKUs is not an omission',
+                      // A paid check then called correct indices incomplete over a later SKU.
+                      'shown before, between or after the requested entries never make',
                     ];
                   for (const text of [
                     ...(product ? availability : []),
