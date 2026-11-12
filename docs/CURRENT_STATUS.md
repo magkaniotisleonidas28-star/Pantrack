@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-08
+Updated: 2026-11-11
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,21 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## A8 repeatable local browser check — 2026-11-10
+
+The [A8 browser command](M7_A8_BROWSER_CHECK_20261110.md) promotes the captured
+manager walkthrough into `pnpm a8:check:browser`. Each run owns a fresh fictional
+app/database and retains recovery, source-change, access, layout and cleanup
+evidence. Two fresh browser runs and all six frozen-source local commands passed:
+162 executed suites, twelve existing Windows skips and all 46 migrations.
+Existing local settings/database bytes stayed unchanged across both browser runs.
+The original head passed Windows/Linux CI. On November 11 the owner requested
+integration after the recorded G14/paid-run outcome. The branch now includes
+main's G15 binding and later-SKU rule; require fresh combined checks before
+merging. Prepare and freeze the resulting merged source before any later G15
+invocation. No gate, paid or hosted action follows from this merge request.
+Hosted A8/M7 acceptance remains open.
 
 ## C4 document stack and current rehearsal position — 2026-11-10
 
