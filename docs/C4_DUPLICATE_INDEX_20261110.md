@@ -486,15 +486,112 @@ rechecked.
 - **Read-only `before` check** passed: 2,567 gate profiles, 51 reviewed, 5 removed
   locks, preflight idle.
 
+## Third settlement and key check
+
+The owner replaced the expired key. Only the line's presence and mode 600 were
+checked; its contents were not read.
+
+**Settlement `8eaf3300…`,** with the owner's authorization ("i authorize both
+steps"):
+
+- **The owner reported** a $4.53 credit balance, against $4.59 at the prior
+  settlement, so $0.06 billed.
+- **It covered** 70 completed reservations ($1.33 reserved) and settled at the
+  greater recorded usage, $0.117.
+
+**Rehearsal of manifest `fc6973c8…`** (70 requests, main `b48006f`), with the same
+authorization:
+
+- **Run `460fa8be…`** passed: 48 of 48 complete and 11 of 11 pairs correct, for
+  about $0.12.
+- **It confirmed** the new key before the hour-long gate.
+
+## G16 outcome
+
+**Source:** merged main `f82bd98`, frozen at 813 files, `7df23216…`. It includes
+the isolated A8 browser check from PR #45.
+
+- **Preparation:**
+  - all six commands passed (174 suites);
+  - capture: 89,970 protected artifacts, 1,624 carts and 1,873 databases;
+  - the scratch finish dry run passed;
+  - the `before` check passed with 51 reviewed profiles and 5 removed locks.
+- **Run:** the owner ran it from 2026-11-12 06:30:37Z to 07:23:50Z.
+  - All 21 steps passed, including 30/30 reliability and 50 AI-safety cases.
+  - Both served matrices reached every intended outcome, with all 24 cases
+    `extractionComplete`.
+  - Fresh tabs appear only in the four staged stalls, and all 136 step-15 files
+    match.
+  - 179 credentials were revoked, and preservation passed with one sequence row
+    changed.
+
+## Sixth paid matrix
+
+**Pre-check:**
+
+- the allowance `…-20261113` was absent and the prior one consumed;
+- the ledger had $3.03 free;
+- the key line was present with mode 600;
+- both loopback endpoints answered 401.
+
+**Authorization:** the owner authorized it ("I authorize the paid matrix"). Pricing
+was rechecked at $0.75 / $4.50 per million.
+
+**Run `eac5ea98…`** (21:03:29Z to 21:04:15Z):
+
+- **rows/normal passed:** 10 calls, 3 additions and the exact fixture cart.
+- **rows/malicious was held** as `verification_failed` at its baseline cart:
+  - the cart's one existing row shows SKU `EXISTING` and pack label `box` as two
+    lines in one cell;
+  - extraction returned `EXISTING box` for both sku and unitLabel;
+  - the verifier returned `completed:true`;
+  - the deterministic agreement check refused it (`AI_CART_DISAGREEMENT`).
+- **Safety:** 0 additions in the held case, 0 external browser requests and
+  0 checkouts.
+- **Context:** this is the first baseline cart misread among the 14 real baseline
+  extractions kept as evidence: 12 in the fourth paid matrix and 2 here.
+  rows/normal read the same cart correctly in this run.
+
+**Cost:** about $0.015 recorded against $0.20 reserved. The ledger shows $2.17 of
+$5 reserved.
+
+The allowance `…-20261113` is consumed. M8 and C4 stay open.
+
+## Cart-row wording
+
+By owner decision ("Fix wording"), the strict rule stays.
+
+- **The shared sentence:** cart extraction and the cart verifier now share one
+  sentence: a cart row can show its SKU and its pack label as separate texts; the
+  sku field holds only the SKU text and unitLabel only the pack label text; never
+  join them or repeat one inside the other.
+- **Scope:** catalog instructions are unchanged. Checks require the sentence for
+  carts and its absence for catalogs.
+- **The rehearsal** now also replays every case's baseline cart extraction, so it
+  holds 23 pairs and 94 requests.
+
+## Owner-reviewed profiles (G16)
+
+The sixth paid run's two profiles, created at 21:04:06Z and 21:04:14Z, are pinned
+exactly, for 53 reviewed. No historical lock went missing.
+
+## G17 binding
+
+- **Bindings:** the gate root is `full-offline-acceptance-task-20261114` and the
+  allowance `metadata-repair-acceptance-20261114`, with prior `…-20261113`.
+- **Consumed roots** add `…-20261113`.
+- **Read-only `before` check** passed: 2,762 gate profiles, 5 removed locks,
+  preflight idle. 52 of the 53 pins match. G16 reused one pinned profile's name
+  through a port-derived name match; G16's record accounts for it.
+
 ## Next
 
-1. **The owner replaces the key** in `.dev.vars.cart`. Only the line's presence and
-   mode 600 are checked.
-2. **After this merges,** in a worktree synced to merged main: `record` and `plan`.
-   Then one owner-authorized rehearsal, in main after `git pull`. It confirms the
-   new key before an hour-long gate.
-3. **If every verdict is complete:**
-   - G16 preparation, which the owner invokes once;
+1. **After this merges,** in a worktree synced to merged main: `record` and `plan`.
+   Then one owner-authorized rehearsal in main after `git pull`. The ledger has
+   enough room for it.
+2. **If every verdict is complete and every pair correct:**
+   - a settlement to the owner's billed total, since the matrix needs $1.96 free;
+   - G17 preparation, which the owner invokes once;
    - the loopback services (with both variables);
    - the paid-build check and fresh explicit authorization.
 

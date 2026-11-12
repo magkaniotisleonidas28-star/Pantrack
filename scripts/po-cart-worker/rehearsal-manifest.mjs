@@ -10,9 +10,10 @@ export const rehearsalCases = ['rows', 'compact'].flatMap((layout) =>
 // Each ready case reads five snapshots; each review case reads the baseline and
 // its changed first product before the deterministic hold.
 export const caseMetadataCount = 36;
-// Real extraction replays: the field-name, label-shape and whole-cart cases, and
-// every review case's changed product in both layouts. On 2026-11-10 the paid
-// matrix held rows/ambiguous, which only the compact pair had replayed.
+// Real extraction replays: the field-name, label-shape and whole-cart cases,
+// every review case's changed product in both layouts, and every case's baseline
+// cart. On 2026-11-10 the paid matrix held rows/ambiguous, which only the compact
+// pair had replayed; on 2026-11-12 it held rows/malicious at its baseline cart.
 export const replayPairs = [
   ['rows/normal', 'product:DEMO-COFFEE'],
   ['rows/normal', 'product:DEMO-CUPS'],
@@ -23,6 +24,7 @@ export const replayPairs = [
       'product:DEMO-COFFEE',
     ]),
   ),
+  ...rehearsalCases.map((kase) => [kase, 'baseline']),
 ];
 // Four checks per group measure the verifier's false-negative rate; on 2026-11-10
 // two checks per group returned 22 of 24 complete.

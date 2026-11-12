@@ -40,6 +40,8 @@ const {
   cartFields,
   metadataCompletionFor,
 } = await import('../.sites-runtime/ai-reader-test.mjs');
+const cartRowRule =
+  'The sku field holds only the SKU text and the unitLabel field holds only the pack label text; never join them or repeat one inside the other.';
 // The catalog verifier names each product field and the availability rule, and no
 // cart-only field.
 {
@@ -65,6 +67,16 @@ const {
     assert.ok(catalog.includes(text), text);
   assert.ok(!catalog.includes('packs ('));
   assert.ok(!metadataCompletionFor('cart').includes('product entr'));
+  // Only carts carry the separate SKU and pack label rule.
+  assert.ok(metadataCompletionFor('cart').includes(cartRowRule));
+  assert.ok(!catalog.includes('cart row can show its SKU'));
+  // The cart extraction instruction carries the same rule; the catalog's does not.
+  const instructions = new StagehandCartReader(null);
+  instructions.extract = (_session, _kind, instruction) => instruction;
+  assert.ok(instructions.cart(null, {}).includes(cartRowRule));
+  assert.ok(
+    !instructions.discover(null, { sku: 'DEMO' }, {}).includes('cart row can show its SKU'),
+  );
 }
 // Every schema field has one plain name, and every named field is in a schema.
 assert.deepEqual(
