@@ -63,6 +63,14 @@ request, because OpenAI refused the AI key: it had expired. Nothing was read or
 added. After the key is replaced, a short practice round will confirm it works,
 then G16 and a fresh go-ahead for the paid test.
 
+With a new key, the practice round passed 48 of 48 again, and G16 passed
+everything. The paid test passed its first case, then stopped safely on the
+second: the AI read the cart's existing item code and its pack size as one name,
+and the program caught the mismatch before adding anything. The AI is now told to
+keep the item code and the pack size apart, and the practice round now also
+re-reads every starting cart. The next steps are that practice round, a budget
+settlement, G17, and a fresh go-ahead for the paid test.
+
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can
 recover the same result after a lost reply or stop/retry. It does not issue,

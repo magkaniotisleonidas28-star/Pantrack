@@ -301,12 +301,19 @@ try {
                       body.instructions.includes(text),
                       'Missing kind instruction: ' + text,
                     );
+                  // On 2026-11-12 a paid cart extraction joined a SKU and its pack label.
+                  const cartRow = 'never join them or repeat one inside the other';
                   if (!product)
                     assert.ok(
                       availability.every((text) => !body.instructions.includes(text)) &&
-                        !body.instructions.includes('available ('),
+                        !body.instructions.includes('available (') &&
+                        body.instructions.includes(cartRow),
                     );
-                  else assert.ok(!body.instructions.includes('packs ('));
+                  else
+                    assert.ok(
+                      !body.instructions.includes('packs (') &&
+                        !body.instructions.includes(cartRow),
+                    );
                   const extraction = extractions.get(phase);
                   assert.ok(extraction);
                   assert.deepEqual(
