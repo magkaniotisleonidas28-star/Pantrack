@@ -1,13 +1,13 @@
 """Independent read-only preservation audit; never emits business rows or secrets."""
 import json,hashlib,sqlite3,collections,os,re,sys,subprocess,importlib.util
 from pathlib import Path
-root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261112')
+root=Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261113')
 # Consumed gate roots stay retained; one whose final audits all passed accounts for the profiles it recorded.
 CONSUMED=[Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261014'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261021'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261022'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261024'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261025'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261027'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261031'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261101'),
           Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261104'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261105'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261108'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261109'),
-          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261110'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261111')]
+          Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261110'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261111'),Path('.sites-runtime/po-cart-workers/full-offline-acceptance-task-20261112')]
 GATE_AUDITS=['credentialsRevoked','cleanupVerified','preservationVerified','evidenceVerified','consumptionVerified','passed']
 # Owner-reviewed gates whose only failed audit was database preservation, for a cause unrelated to
 # browser profiles: their exact final-audit.json and preservation.json hashes.
@@ -15,7 +15,8 @@ PRESERVATION_REVIEWED={'.sites-runtime/po-cart-workers/full-offline-acceptance-t
                        ('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2')}
 # Owner-reviewed profiles changed outside any gate on 2026-11-04 (the paid matrix and offline checks of its
 # follow-up, one reusing a historical name), the one profile of each 2026-11-09 paid matrix, the six of the
-# first 2026-11-10 paid matrix and the twelve of the second: the exact fingerprint of every entry under each.
+# first 2026-11-10 paid matrix, the twelve of the second and the one of the 2026-11-12 matrix: the exact
+# fingerprint of every entry under each.
 PROFILES_REVIEWED={
                    '0aa12d101f3f64d251934fc0f0b422651822551b34cf9586761d50ee2bdadaad':'0b9151af046811c808bc3cf1568fb7c134cabb7f2ac4d95a9fff8cb5a52beb55',
                    '0eb0f1b6f6338bc2019cdfcc4ffabe61bd33caf1922bb2220a5d1c59fad2782f':'c82aa612da7177db398124b130abf8691576b73fe5f41f81f2f61ddf3d55b4c0',
@@ -47,6 +48,7 @@ PROFILES_REVIEWED={
                    '848b0c450cce24180941b75e29d5ee6f8aadbaae6ba688ffd28c0aade3384841':'4f6e2d575b86c831bf456fac7a711c5911a17ae76a6da72c83b09c54de4a4d17',
                    '8511524c20c01acf02f8fee29aa72c25dcea5bd1af15586a7b1d6d1e7aae349d':'82a8ab0397dae43c794e24cef4851318dbd7a828db0a5b1eaa10a84e595dca9a',
                    '861c3bbd96d520b8c92765b481434467280a909cf42dd5bf2dde88a2425d0556':'304e00d63c98b6b2118ec23756912264e1406b55942b323f41930f2b1d9cbeb9',
+                   '8a1b4c471a76953cac109bee59f5d7ce78dcd8184339bb28acaba3f33ca71bb4':'b4426c0c8143c36f5b0f89e7daf7763daee980a0740efb7ceb906e5dc257b203',
                    '8e155d671d4e248e346669f31f3329b59759c00f19306ed13e4fb2d9333ed0f5':'bae0eb13a66160050d35b0491d0309cce0f4e1f5b42b40cda912b8503d451042',
                    '9c2d1d55139564c573d1b19573db2b85f87debb5fb92d4504f82329b46636aea':'fc77f1e9f09558f07455d477fc28c2f7620a3157d016c84289677703bb785421',
                    '9f985ac28ac948eab1a47e2a8515b80136ae4d651715e200b9e6b53e46433996':'f4497cc4f04f529c7251b60c5d70c6b5e9cdbfabe97726379da83108ee61a84d',

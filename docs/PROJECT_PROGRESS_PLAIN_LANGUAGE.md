@@ -57,6 +57,12 @@ review. The checker is now told that other products before, between or after the
 requested ones never make a reading incomplete. The next steps are another
 practice round, a budget settlement, G15, and a fresh go-ahead for the paid test.
 
+After a second budget settlement, the practice round came back 48 of 48 complete
+again, and G15 passed everything. But the paid test stopped at its very first
+request, because OpenAI refused the AI key: it had expired. Nothing was read or
+added. After the key is replaced, a short practice round will confirm it works,
+then G16 and a fresh go-ahead for the paid test.
+
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can
 recover the same result after a lost reply or stop/retry. It does not issue,
