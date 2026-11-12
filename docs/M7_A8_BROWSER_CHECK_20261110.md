@@ -94,9 +94,19 @@ reports retain the actual outcomes. The earlier captured walkthrough on
 No application API, business behavior, schema, migration, dependency or supplier
 contract changes. Source additions are the browser runner/scenario, focused
 lifecycle helper/test and the package command. Shared status/roadmap edits record
-A8 coverage only; Peter's cart/AI files are untouched. Keep this branch unmerged
-through his protected preparation-to-paid-run window. No gate, allowance, paid
-request, Clover action, supplier action, hosted migration or deployment is run.
+A8 coverage only; the A8 implementation changes no cart/AI files. The branch was
+initially held through Peter's protected preparation-to-paid-run window.
+
+On November 11 the owner requested merging PR #45. Main's intervening G14 outcome,
+later-SKU rule and G15 binding (`8ed82ee`) were merged into this branch without
+text conflicts. Their files remain preserved. The A8 runner, scenario, lifecycle
+test and application source remain identical to `ac9c280`, so the two browser
+results above remain their dated evidence; no fresh browser result is inferred.
+Require the six-command combined local pipeline and Windows/Linux CI on the
+refreshed head before integration. G15 must prepare/freeze the resulting merged
+source before its later invocation; preserve that new freeze through the paid run.
+This integration request does not authorize a gate, allowance, paid request,
+Clover/supplier action, hosted migration or deployment.
 
 Rollback removes the command and verification files; no application/data repair
 is needed. Retain generated fictional evidence as needed. The next A8 acceptance

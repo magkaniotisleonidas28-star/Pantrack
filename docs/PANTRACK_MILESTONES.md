@@ -342,8 +342,10 @@ For every numbered item, the assigned person follows the same delivery loop:
   the manager's recovery, invalidation, cancellation and access flow in its own
   fictional app/database. Two fresh browser runs and all six frozen-source local
   commands passed (162 executed suites, twelve Windows skips, 46 migrations).
-  Hold the separate branch through Peter's gate freeze and require final-head
-  Windows/Linux CI. This does not close hosted A8 or enter the cart gate.
+  The owner requested integration on November 11 after the recorded G14/paid-run
+  outcome. Preserve main's G15 changes, require current combined checks and
+  Windows/Linux CI, then prepare/freeze the merged source before a later G15.
+  This does not close hosted A8 or invoke the cart gate.
   **2026-10-13 follow-up:** PR #9 includes the [BUG-03 unresolved-sales guard](BUG03_UNRESOLVED_SALES_READINESS.md).
   Its local tests and main CI pass, but the released development Worker remains
   older. Record hosted sales-readiness/recovery and source-change results after
