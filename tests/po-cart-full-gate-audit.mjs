@@ -41,6 +41,7 @@ const gateRoots = [
   '20261110',
   '20261111',
   '20261112',
+  '20261113',
 ].map((day) => '.sites-runtime/po-cart-workers/full-offline-acceptance-task-' + day);
 const gateListing = () =>
   gateRoots.map((root) =>
@@ -449,27 +450,27 @@ try {
   assert.match(source, /DATABASE_BASES=\[Path\('\.wrangler\/state'\),Path\('\.sites-runtime'\)\]/);
   assert.match(
     source,
-    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261112'\)/,
+    /root=Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261113'\)/,
   );
   assert.match(
     source,
-    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261105'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261108'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261109'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261110'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261111'\)\]/,
+    /CONSUMED=\[Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261014'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261021'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261022'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261024'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261025'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261031'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261101'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261104'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261105'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261108'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261109'\),\n {10}Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261110'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261111'\),Path\('\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261112'\)\]/,
   );
   // Only G6 is owner-reviewed, pinned to its exact final and preservation audits.
   assert.match(
     source,
     /PRESERVATION_REVIEWED=\{'\.sites-runtime\/po-cart-workers\/full-offline-acceptance-task-20261027':\n {23}\('0de11404a0118a9ac446aee4540dfc22f35468450b2ae0a00ec9623658492c37','1887d51e17ec5e3b5443e609679f3feb57e5586e73055ace6d799d6aa472d0b2'\)\}\n/,
   );
-  // Only the 30 profiles reviewed on 2026-11-04, one from each 2026-11-09 paid matrix and the six and twelve
-  // of the two 2026-11-10 paid matrices, each pinned exactly.
+  // Only the 30 profiles reviewed on 2026-11-04, one from each 2026-11-09 paid matrix, the six and twelve
+  // of the two 2026-11-10 paid matrices and the one of the 2026-11-12 matrix, each pinned exactly.
   const reviewedProfiles = source.match(
     /^PROFILES_REVIEWED=\{\n((?: {19}'[0-9a-f]{64}':'[0-9a-f]{64}',\n)* {19}'[0-9a-f]{64}':'[0-9a-f]{64}')\}$/m,
   );
   assert.ok(reviewedProfiles);
-  assert.equal(reviewedProfiles[1].split('\n').length, 50);
+  assert.equal(reviewedProfiles[1].split('\n').length, 51);
   assert.equal(
     createHash('sha256').update(reviewedProfiles[0]).digest('hex'),
-    'f2035f20e92601477f0984c9b267329686bba04403ce3b9179d65565e0798a33',
+    '5bb3330873f2d1ff61abc1a1a78b1de39fb0884cc267297a1fcf10b7a0c82f99',
   );
   // Only the three historical locks G11 removed on 2026-11-09 and the ones G13 and G14 removed on 2026-11-10
   // are reviewed, and only while absent.

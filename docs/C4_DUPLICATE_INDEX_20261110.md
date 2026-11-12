@@ -417,17 +417,86 @@ Collision prevention stays deferred.
 - **Read-only `before` check** against the new audit passed: 2,374 gate profiles,
   50 reviewed, 5 removed locks, preflight idle.
 
+## Second settlement and rehearsal
+
+The later-SKU wording merged as `8ed82ee`.
+
+**Settlement `e00f2c00…`,** with the owner's authorization ("I authorize the
+settlement"):
+- **The owner reported** a $4.59 credit balance, against $4.79 at the prior
+  settlement, so $0.20 billed.
+- **It covered** 188 completed reservations ($3.40 reserved) and settled at the
+  greater recorded usage, $0.279.
+- **The ledger** went from $3.63 to $0.50.
+
+**Rehearsal of manifest `64d94fd4…`** (70 requests), with the owner's authorization:
+- **Run `b271bfb3…`** passed: 48 of 48 complete and 11 of 11 pairs correct, for
+  about $0.12.
+- **First attempt:** it stopped before any request with "Manifest does not match
+  the current source", because the main checkout had not been pulled yet.
+
+## G15 outcome
+
+**Source:** `8ed82ee`, frozen at 809 files, `f992e743…`.
+
+- **Preparation:**
+  - all six commands passed (173 suites);
+  - capture: 84,244 protected artifacts, 1,538 carts and 1,739 databases;
+  - the scratch finish dry run passed;
+  - the `before` check passed with 50 reviewed profiles and 5 removed locks.
+- **Run:** the owner ran it from 2026-11-12 04:17:16Z to 05:10:02Z.
+  - All 21 steps passed, including 30/30 reliability and 50 AI-safety cases.
+  - Both served matrices reached every intended outcome, with all 24 cases
+    `extractionComplete`.
+  - Fresh tabs appear only in the four staged stalls, and all 136 step-15 files
+    match.
+  - 179 credentials were revoked and preservation passed.
+- **Merge during the run:** PR #45 (an isolated A8 browser check) merged on GitHub at
+  04:51Z. The main checkout was not updated, and every step's source snapshot
+  matched `f992e743…`.
+
+## Fifth paid matrix (expired key)
+
+**Pre-check:**
+- the allowance `…-20261112` was absent;
+- the ledger had $3.16 free;
+- the key line was present with mode 600;
+- both loopback endpoints answered 401.
+
+**Authorization:** the owner authorized it ("I auth the paid matrix"). Pricing was
+rechecked.
+
+**Run `823e00f4…`** (05:15:59Z):
+- **What happened:** the first request, the rows/normal baseline Extraction, got
+  **HTTP 401** from the provider.
+- **Hold:** the job held for `verification_failed` at baseline, with 0 completed
+  calls, 0 additions, 0 external browser requests and 0 checkouts.
+- **Cause:** the owner found the API key had **expired**. The key file was last
+  modified 2026-10-11, and its contents were not read.
+- **Ledger:** one 14,574-micro reservation stays `reserved`.
+- **Allowance:** `…-20261112` is consumed.
+
+## G16 binding
+
+- **Bindings:** the gate root is `full-offline-acceptance-task-20261113` and the
+  allowance `metadata-repair-acceptance-20261113`, with prior `…-20261112`.
+- **Consumed roots** add `…-20261112`.
+- **The attempt's one profile,** created at 05:16Z, is pinned exactly, for 51
+  reviewed. No historical lock went missing.
+- **Read-only `before` check** passed: 2,567 gate profiles, 51 reviewed, 5 removed
+  locks, preflight idle.
+
 ## Next
 
-1. **After this merges,** in a worktree synced to merged main: `record` with the
-   display awake, then `plan` read-only.
-2. **The owner authorizes** that manifest; then run `authorize` and `run --ai` once,
-   in main.
+1. **The owner replaces the key** in `.dev.vars.cart`. Only the line's presence and
+   mode 600 are checked.
+2. **After this merges,** in a worktree synced to merged main: `record` and `plan`.
+   Then one owner-authorized rehearsal, in main after `git pull`. It confirms the
+   new key before an hour-long gate.
 3. **If every verdict is complete:**
-   - settle the ledger to the owner's billed total;
-   - prepare G15, which the owner invokes once;
-   - then the loopback services (with both variables), the paid-build check and
-     fresh explicit authorization.
+   - G16 preparation, which the owner invokes once;
+   - the loopback services (with both variables);
+   - the paid-build check and fresh explicit authorization.
 
    No merges from preparation until the paid run finishes.
 
