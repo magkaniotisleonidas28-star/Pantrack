@@ -6,11 +6,12 @@ Updated: 2026-11-13 for the first real supplier decision.
 business software ([decision 0007](decisions/0007-amazon-business-first-supplier.md)).
 Baldor's and Amazon's website rules both forbid automated use, so the AI won't
 work on either website. Amazon's official connection can search products, fill a
-cart and test an order without placing it. The owner is creating the Amazon
-Business account and developer registration using the
-[checklist](C3_AMAZON_BUSINESS_PREPARATION.md). Building starts with pretend data,
-then Amazon's free practice version. Baldor is set aside for later. Nothing has
-been ordered and no supplier has been contacted.
+cart and test an order without placing it. The owner has created the Amazon
+Business account and registered as a developer using the
+[checklist](C3_AMAZON_BUSINESS_PREPARATION.md). Amazon's identity check needs a
+registered business, so it waits until the owner registers one. Building starts
+with pretend data, then Amazon's free practice version. Baldor is set aside for
+later. Nothing has been ordered and no supplier has been contacted.
 
 The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) are merged into main.
 They cover save-history review, exact-request continuation and explicit checks

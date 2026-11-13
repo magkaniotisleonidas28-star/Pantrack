@@ -1,10 +1,11 @@
 # C3 — Amazon Business supplier preparation
 
-Prepared: 2026-11-13. Status: owner decision recorded; account and developer
-registration pending. Per [decision 0007](decisions/0007-amazon-business-first-supplier.md),
+Prepared: 2026-11-13. Status: owner decision recorded; Amazon Business account
+and portal registration done by the owner; identity verification paused until a
+registered business exists (see [Progress](#progress)). Per [decision 0007](decisions/0007-amazon-business-first-supplier.md),
 Amazon Business is the first real supplier target, through its official API.
 Public documentation was read on 2026-11-13; no Amazon account was created or
-used and nobody at Amazon was contacted.
+used by the agent and nobody at Amazon was contacted.
 
 Keep account names, emails, IDs, identity documents, keys and tokens outside this
 repository and outside the conversation. Record only sanitized status here.
@@ -43,15 +44,34 @@ The owner does each step. None needs Pantrack code or a shared secret.
 Later, creating the sandbox app client gives keys. Store them only where the
 setup instructions say, never in chat or Git.
 
+## Progress
+
+Owner-reported, sanitized; no account details are recorded here.
+
+- **2026-11-13:** the owner created the Amazon Business account (step 1) and
+  registered in the Solution Provider Portal (step 4), reaching the identity
+  verification form (step 6). It asks for the legal business name, a company
+  registration number, the registered business address and a verification phone
+  number. The owner has no registered business yet, so verification is paused
+  rather than submitted with incomplete details. Amazon's
+  [onboarding page](https://docs.business.amazon.com/docs/register-as-a-developer)
+  says that after portal registration "you will be able to create sandbox
+  applications"; no sandbox app client exists yet.
+- **Unblock:** register a business (for example an LLC with the owner's state)
+  and obtain an EIN, then resume verification. Whether Amazon accepts a sole
+  proprietor's EIN is unverified. Connector work continues against local fakes
+  meanwhile.
+
 ## C3 items for Amazon Business
 
 | Decision or handoff | Current status |
 | --- | --- |
 | First supplier and route | Amazon Business, official API (decision 0007) |
-| Amazon Business account | Pending; the owner creates it |
-| Solution Provider Portal and identity verification | Pending |
+| Amazon Business account | Created by the owner (2026-11-13) |
+| Solution Provider Portal | Registered by the owner (2026-11-13) |
+| Identity verification | Paused: needs a registered business and its registration number |
 | Developer profile and roles | Pending; Business Product Catalog and Order Placement to request |
-| Sandbox access | Pending step 4; static sandbox covers Cart and Product Search, not Ordering |
+| Sandbox access | Available after portal registration per Amazon's docs; no app client yet; covers Cart and Product Search, not Ordering |
 | Who places the order | Open; the Cart API path ends with an Ordering API call, and website visibility of API carts is unverified |
 | Order submission | Disabled until its own gate records evidence; trial mode places no order |
 | Products, packs, prices and delivery | Unverified for the café's items |

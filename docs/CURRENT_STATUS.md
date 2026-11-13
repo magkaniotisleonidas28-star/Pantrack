@@ -19,11 +19,12 @@ Search, Cart, and Ordering with a no-order trial mode). Baldor's rechecked terms
 still prohibit automated access, and Amazon's website terms prohibit robots and
 similar tools, so no AI browser runs on either site. Baldor is deferred. The
 [Amazon Business preparation](C3_AMAZON_BUSINESS_PREPARATION.md) records the
-owner's account and developer-registration checklist. Work starts against fakes,
-then Amazon's static sandbox once the owner's portal registration exists. Who
-places the order stays open; order submission remains disabled until its own
-gate. No account was created or used and no supplier was contacted. C3 remains
-open.
+owner's account and developer-registration checklist. The owner has created the
+Amazon Business account and registered in the Solution Provider Portal; identity
+verification is paused until a registered business exists. Work starts against
+fakes, then Amazon's static sandbox. Who places the order stays open; order
+submission remains disabled until its own gate. The agent created or used no
+account and contacted no supplier. C3 remains open.
 
 ## A8 repeatable local browser check — 2026-11-10
 

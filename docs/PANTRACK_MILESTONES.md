@@ -524,8 +524,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   Amazon Business through its official API replaces Baldor as the first target,
   because both websites' terms prohibit automated access. The
   [Amazon Business packet](C3_AMAZON_BUSINESS_PREPARATION.md) records the owner's
-  registration checklist and open items; account, approval and order placement
-  remain open.
+  registration checklist and open items. The owner created the account and
+  portal registration; identity verification waits for a registered business.
+  Approval and order placement remain open.
 - [ ] **C4 — Build safe platform components against fakes.** Define supplier,
   PO authorization, durable cart jobs, private Browserbase sessions, fenced Render
   worker, controlled AI actions, confirmation/receiving, scheduler and budget
