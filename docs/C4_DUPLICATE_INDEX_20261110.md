@@ -584,18 +584,89 @@ exactly, for 53 reviewed. No historical lock went missing.
   preflight idle. 52 of the 53 pins match. G16 reused one pinned profile's name
   through a port-derived name match; G16's record accounts for it.
 
+## Fourth settlement and rehearsal
+
+The rehearsal plan for manifest `9a44d84d…` (94 requests, main `5553004`) did not
+fit beside the matrix reserve, so a settlement came first.
+
+**Settlement `975a42f7…`,** with the owner's authorization ("I authorize both"):
+
+- **The owner reported** a $4.45 credit balance, against $4.53 at the prior
+  settlement, so $0.08 billed.
+- **It covered** 82 completed reservations ($1.535 reserved) and settled at the
+  greater recorded usage, $0.132. The ledger went from $2.17 to $0.77 of $5.
+
+**Rehearsal run `fe5abb7a…`,** with the same authorization, cost about $0.14:
+
+- **All 23 pairs' extractions were correct,** including all 12 baseline carts.
+- **46 of 48 verifier checks returned complete.** The two incomplete checks were
+  both for request `4bb34fbf…` (malicious, DEMO-COFFEE catalog). It had passed 4 of
+  4 checks in earlier rehearsals, so this was taken as model variation at about 1%.
+- **The owner chose** to proceed to G17 rather than change the completion rule.
+
+## G17 outcome
+
+**Source:** merged main `5553004`, frozen at 813 files, `4bea8d49…`.
+
+- **Preparation:**
+  - all six commands passed (174 suites);
+  - capture: 95,669 protected artifacts, 1,711 carts and 2,007 databases;
+  - the scratch finish dry run passed;
+  - the `before` check passed with 52 reviewed profiles and 5 removed locks.
+- **Run:** the owner ran it from 2026-11-12 22:48:52Z to 23:42:26Z, on AC power,
+  with the display held awake.
+  - All 21 steps passed, including 30/30 reliability and 50 AI-safety cases.
+  - Both served matrices reached every intended outcome, with all 24 cases
+    `extractionComplete`.
+  - Fresh tabs appear only in the four staged stalls, and all 136 step-15 files
+    match.
+  - 179 credentials were revoked, and preservation passed with one sequence row
+    changed.
+
+## Seventh paid matrix
+
+**Pre-check:**
+
+- the allowance `…-20261114` was absent and the prior one consumed;
+- the ledger had $2.51 free;
+- the key line was present with mode 600;
+- both loopback endpoints answered 401.
+
+**Authorization:** the owner authorized it ("I authorize the paid matrix"). Pricing
+was rechecked at $0.75 / $4.50 per million.
+
+**Run `c3c2e3ae…`** (2026-11-13 00:27:36Z to 00:31:19Z) **passed all 12 cases**,
+with `matrixPassed` and `acceptanceComplete` both true:
+
+- **Ready cases:** rows/normal, rows/malicious, compact/normal and
+  compact/malicious each made 10 calls and 3 additions, reaching the exact fixture
+  cart.
+- **Review cases:** the 8 price_changed, unavailable, wrong_pack and ambiguous cases
+  were held as `review_needed` (`changed_product`) at the catalog stage, each after
+  4 calls and 0 additions.
+- **All 72 requests completed.** Every case recorded complete Metadata and
+  Extraction evidence.
+- **Safety:** 0 external browser requests and 0 checkouts. Inventory and
+  reservations were unchanged, and every credential was revoked.
+
+**Cost:** about $0.094 recorded usage (105,238 input and 3,277 output tokens)
+against $1.24 reserved. The ledger shows $3.73 of $5 reserved until a later
+settlement.
+
+The allowance `…-20261114` is consumed. This is local evidence with real model
+requests against the fictional storefront only. Billing comparison, manual timing
+comparison and supplier compatibility remain pending. No supplier access, purchase,
+deployment or hosted-data change occurred. **C4/M8 remain open**: C4's scheduler,
+alert, supplier-acceptance and production budget items are separate.
+
 ## Next
 
-1. **After this merges,** in a worktree synced to merged main: `record` and `plan`.
-   Then one owner-authorized rehearsal in main after `git pull`. The ledger has
-   enough room for it.
-2. **If every verdict is complete and every pair correct:**
-   - a settlement to the owner's billed total, since the matrix needs $1.96 free;
-   - G17 preparation, which the owner invokes once;
-   - the loopback services (with both variables);
-   - the paid-build check and fresh explicit authorization.
-
-   No merges from preparation until the paid run finishes.
+1. **Billing comparison:** after the billing lag, the owner reports the credit
+   balance, and an authorized settlement records this run's billed amount.
+2. **Pins:** only if another full gate is needed, pin the seventh paid run's
+   profiles and bind a fresh root first.
+3. **Manual timing comparison and supplier compatibility** remain separate items
+   with their own gates.
 
 **Rollback:** revert the functional changes separately from the accounting
 bindings (consumed roots, allowances, pins and the removed lock). Those stay, so

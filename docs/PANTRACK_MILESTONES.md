@@ -634,10 +634,11 @@ For every numbered item, the assigned person follows the same delivery loop:
   Preserve the schema merge
   queue and G8 freeze. Formal replacement authority remains undecided.
   Hosted bucket/privacy acceptance remains separate; check the
-  [current settlement, rehearsal and G14 operator position](C4_DUPLICATE_INDEX_20261110.md#next)
+  [seventh paid matrix pass and remaining items](C4_DUPLICATE_INDEX_20261110.md#seventh-paid-matrix)
   and the [November 8 integration](C4_PR_STACK_INTEGRATION_20261108.md).
-  Prepare/freeze the resulting merged source before the G14 invocation;
-  preserve its preparation-to-paid-run freeze once that preparation begins.
+  After G17, the real-model matrix passed all 12 cases against the fictional
+  storefront (local evidence only); billing and manual timing comparisons and
+  supplier compatibility remain pending.
   Issued artifacts and receiving now have local implementations recorded here;
   hosted document acceptance and supplier/full-workflow acceptance remain separate.
   Supplier email infrastructure is deferred.
