@@ -520,6 +520,12 @@ For every numbered item, the assigned person follows the same delivery loop:
   future outcomes without changing milestone acceptance. Supplier access,
   café authorization, payment/operational decisions, and C3 completion remain
   open; no account was used or supplier contacted.
+  **First real supplier on 2026-11-13 ([decision 0007](decisions/0007-amazon-business-first-supplier.md)):**
+  Amazon Business through its official API replaces Baldor as the first target,
+  because both websites' terms prohibit automated access. The
+  [Amazon Business packet](C3_AMAZON_BUSINESS_PREPARATION.md) records the owner's
+  registration checklist and open items; account, approval and order placement
+  remain open.
 - [ ] **C4 — Build safe platform components against fakes.** Define supplier,
   PO authorization, durable cart jobs, private Browserbase sessions, fenced Render
   worker, controlled AI actions, confirmation/receiving, scheduler and budget

@@ -1,6 +1,9 @@
 # C3 — Baldor supplier preparation
 
 Prepared: 2026-09-30. Status: research packet and inquiry draft ready.
+**Deferred on 2026-11-13:** [decision 0007](decisions/0007-amazon-business-first-supplier.md)
+makes Amazon Business the first real supplier. Baldor's Terms of Use (last
+updated 2024-11-25) were rechecked that day and still prohibit automated access.
 This is one C3 preparation outcome. Baldor approval, testing access, a working
 supplier connection, and M8 acceptance remain pending.
 
