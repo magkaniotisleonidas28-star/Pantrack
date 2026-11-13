@@ -637,8 +637,8 @@ For every numbered item, the assigned person follows the same delivery loop:
   [seventh paid matrix pass and remaining items](C4_DUPLICATE_INDEX_20261110.md#seventh-paid-matrix)
   and the [November 8 integration](C4_PR_STACK_INTEGRATION_20261108.md).
   After G17, the real-model matrix passed all 12 cases against the fictional
-  storefront (local evidence only); billing and manual timing comparisons and
-  supplier compatibility remain pending.
+  storefront (local evidence only), and its billing was compared and settled;
+  manual timing comparison and supplier compatibility remain pending.
   Issued artifacts and receiving now have local implementations recorded here;
   hosted document acceptance and supplier/full-workflow acceptance remain separate.
   Supplier email infrastructure is deferred.

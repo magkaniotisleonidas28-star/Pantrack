@@ -76,8 +76,10 @@ passed everything. **The paid test then passed all 12 cases** for about $0.09:
 the four normal and trick carts were prepared exactly, and the eight problem carts
 were held for a person to review. Nothing was sent anywhere outside the test store,
 and no checkout or order happened. This proves the AI cart preparation on the
-fictional local store only. Comparing the cost with the OpenAI bill, timing it
-against doing it by hand, and trying a real supplier are still to come.
+fictional local store only. The OpenAI bill for the practice round and the paid
+test together was $0.16, a little under the program's own count of $0.23, so the
+program's budget stays on the safe side. Timing it against doing it by hand and
+trying a real supplier are still to come.
 
 Latest addition: [Check prepared file now](C4_PREPARED_FILE_CHECK_LOCAL_EVIDENCE.md)
 checks the current file for an unfinished save and records what it found. It can

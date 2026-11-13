@@ -650,22 +650,37 @@ with `matrixPassed` and `acceptanceComplete` both true:
   reservations were unchanged, and every credential was revoked.
 
 **Cost:** about $0.094 recorded usage (105,238 input and 3,277 output tokens)
-against $1.24 reserved. The ledger shows $3.73 of $5 reserved until a later
-settlement.
+against $1.24 reserved. The ledger showed $3.73 of $5 reserved until the
+settlement below.
 
 The allowance `…-20261114` is consumed. This is local evidence with real model
-requests against the fictional storefront only. Billing comparison, manual timing
-comparison and supplier compatibility remain pending. No supplier access, purchase,
-deployment or hosted-data change occurred. **C4/M8 remain open**: C4's scheduler,
-alert, supplier-acceptance and production budget items are separate.
+requests against the fictional storefront only. Manual timing comparison and
+supplier compatibility remain pending. No supplier access, purchase, deployment or
+hosted-data change occurred. **C4/M8 remain open**: C4's scheduler, alert,
+supplier-acceptance and production budget items are separate.
+
+## Fifth settlement (billing comparison)
+
+**Settlement `0ae68662…`,** with the owner's authorization ("I authorize the
+settlement"), after the one-hour billing lag:
+
+- **The owner reported** a $4.29 credit balance, against $4.45 at the prior
+  settlement, so $0.16 billed.
+- **It covered** 166 completed reservations: the rehearsal's 94 and the paid
+  matrix's 72 ($2.96 reserved). One unsettled reservation was excluded and keeps its
+  full amount.
+- **Recorded usage was $0.233**, above the $0.16 billed, so it settled at the
+  greater recorded figure. The ledger went from $3.73 to $1.00 of $5.
+- **Comparison:** the provider's bill does not separate the two runs, so the
+  comparison is for both together. Recorded usage has been above the billed amount
+  in the last three settlements ($0.117 against $0.06, $0.132 against $0.08, and
+  $0.233 against $0.16), so the ledger remains conservative.
 
 ## Next
 
-1. **Billing comparison:** after the billing lag, the owner reports the credit
-   balance, and an authorized settlement records this run's billed amount.
-2. **Pins:** only if another full gate is needed, pin the seventh paid run's
+1. **Pins:** only if another full gate is needed, pin the seventh paid run's
    profiles and bind a fresh root first.
-3. **Manual timing comparison and supplier compatibility** remain separate items
+2. **Manual timing comparison and supplier compatibility** remain separate items
    with their own gates.
 
 **Rollback:** revert the functional changes separately from the accounting
