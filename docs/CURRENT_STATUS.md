@@ -23,8 +23,12 @@ owner's account and developer-registration checklist. The owner has created the
 Amazon Business account and registered in the Solution Provider Portal; identity
 verification is paused until a registered business exists. Work starts against
 fakes, then Amazon's static sandbox. Who places the order stays open; order
-submission remains disabled until its own gate. The agent created or used no
-account and contacted no supplier. C3 remains open.
+submission remains disabled until its own gate. By
+[decision 0008](decisions/0008-ai-browser-only-with-supplier-permission.md)
+(2026-11-14), the AI browser runs only on suppliers that give written
+permission; the owner sends the
+[permission request](C3_SUPPLIER_PERMISSION_REQUEST.md). The agent created or
+used no account and contacted no supplier. C3 remains open.
 
 ## A8 repeatable local browser check — 2026-11-10
 
@@ -1329,6 +1333,7 @@ pending M6 POS gate has not been removed.
 - [M6 Toast access handoff](M6_TOAST_ACCESS.md)
 - [C3 Baldor supplier preparation](C3_BALDOR_PREPARATION.md)
 - [C3 Amazon Business supplier preparation](C3_AMAZON_BUSINESS_PREPARATION.md)
+- [C3 supplier permission request](C3_SUPPLIER_PERMISSION_REQUEST.md)
 - [Purchase-order-first rollout](PURCHASE_ORDER_ROLLOUT.md)
 - [C4 persistent PO draft foundation](C4_PO_FOUNDATION_LOCAL_EVIDENCE.md)
 - [Quick waste recording and menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md)

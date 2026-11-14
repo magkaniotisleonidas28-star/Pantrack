@@ -11,7 +11,9 @@ Business account and registered as a developer using the
 [checklist](C3_AMAZON_BUSINESS_PREPARATION.md). Amazon's identity check needs a
 registered business, so it waits until the owner registers one. Building starts
 with pretend data, then Amazon's free practice version. Baldor is set aside for
-later. Nothing has been ordered and no supplier has been contacted.
+later. The AI browser will only be used on suppliers that agree in writing
+([decision 0008](decisions/0008-ai-browser-only-with-supplier-permission.md));
+the owner sends them a [permission request](C3_SUPPLIER_PERMISSION_REQUEST.md). Nothing has been ordered and no supplier has been contacted.
 
 The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) are merged into main.
 They cover save-history review, exact-request continuation and explicit checks
