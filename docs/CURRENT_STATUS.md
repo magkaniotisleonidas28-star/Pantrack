@@ -11,6 +11,17 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Workspace header, navigation and wording — 2026-11-14
+
+At the owner's request after a local prototype review, the
+[workspace header and navigation change](UI_SHELL_NAVIGATION_LOCAL_EVIDENCE_20261114.md)
+replaces the company bar with a company menu in the header, keeps section
+choices only in the side menu (no page tabs), renames the order page "Create a
+new order", uses "supplier" wording with plain-language notices, and marks
+unfinished supplier sections "Coming soon". Local evidence only; no API, schema
+or authorization change. Simpler Setup & register, guided product setup, Sales
+as its own section and recipe option sets follow as separate changes.
+
 ## C3 first real supplier: Amazon Business — 2026-11-13
 
 By [decision 0007](decisions/0007-amazon-business-first-supplier.md), the first

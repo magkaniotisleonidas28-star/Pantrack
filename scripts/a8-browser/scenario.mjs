@@ -233,11 +233,10 @@ export async function runA8Scenario({ origin, appRoot, evidenceRoot, executableP
       await page.goto(
         origin + '/signin-with-chatgpt?return_to=' + encodeURIComponent('/?company=' + companyId),
       );
-      await page.getByRole('button', { name: 'Inventory', exact: true }).first().click();
-      await page
-        .getByRole('navigation', { name: 'Inventory sections' })
-        .getByRole('button', { name: 'Purchasing plan', exact: true })
-        .click();
+      // Inventory sections are chosen in the workspace side menu.
+      const sections = page.getByRole('navigation', { name: 'Workspace sections' }).first();
+      await sections.getByRole('button', { name: 'Inventory', exact: true }).click();
+      await sections.getByRole('button', { name: 'Purchasing plan', exact: true }).click();
     }
     await openPlan();
     await page.locator('summary').filter({ hasText: 'Clover review' }).click();

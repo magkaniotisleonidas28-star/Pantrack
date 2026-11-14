@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { inventorySections, type InventorySection } from './workspace-navigation';
 import './inventory-layout.css';
 
+// Sections are chosen in the workspace side menu; the heading names the current one.
 export function InventoryLayout({
   section,
-  onSectionChange,
   loading,
   onRefresh,
   children,
@@ -24,26 +24,15 @@ export function InventoryLayout({
     <div className="inventory-surface" aria-busy={loading}>
       <div className="page-heading inventory-heading">
         <div>
-          <h1>Inventory</h1>
-          <p>Track stock, manage recipes, and review sales and purchasing suggestions.</p>
+          <div className="eyebrow">Inventory</div>
+          <h1>{inventorySections.find((item) => item.id === section)?.label}</h1>
+          <p>Track stock, recipes, sales and what to reorder.</p>
         </div>
         <Button variant="ghost" disabled={loading} onClick={onRefresh}>
           <RefreshCw size={16} />
           Refresh
         </Button>
       </div>
-      <nav className="inventory-section-nav" aria-label="Inventory sections">
-        {inventorySections.map((item) => (
-          <button
-            type="button"
-            key={item.id}
-            aria-current={section === item.id ? 'page' : undefined}
-            onClick={() => onSectionChange(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </nav>
       {children}
     </div>
   );

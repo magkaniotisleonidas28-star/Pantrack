@@ -2,6 +2,13 @@
 
 Updated: 2026-11-13 for the first real supplier decision.
 
+**Simpler screens (2026-11-14):** after trying a preview, the owner approved a
+cleaner layout: one header with a company menu, page sections chosen only from
+the side menu, "Create a new order" as the order page title, "supplier"
+everywhere instead of "vendor", plainer messages, and "Coming soon" labels on
+unfinished parts. The [record](UI_SHELL_NAVIGATION_LOCAL_EVIDENCE_20261114.md)
+covers what changed and how it was checked. More screen changes follow.
+
 **First real supplier:** Amazon Business, through Amazon's official connection for
 business software ([decision 0007](decisions/0007-amazon-business-first-supplier.md)).
 Baldor's and Amazon's website rules both forbid automated use, so the AI won't

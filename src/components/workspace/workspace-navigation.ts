@@ -7,10 +7,10 @@ export const inventorySections = [
 export const legacyInventorySections = inventorySections;
 export const exactInventorySections = inventorySections;
 export const supplierSections = [
-  { id: 'vendors', label: 'Vendor connections' },
-  { id: 'rules', label: 'Automation rules' },
-  { id: 'activity', label: 'Proposals & orders' },
-  { id: 'schedule', label: 'Schedule & setup' },
+  { id: 'vendors', label: 'Your suppliers' },
+  { id: 'rules', label: 'Automation rules', soon: true },
+  { id: 'activity', label: 'Suggested orders', soon: true },
+  { id: 'schedule', label: 'Schedule', soon: true },
 ] as const;
 
 export type InventorySection = (typeof inventorySections)[number]['id'];
