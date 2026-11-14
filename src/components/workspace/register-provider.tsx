@@ -202,67 +202,77 @@ export default function RegisterProvider({
           </div>
         )}
       </section>
-      {saved?.provider === 'clover' && (
-        <CloverConnection
-          companyId={companyId}
-          onMap={onMap}
-          onStatusChange={() => void refreshAvailability()}
-        />
-      )}
-      <section className="catalog-card" style={{ margin: '24px 0' }}>
-        <h2>Common sales endpoint</h2>
-        <span className="sample-tag">{enabled ? 'Access token enabled' : 'Access disabled'}</span>
-        <p>
-          An integration service can translate your POS sales into Pantrack’s standard format and
-          send them here automatically. This requires an adapter for that POS; Pantrack does not
-          automatically read every register. Only send prepared item quantities after your opening
-          inventory count.
-        </p>
-        <p>Last accepted request: {last ? new Date(last).toLocaleString() : 'None received'}</p>
-        <label>
-          Company endpoint
-          <Input readOnly value={endpoint} />
-        </label>
-        <div className="inventory-actions" style={{ marginTop: 16 }}>
-          <Button
-            disabled={busy || !saved}
-            onClick={() => (enabled ? setConfirm('token') : void action('token'))}
-          >
-            {enabled ? 'Replace access token' : 'Create access token'}
-          </Button>
-          {enabled && (
-            <Button variant="outline" disabled={busy} onClick={() => setConfirm('revoke')}>
-              Revoke access
-            </Button>
-          )}
-          <a href="/register-integration-guide.md" target="_blank" rel="noreferrer">
-            Integration instructions
-          </a>
-        </div>
-        {token && (
-          <div className="payment-callout">
-            <label>
-              Access token — shown once
-              <Input readOnly type="password" value={token} />
-            </label>
-            <Button
-              variant="outline"
-              onClick={() =>
-                void navigator.clipboard
-                  .writeText(token)
-                  .then(() => setNotice('Token copied.'))
-                  .catch(() => setError('Copy failed. Select and copy the token field.'))
-              }
-            >
-              Copy token
-            </Button>
-            <p>
-              This token authorizes inventory deductions for this company. Store it in your
-              integration service’s secret settings.
-            </p>
-          </div>
+      {/* Café-facing choices stay above; app-owner and integration details are tucked away. */}
+      <details className="setup-advanced">
+        <summary>
+          Technical connections
+          <small>
+            For whoever set up Pantrack: the Clover app, the automatic sales address and access
+            tokens.
+          </small>
+        </summary>
+        {saved?.provider === 'clover' && (
+          <CloverConnection
+            companyId={companyId}
+            onMap={onMap}
+            onStatusChange={() => void refreshAvailability()}
+          />
         )}
-      </section>
+        <section className="catalog-card" style={{ margin: '24px 0' }}>
+          <h2>Common sales endpoint</h2>
+          <span className="sample-tag">{enabled ? 'Access token enabled' : 'Access disabled'}</span>
+          <p>
+            An integration service can translate your POS sales into Pantrack’s standard format and
+            send them here automatically. This requires an adapter for that POS; Pantrack does not
+            automatically read every register. Only send prepared item quantities after your opening
+            inventory count.
+          </p>
+          <p>Last accepted request: {last ? new Date(last).toLocaleString() : 'None received'}</p>
+          <label>
+            Company endpoint
+            <Input readOnly value={endpoint} />
+          </label>
+          <div className="inventory-actions" style={{ marginTop: 16 }}>
+            <Button
+              disabled={busy || !saved}
+              onClick={() => (enabled ? setConfirm('token') : void action('token'))}
+            >
+              {enabled ? 'Replace access token' : 'Create access token'}
+            </Button>
+            {enabled && (
+              <Button variant="outline" disabled={busy} onClick={() => setConfirm('revoke')}>
+                Revoke access
+              </Button>
+            )}
+            <a href="/register-integration-guide.md" target="_blank" rel="noreferrer">
+              Integration instructions
+            </a>
+          </div>
+          {token && (
+            <div className="payment-callout">
+              <label>
+                Access token — shown once
+                <Input readOnly type="password" value={token} />
+              </label>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  void navigator.clipboard
+                    .writeText(token)
+                    .then(() => setNotice('Token copied.'))
+                    .catch(() => setError('Copy failed. Select and copy the token field.'))
+                }
+              >
+                Copy token
+              </Button>
+              <p>
+                This token authorizes inventory deductions for this company. Store it in your
+                integration service’s secret settings.
+              </p>
+            </div>
+          )}
+        </section>
+      </details>
       <AlertDialog open={!!confirm} onOpenChange={(v) => !v && !busy && setConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogTitle>
