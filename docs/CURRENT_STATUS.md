@@ -21,8 +21,10 @@ similar tools, so no AI browser runs on either site. Baldor is deferred. The
 [Amazon Business preparation](C3_AMAZON_BUSINESS_PREPARATION.md) records the
 owner's account and developer-registration checklist. The owner has created the
 Amazon Business account and registered in the Solution Provider Portal; identity
-verification is paused until a registered business exists. Work starts against
-fakes, then Amazon's static sandbox. Who places the order stays open; order
+verification is paused until a registered business exists. The
+[Amazon Business cart preparation](C4_AMAZON_BUSINESS_FAKE_CART_LOCAL_EVIDENCE.md)
+passed locally against a fake (local evidence only); Amazon's static sandbox is
+next. Who places the order stays open; order
 submission remains disabled until its own gate. The agent created or used no
 account and contacted no supplier. C3 remains open.
 
