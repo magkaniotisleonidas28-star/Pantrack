@@ -526,7 +526,9 @@ For every numbered item, the assigned person follows the same delivery loop:
   [Amazon Business packet](C3_AMAZON_BUSINESS_PREPARATION.md) records the owner's
   registration checklist and open items. The owner created the account and
   portal registration; identity verification waits for a registered business.
-  Approval and order placement remain open. By
+  Approval and order placement remain open. The
+  [Amazon Business fake cart](C4_AMAZON_BUSINESS_FAKE_CART_LOCAL_EVIDENCE.md)
+  passes locally with no network and no ordering path. By
   [decision 0008](decisions/0008-ai-browser-only-with-supplier-permission.md),
   the AI browser runs only on suppliers giving written permission; the owner
   sends the [permission request](C3_SUPPLIER_PERMISSION_REQUEST.md).

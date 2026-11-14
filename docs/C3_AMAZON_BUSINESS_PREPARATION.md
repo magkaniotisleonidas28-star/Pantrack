@@ -83,7 +83,9 @@ Owner-reported, sanitized; no account details are recorded here.
 
 1. **Fakes:** an Amazon Business connector contract against local fakes,
    reusing the shared PO engine's authorization, limits, duplicate prevention and
-   cart states. Local evidence only.
+   cart states. Local evidence only. The cart-preparation contract
+   [passed locally against a fake](C4_AMAZON_BUSINESS_FAKE_CART_LOCAL_EVIDENCE.md)
+   on 2026-11-13; wiring it into the durable cart job remains.
 2. **Static sandbox:** Product Search and Cart against the sandbox once step 4 is
    done. Sandbox evidence only.
 3. **Trial mode:** after approval, a separately authorized trial order that
