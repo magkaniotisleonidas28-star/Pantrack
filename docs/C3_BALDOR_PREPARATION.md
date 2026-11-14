@@ -1,6 +1,9 @@
 # C3 — Baldor supplier preparation
 
 Prepared: 2026-09-30. Status: research packet and inquiry draft ready.
+**Deferred on 2026-11-13:** [decision 0007](decisions/0007-amazon-business-first-supplier.md)
+makes Amazon Business the first real supplier. Baldor's Terms of Use (last
+updated 2024-11-25) were rechecked that day and still prohibit automated access.
 This is one C3 preparation outcome. Baldor approval, testing access, a working
 supplier connection, and M8 acceptance remain pending.
 
@@ -30,7 +33,7 @@ disabled while fictional development continues.
 
 ### Browser-access inquiry — owner reviews and sends
 
-**Status: withdrawn by the owner on 2026-10-26 ([decision 0006](decisions/0006-m10-payment-and-limits.md)); never sent.** Whether Baldor's terms allow automated access stays an open question, and any real Baldor session still needs separate explicit authorization. The draft is kept for reference: ask the supplier's appropriate contact whether Pantrack may
+**Status: withdrawn by the owner on 2026-10-26 ([decision 0006](decisions/0006-m10-payment-and-limits.md)); never sent.** On 2026-11-14, [decision 0008](decisions/0008-ai-browser-only-with-supplier-permission.md) lets the owner ask Baldor with the [permission request](C3_SUPPLIER_PERMISSION_REQUEST.md) instead. Whether Baldor's terms allow automated access stays an open question, and any real Baldor session still needs separate explicit authorization. The draft is kept for reference: ask the supplier's appropriate contact whether Pantrack may
 use a controlled hosted browser to prepare a cart from an exact reviewed PO,
 with manual sign-in/2FA and a human performing all checkout. Confirm permitted
 automation, required agreements/restrictions, supported authentication domains,
