@@ -11,12 +11,13 @@ import WeeklySchedules from './weekly-schedules';
 import InventoryPanel from './inventory-panel';
 import ProductCatalog from './product-catalog';
 import PaymentMethods from './payment-methods';
-import {CalendarClock,CreditCard,Gauge,Menu,ChevronRight,Moon,Sun,Trash2,X} from 'lucide-react';
+import {CalendarClock,CreditCard,Gauge,Menu,ChevronRight,Moon,Sun,Trash2,X,Receipt} from 'lucide-react';
 import {Sheet,SheetTrigger,SheetContent,SheetTitle,SheetDescription} from '@/components/ui/sheet';
 import {useCallback,useEffect,useRef,useState,useSyncExternalStore,type ReactNode} from 'react';
 import {useRequestScope} from '@/hooks/use-request-scope';
 import {Package,ShoppingBag,BookOpen,History,Truck,Search,Plus,Minus,ArrowRight,Download,Check,Leaf,AlertCircle} from 'lucide-react';
-import {legacyInventorySections,exactInventorySections,supplierSections,type InventorySection,type SupplierSection,type InventoryMode} from './workspace-navigation';
+import {legacyInventorySections,exactInventorySections,supplierSections,salesSections,type InventorySection,type SupplierSection,type SalesSection,type InventoryMode} from './workspace-navigation';
+import SalesPanel from './sales-panel';
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/ui/dialog';
 import {Table,TableHeader,TableBody,TableRow,TableHead,TableCell} from '@/components/ui/table';
 import {Button} from '@/components/ui/button';
@@ -51,6 +52,7 @@ const [navigationOpen,setNavigationOpen]=useState(false);
 const [wasteEnabled,setWasteEnabled]=useState(false),[wasteLaunch,setWasteLaunch]=useState(0),[wasteSection,setWasteSection]=useState<WasteSection>('record'),[stockFocus,setStockFocus]=useState<string>();
 const [inventorySection,setInventorySection]=useState<InventorySection>('stock');
 const [supplierSection,setSupplierSection]=useState<SupplierSection>('vendors');
+const [salesSection,setSalesSection]=useState<SalesSection>('record');
 const [inventoryMode,setInventoryMode]=useState<InventoryMode>('legacy');
 const {theme,toggleTheme}=useWorkspaceTheme();
 const [showOrderDock,setShowOrderDock]=useState(false);
@@ -60,6 +62,7 @@ const changeInventoryMode=useCallback((mode:InventoryMode)=>{setInventoryMode(mo
 const navigation=[
   {value:'order',label:'New order',icon:ShoppingBag},
   {value:'inventory',label:'Inventory',icon:Package},
+  {value:'sales',label:'Sales',icon:Receipt},
   ...(wasteEnabled?[{value:'waste',label:'Waste',icon:Trash2}]:[]),
   {value:'catalog',label:'Product catalog',icon:BookOpen},
   {value:'history',label:'Order history',icon:History},
@@ -70,12 +73,12 @@ const navigation=[
   ...(role==='owner'&&limitsEnabled?[{value:'spending-limits',label:'Spending limits',icon:Gauge}]:[]),
   ...(role==='owner'?[{value:'payments',label:'Payment methods',icon:CreditCard},{value:'setup',label:'Setup & register',icon:Check}]:[]),
 ];
-const subsections=tab==='inventory'?(inventoryMode==='exact'?exactInventorySections:legacyInventorySections):tab==='waste'?[{id:'record',label:'Record waste'},{id:'setup',label:'Item setup'},{id:'review',label:wasteHeld?`Needs review (${wasteHeld})`:'Needs review'}]:tab==='suppliers'&&role==='owner'?supplierSections:[];
-const activeSubsection=tab==='inventory'?inventorySection:tab==='waste'?wasteSection:supplierSection;
+const subsections=tab==='inventory'?(inventoryMode==='exact'?exactInventorySections:legacyInventorySections):tab==='waste'?[{id:'record',label:'Record waste'},{id:'setup',label:'Item setup'},{id:'review',label:wasteHeld?`Needs review (${wasteHeld})`:'Needs review'}]:tab==='suppliers'&&role==='owner'?supplierSections:tab==='sales'?salesSections:[];
+const activeSubsection=tab==='inventory'?inventorySection:tab==='waste'?wasteSection:tab==='sales'?salesSection:supplierSection;
 const activeLabel=[navigation.find(item=>item.value===tab)?.label,subsections.find(item=>item.id===activeSubsection)?.label].filter(Boolean).join(' / ');
-function chooseSubsection(id:string){if(tab==='inventory')setInventorySection(id as InventorySection);else if(tab==='waste')setWasteSection(id as WasteSection);else setSupplierSection(id as SupplierSection);setNavigationOpen(false);}
+function chooseSubsection(id:string){if(tab==='inventory')setInventorySection(id as InventorySection);else if(tab==='waste')setWasteSection(id as WasteSection);else if(tab==='sales')setSalesSection(id as SalesSection);else setSupplierSection(id as SupplierSection);setNavigationOpen(false);}
 function renderNavigation(mobile=false){return <nav aria-label="Workspace sections" className="sidebar-navigation">{navigation.map(({value,label,icon:Icon})=><div className="sidebar-group" key={value}>
-  <button type="button" className="sidebar-main-item" aria-label={label} title={label} aria-current={tab===value&&!subsections.length?'page':undefined} data-active={tab===value} onClick={event=>{if(!mobile)event.currentTarget.focus();setTab(value);if(mobile&&value!=='inventory'&&value!=='waste'&&!(value==='suppliers'&&role==='owner'))setNavigationOpen(false);}}><Icon size={18}/><span className="sidebar-item-label">{label}</span>{value==='history'&&orders.length>0&&<span className="count sidebar-item-label">{orders.length}</span>}</button>
+  <button type="button" className="sidebar-main-item" aria-label={label} title={label} aria-current={tab===value&&!subsections.length?'page':undefined} data-active={tab===value} onClick={event=>{if(!mobile)event.currentTarget.focus();setTab(value);if(mobile&&value!=='inventory'&&value!=='waste'&&value!=='sales'&&!(value==='suppliers'&&role==='owner'))setNavigationOpen(false);}}><Icon size={18}/><span className="sidebar-item-label">{label}</span>{value==='history'&&orders.length>0&&<span className="count sidebar-item-label">{orders.length}</span>}</button>
   {tab===value&&subsections.length>0&&<div className="sidebar-subsections">{subsections.map(item=><button type="button" key={item.id} aria-current={activeSubsection===item.id?'page':undefined} onClick={()=>chooseSubsection(item.id)}>{item.label}{'soon' in item&&item.soon&&<span className="soon-badge">Soon</span>}</button>)}</div>}
 </div>)}</nav>;}
 const [removing,setRemoving]=useState<Order|null>(null);
@@ -136,7 +139,7 @@ return <div className="app sidebar-workspace" data-workspace-theme={theme}>
 {tab==='history'&&<section><div className="page-heading"><div><h1>Order history</h1><p>Every order you prepare is saved here.</p></div></div>{orders.length?<div className="history-list">{orders.map(o=><article className="history-card" key={o.id}><div><strong>Order {o.id.slice(0,8).toUpperCase()}</strong><small>{new Date(o.created).toLocaleString()} · {o.items.length} products</small></div><span className="status">{o.status}</span><strong>{money(o.total)}</strong><Button variant="outline" onClick={()=>setDetail(o)}>View & export</Button>{o.status==='Prepared — not sent'&&<Button variant="ghost" className="remove-order" onClick={()=>{setError('');setRemoving(o);}}>Remove</Button>}<Button variant="ghost" onClick={()=>{setQty(Object.fromEntries(o.items.filter(i=>products.some(p=>p.id===i.id)).map(i=>[i.id,i.quantity])));key.current='';setTab('order');setNotice('Order loaded as a new draft. Current catalog prices apply.');}}>Reorder</Button></article>)}</div>:<div className="empty"><History size={35}/><h2>Your first order starts here.</h2><p>Choose products and save a reviewed order to build your history.</p><Button onClick={()=>setTab('order')}>Create an order</Button></div>}</section>}
 {tab==='setup'&&<section><SetupRegister companyId={companyId} products={products} onNavigate={setTab}/></section>}
 {tab==='suppliers'&&<section>{role==='owner'?<VendorAutomation section={supplierSection} companyId={companyId} products={products}/>:<ManagerOperations companyId={companyId}/>}</section>}
-{<section hidden={tab!=='inventory'}><InventoryPanel onFocusHandled={()=>setStockFocus(undefined)} onCatalogReload={async()=>{const data=await request(companyId);setProducts(data.products);setInventoryRefresh(n=>n+1);}} refreshKey={inventoryRefresh} section={inventorySection} onSectionChange={setInventorySection} onDirtyChange={setInventoryDirty} focusProductId={stockFocus} onModeChange={changeInventoryMode} companyId={companyId} products={products} role={role} hasDraft={items.length>0} onStage={q=>{setQty(q);key.current='';setTab('order');setNotice('Replenishment plan loaded. Review quantities, prices, and suppliers before saving.');}}/></section>}{tab==='payments'&&<section><PaymentMethods companyId={companyId} companyName={companyName} hasDraft={items.length>0}/></section>}
+{<section hidden={tab!=='inventory'}><InventoryPanel onFocusHandled={()=>setStockFocus(undefined)} onCatalogReload={async()=>{const data=await request(companyId);setProducts(data.products);setInventoryRefresh(n=>n+1);}} refreshKey={inventoryRefresh} section={inventorySection} onSectionChange={setInventorySection} onDirtyChange={setInventoryDirty} focusProductId={stockFocus} onModeChange={changeInventoryMode} companyId={companyId} products={products} role={role} hasDraft={items.length>0} onStage={q=>{setQty(q);key.current='';setTab('order');setNotice('Replenishment plan loaded. Review quantities, prices, and suppliers before saving.');}}/></section>}{tab==='sales'&&<SalesPanel key={salesSection} companyId={companyId} role={role} section={salesSection} onInventoryChanged={()=>setInventoryRefresh(n=>n+1)}/>}{tab==='payments'&&<section><PaymentMethods companyId={companyId} companyName={companyName} hasDraft={items.length>0}/></section>}
 <footer>pantrack. <span>Prepared with care. Ordered with confidence.</span><a href="/auth/signout" target="_top">Sign out</a></footer></main></div></div>
 <AlertDialog open={!!removing} onOpenChange={open=>!open&&!busy&&setRemoving(null)}><AlertDialogContent><AlertDialogTitle>Remove prepared order?</AlertDialogTitle><AlertDialogDescription>Order {removing?.id.slice(0,8).toUpperCase()} will be removed from {companyName}’s history. This cannot be undone. Nothing has been sent to a supplier.</AlertDialogDescription>{error&&<p className="error" role="alert">{error}</p>}<AlertDialogFooter><AlertDialogCancel disabled={busy}>Keep order</AlertDialogCancel><Button variant="destructive" disabled={busy} onClick={removeOrder}>{busy?'Removing…':'Remove order'}</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>
 <Dialog open={review} onOpenChange={v=>!busy&&setReview(v)}><DialogContent className="order-dialog"><DialogTitle>Review your order</DialogTitle><DialogDescription>Check quantities and pack sizes. Saving prepares an order; it does not send it or charge you.</DialogDescription>{summary(items)}<div className="between total"><span>Estimated subtotal</span><strong>{money(total)}</strong></div><p className="muted">Tax, delivery, stock, and supplier cutoffs are unverified. Sample minimums are guidance only.</p>{error&&<p className="error" role="alert">{error}</p>}<Button disabled={busy||!items.length} onClick={prepare}>{busy?'Saving…':'Save prepared order'}</Button></DialogContent></Dialog>
