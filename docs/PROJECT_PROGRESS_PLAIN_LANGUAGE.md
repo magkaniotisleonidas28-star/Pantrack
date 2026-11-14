@@ -2,6 +2,13 @@
 
 Updated: 2026-11-13 for the first real supplier decision.
 
+**Recipe options (2026-11-14):** the owner chose how drink choices work: each
+item keeps only its fixed ingredients, and milk, syrups and ice are shared
+"option sets" set up once ([decision 0009](decisions/0009-recipe-option-sets.md)).
+The first step lets an item have up to 64 options (the café has more than 16)
+and allows options that change no stock, like "extra hot"
+([record](RECIPE_OPTION_LIMITS_LOCAL_EVIDENCE_20261114.md)).
+
 **Simpler screens (2026-11-14):** after trying a preview, the owner approved a
 cleaner layout: one header with a company menu, page sections chosen only from
 the side menu, "Create a new order" as the order page title, "supplier"

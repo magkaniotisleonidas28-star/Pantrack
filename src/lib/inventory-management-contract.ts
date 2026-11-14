@@ -132,6 +132,9 @@ export type RecipeAmountInput = {
   unitId: string;
 };
 
+/** Menus with many milks and syrups need more than the original 16 options per item. */
+export const MAX_RECIPE_MODIFIERS = 64;
+
 export type RecipeChoiceGroup = { id: string; name: string; modifierIds: string[] };
 
 export type RecipePublishInput = {

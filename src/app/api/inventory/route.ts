@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { publishRecipe } from '@/lib/d1-recipe-publisher';
 import { recordPackageStock } from '@/lib/d1-stock-pack';
 import { readPlanningRecords } from '@/lib/inventory-planning-units';
+import { MAX_RECIPE_MODIFIERS } from '@/lib/inventory-management-contract';
 const amount = z.number().finite().min(0).max(10000000).multipleOf(0.001);
 const settings = z.object({
   targetStock: amount.nullable().optional().default(null),
@@ -129,7 +130,9 @@ const exactMutation = z.discriminatedUnion('action', [
       versionId: identity,
       name: z.string().trim().min(1).max(100),
       expectedActiveVersionId: identity.nullable(),
-      expectedModifiers: z.record(identity, identity),
+      expectedModifiers: z
+        .record(identity, identity)
+        .refine((value) => Object.keys(value).length <= MAX_RECIPE_MODIFIERS),
       ingredients: z.array(recipeAmount).min(1).max(50),
       choices: z
         .array(
@@ -137,7 +140,7 @@ const exactMutation = z.discriminatedUnion('action', [
             .object({
               id: identity,
               name: z.string().trim().min(1).max(100),
-              modifierIds: z.array(identity).min(2).max(20),
+              modifierIds: z.array(identity).min(2).max(40),
             })
             .strict(),
         )
@@ -149,14 +152,12 @@ const exactMutation = z.discriminatedUnion('action', [
               modifierId: identity,
               versionId: identity,
               name: z.string().trim().min(1).max(100),
-              deltas: z
-                .array(recipeAmount.extend({ signed: z.boolean() }))
-                .min(1)
-                .max(50),
+              // An empty list is an option with no stock effect, such as "extra hot".
+              deltas: z.array(recipeAmount.extend({ signed: z.boolean() })).max(50),
             })
             .strict(),
         )
-        .max(16),
+        .max(MAX_RECIPE_MODIFIERS),
     })
     .strict(),
   z
