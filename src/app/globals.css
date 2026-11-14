@@ -616,3 +616,17 @@ body[data-workspace-theme=dark] .waste-entry-button { background: #1d2a23; color
 .setup-advanced > summary { cursor: pointer; padding: 14px 0; font-weight: 600; font-size: 15px; }
 .setup-advanced > summary small { font-weight: 400; margin-top: 2px; }
 .sidebar-workspace[data-workspace-theme=dark] .setup-register > .setup-advanced { background: #19261f; border-color: #365043; }
+
+/* Sales section and its upcoming features. */
+.coming-soon-card { display: grid; gap: 8px; align-content: start; }
+.coming-soon-card > svg { color: #61836b; }
+.coming-soon-card .soon-badge { margin-left: 0; justify-self: start; }
+.coming-soon-card h2 { margin: 4px 0 0; }
+.coming-soon-card p { margin: 0; font-size: 14px; }
+.sales-panel .sales-batch-form { display: grid; gap: 14px; max-width: 640px; }
+.sales-panel .sales-batch-form label { display: grid; gap: 6px; font-size: 14px; }
+.sales-panel .sales-quantity { grid-template-columns: 1fr 120px; align-items: center; }
+.sales-history { display: grid; margin: 0; padding: 0; list-style: none; }
+.sales-history li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #edf0ee; font-size: 14px; }
+.sales-history li > span { display: grid; gap: 2px; }
+.sales-history li:last-child { border-bottom: 0; }

@@ -1,6 +1,6 @@
 export const inventorySections = [
   { id: 'stock', label: 'Stock' },
-  { id: 'recipes', label: 'Recipes & sales' },
+  { id: 'recipes', label: 'Recipes' },
   { id: 'plan', label: 'Purchasing plan' },
   { id: 'activity', label: 'Activity' },
 ] as const;
@@ -12,9 +12,16 @@ export const supplierSections = [
   { id: 'activity', label: 'Suggested orders', soon: true },
   { id: 'schedule', label: 'Schedule', soon: true },
 ] as const;
+export const salesSections = [
+  { id: 'record', label: 'Record sales' },
+  { id: 'history', label: 'Sales history' },
+  { id: 'insights', label: 'Insights', soon: true },
+] as const;
 
 export type InventorySection = (typeof inventorySections)[number]['id'];
 
 export type SupplierSection = (typeof supplierSections)[number]['id'];
+
+export type SalesSection = (typeof salesSections)[number]['id'];
 
 export type InventoryMode = 'legacy' | 'exact';

@@ -10,8 +10,11 @@ unfinished parts. The [record](UI_SHELL_NAVIGATION_LOCAL_EVIDENCE_20261114.md)
 covers what changed and how it was checked. Setup & register now shows café
 steps first, a "Set up products" walkthrough goes through products one at a
 time, and stock shows in cases or bags first
-([record](UI_SETUP_GUIDED_STOCK_LOCAL_EVIDENCE_20261114.md)). More screen
-changes follow.
+([record](UI_SETUP_GUIDED_STOCK_LOCAL_EVIDENCE_20261114.md)). Sales now has its
+own section in the side menu for recording sales and seeing past sales, with
+future sales insights marked "Coming soon"
+([record](UI_SALES_SECTION_LOCAL_EVIDENCE_20261114.md)). Recipe option sets come
+next.
 
 **First real supplier:** Amazon Business, through Amazon's official connection for
 business software ([decision 0007](decisions/0007-amazon-business-first-supplier.md)).

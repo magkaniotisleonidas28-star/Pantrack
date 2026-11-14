@@ -23,8 +23,10 @@ or authorization change. The
 [Setup & register and guided product setup change](UI_SETUP_GUIDED_STOCK_LOCAL_EVIDENCE_20261114.md)
 puts café steps first with technical connections tucked away, adds a guided
 walkthrough for products without stock on both stock screens, and shows stock
-in purchase packs first. Sales as its own section and recipe option sets follow
-as separate changes.
+in purchase packs first. [Sales as its own section](UI_SALES_SECTION_LOCAL_EVIDENCE_20261114.md)
+moves sales recording and history out of Recipes into a new Sales menu section
+(with "Insights" marked coming soon), reusing the existing sales flows. Recipe
+option sets follow as separate changes.
 
 ## C3 first real supplier: Amazon Business — 2026-11-13
 
