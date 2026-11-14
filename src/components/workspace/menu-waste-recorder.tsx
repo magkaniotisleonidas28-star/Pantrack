@@ -35,7 +35,7 @@ type Held = {
     sourceId: string;
 };
 const itemKey = (i: Pick<MenuWasteItem, 'kind' | 'id'>) => JSON.stringify([i.kind, i.id]);
-function MenuWasteRecorderClient({ companyId, email, role, page, section = 'record', launchCount = 0, refreshKey = 0, onEnabledChange, onDirtyChange, onSaved, onSetup, onSection }: {
+function MenuWasteRecorderClient({ companyId, email, role, page, section = 'record', launchCount = 0, refreshKey = 0, onEnabledChange, onDirtyChange, onSaved, onSetup, onSection, onHeldCountChange }: {
     companyId: string;
     email: string;
     role: string;
@@ -48,6 +48,8 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
     onSaved: () => void;
     onSetup?: (id: string) => void;
     onSection?: (v: WasteSection) => void;
+    /** Lets the side menu show how many entries need review. */
+    onHeldCountChange?: (count: number) => void;
 }) {
     const storage = wasteStorageKey(companyId, email) + ':menu';
     const [restored] = useState(() => recoverMenuWaste(storage, companyId));
@@ -88,6 +90,7 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
     }, [companyId, manager, onEnabledChange, beginOptions, requestVersion]);
     function load() { setLoading(true); return loadData(); }
     useEffect(() => { void loadData(); }, [loadData]);
+    useEffect(() => { onHeldCountChange?.(held.length); }, [held.length, onHeldCountChange]);
     useEffect(() => { onDirtyChange(dirty || ingredientDirty); }, [dirty, ingredientDirty, onDirtyChange]);
     useEffect(() => { if (!dirty)
         return; const warn = (e: BeforeUnloadEvent) => e.preventDefault(); window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
@@ -250,7 +253,7 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
   {error && !pending && <Button variant="outline" onClick={() => void load()}>Refresh items</Button>}
  </div>;
     return <>
-  {(enabled || pending) && page && <section className="menu-waste-page task-form"><div className="page-heading"><div><h1>Waste</h1><p>Record the café item. Its stock or recipe ingredients are handled for you.</p></div><Button type="button" variant="ghost" disabled={loading||frozen} onClick={()=>{setError('');void load();}}><RefreshCw size={16}/>Refresh</Button></div>{onSection&&<nav className="inventory-section-nav" aria-label="Waste sections">{([{id:'record',label:'Record waste'},...(manager?[{id:'setup',label:'Item setup'},{id:'review',label:'Needs review'}]:[])] as {id:WasteSection;label:string}[]).map(link=><button key={link.id} type="button" disabled={frozen} aria-current={view===link.id?'page':undefined} onClick={()=>onSection(link.id)}>{link.label}{link.id==='review'&&held.length>0?` (${held.length})`:''}</button>)}</nav>}{body}</section>}
+  {(enabled || pending) && page && <section className="menu-waste-page task-form"><div className="page-heading"><div><h1>Waste</h1><p>Record the café item. Its stock or recipe ingredients are handled for you.</p></div><Button type="button" variant="ghost" disabled={loading||frozen} onClick={()=>{setError('');void load();}}><RefreshCw size={16}/>Refresh</Button></div>{body}</section>}
   <Sheet open={open && !page} onOpenChange={close}><SheetContent className="waste-sheet" showCloseButton={!frozen}><SheetTitle>Record café-item waste</SheetTitle><SheetDescription>Ready-made food and recipe-based drinks.</SheetDescription>{onSection && <Button variant="outline" disabled={busy} onClick={() => { setOpen(false); onSection('record'); }}>Open Waste page</Button>}{body}</SheetContent></Sheet>
   <WasteRecorder companyId={companyId} email={email} role={role} showButton={false} launchCount={ingredientLaunch} onDirtyChange={setIngredientDirty} onSaved={onSaved}/>
   <AlertDialog open={discard} onOpenChange={setDiscard}><AlertDialogContent className="waste-discard-dialog"><AlertDialogTitle>Discard this unfinished entry?</AlertDialogTitle><AlertDialogDescription>No waste has been saved. Your order draft stays in place.</AlertDialogDescription><AlertDialogFooter><AlertDialogCancel>Keep entry</AlertDialogCancel><AlertDialogAction onClick={() => { reset(); setOpen(false); }}>Discard entry</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>

@@ -546,3 +546,46 @@ body[data-workspace-theme=dark] .waste-entry-button { background: #1d2a23; color
   background: var(--background); color: var(--foreground);
 }
 .recipe-builder select,.sales-entry select { appearance: none; min-height: 42px; line-height: 24px; padding: 8px 30px 8px 12px; border: 1px solid var(--border); background-color: var(--background); color: var(--foreground); border-radius: 6px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='m2 4 4 4 4-4' fill='none' stroke='%2393a89b' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+
+/* One workspace header: the company menu replaces the separate company bar. */
+.topbar-company { display: flex; align-items: center; min-width: 0; }
+.company-menu-trigger {
+  display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 280px;
+  padding: 7px 11px; border: 1px solid #dce5df; border-radius: 8px; background: #fff;
+  font-size: 14px; font-weight: 600; color: #25312c;
+}
+.company-menu-trigger > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.company-menu-trigger > svg { flex-shrink: 0; color: #6b7a71; }
+.company-menu-trigger:hover { background: #f3f5f4; }
+.company-menu { min-width: 240px; max-width: min(360px, 92vw); }
+.company-menu [role=group] { max-height: min(320px, 50vh); overflow-y: auto; }
+.company-menu [role=menuitem] { gap: 9px; }
+.members-dialog { max-width: 720px !important; }
+.members-dialog section.product-form > h2:first-child { display: none; }
+.sidebar-workspace .workspace-name { gap: 8px; }
+.sidebar-workspace .demo-banner { align-items: center; }
+.demo-banner-dismiss { margin-left: auto; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; color: #66736b; flex-shrink: 0; }
+.demo-banner-dismiss:hover { background: #f0f3f1; }
+@media (max-width: 760px) {
+  .sidebar-workspace .topbar { gap: 10px; }
+  .sidebar-workspace .brand { font-size: 0; gap: 0; }
+  .sidebar-workspace .brand .brand-period { display: none; }
+  .topbar-company { flex: 1; }
+  .company-menu-trigger { max-width: 100%; font-size: 13px; padding: 7px 9px; }
+  .waste-entry-label { display: none; }
+  .sidebar-workspace .topbar .waste-entry-button { order: 0; margin: 0; padding: 0 10px; min-height: 36px; height: 36px; }
+  .sidebar-workspace .account { font-size: 0; gap: 0; }
+  .sidebar-workspace .account .avatar { font-size: 13px; }
+}
+.sidebar-workspace[data-workspace-theme=dark] .company-menu-trigger { background: #1d2a23; border-color: #45604c; color: #eaf3ec; }
+.sidebar-workspace[data-workspace-theme=dark] .company-menu-trigger:hover { background: #294434; }
+.sidebar-workspace[data-workspace-theme=dark] .demo-banner-dismiss { color: #afc4b5; }
+.sidebar-workspace[data-workspace-theme=dark] .demo-banner-dismiss:hover { background: #263a2e; }
+
+/* "Coming soon" markers for unfinished sections. */
+.soon-badge { display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 999px; background: #f6efdf; color: #8a6a28; font-size: 10px; font-weight: 600; letter-spacing: .2px; vertical-align: middle; white-space: nowrap; }
+.sidebar-subsections button { display: flex; align-items: center; }
+.sidebar-subsections button .soon-badge { margin-left: auto; }
+.coming-soon-callout { display: flex; align-items: center; gap: 10px; }
+.coming-soon-callout .soon-badge, .payment-empty .soon-badge { margin-left: 0; }
+.sidebar-workspace[data-workspace-theme=dark] .soon-badge { background: #3a3220; color: #e7cf95; }

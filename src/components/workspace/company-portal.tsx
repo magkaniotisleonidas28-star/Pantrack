@@ -15,6 +15,16 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogTitle,
@@ -23,7 +33,7 @@ import {
   AlertDialogAction,
   AlertDialogFooter,
 } from '@/components/ui/alert-dialog';
-import { Building2, Plus, Pencil, Package } from 'lucide-react';
+import { Building2, Plus, Pencil, Package, Users, ChevronDown } from 'lucide-react';
 type Company = { id: string; name: string; role: string };
 
 export default function CompanyPortal({ email }: { email: string }) {
@@ -35,7 +45,8 @@ export default function CompanyPortal({ email }: { email: string }) {
     [name, setName] = useState(''),
     [busy, setBusy] = useState(false),
     [dirty, setDirty] = useState(false),
-    [pending, setPending] = useState('');
+    [pending, setPending] = useState(''),
+    [membersOpen, setMembersOpen] = useState(false);
   const createId = useRef(''),
     saving = useRef(false);
   const preference = 'pantry-company:' + email;
@@ -131,65 +142,127 @@ export default function CompanyPortal({ email }: { email: string }) {
     }
   }
   const current = companies.find((c) => c.id === active);
+  function chooseCompany(id: string) {
+    if (id === active) return;
+    if (dirty) setPending(id);
+    else switchCompany(id);
+  }
+  function openRename() {
+    if (!current) return;
+    setName(current.name);
+    setError('');
+    setForm('rename');
+  }
+  // Managers and owners get the company controls inside the workspace header.
+  const companyMenu = current && (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button type="button" className="company-menu-trigger" disabled={busy}>
+          <Building2 size={16} />
+          <span>{current.name}</span>
+          <ChevronDown size={14} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="company-menu">
+        <DropdownMenuLabel>Your companies</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={active} onValueChange={chooseCompany}>
+          {companies.map((c) => (
+            <DropdownMenuRadioItem value={c.id} key={c.id}>
+              {c.name}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+        {current.role === 'owner' && (
+          <DropdownMenuItem onSelect={openRename}>
+            <Pencil size={15} />
+            Rename company
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onSelect={() => setMembersOpen(true)}>
+          <Users size={15} />
+          Members & ownership
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={openCreate}>
+          <Plus size={15} />
+          New company
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+  const headerControls = !loading && current && current.role !== 'employee';
   return (
     <>
-      <div className="company-bar">
-        <div className="company-control">
-          <Building2 size={19} />
-          <label htmlFor="company-switch">Company</label>
-          <Select
-            value={active}
-            disabled={loading || busy}
-            onValueChange={(id) => {
-              if (id !== active) {
-                if (dirty) setPending(id);
-                else switchCompany(id);
-              }
-            }}
-          >
-            <SelectTrigger id="company-switch" className="company-select">
-              <SelectValue placeholder="Choose a company" />
-            </SelectTrigger>
-            <SelectContent>
-              {companies.map((c) => (
-                <SelectItem value={c.id} key={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="company-actions">
-          {current?.role === 'owner' && (
-            <Button
-              variant="ghost"
-              disabled={busy}
-              onClick={() => {
-                setName(current.name);
-                setError('');
-                setForm('rename');
+      {!headerControls && (
+        <div className="company-bar">
+          <div className="company-control">
+            <Building2 size={19} />
+            <label htmlFor="company-switch">Company</label>
+            <Select
+              value={active}
+              disabled={loading || busy}
+              onValueChange={(id) => {
+                if (id !== active) {
+                  if (dirty) setPending(id);
+                  else switchCompany(id);
+                }
               }}
             >
-              <Pencil size={15} />
-              Rename
+              <SelectTrigger id="company-switch" className="company-select">
+                <SelectValue placeholder="Choose a company" />
+              </SelectTrigger>
+              <SelectContent>
+                {companies.map((c) => (
+                  <SelectItem value={c.id} key={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="company-actions">
+            {current?.role === 'owner' && (
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => {
+                  setName(current.name);
+                  setError('');
+                  setForm('rename');
+                }}
+              >
+                <Pencil size={15} />
+                Rename
+              </Button>
+            )}
+            <Button variant="outline" disabled={loading || busy} onClick={openCreate}>
+              <Plus size={16} />
+              New company
             </Button>
-          )}
-          <Button variant="outline" disabled={loading || busy} onClick={openCreate}>
-            <Plus size={16} />
-            New company
-          </Button>
+          </div>
         </div>
-      </div>
+      )}
       {loading ? (
         <div className="empty" role="status">
           Loading your companies…
         </div>
       ) : current ? (
         <>
-          <details className="membership-details">
-            <summary>Members & ownership</summary>
-            <MembersPanel key={active} companyId={active} owner={current.role === 'owner'} />
-          </details>
+          {current.role === 'employee' && (
+            <details className="membership-details">
+              <summary>Members & ownership</summary>
+              <MembersPanel key={active} companyId={active} owner={false} />
+            </details>
+          )}
+          <Dialog open={membersOpen} onOpenChange={setMembersOpen}>
+            <DialogContent className="order-dialog members-dialog">
+              <DialogTitle>Members & ownership</DialogTitle>
+              <DialogDescription>
+                Who can use {current.name}, and what each person can do.
+              </DialogDescription>
+              <MembersPanel key={active} companyId={active} owner={current.role === 'owner'} />
+            </DialogContent>
+          </Dialog>
           {current.role === 'employee' ? (
             <EmployeeWorkspace
               key={active}
@@ -203,6 +276,7 @@ export default function CompanyPortal({ email }: { email: string }) {
               email={email}
               companyId={active}
               companyName={current.name}
+              companyMenu={companyMenu}
               role={current.role}
               onDirtyChange={setDirty}
             />

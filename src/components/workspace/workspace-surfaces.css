@@ -62,10 +62,6 @@ html .sidebar-workspace[data-workspace-theme] .setup-progress { margin: 24px 0 3
 .setup-checklist h2 { font-size: 15px; margin: 0 0 6px; }
 .setup-checklist p { margin: 8px 0 0; font-size: 13px; max-width: 70ch; }
 .setup-checklist small { color: var(--muted-foreground); }
-.workspace-section-nav { display: flex; flex-wrap: wrap; gap: 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-.workspace-section-nav button { min-height: 44px; padding: 8px 0 12px; border-bottom: 2px solid transparent; color: var(--muted-foreground); font-size: 14px; }
-.workspace-section-nav button[aria-current=page] { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
-.workspace-section-nav button:hover { color: var(--foreground); }
 html .sidebar-workspace[data-workspace-theme] .product-catalog { min-width: 0; }
 .catalog-list-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
 .catalog-search { position: relative; width: 420px; max-width: 100%; }
@@ -90,7 +86,7 @@ html .sidebar-workspace[data-workspace-theme] .po-preview legend { padding: 0 16
 html .sidebar-workspace[data-workspace-theme] :is(.po-line,.po-detail) { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 20px 0; margin: 0; }
 html .sidebar-workspace[data-workspace-theme] .po-preview :is(.po-line,.po-detail) h3 { font-size: 15px; font-weight: 600; }
 html .sidebar-workspace[data-workspace-theme] .po-preview .po-fields { gap: 16px 24px; }
-html .sidebar-workspace[data-workspace-theme] :is(.workspace-section-nav,.setup-progress,.catalog-products) :is(button,summary,a):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+html .sidebar-workspace[data-workspace-theme] :is(.setup-progress,.catalog-products) :is(button,summary,a):focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 html .sidebar-workspace[data-workspace-theme] :is(small,.catalog-list-tools > p) { color: var(--muted-foreground); }
 html .sidebar-workspace[data-workspace-theme] input { caret-color: var(--primary); }
 html .sidebar-workspace[data-workspace-theme] ::selection { background: var(--accent); color: var(--accent-foreground); }
