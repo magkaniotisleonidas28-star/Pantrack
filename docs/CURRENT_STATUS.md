@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-11
+Updated: 2026-11-13
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,25 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## C3 first real supplier: Amazon Business — 2026-11-13
+
+By [decision 0007](decisions/0007-amazon-business-first-supplier.md), the first
+real supplier target is Amazon Business through its official API (Product
+Search, Cart, and Ordering with a no-order trial mode). Baldor's rechecked terms
+still prohibit automated access, and Amazon's website terms prohibit robots and
+similar tools, so no AI browser runs on either site. Baldor is deferred. The
+[Amazon Business preparation](C3_AMAZON_BUSINESS_PREPARATION.md) records the
+owner's account and developer-registration checklist. The owner has created the
+Amazon Business account and registered in the Solution Provider Portal; identity
+verification is paused until a registered business exists. Work starts against
+fakes, then Amazon's static sandbox. Who places the order stays open; order
+submission remains disabled until its own gate. By
+[decision 0008](decisions/0008-ai-browser-only-with-supplier-permission.md)
+(2026-11-14), the AI browser runs only on suppliers that give written
+permission; the owner sends the
+[permission request](C3_SUPPLIER_PERMISSION_REQUEST.md). The agent created or
+used no account and contacted no supplier. C3 remains open.
 
 ## A8 repeatable local browser check — 2026-11-10
 
@@ -1313,6 +1332,8 @@ pending M6 POS gate has not been removed.
 - [M6 B8 local adapter foundation](M6_B8_ADAPTER_FOUNDATION.md)
 - [M6 Toast access handoff](M6_TOAST_ACCESS.md)
 - [C3 Baldor supplier preparation](C3_BALDOR_PREPARATION.md)
+- [C3 Amazon Business supplier preparation](C3_AMAZON_BUSINESS_PREPARATION.md)
+- [C3 supplier permission request](C3_SUPPLIER_PERMISSION_REQUEST.md)
 - [Purchase-order-first rollout](PURCHASE_ORDER_ROLLOUT.md)
 - [C4 persistent PO draft foundation](C4_PO_FOUNDATION_LOCAL_EVIDENCE.md)
 - [Quick waste recording and menu analysis roadmap](WASTE_AND_MARGIN_ROADMAP.md)

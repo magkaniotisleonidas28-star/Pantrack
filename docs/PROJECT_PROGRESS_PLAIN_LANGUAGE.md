@@ -1,6 +1,19 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-10 for the G13 result, the third paid test and the budget settlement.
+Updated: 2026-11-13 for the first real supplier decision.
+
+**First real supplier:** Amazon Business, through Amazon's official connection for
+business software ([decision 0007](decisions/0007-amazon-business-first-supplier.md)).
+Baldor's and Amazon's website rules both forbid automated use, so the AI won't
+work on either website. Amazon's official connection can search products, fill a
+cart and test an order without placing it. The owner has created the Amazon
+Business account and registered as a developer using the
+[checklist](C3_AMAZON_BUSINESS_PREPARATION.md). Amazon's identity check needs a
+registered business, so it waits until the owner registers one. Building starts
+with pretend data, then Amazon's free practice version. Baldor is set aside for
+later. The AI browser will only be used on suppliers that agree in writing
+([decision 0008](decisions/0008-ai-browser-only-with-supplier-permission.md));
+the owner sends them a [permission request](C3_SUPPLIER_PERMISSION_REQUEST.md). Nothing has been ordered and no supplier has been contacted.
 
 The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) are merged into main.
 They cover save-history review, exact-request continuation and explicit checks
@@ -343,6 +356,7 @@ access and production mappings; and complete supplier/checkout/confirmation/
 delivery acceptance. Reuse the local features rather than rebuild them.
 
 Evidence: [C2 closeout](C2_M2_CLOSEOUT.md), [Baldor preparation](C3_BALDOR_PREPARATION.md),
+[Amazon Business preparation](C3_AMAZON_BUSINESS_PREPARATION.md),
 [latest local cart reconciliation](C4_PO_CART_RECONCILIATION_LOCAL_EVIDENCE.md),
 [earlier AI evaluation and its recorded limits](C4_PO_CART_AI_LOCAL_EVIDENCE.md)
 and [PO/cart integration checklist](PO_AI_CART_INTEGRATION_ROADMAP.md).
