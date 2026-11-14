@@ -589,3 +589,30 @@ body[data-workspace-theme=dark] .waste-entry-button { background: #1d2a23; color
 .coming-soon-callout { display: flex; align-items: center; gap: 10px; }
 .coming-soon-callout .soon-badge, .payment-empty .soon-badge { margin-left: 0; }
 .sidebar-workspace[data-workspace-theme=dark] .soon-badge { background: #3a3220; color: #e7cf95; }
+
+/* Guided product setup on the stock list. */
+.guided-setup-callout { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 18px; padding: 16px 18px; border: 1px solid #cfe0d5; border-radius: 9px; background: #eef6f0; }
+.guided-setup-callout > div { display: grid; gap: 4px; }
+.guided-setup-callout strong { font-size: 15px; color: #1f4d3b; }
+.guided-setup-callout span { font-size: 13px; color: #55685d; }
+.guided-setup-callout button { flex-shrink: 0; }
+.guided-setup-progress { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.guide-progress { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .2px; color: #215743; }
+.guide-actions { display: flex; justify-content: space-between; gap: 8px; }
+.settings-more { border-top: 1px solid #e3e8e5; padding-top: 10px; }
+.settings-more > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: #3d5246; padding: 4px 0; }
+.settings-more[open] { display: grid; gap: 13px; }
+@media (max-width: 760px) {
+  .guided-setup-callout { flex-direction: column; align-items: stretch; }
+}
+.sidebar-workspace[data-workspace-theme=dark] .guided-setup-callout { background: #1d2a23; border-color: #45604c; }
+.sidebar-workspace[data-workspace-theme=dark] .guided-setup-callout strong { color: #e0efe4; }
+.sidebar-workspace[data-workspace-theme=dark] .guided-setup-callout span { color: #b3c7b8; }
+.sidebar-workspace[data-workspace-theme=dark] .guide-progress { color: #8fd3a8; }
+
+/* Setup & register: café steps first, technical connections tucked away last. */
+.setup-register { display: flex; flex-direction: column; }
+.setup-register > .setup-advanced { order: 99; margin: 32px 0 8px; border: 1px solid #e1e6e3; border-radius: 9px; background: #fff; padding: 4px 18px; }
+.setup-advanced > summary { cursor: pointer; padding: 14px 0; font-weight: 600; font-size: 15px; }
+.setup-advanced > summary small { font-weight: 400; margin-top: 2px; }
+.sidebar-workspace[data-workspace-theme=dark] .setup-register > .setup-advanced { background: #19261f; border-color: #365043; }

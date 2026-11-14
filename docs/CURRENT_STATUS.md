@@ -19,8 +19,12 @@ replaces the company bar with a company menu in the header, keeps section
 choices only in the side menu (no page tabs), renames the order page "Create a
 new order", uses "supplier" wording with plain-language notices, and marks
 unfinished supplier sections "Coming soon". Local evidence only; no API, schema
-or authorization change. Simpler Setup & register, guided product setup, Sales
-as its own section and recipe option sets follow as separate changes.
+or authorization change. The
+[Setup & register and guided product setup change](UI_SETUP_GUIDED_STOCK_LOCAL_EVIDENCE_20261114.md)
+puts café steps first with technical connections tucked away, adds a guided
+walkthrough for products without stock on both stock screens, and shows stock
+in purchase packs first. Sales as its own section and recipe option sets follow
+as separate changes.
 
 ## C3 first real supplier: Amazon Business — 2026-11-13
 
