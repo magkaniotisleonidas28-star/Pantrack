@@ -9,11 +9,14 @@ work on either website. Amazon's official connection can search products, fill a
 cart and test an order without placing it. The owner has created the Amazon
 Business account and registered as a developer using the
 [checklist](C3_AMAZON_BUSINESS_PREPARATION.md). Amazon's identity check needs a
-registered business, so it waits until the owner registers one. Building starts
-with pretend data, then Amazon's free practice version. Baldor is set aside for
-later. The AI browser will only be used on suppliers that agree in writing
+registered business, so it waits until the owner registers one. The
+[pretend-Amazon cart](C4_AMAZON_BUSINESS_FAKE_CART_LOCAL_EVIDENCE.md) now works
+on this computer: it fills and checks a cart and cannot place an order. Amazon's
+free practice version comes next. Baldor is set aside for later. The AI browser
+will only be used on suppliers that agree in writing
 ([decision 0008](decisions/0008-ai-browser-only-with-supplier-permission.md));
-the owner sends them a [permission request](C3_SUPPLIER_PERMISSION_REQUEST.md). Nothing has been ordered and no supplier has been contacted.
+the owner sends them a [permission request](C3_SUPPLIER_PERMISSION_REQUEST.md).
+Nothing has been ordered and no supplier has been contacted.
 
 The [seven document PRs](C4_PR_STACK_INTEGRATION_20261108.md) are merged into main.
 They cover save-history review, exact-request continuation and explicit checks
