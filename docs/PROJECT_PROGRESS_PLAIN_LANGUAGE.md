@@ -9,8 +9,12 @@ The first step lets an item have up to 64 options (the café has more than 16)
 and allows options that change no stock, like "extra hot"
 ([record](RECIPE_OPTION_LIMITS_LOCAL_EVIDENCE_20261114.md)). Pantrack can now
 save option sets, attach them to items with per-item amounts, and update every
-attached item when a set changes ([record](RECIPE_OPTION_SETS_LOCAL_EVIDENCE_20261114.md));
-the screens to manage them come next.
+attached item when a set changes ([record](RECIPE_OPTION_SETS_LOCAL_EVIDENCE_20261114.md)).
+The Recipes page now has screens for this: an Option sets view to create and
+edit sets, and in each item a way to attach sets and change an amount for that
+item only ([record](RECIPE_OPTION_SCREENS_LOCAL_EVIDENCE_20261115.md)). Next:
+light or no ice adding more of the picked milk, then linking each choice to
+Clover.
 
 **Simpler screens (2026-11-14):** after trying a preview, the owner approved a
 cleaner layout: one header with a company menu, page sections chosen only from
@@ -23,8 +27,7 @@ time, and stock shows in cases or bags first
 ([record](UI_SETUP_GUIDED_STOCK_LOCAL_EVIDENCE_20261114.md)). Sales now has its
 own section in the side menu for recording sales and seeing past sales, with
 future sales insights marked "Coming soon"
-([record](UI_SALES_SECTION_LOCAL_EVIDENCE_20261114.md)). Recipe option sets come
-next.
+([record](UI_SALES_SECTION_LOCAL_EVIDENCE_20261114.md)).
 
 **First real supplier:** Amazon Business, through Amazon's official connection for
 business software ([decision 0007](decisions/0007-amazon-business-first-supplier.md)).
