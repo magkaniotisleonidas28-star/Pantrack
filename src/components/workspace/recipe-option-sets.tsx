@@ -8,12 +8,14 @@ import type {
   RecipeAmountInput,
   RecipeVersionView,
 } from '@/lib/inventory-management-contract';
-import type {
-  OptionApplyResult,
-  OptionChoice,
-  OptionSetKind,
-  OptionSetView,
-  OptionSetsView,
+import {
+  isOptionGenerated,
+  optionGroupId,
+  type OptionApplyResult,
+  type OptionChoice,
+  type OptionSetKind,
+  type OptionSetView,
+  type OptionSetsView,
 } from '@/lib/recipe-option-sets-contract';
 import { sendSaveRequest } from '@/lib/waste-client';
 import type { Product } from '@/lib/pantry';
@@ -71,6 +73,28 @@ export function staleLinks(optionSets: OptionSetsView, recipeId?: string) {
     (l) =>
       (!recipeId || l.recipeId === recipeId) &&
       l.appliedRevision !== optionSets.sets.find((s) => s.id === l.setId)?.revision,
+  );
+}
+
+/**
+ * Whether an item is behind its option sets: an attached set changed, or it
+ * still carries choices from a set that was removed or detached.
+ */
+export function itemNeedsUpdate(
+  optionSets: OptionSetsView,
+  view: InventoryManagementView,
+  recipeId: string,
+) {
+  const attached = optionSets.links.filter((l) => l.recipeId === recipeId);
+  return (
+    staleLinks(optionSets, recipeId).length > 0 ||
+    view.modifiers.some(
+      (m) =>
+        m.recipeId === recipeId &&
+        m.status === 'active' &&
+        isOptionGenerated(m.modifierId) &&
+        !attached.some((l) => m.modifierId.startsWith(optionGroupId(l.setId) + '-')),
+    )
   );
 }
 
@@ -201,6 +225,53 @@ export default function OptionSetsManager({
         setError(outcome.message);
         if (outcome.kind === 'rejected') setPending(null);
       }
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
+
+  async function remove(set: OptionSetView) {
+    const items = usedBy(set.id).map(names.item);
+    if (
+      !window.confirm(
+        `Remove ${set.name}? ` +
+          (items.length
+            ? `Its choices will be taken off ${items.join(', ')}. `
+            : 'No items use it. ') +
+          'Past sales keep the amounts that applied at the time.',
+      )
+    )
+      return;
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      // Repeating a removal is safe: it only republishes items still carrying the set.
+      const outcome = await sendSaveRequest('/api/inventory', {
+        action: 'removeOptionSetExact',
+        companyId,
+        setId: set.id,
+        expectedRevision: set.revision,
+      });
+      if (outcome.kind !== 'saved') setError(outcome.message);
+      else {
+        const applied = (outcome.result as { applied?: OptionApplyResult[] }).applied ?? [];
+        const failed = applied.filter((a) => a.status === 'failed');
+        if (failed.length)
+          setError(
+            `${set.name} was removed, but ${failed.map((a) => names.item(a.recipeId)).join(', ')} could not be updated. Open the item under Items and choose Update now.`,
+          );
+        else
+          setNotice(
+            applied.length
+              ? `${set.name} removed. ${applied.length} item${applied.length === 1 ? '' : 's'} updated.`
+              : `${set.name} removed.`,
+          );
+      }
+      await onReload().catch(() => setError('Refresh to see the latest option sets.'));
     } finally {
       lock.current = false;
       setBusy(false);
@@ -482,6 +553,14 @@ export default function OptionSetsManager({
                     >
                       Edit option set
                     </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={loading || busy}
+                      onClick={() => void remove(s)}
+                    >
+                      Remove option set
+                    </Button>
                     {stale.length > 0 && (
                       <Button
                         type="button"
@@ -536,7 +615,7 @@ export function ItemOptionSets({
   const attached = optionSets.links
     .filter((l) => l.recipeId === recipe.recipeId)
     .sort((a, b) => a.position - b.position);
-  const stale = staleLinks(optionSets, recipe.recipeId).length > 0;
+  const stale = itemNeedsUpdate(optionSets, view, recipe.recipeId);
   const [links, setLinks] = useState<Array<{
     setId: string;
     overrides: Record<string, string>;

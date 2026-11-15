@@ -12,7 +12,10 @@ save option sets, attach them to items with per-item amounts, and update every
 attached item when a set changes ([record](RECIPE_OPTION_SETS_LOCAL_EVIDENCE_20261114.md)).
 The Recipes page now has screens for this: an Option sets view to create and
 edit sets, and in each item a way to attach sets and change an amount for that
-item only ([record](RECIPE_OPTION_SCREENS_LOCAL_EVIDENCE_20261115.md)). Next:
+item only ([record](RECIPE_OPTION_SCREENS_LOCAL_EVIDENCE_20261115.md)). A set
+you no longer need can be removed: it disappears from the list and from every
+item using it, while past sales stay as they were
+([record](RECIPE_OPTION_SET_REMOVAL_LOCAL_EVIDENCE_20261115.md)). Next:
 light or no ice adding more of the picked milk, then linking each choice to
 Clover.
 

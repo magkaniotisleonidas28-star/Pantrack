@@ -27,6 +27,14 @@ export type SaveOptionSetInput = {
   choices: OptionChoice[];
 };
 
+export type RemoveOptionSetInput = {
+  companyId: string;
+  actor: string;
+  setId: string;
+  /** The revision the person saw when choosing to remove the set. */
+  expectedRevision: number;
+};
+
 export type AttachOptionSetsInput = {
   companyId: string;
   actor: string;
@@ -77,7 +85,7 @@ export class D1RecipeOptionSets {
     const [sets, links] = await Promise.all([
       this.db
         .prepare(
-          'SELECT id,revision,name,kind,choices_json,updated_at FROM recipe_option_sets WHERE company_id=? ORDER BY name,id',
+          'SELECT id,revision,name,kind,choices_json,updated_at FROM recipe_option_sets WHERE company_id=? AND archived_at IS NULL ORDER BY name,id',
         )
         .bind(companyId)
         .all<SetRow>(),
@@ -109,7 +117,7 @@ export class D1RecipeOptionSets {
   private async set(companyId: string, setId: string) {
     const row = await this.db
       .prepare(
-        'SELECT id,revision,name,kind,choices_json,updated_at FROM recipe_option_sets WHERE company_id=? AND id=?',
+        'SELECT id,revision,name,kind,choices_json,updated_at FROM recipe_option_sets WHERE company_id=? AND id=? AND archived_at IS NULL',
       )
       .bind(companyId, setId)
       .first<SetRow>();
@@ -133,7 +141,9 @@ export class D1RecipeOptionSets {
         fingerprint
       )
         fail('This save was already used for different details.', 'operation_conflict');
-      return { set: (await this.set(input.companyId, input.setId))!, applied: [] };
+      const set = await this.set(input.companyId, input.setId);
+      if (!set) fail('This option set was removed.', 'concurrent_update');
+      return { set: set!, applied: [] };
     };
     const saved = await replay();
     if (saved) return saved;
@@ -156,6 +166,8 @@ export class D1RecipeOptionSets {
         fail('Each "pick one" choice must add an ingredient.');
       if (choice.changes.length) await stock.recipeAmounts(input.companyId, choice.changes, true);
     }
+    if (await this.archived(input.companyId, input.setId))
+      fail('This option set was removed.', 'concurrent_update');
     const existing = await this.set(input.companyId, input.setId);
     if ((existing?.revision ?? 0) !== input.expectedRevision)
       fail('This option set changed. Refresh before saving.', 'concurrent_update');
@@ -180,7 +192,7 @@ export class D1RecipeOptionSets {
             .bind(input.companyId, input.setId, name, input.kind, choicesJson, input.actor, now)
         : this.db
             .prepare(
-              'UPDATE recipe_option_sets SET revision=?,name=?,kind=?,choices_json=?,updated_by=?,updated_at=? WHERE company_id=? AND id=? AND revision=?',
+              'UPDATE recipe_option_sets SET revision=?,name=?,kind=?,choices_json=?,updated_by=?,updated_at=? WHERE company_id=? AND id=? AND revision=? AND archived_at IS NULL',
             )
             .bind(
               revision,
@@ -265,10 +277,12 @@ export class D1RecipeOptionSets {
       this.db
         .prepare('DELETE FROM recipe_option_links WHERE company_id=? AND recipe_id=?')
         .bind(input.companyId, input.recipeId),
+      // A set removed since it was checked is not attached.
       ...input.links.map((link, position) =>
         this.db
           .prepare(
-            'INSERT INTO recipe_option_links(company_id,recipe_id,set_id,position,overrides_json,applied_revision,linked_by,linked_at) VALUES (?,?,?,?,?,NULL,?,?)',
+            `INSERT INTO recipe_option_links(company_id,recipe_id,set_id,position,overrides_json,applied_revision,linked_by,linked_at)
+            SELECT ?,?,?,?,?,NULL,?,? WHERE EXISTS(SELECT 1 FROM recipe_option_sets WHERE company_id=? AND id=? AND archived_at IS NULL)`,
           )
           .bind(
             input.companyId,
@@ -278,10 +292,65 @@ export class D1RecipeOptionSets {
             JSON.stringify(link.overrides),
             input.actor,
             now,
+            input.companyId,
+            link.setId,
           ),
       ),
     ]);
     return this.apply(input.companyId, input.recipeId, input.actor, true);
+  }
+
+  private async archived(companyId: string, setId: string) {
+    return !!(await this.db
+      .prepare(
+        'SELECT 1 FROM recipe_option_sets WHERE company_id=? AND id=? AND archived_at IS NOT NULL',
+      )
+      .bind(companyId, setId)
+      .first());
+  }
+
+  /**
+   * Removes a set: hides it, keeps its revision history, detaches it from every
+   * item and republishes those items without its choices. Repeating a removal
+   * only republishes items that still carry the set's choices.
+   */
+  async removeSet(input: RemoveOptionSetInput): Promise<{ applied: OptionApplyResult[] }> {
+    const row = await this.db
+      .prepare('SELECT revision,archived_at FROM recipe_option_sets WHERE company_id=? AND id=?')
+      .bind(input.companyId, input.setId)
+      .first<{ revision: number; archived_at: string | null }>();
+    if (!row) fail('Choose an existing option set.');
+    if (!row!.archived_at) {
+      if (row!.revision !== input.expectedRevision)
+        fail('This option set changed. Refresh before removing it.', 'concurrent_update');
+      const now = this.now();
+      const [archive] = await this.db.batch([
+        this.db
+          .prepare(
+            'UPDATE recipe_option_sets SET archived_by=?,archived_at=? WHERE company_id=? AND id=? AND revision=? AND archived_at IS NULL',
+          )
+          .bind(input.actor, now, input.companyId, input.setId, input.expectedRevision),
+        this.db
+          .prepare(
+            'DELETE FROM recipe_option_links WHERE company_id=? AND set_id=? AND EXISTS(SELECT 1 FROM recipe_option_sets WHERE company_id=? AND id=? AND archived_at=? AND archived_by=?)',
+          )
+          .bind(input.companyId, input.setId, input.companyId, input.setId, now, input.actor),
+      ]);
+      if (archive.meta.changes !== 1)
+        fail('This option set changed. Refresh before removing it.', 'concurrent_update');
+    }
+    // Option IDs contain only letters, digits and hyphens, so LIKE matches the prefix exactly.
+    const carrying = await this.db
+      .prepare(
+        `SELECT DISTINCT m.recipe_id FROM recipe_modifier_versions m WHERE m.company_id=? AND m.status='active' AND m.modifier_id LIKE ?
+        AND EXISTS(SELECT 1 FROM recipe_versions r WHERE r.company_id=m.company_id AND r.recipe_id=m.recipe_id AND r.status='active') ORDER BY m.recipe_id`,
+      )
+      .bind(input.companyId, optionModifierId(input.setId, '%'))
+      .all<{ recipe_id: string }>();
+    const applied = [];
+    for (const { recipe_id } of carrying.results)
+      applied.push(await this.apply(input.companyId, recipe_id, input.actor, true));
+    return { applied };
   }
 
   /** Republishes one recipe with its own modifiers plus every attached set's choices. */

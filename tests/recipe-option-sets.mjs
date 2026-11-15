@@ -437,6 +437,124 @@ assert.deepEqual(
   [],
 );
 
+// Removing a set hides it, keeps its history, and takes its choices off every item.
+now = '2026-04-07T00:00:00.000Z';
+await options.attach({
+  companyId,
+  actor,
+  recipeId: 'medium',
+  links: [
+    { setId: 'milk-medium', overrides: {} },
+    { setId: 'syrups', overrides: {} },
+  ],
+});
+await options.attach({
+  companyId,
+  actor,
+  recipeId: 'large',
+  links: [{ setId: 'syrups', overrides: {} }],
+});
+await assert.rejects(
+  options.removeSet({ companyId, actor, setId: 'syrups', expectedRevision: 2 }),
+  (e) => e.code === 'concurrent_update',
+);
+await assert.rejects(
+  options.removeSet({ companyId: 'b', actor, setId: 'syrups', expectedRevision: 1 }),
+  (e) => e.code === 'invalid_option_set',
+);
+now = '2026-04-08T00:00:00.000Z';
+assert.deepEqual(
+  await options.removeSet({ companyId, actor, setId: 'syrups', expectedRevision: 1 }),
+  {
+    applied: [
+      { recipeId: 'large', status: 'applied' },
+      { recipeId: 'medium', status: 'applied' },
+    ],
+  },
+);
+const removed = await stock.read(companyId);
+assert.deepEqual(activeModifiers(removed, 'medium'), [
+  'extra-shot',
+  'opt-milk-medium-oat',
+  'opt-milk-medium-whole',
+]);
+assert.deepEqual(activeModifiers(removed, 'large'), []);
+const listed = await options.list(companyId);
+assert.deepEqual(
+  listed.sets.map((s) => s.id),
+  ['combo', 'ice', 'milk-medium'],
+);
+assert.ok(!listed.links.some((l) => l.setId === 'syrups'));
+assert.deepEqual(
+  {
+    ...sql
+      .prepare(
+        "SELECT archived_by,archived_at FROM recipe_option_sets WHERE company_id='a' AND id='syrups'",
+      )
+      .get(),
+  },
+  { archived_by: actor, archived_at: now },
+);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT count(*) n FROM recipe_option_set_revisions WHERE company_id='a' AND set_id='syrups'",
+    )
+    .get().n,
+  1,
+  'revision history is kept',
+);
+// A sale still naming a removed choice is held for review, not applied.
+assert.equal(
+  (
+    await port.consume(
+      sale('sale-removed', 'medium', ['opt-milk-medium-whole', 'opt-syrups-vanilla'], now),
+    )
+  ).status,
+  'held',
+);
+// Repeating the removal changes nothing; a removed set cannot be saved or attached.
+assert.deepEqual(
+  await options.removeSet({ companyId, actor, setId: 'syrups', expectedRevision: 1 }),
+  { applied: [] },
+);
+await assert.rejects(
+  options.saveSet({ ...syrups, operationId: 'syrups-after', expectedRevision: 1 }),
+  (e) => e.code === 'concurrent_update',
+);
+await assert.rejects(
+  options.saveSet({ ...syrups, operationId: 'syrups-new', expectedRevision: 0 }),
+  (e) => e.code === 'concurrent_update',
+);
+await assert.rejects(
+  options.attach({
+    companyId,
+    actor,
+    recipeId: 'large',
+    links: [{ setId: 'syrups', overrides: {} }],
+  }),
+  (e) => e.code === 'invalid_option_set',
+);
+// A removal interrupted before republishing is finished by repeating it.
+await options.attach({
+  companyId,
+  actor,
+  recipeId: 'large',
+  links: [{ setId: 'ice', overrides: {} }],
+});
+assert.deepEqual(activeModifiers(await stock.read(companyId), 'large'), [
+  'opt-ice-light',
+  'opt-ice-none',
+]);
+sql.exec(
+  "UPDATE recipe_option_sets SET archived_by='manager',archived_at='x' WHERE company_id='a' AND id='ice'; DELETE FROM recipe_option_links WHERE company_id='a' AND set_id='ice'",
+);
+assert.deepEqual(
+  await options.removeSet({ companyId, actor, setId: 'ice', expectedRevision: 99 }),
+  { applied: [{ recipeId: 'large', status: 'applied' }] },
+);
+assert.deepEqual(activeModifiers(await stock.read(companyId), 'large'), []);
+
 // Company isolation.
 assert.deepEqual(await options.list('b'), { sets: [], links: [] });
 await assert.rejects(
@@ -458,5 +576,5 @@ assert.equal(
 
 sql.close();
 console.log(
-  'PASS: option sets: create/replay/conflict, attach with item overrides, generated modifiers and pick-one group, sales with milk + syrups + no-change ice, set edits republish attached items only with history kept, detach, and company isolation.',
+  'PASS: option sets: create/replay/conflict, attach with item overrides, generated modifiers and pick-one group, sales with milk + syrups + no-change ice, set edits republish attached items only with history kept, detach, removal with history kept and interrupted-removal repair, and company isolation.',
 );

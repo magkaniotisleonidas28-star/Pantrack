@@ -1121,6 +1121,9 @@ export const recipeOptionSets=sqliteTable('recipe_option_sets',{
  choicesJson:text('choices_json').notNull(),
  updatedBy:text('updated_by').notNull(),
  updatedAt:text('updated_at').notNull(),
+ // Removed sets stay for their revision history but are hidden and cannot be attached.
+ archivedBy:text('archived_by'),
+ archivedAt:text('archived_at'),
 },t=>[primaryKey({columns:[t.companyId,t.id]}),check('recipe_option_set_kind',sql`${t.kind} IN ('one','addons')`)]);
 
 export const recipeOptionSetRevisions=sqliteTable('recipe_option_set_revisions',{

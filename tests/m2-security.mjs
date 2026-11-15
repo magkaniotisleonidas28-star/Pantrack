@@ -749,6 +749,7 @@ const actions = {
     'saveOptionSetExact',
     'attachOptionSetsExact',
     'applyOptionSetsExact',
+    'removeOptionSetExact',
   ],
   sales: ['recipe', 'import', 'mapping', 'removeMapping'],
   register: ['save', 'token', 'revoke'],
@@ -1216,8 +1217,7 @@ for (const body of [optionSetBody, attachBody]) {
   );
 }
 assert.equal(
-  (await call('inventory', 'POST', { ...optionSetBody, setId: 'bad id!' }, cookies.manager))
-    .status,
+  (await call('inventory', 'POST', { ...optionSetBody, setId: 'bad id!' }, cookies.manager)).status,
   400,
   'option set IDs are restricted',
 );
@@ -1238,6 +1238,39 @@ assert.equal(
     .status,
   409,
   'a stale option set save conflicts',
+);
+const removeBody = {
+  companyId: 'company-a',
+  action: 'removeOptionSetExact',
+  setId: 'extras',
+  expectedRevision: 1,
+};
+for (const cookie of [undefined, cookies.other, cookies.employee])
+  assert.equal(
+    (await call('inventory', 'POST', removeBody, cookie)).status,
+    cookie ? 403 : 401,
+    'option set removal denied',
+  );
+assert.equal(
+  (await call('inventory', 'POST', { ...removeBody, companyId: 'company-b' }, cookies.manager))
+    .status,
+  403,
+  'option set removal for another company',
+);
+assert.equal(
+  (await call('inventory', 'POST', { ...removeBody, expectedRevision: 2 }, cookies.manager)).status,
+  409,
+  'a stale option set removal conflicts',
+);
+const removedSet = await call('inventory', 'POST', removeBody, cookies.manager);
+assert.equal(removedSet.status, 200);
+assert.deepEqual((await removedSet.json()).result.applied, [
+  { recipeId: publishBody.recipeId, status: 'applied' },
+]);
+assert.deepEqual(
+  (await (await call('inventory', 'GET', null, cookies.employee)).json()).optionSets,
+  { sets: [], links: [] },
+  'a removed option set is hidden',
 );
 assert.equal(
   sql

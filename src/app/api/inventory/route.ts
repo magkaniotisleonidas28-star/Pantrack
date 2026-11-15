@@ -303,6 +303,14 @@ const exactMutation = z.discriminatedUnion('action', [
   z
     .object({ action: z.literal('applyOptionSetsExact'), companyId: identity, recipeId: identity })
     .strict(),
+  z
+    .object({
+      action: z.literal('removeOptionSetExact'),
+      companyId: identity,
+      setId: optionId,
+      expectedRevision: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
+    })
+    .strict(),
 ]);
 
 async function handleGET(req: Request) {
@@ -400,6 +408,8 @@ async function handlePOST(req: Request) {
         result = await new D1RecipeOptionSets(db).saveSet({ ...b, actor: u.email });
       else if (b.action === 'attachOptionSetsExact')
         result = await new D1RecipeOptionSets(db).attach({ ...b, actor: u.email });
+      else if (b.action === 'removeOptionSetExact')
+        result = await new D1RecipeOptionSets(db).removeSet({ ...b, actor: u.email });
       else result = await new D1RecipeOptionSets(db).apply(b.companyId, b.recipeId, u.email, true);
       return Response.json({ ok: true, result });
     }

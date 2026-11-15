@@ -76,7 +76,8 @@ sign-in, exact preview enabled), no page errors:
 
 - "More of the picked milk" for light or no ice (step 3) and linking choices
   to Clover options (step 4).
-- Deleting an option set; untick it on every item to stop using it.
+- Removing an option set; added afterwards
+  ([record](RECIPE_OPTION_SET_REMOVAL_LOCAL_EVIDENCE_20261115.md)).
 - Hosted D1 or a real Clover account; this was local only.
 
 ## Rollback
