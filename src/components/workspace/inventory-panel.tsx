@@ -14,12 +14,14 @@ import {type Product,money} from '@/lib/pantry';
 import type {InventoryManagementView} from '@/lib/inventory-management-contract';
 import {legacyInventorySections,exactInventorySections,type InventorySection,type InventoryMode} from './workspace-navigation';
 import ExactInventoryPanel from './exact-inventory-panel';
+import {emptyOptionSets} from './recipe-option-sets';
+import type {OptionSetsView} from '@/lib/recipe-option-sets-contract';
 import {InventoryLayout,StockSearch} from './inventory-layout';
 type Recipe={id:string;name:string;ingredients:{productId:string;quantity:number;unit:string}[]};
 type Edit={productId:string;action:string;id:string;version:number;settings:InventorySettings};
 export default function InventoryPanel({companyId,products,role,hasDraft,onStage,section:requestedSection,onSectionChange,onModeChange,focusProductId,onFocusHandled,refreshKey,onCatalogReload,onDirtyChange}:{companyId:string;products:Product[];role:string;hasDraft:boolean;section:InventorySection;onSectionChange:(section:InventorySection)=>void;refreshKey:number;focusProductId?:string;onFocusHandled:()=>void;onCatalogReload:()=>Promise<void>;onModeChange:(mode:InventoryMode)=>void;onDirtyChange:(dirty:boolean)=>void;onStage:(q:Record<string,number>)=>void}){
 const [records,setRecords]=useState<InventoryRecord[]>([]),[events,setEvents]=useState<InventoryEvent[]>([]),[recipes,setRecipes]=useState<Recipe[]>([]),[,setImports]=useState<{reference:string;created:string}[]>([]),[explicitLoading,setLoading]=useState(true),[error,setError]=useState(''),[notice,setNotice]=useState(''),[edit,setEdit]=useState<Edit|null>(null),[amount,setAmount]=useState(0),[note,setNote]=useState(''),[fromIncoming,setFromIncoming]=useState(true),[busy,setBusy]=useState(false),[recipe,setRecipe]=useState<Recipe|null>(null),[clock,setClock]=useState(Date.now);
-const [exactEnabled,setExactEnabled]=useState(false),[exact,setExact]=useState<InventoryManagementView|null>(null);
+const [exactEnabled,setExactEnabled]=useState(false),[exact,setExact]=useState<InventoryManagementView|null>(null),[optionSets,setOptionSets]=useState<OptionSetsView>(emptyOptionSets);
 const lock=useRef(false);
 const [onlyChecks,setOnlyChecks]=useState(false),[stockSearch,setStockSearch]=useState('');
 // Guided setup walks unconfigured products: settings, then an opening count.
@@ -28,14 +30,14 @@ const call=useCallback(async(path:string,body?:Record<string,unknown>)=>{const r
 const [loadedRefresh,setLoadedRefresh]=useState(refreshKey);
 const loading=explicitLoading||loadedRefresh!==refreshKey;
 const beginRequest=useRequestScope(companyId);
-const loadData=useCallback((rethrow=false)=>{const current=beginRequest();return Promise.all([call('inventory'),call('sales')]).then(([i,s])=>{if(!current())return;setRecords(i.records);setEvents(i.events);setRecipes(s.recipes);setImports(s.imports);setExactEnabled(i.exactEnabled===true);setExact(i.exact??null);setClock(Date.now());}).catch(e=>{if(current())setError((e as Error).message);if(rethrow)throw e;}).finally(()=>{if(current()){setLoadedRefresh(refreshKey);setLoading(false);}});},[call,beginRequest,refreshKey]);
+const loadData=useCallback((rethrow=false)=>{const current=beginRequest();return Promise.all([call('inventory'),call('sales')]).then(([i,s])=>{if(!current())return;setRecords(i.records);setEvents(i.events);setRecipes(s.recipes);setImports(s.imports);setExactEnabled(i.exactEnabled===true);setExact(i.exact??null);setOptionSets(i.optionSets??emptyOptionSets);setClock(Date.now());}).catch(e=>{if(current())setError((e as Error).message);if(rethrow)throw e;}).finally(()=>{if(current()){setLoadedRefresh(refreshKey);setLoading(false);}});},[call,beginRequest,refreshKey]);
 function load(rethrow=false){setLoading(true);return loadData(rethrow);}
 useEffect(()=>{void loadData();},[loadData]);
 useEffect(()=>{const id=setInterval(()=>setClock(Date.now()),60000);return()=>clearInterval(id);},[]);
 useEffect(()=>{if(!loading)onModeChange(exactEnabled&&exact?'exact':'legacy');},[loading,exactEnabled,exact,onModeChange]);
 const availableSections=exactEnabled&&exact?exactInventorySections:legacyInventorySections;
 const section=availableSections.some(item=>item.id===requestedSection)?requestedSection:'stock';
-if(exactEnabled&&exact)return <ExactInventoryPanel onFocusHandled={onFocusHandled} focusProductId={focusProductId} section={section} onSectionChange={onSectionChange} companyId={companyId} products={products} role={role} view={exact} legacyRecords={records} now={clock} hasDraft={hasDraft} onStage={onStage} loading={loading} onReload={()=>load(true)} onCatalogReload={onCatalogReload} onDirtyChange={onDirtyChange}/>;
+if(exactEnabled&&exact)return <ExactInventoryPanel onFocusHandled={onFocusHandled} focusProductId={focusProductId} section={section} onSectionChange={onSectionChange} companyId={companyId} products={products} role={role} view={exact} optionSets={optionSets} legacyRecords={records} now={clock} hasDraft={hasDraft} onStage={onStage} loading={loading} onReload={()=>load(true)} onCatalogReload={onCatalogReload} onDirtyChange={onDirtyChange}/>;
 const lookup=(id:string)=>products.find(p=>p.id===id);
 const plans=records.map(r=>({r,plan:recommendation(r,clock)})),suggested=plans.filter(x=>x.plan.packs>0),exceptions=plans.filter(x=>x.plan.needsCheck||x.plan.expired||x.plan.limited);
 const shownProducts=products.filter(p=>[p.name,p.supplier,p.sku].join(' ').toLowerCase().includes(stockSearch.trim().toLowerCase())).filter(p=>!onlyChecks||exceptions.some(x=>x.r.productId===p.id));

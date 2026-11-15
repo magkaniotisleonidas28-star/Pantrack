@@ -9,18 +9,14 @@ import {
   type RecipeAmountInput,
   type RecipeChoiceGroup,
 } from '@/lib/inventory-management-contract';
-import {
-  CURATED_UNIT_IDS,
-  curatedUnit,
-  formatCanonical,
-  unitLabel,
-} from '@/lib/inventory-quantities';
+import { CURATED_UNIT_IDS, formatCanonical, unitLabel } from '@/lib/inventory-quantities';
 import { modifierChanges, type ModifierChange } from '@/lib/modifier-editor';
 import { isOptionGenerated } from '@/lib/recipe-option-sets-contract';
 import { sendSaveRequest } from '@/lib/waste-client';
 import type { Product } from '@/lib/pantry';
 import { Plus, X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { TaskSection } from './task-form';
+import { RecipeAmountFields } from './recipe-amount-fields';
 
 type Rule = {
   modifierId: string;
@@ -134,66 +130,19 @@ export default function RecipeBuilder({
   }
   const rules = (id: string, change: Partial<Rule>) =>
     update({ rules: model.rules.map((r) => (r.modifierId === id ? { ...r, ...change } : r)) });
-  function amountFields(
+  const amountFields = (
     value: RecipeAmountInput,
     onChange: (v: RecipeAmountInput) => void,
-    allowRemove = false,
-  ) {
-    const record = view.records.find((r) => r.productId === value.productId);
-    return (
-      <div className="recipe-amount-fields">
-        <label>
-          Ingredient
-          <select
-            required
-            value={value.productId}
-            onChange={(e) => {
-              const r = view.records.find((r) => r.productId === e.target.value);
-              onChange({ ...value, productId: e.target.value, unitId: r ? r.stockUnitId : '' });
-            }}
-          >
-            <option value="">Choose stocked ingredient</option>
-            {view.records.map((r) => (
-              <option key={r.productId} value={r.productId}>
-                {name(r.productId)}
-              </option>
-            ))}
-          </select>
-        </label>
-        {!allowRemove && (
-          <label>
-            Quantity
-            <Input
-              required
-              inputMode="decimal"
-              value={value.amount}
-              onChange={(e) => onChange({ ...value, amount: e.target.value })}
-            />
-          </label>
-        )}
-        <label>
-          Unit
-          <select
-            required
-            value={value.unitId}
-            onChange={(e) => onChange({ ...value, unitId: e.target.value })}
-          >
-            {record && !CURATED_UNIT_IDS.some((id) => id === record.stockUnitId) && (
-              <option value={record.stockUnitId}>{record.stockUnitLabel}</option>
-            )}
-            {CURATED_UNIT_IDS.filter(
-              (id) => !record || curatedUnit(id).dimension === record.dimension,
-            ).map((id) => (
-              <option key={id} value={id}>
-                {unitLabel(id)}
-              </option>
-            ))}
-          </select>
-        </label>
-        {allowRemove && <span>Per item</span>}
-      </div>
-    );
-  }
+    fixedAmount = false,
+  ) => (
+    <RecipeAmountFields
+      view={view}
+      products={products}
+      value={value}
+      onChange={onChange}
+      fixedAmount={fixedAmount}
+    />
+  );
   function addRule(sourceId?: string) {
     const source = view.modifiers.find((m) => m.versionId === sourceId);
     update({
@@ -210,7 +159,7 @@ export default function RecipeBuilder({
     });
   }
   function addChoice() {
-    const options = ['Whole milk', 'Oat milk'].map((label) => ({
+    const options = ['', ''].map((label) => ({
       modifierId: crypto.randomUUID(),
       versionId: crypto.randomUUID(),
       name: label,
@@ -223,7 +172,7 @@ export default function RecipeBuilder({
         ...model.choices,
         {
           id: crypto.randomUUID(),
-          name: 'Milk choice',
+          name: '',
           modifierIds: options.map((o) => o.modifierId),
         },
       ],
@@ -266,7 +215,7 @@ export default function RecipeBuilder({
           await onReload();
           onSaved();
         } catch {
-          setError('Recipe saved. Refresh the list before making another change.');
+          setError('Item saved. Refresh the list before making another change.');
         }
       } else {
         setError(outcome.message);
@@ -289,11 +238,11 @@ export default function RecipeBuilder({
       }}
     >
       <header className="task-form-heading">
-        <h2>{review ? 'Review recipe' : editing ? 'Edit recipe' : 'Create recipe'}</h2>
+        <h2>{review ? 'Review item' : editing ? 'Edit item' : 'Add item'}</h2>
         <p>
           {review
-            ? 'Check the quantities for one menu item before saving.'
-            : 'Build the recipe for one item sold. Add customer choices and extras only if you need them.'}
+            ? 'Check the quantities for one item before saving.'
+            : 'List what one item always uses. Shared choices such as milk or syrups come from option sets; add modifiers here only for choices this item alone has.'}
         </p>
       </header>
       {editing && !editing.ingredients.length && (
@@ -310,27 +259,27 @@ export default function RecipeBuilder({
       {!review && (
         <fieldset disabled={disabled}>
           <TaskSection
-            title="Recipe details"
-            description="Give the recipe the name your team uses on the menu."
+            title="Item details"
+            description="Use the same name as the button in Clover. Each size is its own item."
           >
             <label>
-              Recipe name
+              Item name
               <Input
                 required
                 maxLength={100}
-                placeholder="e.g. 12 oz latte"
+                placeholder="e.g. Iced Latte Medium"
                 value={model.name}
                 onChange={(e) => update({ name: e.target.value })}
               />
             </label>
           </TaskSection>
           <TaskSection
-            title="Base ingredients"
-            description="Enter the quantities used in one item, including cups or packaging. Put milk alternatives under Customer choices."
+            title="Always uses"
+            description="The quantities used every time one item is made, including cups or packaging. Leave out anything the customer chooses, such as milk."
           >
             {!view.records.length && (
               <p className="notice">
-                Set up at least one stock item under Stock → Add stock before building a recipe.
+                Set up at least one stock item under Stock → Add stock before adding an item.
               </p>
             )}
             {model.ingredients.map((i, index) => (
@@ -363,12 +312,10 @@ export default function RecipeBuilder({
             </Button>
           </TaskSection>
           <TaskSection
-            title="Customer choices"
-            description="For alternatives such as whole or oat milk. The customer chooses one, and only that option’s ingredients are used."
+            title="Pick-one choices for this item"
+            description="Only for a choice no other item shares. The customer picks exactly one option, and only that option’s ingredients are used. Shared choices like milk belong in an option set."
           >
-            {!model.choices.length && (
-              <p className="task-help">Optional. Skip this if every item is made the same way.</p>
-            )}
+            {!model.choices.length && <p className="task-help">Optional. Most items need none.</p>}
             {model.carried.length > 0 && (
               <p className="task-help">
                 {model.carried.length} option-set choice{model.carried.length === 1 ? '' : 's'}{' '}
@@ -517,19 +464,19 @@ export default function RecipeBuilder({
             <Button
               type="button"
               variant="outline"
-              disabled={model.rules.length > 14}
+              disabled={model.rules.length + model.carried.length + 2 > MAX_RECIPE_MODIFIERS}
               onClick={addChoice}
             >
               <Plus size={16} />
-              Add milk choice
+              Add pick-one choice
             </Button>
           </TaskSection>
           <TaskSection
-            title="Extras & substitutions"
-            description="Optional changes such as an extra shot or swapping an ingredient. Each change applies only when selected."
+            title="Modifiers for this item only"
+            description="Optional changes only this item has, such as an extra shot or whipped cream. Each one applies only when the customer asks for it. A modifier with no ingredient changes uses no stock."
           >
             {!model.rules.some((r) => !grouped.has(r.modifierId)) && (
-              <p className="task-help">No extras added.</p>
+              <p className="task-help">No modifiers added.</p>
             )}
             {model.rules
               .filter((r) => !grouped.has(r.modifierId))
@@ -537,11 +484,11 @@ export default function RecipeBuilder({
                 <div className="task-option-row" key={r.modifierId}>
                   <div className="task-option-header">
                     <label>
-                      Extra or substitution name
+                      Modifier name, as in Clover
                       <Input
                         required
                         readOnly={r.existing}
-                        placeholder="e.g. Extra espresso shot"
+                        placeholder="e.g. Extra shot"
                         value={r.name}
                         onChange={(e) => rules(r.modifierId, { name: e.target.value })}
                       />
@@ -553,9 +500,14 @@ export default function RecipeBuilder({
                         update({ rules: model.rules.filter((m) => m.modifierId !== r.modifierId) })
                       }
                     >
-                      Remove extra
+                      Remove modifier
                     </Button>
                   </div>
+                  {!r.changes.length && (
+                    <p className="task-help">
+                      No stock change. Sales with this modifier use no extra ingredients.
+                    </p>
+                  )}
                   {r.changes.map((c, index) => (
                     <div className="task-option-row" key={index}>
                       <label>
@@ -586,7 +538,6 @@ export default function RecipeBuilder({
                       <Button
                         type="button"
                         variant="ghost"
-                        disabled={r.changes.length === 1}
                         onClick={() =>
                           rules(r.modifierId, { changes: r.changes.filter((_, n) => n !== index) })
                         }
@@ -598,6 +549,7 @@ export default function RecipeBuilder({
                   <Button
                     type="button"
                     variant="outline"
+                    disabled={r.changes.length >= 10}
                     onClick={() =>
                       rules(r.modifierId, {
                         changes: [...r.changes, { ...blank(), direction: 'add' }],
@@ -616,20 +568,25 @@ export default function RecipeBuilder({
               onClick={() => addRule()}
             >
               <Plus size={16} />
-              Add extra or substitution
+              Add modifier for this item
             </Button>
             <details className="task-disclosure">
-              <summary>Copy an extra from another recipe</summary>
+              <summary>Copy a modifier from another item</summary>
               <label>
-                Existing extra
+                Existing modifier
                 <select
                   value=""
                   disabled={model.rules.length + model.carried.length >= MAX_RECIPE_MODIFIERS}
                   onChange={(e) => addRule(e.target.value)}
                 >
-                  <option value="">Choose an extra to copy</option>
+                  <option value="">Choose a modifier to copy</option>
                   {view.modifiers
-                    .filter((m) => m.status === 'active' && m.recipeId !== model.recipeId)
+                    .filter(
+                      (m) =>
+                        m.status === 'active' &&
+                        m.recipeId !== model.recipeId &&
+                        !isOptionGenerated(m.modifierId),
+                    )
                     .map((m) => (
                       <option key={m.versionId} value={m.versionId}>
                         {m.name} · {view.recipes.find((r) => r.recipeId === m.recipeId)?.name}
@@ -638,13 +595,13 @@ export default function RecipeBuilder({
                 </select>
               </label>
               <p className="task-help">
-                The copy can be edited independently of the original recipe.
+                The copy can be edited independently of the original item.
               </p>
             </details>
           </TaskSection>
           <div className="task-form-actions">
             <Button type="submit" disabled={!view.records.length}>
-              Review recipe
+              Review item
               <ArrowRight size={16} />
             </Button>
             {!disabled && (
@@ -652,7 +609,7 @@ export default function RecipeBuilder({
                 type="button"
                 variant="ghost"
                 onClick={() => {
-                  if (!dirty || window.confirm('Discard this recipe edit?')) onSaved();
+                  if (!dirty || window.confirm('Discard this item edit?')) onSaved();
                 }}
               >
                 Cancel
@@ -662,7 +619,7 @@ export default function RecipeBuilder({
         </fieldset>
       )}
       {review && (
-        <section className="task-review" aria-label="Recipe review">
+        <section className="task-review" aria-label="Item review">
           <h3 ref={reviewHeading} tabIndex={-1}>
             {model.name}
           </h3>
@@ -683,7 +640,7 @@ export default function RecipeBuilder({
           </TaskSection>
           {!!model.choices.length && (
             <TaskSection
-              title="Customer choices"
+              title="Pick-one choices"
               description="Exactly one option is required in each group."
             >
               {model.choices.map((g) => (
@@ -708,7 +665,7 @@ export default function RecipeBuilder({
             </TaskSection>
           )}
           {model.rules.some((r) => !grouped.has(r.modifierId)) && (
-            <TaskSection title="Optional extras" description="Used only when ordered.">
+            <TaskSection title="Modifiers for this item" description="Used only when ordered.">
               {model.rules
                 .filter((r) => !grouped.has(r.modifierId))
                 .map((r) => (
@@ -720,19 +677,19 @@ export default function RecipeBuilder({
                           (c) =>
                             `${c.direction} ${c.amount} ${unitLabel(c.unitId)} ${name(c.productId)}`,
                         )
-                        .join(', ')}
+                        .join(', ') || 'No stock change'}
                     </p>
                   </div>
                 ))}
             </TaskSection>
           )}
           <p className="task-help">
-            Saving makes this recipe and its choices available together. Previous versions remain in
+            Saving makes this item and its choices available together. Previous versions remain in
             history.
           </p>
           <div className="task-form-actions">
             <Button type="button" disabled={busy || saved} onClick={() => void save()}>
-              {busy ? 'Saving…' : pending ? 'Retry same recipe save' : 'Save recipe'}
+              {busy ? 'Saving…' : pending ? 'Retry same save' : 'Save item'}
             </Button>
             {!disabled && (
               <Button type="button" variant="ghost" onClick={() => setReview(false)}>
@@ -753,7 +710,7 @@ export default function RecipeBuilder({
               .catch(() => setError('Could not refresh. Try again.'))
           }
         >
-          Refresh recipe list
+          Refresh item list
         </Button>
       )}
     </form>

@@ -56,7 +56,9 @@ choice groups atomically (`publishRecipe`), maps Clover items and
    Evidence: [recipe option limits](../RECIPE_OPTION_LIMITS_LOCAL_EVIDENCE_20261114.md).
 2. **Stored option sets:** additive migration for sets, attachments and
    overrides; owner/manager API with anonymous, wrong-company and
-   forbidden-role tests; republish of attached items; item editor UI.
+   forbidden-role tests; republish of attached items
+   ([evidence](../RECIPE_OPTION_SETS_LOCAL_EVIDENCE_20261114.md)); item editor UI
+   ([evidence](../RECIPE_OPTION_SCREENS_LOCAL_EVIDENCE_20261115.md)).
 3. **"More of the picked choice"** in sales consumption.
 4. **Clover linking per choice:** link a Clover option to a set choice once,
    creating the (item, modifier) mappings for every attached item.

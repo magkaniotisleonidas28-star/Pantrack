@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-13
+Updated: 2026-11-15
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -23,8 +23,11 @@ Local evidence only; no schema change. Step 2a,
 [stored option sets](RECIPE_OPTION_SETS_LOCAL_EVIDENCE_20261114.md), adds
 migration `0046` (sets, revisions, item attachments), owner/manager API actions
 that republish attached items through the existing atomic recipe publisher, and
-a recipe-builder safeguard that keeps option-set choices. Local evidence only;
-the option-set screens follow.
+a recipe-builder safeguard that keeps option-set choices. Step 2b,
+[option-set screens](RECIPE_OPTION_SCREENS_LOCAL_EVIDENCE_20261115.md), adds the
+Option sets view, per-item attachment with amount changes and "Update now",
+item wording, and no-change item-only modifiers. Local evidence only; "more of
+the picked milk" (step 3) and Clover linking per choice (step 4) follow.
 
 ## Workspace header, navigation and wording — 2026-11-14
 
