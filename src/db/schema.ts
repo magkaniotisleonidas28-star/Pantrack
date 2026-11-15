@@ -1109,3 +1109,42 @@ export const poCartConfirmationReviews=sqliteTable('po_cart_confirmation_reviews
 },t=>[primaryKey({columns:[t.companyId,t.id]}),uniqueIndex('po_cart_confirmation_review_operation').on(t.companyId,t.operationId),
  uniqueIndex('po_cart_confirmation_one_approval').on(t.companyId,t.confirmationId).where(sql`${t.kind}='approved'`),
  foreignKey({columns:[t.companyId,t.confirmationId],foreignColumns:[poCartConfirmations.companyId,poCartConfirmations.id]})]);
+
+// Shared recipe option sets (decision 0009). Each attached recipe is republished
+// with ordinary versioned modifiers, so sales never read these tables.
+export const recipeOptionSets=sqliteTable('recipe_option_sets',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ id:text('id').notNull(),
+ revision:integer('revision').notNull(),
+ name:text('name').notNull(),
+ kind:text('kind').notNull(),
+ choicesJson:text('choices_json').notNull(),
+ updatedBy:text('updated_by').notNull(),
+ updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),check('recipe_option_set_kind',sql`${t.kind} IN ('one','addons')`)]);
+
+export const recipeOptionSetRevisions=sqliteTable('recipe_option_set_revisions',{
+ companyId:text('company_id').notNull(),
+ setId:text('set_id').notNull(),
+ revision:integer('revision').notNull(),
+ operationId:text('operation_id').notNull(),
+ name:text('name').notNull(),
+ kind:text('kind').notNull(),
+ choicesJson:text('choices_json').notNull(),
+ createdBy:text('created_by').notNull(),
+ createdAt:text('created_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.setId,t.revision]}),uniqueIndex('recipe_option_set_revision_operation').on(t.companyId,t.operationId),
+ foreignKey({columns:[t.companyId,t.setId],foreignColumns:[recipeOptionSets.companyId,recipeOptionSets.id]})]);
+
+export const recipeOptionLinks=sqliteTable('recipe_option_links',{
+ companyId:text('company_id').notNull(),
+ recipeId:text('recipe_id').notNull(),
+ setId:text('set_id').notNull(),
+ position:integer('position').notNull(),
+ overridesJson:text('overrides_json').notNull(),
+ appliedRevision:integer('applied_revision'),
+ linkedBy:text('linked_by').notNull(),
+ linkedAt:text('linked_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.recipeId,t.setId]}),index('recipe_option_link_set').on(t.companyId,t.setId),
+ foreignKey({columns:[t.companyId,t.recipeId],foreignColumns:[recipeLineages.companyId,recipeLineages.id]}),
+ foreignKey({columns:[t.companyId,t.setId],foreignColumns:[recipeOptionSets.companyId,recipeOptionSets.id]})]);

@@ -16,6 +16,7 @@ import {
   unitLabel,
 } from '@/lib/inventory-quantities';
 import { modifierChanges, type ModifierChange } from '@/lib/modifier-editor';
+import { isOptionGenerated } from '@/lib/recipe-option-sets-contract';
 import { sendSaveRequest } from '@/lib/waste-client';
 import type { Product } from '@/lib/pantry';
 import { Plus, X, ArrowLeft, ArrowRight } from 'lucide-react';
@@ -39,6 +40,9 @@ type Model = {
   ingredients: RecipeAmountInput[];
   choices: RecipeChoiceGroup[];
   rules: Rule[];
+  /** Option-set choices are managed with their sets and republished unchanged here. */
+  carried: Rule[];
+  carriedChoices: RecipeChoiceGroup[];
 };
 
 export default function RecipeBuilder({
@@ -60,16 +64,24 @@ export default function RecipeBuilder({
 }) {
   const blank = (): RecipeAmountInput => ({ productId: '', amount: '', unitId: 'mL' });
   const create = (): Model => {
-    const mods = editing
+    const active = editing
       ? view.modifiers.filter((m) => m.recipeId === editing.recipeId && m.status === 'active')
       : [];
+    const mods = active.filter((m) => !isOptionGenerated(m.modifierId));
+    const toRule = (m: (typeof active)[number]): Rule => ({
+      modifierId: m.modifierId,
+      versionId: crypto.randomUUID(),
+      name: m.name,
+      existing: true,
+      changes: modifierChanges(m),
+    });
     return {
       operationId: crypto.randomUUID(),
       recipeId: editing?.recipeId ?? crypto.randomUUID(),
       versionId: crypto.randomUUID(),
       name: editing?.name ?? '',
       expectedActiveVersionId: editing?.status === 'active' ? editing.versionId : null,
-      expectedModifiers: Object.fromEntries(mods.map((m) => [m.modifierId, m.versionId])),
+      expectedModifiers: Object.fromEntries(active.map((m) => [m.modifierId, m.versionId])),
       ingredients: editing?.ingredients.length
         ? editing.ingredients.map((i) =>
             CURATED_UNIT_IDS.some((id) => id === i.unitId)
@@ -81,14 +93,10 @@ export default function RecipeBuilder({
                 },
           )
         : [blank()],
-      choices: editing?.choices ?? [],
-      rules: mods.map((m) => ({
-        modifierId: m.modifierId,
-        versionId: crypto.randomUUID(),
-        name: m.name,
-        existing: true,
-        changes: modifierChanges(m),
-      })),
+      choices: (editing?.choices ?? []).filter((g) => !isOptionGenerated(g.id)),
+      rules: mods.map(toRule),
+      carried: active.filter((m) => isOptionGenerated(m.modifierId)).map(toRule),
+      carriedChoices: (editing?.choices ?? []).filter((g) => isOptionGenerated(g.id)),
     };
   };
   const [model, setModel] = useState<Model>(create),
@@ -232,8 +240,8 @@ export default function RecipeBuilder({
       expectedActiveVersionId: model.expectedActiveVersionId,
       expectedModifiers: model.expectedModifiers,
       ingredients: model.ingredients,
-      choices: model.choices,
-      modifiers: model.rules.map((r) => ({
+      choices: [...model.choices, ...model.carriedChoices],
+      modifiers: [...model.rules, ...model.carried].map((r) => ({
         modifierId: r.modifierId,
         versionId: r.versionId,
         name: r.name.trim(),
@@ -361,6 +369,13 @@ export default function RecipeBuilder({
             {!model.choices.length && (
               <p className="task-help">Optional. Skip this if every item is made the same way.</p>
             )}
+            {model.carried.length > 0 && (
+              <p className="task-help">
+                {model.carried.length} option-set choice{model.carried.length === 1 ? '' : 's'}{' '}
+                (such as milk or syrups) will be kept as they are. Change them with their option
+                sets.
+              </p>
+            )}
             {model.choices.map((g) => {
               const options = model.rules.filter((r) => g.modifierIds.includes(r.modifierId)),
                 first = options[0]?.changes[0];
@@ -458,7 +473,7 @@ export default function RecipeBuilder({
                     <Button
                       type="button"
                       variant="outline"
-                      disabled={model.rules.length >= MAX_RECIPE_MODIFIERS}
+                      disabled={model.rules.length + model.carried.length >= MAX_RECIPE_MODIFIERS}
                       onClick={() => {
                         const id = crypto.randomUUID();
                         update({
@@ -597,7 +612,7 @@ export default function RecipeBuilder({
             <Button
               type="button"
               variant="outline"
-              disabled={model.rules.length >= MAX_RECIPE_MODIFIERS}
+              disabled={model.rules.length + model.carried.length >= MAX_RECIPE_MODIFIERS}
               onClick={() => addRule()}
             >
               <Plus size={16} />
@@ -609,7 +624,7 @@ export default function RecipeBuilder({
                 Existing extra
                 <select
                   value=""
-                  disabled={model.rules.length >= MAX_RECIPE_MODIFIERS}
+                  disabled={model.rules.length + model.carried.length >= MAX_RECIPE_MODIFIERS}
                   onChange={(e) => addRule(e.target.value)}
                 >
                   <option value="">Choose an extra to copy</option>
