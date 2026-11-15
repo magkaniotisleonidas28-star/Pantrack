@@ -19,7 +19,12 @@ with per-item overrides and item-only modifiers, generated as ordinary versioned
 modifiers. Step 1, [recipe option limits](RECIPE_OPTION_LIMITS_LOCAL_EVIDENCE_20261114.md),
 raises the per-item limit from 16 to 64 modifiers, keeps the republish check
 within D1's bound-parameter limit, and allows options with no stock change.
-Local evidence only; no schema change.
+Local evidence only; no schema change. Step 2a,
+[stored option sets](RECIPE_OPTION_SETS_LOCAL_EVIDENCE_20261114.md), adds
+migration `0046` (sets, revisions, item attachments), owner/manager API actions
+that republish attached items through the existing atomic recipe publisher, and
+a recipe-builder safeguard that keeps option-set choices. Local evidence only;
+the option-set screens follow.
 
 ## Workspace header, navigation and wording — 2026-11-14
 

@@ -746,6 +746,9 @@ const actions = {
     'saveModifierDraftExact',
     'activateModifierExact',
     'archiveModifierExact',
+    'saveOptionSetExact',
+    'attachOptionSetsExact',
+    'applyOptionSetsExact',
   ],
   sales: ['recipe', 'import', 'mapping', 'removeMapping'],
   register: ['save', 'token', 'revoke'],
@@ -1179,6 +1182,63 @@ assert.equal(
   403,
 );
 assert.equal((await call('inventory', 'POST', publishBody, cookies.manager)).status, 200);
+// Shared option sets follow the same owner/manager and company rules.
+const optionSetBody = {
+  companyId: 'company-a',
+  action: 'saveOptionSetExact',
+  operationId: 'option-set-security',
+  setId: 'extras',
+  expectedRevision: 0,
+  name: 'Extras',
+  kind: 'addons',
+  choices: [
+    { id: 'splash', name: 'Splash', changes: [{ productId: 'milk', amount: '1', unitId: 'mL' }] },
+    { id: 'hot', name: 'Extra hot', changes: [] },
+  ],
+};
+const attachBody = {
+  companyId: 'company-a',
+  action: 'attachOptionSetsExact',
+  recipeId: publishBody.recipeId,
+  links: [{ setId: 'extras', overrides: {} }],
+};
+for (const body of [optionSetBody, attachBody]) {
+  for (const cookie of [undefined, cookies.other, cookies.employee])
+    assert.equal(
+      (await call('inventory', 'POST', body, cookie)).status,
+      cookie ? 403 : 401,
+      body.action + ' denied',
+    );
+  assert.equal(
+    (await call('inventory', 'POST', { ...body, companyId: 'company-b' }, cookies.manager)).status,
+    403,
+    body.action + ' other company',
+  );
+}
+assert.equal(
+  (await call('inventory', 'POST', { ...optionSetBody, setId: 'bad id!' }, cookies.manager))
+    .status,
+  400,
+  'option set IDs are restricted',
+);
+const savedSet = await call('inventory', 'POST', optionSetBody, cookies.manager);
+assert.equal(savedSet.status, 200);
+assert.equal((await savedSet.json()).result.set.revision, 1);
+const attachedSet = await call('inventory', 'POST', attachBody, cookies.manager);
+assert.equal(attachedSet.status, 200);
+assert.equal((await attachedSet.json()).result.status, 'applied');
+const optionRead = await (await call('inventory', 'GET', null, cookies.employee)).json();
+assert.deepEqual(
+  optionRead.optionSets.links.map((link) => [link.setId, link.appliedRevision]),
+  [['extras', 1]],
+  'Employees can read option sets but not change them.',
+);
+assert.equal(
+  (await call('inventory', 'POST', { ...optionSetBody, operationId: 'stale-set' }, cookies.owner))
+    .status,
+  409,
+  'a stale option set save conflicts',
+);
 assert.equal(
   sql
     .prepare(

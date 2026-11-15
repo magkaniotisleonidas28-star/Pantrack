@@ -5,8 +5,10 @@ import { unstable_splitSqlQuery } from 'wrangler';
 const db = new DatabaseSync(':memory:');
 db.exec('PRAGMA foreign_keys=ON');
 const entries = JSON.parse(readFileSync('drizzle/meta/_journal.json', 'utf8')).entries;
-assert.equal(entries.at(-1).tag, '0045_prepared_file_checks');
-for (const entry of entries.slice(0, -1))
+// Later migrations may follow; apply everything before this one.
+const checks = entries.find((entry) => entry.tag === '0045_prepared_file_checks');
+assert.ok(checks, 'Missing prepared file check migration');
+for (const entry of entries.filter((entry) => entry.idx < checks.idx))
   for (const sql of unstable_splitSqlQuery(readFileSync(`drizzle/${entry.tag}.sql`, 'utf8')))
     db.exec(sql);
 db.exec(

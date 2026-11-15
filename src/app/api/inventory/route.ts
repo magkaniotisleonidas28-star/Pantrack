@@ -14,6 +14,7 @@ import { publishRecipe } from '@/lib/d1-recipe-publisher';
 import { recordPackageStock } from '@/lib/d1-stock-pack';
 import { readPlanningRecords } from '@/lib/inventory-planning-units';
 import { MAX_RECIPE_MODIFIERS } from '@/lib/inventory-management-contract';
+import { D1RecipeOptionSets } from '@/lib/d1-recipe-option-sets';
 const amount = z.number().finite().min(0).max(10000000).multipleOf(0.001);
 const settings = z.object({
   targetStock: amount.nullable().optional().default(null),
@@ -87,6 +88,8 @@ const packageQuantity = z
   })
   .strict();
 const recipeAmount = z.object({ productId: identity, amount: decimal, unitId: identity }).strict();
+// Short enough for generated modifier IDs (opt-<set>-<choice>) to stay within identity limits.
+const optionId = z.string().regex(/^[A-Za-z0-9-]{1,60}$/);
 const exactMutation = z.discriminatedUnion('action', [
   z
     .object({
@@ -264,6 +267,42 @@ const exactMutation = z.discriminatedUnion('action', [
       versionId: identity,
     })
     .strict(),
+  z
+    .object({
+      action: z.literal('saveOptionSetExact'),
+      companyId: identity,
+      operationId: identity,
+      setId: optionId,
+      expectedRevision: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+      name: z.string().trim().min(1).max(100),
+      kind: z.enum(['one', 'addons']),
+      choices: z
+        .array(
+          z
+            .object({
+              id: optionId,
+              name: z.string().trim().min(1).max(100),
+              changes: z.array(recipeAmount).max(10),
+            })
+            .strict(),
+        )
+        .min(1)
+        .max(40),
+    })
+    .strict(),
+  z
+    .object({
+      action: z.literal('attachOptionSetsExact'),
+      companyId: identity,
+      recipeId: identity,
+      links: z
+        .array(z.object({ setId: optionId, overrides: z.record(optionId, decimal) }).strict())
+        .max(10),
+    })
+    .strict(),
+  z
+    .object({ action: z.literal('applyOptionSetsExact'), companyId: identity, recipeId: identity })
+    .strict(),
 ]);
 
 async function handleGET(req: Request) {
@@ -275,7 +314,7 @@ async function handleGET(req: Request) {
       return Response.json({ error: 'Company access denied.' }, { status: 403 });
     const db = database();
     const enabled = exactInventoryPreviewEnabled();
-    const [records, e, exact] = await Promise.all([
+    const [records, e, exact, optionSets] = await Promise.all([
       readPlanningRecords(db, companyId!),
       db
         .prepare(
@@ -284,9 +323,16 @@ async function handleGET(req: Request) {
         .bind(companyId)
         .all<{ data: string }>(),
       enabled ? new D1InventoryManagementService(db).read(companyId!) : null,
+      enabled ? new D1RecipeOptionSets(db).list(companyId!) : null,
     ]);
     return Response.json(
-      { records, events: e.results.map((x) => JSON.parse(x.data)), exactEnabled: enabled, exact },
+      {
+        records,
+        events: e.results.map((x) => JSON.parse(x.data)),
+        exactEnabled: enabled,
+        exact,
+        optionSets,
+      },
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch {
@@ -348,7 +394,13 @@ async function handlePOST(req: Request) {
         result = await service.saveModifierDraft({ ...b, actor: u.email });
       else if (b.action === 'activateModifierExact')
         result = await service.activateModifier({ ...b, actor: u.email });
-      else result = await service.archiveModifier({ ...b, actor: u.email });
+      else if (b.action === 'archiveModifierExact')
+        result = await service.archiveModifier({ ...b, actor: u.email });
+      else if (b.action === 'saveOptionSetExact')
+        result = await new D1RecipeOptionSets(db).saveSet({ ...b, actor: u.email });
+      else if (b.action === 'attachOptionSetsExact')
+        result = await new D1RecipeOptionSets(db).attach({ ...b, actor: u.email });
+      else result = await new D1RecipeOptionSets(db).apply(b.companyId, b.recipeId, u.email, true);
       return Response.json({ ok: true, result });
     }
     const b = z
