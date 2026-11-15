@@ -11,6 +11,16 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Recipe option sets: decision and limits — 2026-11-14
+
+[Decision 0009](decisions/0009-recipe-option-sets.md) records the owner's recipe
+direction: fixed ingredients per item, shared option sets (milk, syrups, ice)
+with per-item overrides and item-only modifiers, generated as ordinary versioned
+modifiers. Step 1, [recipe option limits](RECIPE_OPTION_LIMITS_LOCAL_EVIDENCE_20261114.md),
+raises the per-item limit from 16 to 64 modifiers, keeps the republish check
+within D1's bound-parameter limit, and allows options with no stock change.
+Local evidence only; no schema change.
+
 ## Workspace header, navigation and wording — 2026-11-14
 
 At the owner's request after a local prototype review, the

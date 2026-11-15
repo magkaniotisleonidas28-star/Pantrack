@@ -2,11 +2,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type {
-  InventoryManagementView,
-  RecipeVersionView,
-  RecipeAmountInput,
-  RecipeChoiceGroup,
+import {
+  MAX_RECIPE_MODIFIERS,
+  type InventoryManagementView,
+  type RecipeVersionView,
+  type RecipeAmountInput,
+  type RecipeChoiceGroup,
 } from '@/lib/inventory-management-contract';
 import {
   CURATED_UNIT_IDS,
@@ -457,7 +458,7 @@ export default function RecipeBuilder({
                     <Button
                       type="button"
                       variant="outline"
-                      disabled={model.rules.length >= 16}
+                      disabled={model.rules.length >= MAX_RECIPE_MODIFIERS}
                       onClick={() => {
                         const id = crypto.randomUUID();
                         update({
@@ -596,7 +597,7 @@ export default function RecipeBuilder({
             <Button
               type="button"
               variant="outline"
-              disabled={model.rules.length >= 16}
+              disabled={model.rules.length >= MAX_RECIPE_MODIFIERS}
               onClick={() => addRule()}
             >
               <Plus size={16} />
@@ -608,7 +609,7 @@ export default function RecipeBuilder({
                 Existing extra
                 <select
                   value=""
-                  disabled={model.rules.length >= 16}
+                  disabled={model.rules.length >= MAX_RECIPE_MODIFIERS}
                   onChange={(e) => addRule(e.target.value)}
                 >
                   <option value="">Choose an extra to copy</option>

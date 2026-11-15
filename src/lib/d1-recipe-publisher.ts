@@ -1,5 +1,5 @@
 import { D1InventoryManagementService, InventoryManagementError } from './d1-inventory-management';
-import type { RecipePublishInput } from './inventory-management-contract';
+import { MAX_RECIPE_MODIFIERS, type RecipePublishInput } from './inventory-management-contract';
 
 export async function publishRecipe(
   db: D1Database,
@@ -31,13 +31,13 @@ export async function publishRecipe(
   if (
     !input.name.trim() ||
     !input.ingredients.length ||
-    input.modifiers.length > 16 ||
-    Object.keys(input.expectedModifiers).length > 16 ||
+    input.modifiers.length > MAX_RECIPE_MODIFIERS ||
+    Object.keys(input.expectedModifiers).length > MAX_RECIPE_MODIFIERS ||
     input.choices.length > 10
   )
     fail('Check the recipe name, ingredients, and choices.');
-  if (input.ingredients.length + input.modifiers.reduce((n, m) => n + m.deltas.length, 0) > 100)
-    fail('Use at most 100 ingredient changes in one recipe.');
+  if (input.ingredients.length + input.modifiers.reduce((n, m) => n + m.deltas.length, 0) > 200)
+    fail('Use at most 200 ingredient changes in one recipe.');
   const ids = new Set(input.modifiers.map((m) => m.modifierId));
   if (
     ids.size !== input.modifiers.length ||
@@ -64,11 +64,14 @@ export async function publishRecipe(
   const ingredients = await service.recipeAmounts(input.companyId, input.ingredients);
   const prepared = [];
   for (const modifier of input.modifiers) {
-    const deltas = await service.recipeAmounts(
-      input.companyId,
-      modifier.deltas.map((d) => ({ ...d, amount: d.signed ? '-' + d.amount : d.amount })),
-      true,
-    );
+    // No deltas means a choice with no stock effect, such as "extra hot".
+    const deltas = modifier.deltas.length
+      ? await service.recipeAmounts(
+          input.companyId,
+          modifier.deltas.map((d) => ({ ...d, amount: d.signed ? '-' + d.amount : d.amount })),
+          true,
+        )
+      : [];
     const lineage = await db
       .prepare(
         'SELECT name FROM recipe_modifier_lineages WHERE company_id=? AND recipe_id=? AND id=?',
@@ -114,17 +117,21 @@ export async function publishRecipe(
     input.recipeId,
     ...(input.expectedActiveVersionId ? [input.expectedActiveVersionId] : []),
   );
+  // Compare the whole active modifier set with one JSON value, so the bound
+  // parameters stay constant however many modifiers a recipe has (D1 allows 100).
   const expected = Object.entries(input.expectedModifiers);
   guards.push(
     "(SELECT count(*) FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND status='active')=?",
+    "NOT EXISTS(SELECT 1 FROM recipe_modifier_versions v WHERE v.company_id=? AND v.recipe_id=? AND v.status='active' AND NOT EXISTS(SELECT 1 FROM json_each(?) e WHERE json_extract(e.value,'$[0]')=v.modifier_id AND json_extract(e.value,'$[1]')=v.id))",
   );
-  guardValues.push(input.companyId, input.recipeId, expected.length);
-  for (const [id, versionId] of expected) {
-    guards.push(
-      "EXISTS(SELECT 1 FROM recipe_modifier_versions WHERE company_id=? AND recipe_id=? AND modifier_id=? AND id=? AND status='active')",
-    );
-    guardValues.push(input.companyId, input.recipeId, id, versionId);
-  }
+  guardValues.push(
+    input.companyId,
+    input.recipeId,
+    expected.length,
+    input.companyId,
+    input.recipeId,
+    JSON.stringify(expected),
+  );
   const statements: D1PreparedStatement[] = [
     db
       .prepare(
