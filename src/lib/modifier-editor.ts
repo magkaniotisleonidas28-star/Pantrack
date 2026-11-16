@@ -1,19 +1,27 @@
 import type { ModifierVersionView, RecipeAmountInput } from './inventory-management-contract';
-import { formatCanonical } from './inventory-quantities';
+import { CURATED_UNIT_IDS, formatCanonical } from './inventory-quantities';
 
 export type ModifierChange = RecipeAmountInput & { direction: 'add' | 'remove' };
 
 export type ModifierDraftIdentity = { modifierId: string; draftId: string };
 
-/** Use stored canonical quantities, not an old custom unit whose conversion
- * may have changed. A copy has its own rows and never carries source IDs. */
+/** Keep amounts as entered in standard units, such as 10 fl oz. Otherwise use the
+ * stored canonical quantity, not an old custom unit whose conversion may have
+ * changed. A copy has its own rows and never carries source IDs. */
 export function modifierChanges(version: ModifierVersionView): ModifierChange[] {
-  return version.deltas.map((delta) => ({
-    productId: delta.productId,
-    amount: formatCanonical(delta.quantity).replace(/^-/, ''),
-    unitId: { mass: 'g', volume: 'mL', count: 'each' }[delta.quantity.dimension],
-    direction: delta.quantity.minor.startsWith('-') ? 'remove' : 'add',
-  }));
+  return version.deltas.map((delta) => {
+    const entered = CURATED_UNIT_IDS.some((id) => id === delta.unitId);
+    return {
+      productId: delta.productId,
+      amount: entered
+        ? delta.amount.replace(/^-/, '')
+        : formatCanonical(delta.quantity).replace(/^-/, ''),
+      unitId: entered
+        ? delta.unitId
+        : { mass: 'g', volume: 'mL', count: 'each' }[delta.quantity.dimension],
+      direction: delta.quantity.minor.startsWith('-') ? 'remove' : 'add',
+    };
+  });
 }
 
 export function modifierDraftRequest(

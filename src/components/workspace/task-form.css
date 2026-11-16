@@ -123,3 +123,14 @@
 .task-form .option-extra-field { display: grid; gap: 6px; }
 .task-form .option-extra-field > span { display: flex; align-items: center; gap: 8px; max-width: 160px; font-weight: 400; }
 @media (max-width: 640px) { .task-form .item-option-override { grid-template-columns: minmax(0,1fr); } }
+/* "Oat milk comes in a [carton] that holds [64] [fl oz]": one readable line that wraps on phones. */
+.task-form .pack-sentence { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: 15px; }
+/* Specific enough to win over the full-width field rule above. */
+.task-form .task-section-fields .pack-sentence :is(input,select) { width: 9rem; flex: none; }
+.task-form .task-section-fields .pack-sentence input[inputmode="decimal"] { width: 6rem; }
+.task-form .task-section-fields .pack-sentence select { width: auto; min-width: 6.5rem; }
+.task-form .pack-recipe-unit { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; font-size: 15px; font-weight: 400; }
+.task-form .task-section-fields .pack-recipe-unit select { width: auto; min-width: 6.5rem; }
+.task-form .recipe-amount-hint { font-size: 13px; color: var(--muted-foreground); align-self: end; padding-bottom: 10px; }
+.unit-preference { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--muted-foreground); }
+.unit-preference select { width: auto; }

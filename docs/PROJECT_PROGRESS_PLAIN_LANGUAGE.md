@@ -2,6 +2,14 @@
 
 Updated: 2026-11-13 for the first real supplier decision.
 
+**Easier units (2026-11-16):** setting up stock now reads like a sentence:
+"Oat milk comes in a carton that holds 64 fl oz". Pantrack guesses the
+container and unit from the name. The café picks US or metric units once.
+Recipes show how an amount relates to what you buy, such as "about 6 per
+carton". Counting asks for full cartons plus how full the open one is (¼, ½,
+¾). Syrups and spreads can be measured in pumps or scoops
+([record](EASIER_UNITS_LOCAL_EVIDENCE_20261116.md)).
+
 **Recipe options (2026-11-14):** the owner chose how drink choices work: each
 item keeps only its fixed ingredients, and milk, syrups and ice are shared
 "option sets" set up once ([decision 0009](decisions/0009-recipe-option-sets.md)).

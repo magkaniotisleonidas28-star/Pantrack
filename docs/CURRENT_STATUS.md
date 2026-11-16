@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-15
+Updated: 2026-11-16
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,20 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Easier units for stock and recipes — 2026-11-16
+
+After trying a local preview, the owner approved five changes to how amounts
+are entered and shown ([record](EASIER_UNITS_LOCAL_EVIDENCE_20261116.md)):
+- product setup as one sentence ("comes in a carton that holds 64 fl oz") with
+  name-based starting guesses;
+- a café-wide everyday-units setting (US or metric), adding migration `0050`;
+- recipe rows that default to the product's unit and show "about 6 per
+  carton";
+- counts of full containers plus how full the open one is (¼, ½, ¾ or exact);
+- pumps and scoops as a product's own measure.
+
+Stored amounts and past records are unchanged. Local evidence only.
 
 ## Recipe option sets: decision and limits — 2026-11-14
 

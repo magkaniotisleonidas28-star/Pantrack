@@ -351,6 +351,13 @@
       "when": 1794851765658,
       "tag": "0049_clover_option_links",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "6",
+      "when": 1794864805790,
+      "tag": "0050_company_preferences",
+      "breakpoints": true
     }
   ]
 }

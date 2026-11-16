@@ -750,6 +750,7 @@ const actions = {
     'attachOptionSetsExact',
     'applyOptionSetsExact',
     'removeOptionSetExact',
+    'setMeasurementSystemExact',
   ],
   sales: ['recipe', 'import', 'mapping', 'removeMapping'],
   register: ['save', 'token', 'revoke'],
@@ -1311,6 +1312,49 @@ assert.deepEqual(
   (await (await call('inventory', 'GET', null, cookies.employee)).json()).optionSets,
   { sets: [], links: [] },
   'a removed option set is hidden',
+);
+// The café's everyday units: owners and managers choose; everyone reads; companies stay separate.
+const unitsBody = {
+  companyId: 'company-a',
+  action: 'setMeasurementSystemExact',
+  measurementSystem: 'metric',
+};
+for (const cookie of [undefined, cookies.other, cookies.employee])
+  assert.equal(
+    (await call('inventory', 'POST', unitsBody, cookie)).status,
+    cookie ? 403 : 401,
+    'measurement system change denied',
+  );
+assert.equal(
+  (await call('inventory', 'POST', { ...unitsBody, companyId: 'company-b' }, cookies.manager))
+    .status,
+  403,
+  'measurement system change for another company',
+);
+assert.equal(
+  (
+    await call(
+      'inventory',
+      'POST',
+      { ...unitsBody, measurementSystem: 'imperial' },
+      cookies.manager,
+    )
+  ).status,
+  400,
+  'only US or metric',
+);
+const unitsRead = async (cookie) =>
+  (await (await call('inventory', 'GET', null, cookie)).json()).exact.measurementSystem;
+assert.equal(await unitsRead(cookies.employee), 'us', 'US units by default');
+assert.equal((await call('inventory', 'POST', unitsBody, cookies.manager)).status, 200);
+assert.equal(await unitsRead(cookies.employee), 'metric', 'everyone sees the café choice');
+assert.deepEqual(
+  sql
+    .prepare('SELECT company_id,measurement_system,updated_by FROM company_preferences')
+    .all()
+    .map((row) => ({ ...row })),
+  [{ company_id: 'company-a', measurement_system: 'metric', updated_by: 'manager@example.test' }],
+  'only the chosen company changes, with who changed it',
 );
 assert.equal(
   sql

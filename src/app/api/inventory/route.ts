@@ -310,6 +310,13 @@ const exactMutation = z.discriminatedUnion('action', [
     .strict(),
   z
     .object({
+      action: z.literal('setMeasurementSystemExact'),
+      companyId: identity,
+      measurementSystem: z.enum(['us', 'metric']),
+    })
+    .strict(),
+  z
+    .object({
       action: z.literal('removeOptionSetExact'),
       companyId: identity,
       setId: optionId,
@@ -413,6 +420,8 @@ async function handlePOST(req: Request) {
         result = await new D1RecipeOptionSets(db).saveSet({ ...b, actor: u.email });
       else if (b.action === 'attachOptionSetsExact')
         result = await new D1RecipeOptionSets(db).attach({ ...b, actor: u.email });
+      else if (b.action === 'setMeasurementSystemExact')
+        result = await service.setMeasurementSystem({ ...b, actor: u.email });
       else if (b.action === 'removeOptionSetExact')
         result = await new D1RecipeOptionSets(db).removeSet({ ...b, actor: u.email });
       else result = await new D1RecipeOptionSets(db).apply(b.companyId, b.recipeId, u.email, true);

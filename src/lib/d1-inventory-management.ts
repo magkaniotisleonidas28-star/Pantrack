@@ -1,3 +1,4 @@
+import { DEFAULT_MEASUREMENT_SYSTEM, type MeasurementSystem } from './unit-preferences';
 import type { Product } from './pantry';
 import { defaultSettings, type InventoryRecord } from './inventory';
 import {
@@ -2756,6 +2757,33 @@ export class D1InventoryManagementService implements InventoryManagementService 
       recipes: recipeViews,
       modifiers: modifierViews,
       legacyReview: await legacyM3Review(this.db, companyId),
+      measurementSystem: await this.measurementSystem(companyId),
     };
+  }
+
+  async measurementSystem(companyId: string): Promise<MeasurementSystem> {
+    const row = await this.db
+      .prepare('SELECT measurement_system FROM company_preferences WHERE company_id=?')
+      .bind(companyId)
+      .first<{ measurement_system: MeasurementSystem }>();
+    return row?.measurement_system ?? DEFAULT_MEASUREMENT_SYSTEM;
+  }
+
+  /** Changes how amounts are shown and entered; stored amounts stay as they are. */
+  async setMeasurementSystem(input: {
+    companyId: string;
+    actor: string;
+    measurementSystem: MeasurementSystem;
+  }) {
+    if (input.measurementSystem !== 'us' && input.measurementSystem !== 'metric')
+      throw new InventoryManagementError('invalid_preference', 'Choose US or metric units.');
+    await this.db
+      .prepare(
+        `INSERT INTO company_preferences(company_id,measurement_system,updated_by,updated_at) VALUES (?,?,?,?)
+        ON CONFLICT(company_id) DO UPDATE SET measurement_system=excluded.measurement_system,updated_by=excluded.updated_by,updated_at=excluded.updated_at`,
+      )
+      .bind(input.companyId, input.measurementSystem, input.actor, this.clock.now().toISOString())
+      .run();
+    return { measurementSystem: input.measurementSystem };
   }
 }

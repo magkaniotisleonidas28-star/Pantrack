@@ -10,14 +10,14 @@ import {
   type RecipeAmountInput,
   type RecipeChoiceGroup,
 } from '@/lib/inventory-management-contract';
-import { CURATED_UNIT_IDS, formatCanonical, unitLabel } from '@/lib/inventory-quantities';
+import { CURATED_UNIT_IDS, formatCanonical } from '@/lib/inventory-quantities';
 import { modifierChanges, type ModifierChange } from '@/lib/modifier-editor';
 import { isOptionGenerated } from '@/lib/recipe-option-sets-contract';
 import { sendSaveRequest } from '@/lib/waste-client';
 import type { Product } from '@/lib/pantry';
 import { Plus, X, ArrowLeft, ArrowRight } from 'lucide-react';
 import { TaskSection } from './task-form';
-import { RecipeAmountFields } from './recipe-amount-fields';
+import { RecipeAmountFields, amountUnitLabel } from './recipe-amount-fields';
 
 type Rule = {
   modifierId: string;
@@ -637,7 +637,7 @@ export default function RecipeBuilder({
                 <div key={index}>
                   <dt>{name(i.productId)}</dt>
                   <dd>
-                    {i.amount} {unitLabel(i.unitId)}
+                    {i.amount} {amountUnitLabel(view, i)}
                   </dd>
                 </div>
               ))}
@@ -659,7 +659,10 @@ export default function RecipeBuilder({
                           <dt>{r.name}</dt>
                           <dd>
                             {r.changes
-                              .map((c) => `${c.amount} ${unitLabel(c.unitId)} ${name(c.productId)}`)
+                              .map(
+                                (c) =>
+                                  `${c.amount} ${amountUnitLabel(view, c)} ${name(c.productId)}`,
+                              )
                               .join(', ')}
                           </dd>
                         </div>
@@ -680,7 +683,7 @@ export default function RecipeBuilder({
                       {r.changes
                         .map(
                           (c) =>
-                            `${c.direction} ${c.amount} ${unitLabel(c.unitId)} ${name(c.productId)}`,
+                            `${c.direction} ${c.amount} ${amountUnitLabel(view, c)} ${name(c.productId)}`,
                         )
                         .join(', ') || 'No stock change'}
                     </p>

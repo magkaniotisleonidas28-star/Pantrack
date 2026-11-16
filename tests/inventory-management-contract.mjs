@@ -599,6 +599,7 @@ assert.deepEqual(await companyB.read('company-b'), {
   recipes: [],
   modifiers: [],
   legacyReview: { products: [], recipes: [] },
+  measurementSystem: 'us',
 });
 const restarted = new D1InventoryManagementService(database, { clock });
 const view = await restarted.read('company-a');
@@ -773,6 +774,7 @@ assert.deepEqual(
     recipes: [],
     modifiers: [],
     legacyReview: { products: [], recipes: [] },
+    measurementSystem: 'us',
   },
   'Copied rules remain company scoped.',
 );
