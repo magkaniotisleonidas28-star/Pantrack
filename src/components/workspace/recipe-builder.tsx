@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import {
   MAX_RECIPE_MODIFIERS,
   type InventoryManagementView,
+  type ModifierExtra,
   type RecipeVersionView,
   type RecipeAmountInput,
   type RecipeChoiceGroup,
@@ -24,6 +25,8 @@ type Rule = {
   name: string;
   existing: boolean;
   changes: ModifierChange[];
+  /** Kept as saved, such as light ice adding more of the picked milk. */
+  extra?: ModifierExtra;
 };
 
 type Model = {
@@ -70,6 +73,7 @@ export default function RecipeBuilder({
       name: m.name,
       existing: true,
       changes: modifierChanges(m),
+      ...(m.extra ? { extra: m.extra } : {}),
     });
     return {
       operationId: crypto.randomUUID(),
@@ -195,6 +199,7 @@ export default function RecipeBuilder({
         versionId: r.versionId,
         name: r.name.trim(),
         deltas: r.changes.map(({ direction, ...c }) => ({ ...c, signed: direction === 'remove' })),
+        ...(r.extra ? { extra: r.extra } : {}),
       })),
     };
   }

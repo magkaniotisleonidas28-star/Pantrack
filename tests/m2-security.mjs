@@ -1221,6 +1221,46 @@ assert.equal(
   400,
   'option set IDs are restricted',
 );
+for (const extraPercent of [0, 101, 2.5, '25'])
+  assert.equal(
+    (
+      await call(
+        'inventory',
+        'POST',
+        {
+          ...optionSetBody,
+          choices: [{ id: 'light', name: 'Light ice', changes: [], extraPercent }],
+        },
+        cookies.manager,
+      )
+    ).status,
+    400,
+    'a "more of the picked choice" percentage is a whole number from 1 to 100',
+  );
+assert.equal(
+  (
+    await call(
+      'inventory',
+      'POST',
+      {
+        ...publishBody,
+        operationId: 'extra-out-of-range',
+        modifiers: [
+          {
+            modifierId: 'light',
+            versionId: crypto.randomUUID(),
+            name: 'Light',
+            deltas: [],
+            extra: { groupId: 'milk', percent: 101 },
+          },
+        ],
+      },
+      cookies.manager,
+    )
+  ).status,
+  400,
+  'a recipe modifier extra is range-checked',
+);
 const savedSet = await call('inventory', 'POST', optionSetBody, cookies.manager);
 assert.equal(savedSet.status, 200);
 assert.equal((await savedSet.json()).result.set.revision, 1);

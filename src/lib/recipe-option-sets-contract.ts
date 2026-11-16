@@ -1,7 +1,16 @@
 import type { RecipeAmountInput } from './inventory-management-contract';
 
-/** A choice with no changes has no stock effect, such as "extra hot". */
-export type OptionChoice = { id: string; name: string; changes: RecipeAmountInput[] };
+/**
+ * A choice with no changes has no stock effect, such as "extra hot".
+ * `extraPercent` (optional add-ons only) also adds that share of the option the
+ * customer picked in the item's pick-one set, such as light ice adding 25% more milk.
+ */
+export type OptionChoice = {
+  id: string;
+  name: string;
+  changes: RecipeAmountInput[];
+  extraPercent?: number;
+};
 
 /**
  * "one": the customer must pick exactly one (milk), published as a choice group.

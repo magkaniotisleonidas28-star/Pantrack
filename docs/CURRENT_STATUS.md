@@ -29,8 +29,12 @@ Option sets view, per-item attachment with amount changes and "Update now",
 item wording, and no-change item-only modifiers. A follow-up,
 [option-set removal](RECIPE_OPTION_SET_REMOVAL_LOCAL_EVIDENCE_20261115.md),
 adds migration `0047` and Remove option set, which hides a set, keeps its
-history and takes its choices off every item. Local evidence only; "more of
-the picked milk" (step 3) and Clover linking per choice (step 4) follow.
+history and takes its choices off every item. Step 3,
+[more of the picked choice](RECIPE_CHOICE_EXTRAS_LOCAL_EVIDENCE_20261116.md),
+adds migration `0048`: an optional add-on such as light ice can add a whole
+percentage of whichever option the customer picked in the item's pick-one set,
+applied by sales consumption. Local evidence only; Clover linking per choice
+(step 4) follows.
 
 ## Workspace header, navigation and wording — 2026-11-14
 

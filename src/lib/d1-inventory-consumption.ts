@@ -1,5 +1,5 @@
 import { UserFacingError } from '@/lib/user-facing-error';
-import { choiceIssues } from './recipe-choices';
+import { choiceExtraMinor, choiceIssues } from './recipe-choices';
 import type { RecipeChoiceGroup } from './inventory-management-contract';
 import {
   INVENTORY_CONSUMPTION_CONTRACT,
@@ -451,6 +451,25 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
     return rows.results;
   }
 
+  private async modifierExtra(
+    companyId: string,
+    recipeId: string,
+    modifierId: string,
+    versionId: string,
+  ) {
+    const row = await this.db
+      .prepare(
+        `SELECT group_id,percent FROM recipe_modifier_extras
+      WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=?`,
+      )
+      .bind(companyId, recipeId, modifierId, versionId)
+      .first<{ group_id: string; percent: number }>();
+    if (!row) return null;
+    if (!Number.isSafeInteger(row.percent) || row.percent < 1 || row.percent > 100)
+      throw new InventoryConsumptionPersistenceError('Persisted modifier extra is invalid.');
+    return { groupId: row.group_id, percent: row.percent };
+  }
+
   private async balance(companyId: string, productId: string): Promise<LoadedBalance | null> {
     const row = await this.db
       .prepare(
@@ -697,12 +716,10 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
         )
         .bind(request.companyId, line.recipeId, recipe.id)
         .first<{ groups_json: string }>();
-      issues.push(
-        ...choiceIssues(
-          choiceRow ? parseJson<RecipeChoiceGroup[]>(choiceRow.groups_json, 'recipe choices') : [],
-          line,
-        ),
-      );
+      const groups = choiceRow
+        ? parseJson<RecipeChoiceGroup[]>(choiceRow.groups_json, 'recipe choices')
+        : [];
+      issues.push(...choiceIssues(groups, line));
       const selected: SelectedRecipeVersion = {
         lineId: line.lineId,
         recipeId: line.recipeId,
@@ -727,6 +744,8 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
           line.lineId,
         );
       }
+      const pickedDeltas = new Map<string, IngredientRow[]>();
+      const extras: Array<{ groupId: string; percent: number; quantity: string }> = [];
       for (const requestedModifier of line.modifiers) {
         const modifier = await this.selectedVersion(
           'recipe_modifier_versions',
@@ -750,17 +769,50 @@ export class D1InventoryConsumptionPort implements InventoryConsumptionPort {
           modifierVersionId: modifier.id,
           quantity: requestedModifier.quantity,
         });
-        for (const delta of await this.modifierDeltas(
+        const deltas = await this.modifierDeltas(
           request.companyId,
           line.recipeId,
           requestedModifier.modifierId,
           modifier.id,
-        )) {
+        );
+        pickedDeltas.set(requestedModifier.modifierId, deltas);
+        const extra = await this.modifierExtra(
+          request.companyId,
+          line.recipeId,
+          requestedModifier.modifierId,
+          modifier.id,
+        );
+        if (extra) extras.push({ ...extra, quantity: requestedModifier.quantity });
+        for (const delta of deltas) {
           add(
             lineAggregates,
             delta.product_id,
             { dimension: delta.dimension as UnitDimension, minor: delta.quantity_minor ?? '' },
             BigInt(requestedModifier.quantity),
+            line.lineId,
+          );
+        }
+      }
+      // "More of the picked choice": add a share of the option picked in the
+      // named group. A missing or unknown pick is already held above.
+      for (const extra of extras) {
+        const group = groups.find((g) => g.id === extra.groupId);
+        if (!group)
+          throw new InventoryConsumptionPersistenceError(
+            'Persisted modifier extra names an unknown choice.',
+          );
+        const picked = line.modifiers.find((m) => group.modifierIds.includes(m.modifierId));
+        for (const delta of (picked && pickedDeltas.get(picked.modifierId)) ?? []) {
+          const minor = signedMinor(delta.quantity_minor);
+          if (minor === null) continue;
+          add(
+            lineAggregates,
+            delta.product_id,
+            {
+              dimension: delta.dimension as UnitDimension,
+              minor: String(choiceExtraMinor(minor, extra.percent, BigInt(extra.quantity))),
+            },
+            ONE,
             line.lineId,
           );
         }

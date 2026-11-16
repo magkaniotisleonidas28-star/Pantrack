@@ -137,6 +137,10 @@ export const MAX_RECIPE_MODIFIERS = 64;
 
 export type RecipeChoiceGroup = { id: string; name: string; modifierIds: string[] };
 
+/** Each occurrence of the modifier also adds `percent` (1–100) of the option
+ * picked from choice group `groupId`, such as light ice adding more of the milk. */
+export type ModifierExtra = { groupId: string; percent: number };
+
 export type RecipePublishInput = {
   companyId: string;
   operationId: string;
@@ -153,6 +157,7 @@ export type RecipePublishInput = {
     versionId: string;
     name: string;
     deltas: Array<RecipeAmountInput & { signed: boolean }>;
+    extra?: ModifierExtra;
   }>;
 };
 
@@ -244,6 +249,7 @@ export type ModifierVersionView = {
   activeFrom: string | null;
   activeTo: string | null;
   deltas: Array<RecipeAmountInput & { quantity: ExactQuantity }>;
+  extra?: ModifierExtra;
 };
 
 export type LegacyM3Review = {

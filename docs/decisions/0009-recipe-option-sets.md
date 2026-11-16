@@ -59,7 +59,9 @@ choice groups atomically (`publishRecipe`), maps Clover items and
    forbidden-role tests; republish of attached items
    ([evidence](../RECIPE_OPTION_SETS_LOCAL_EVIDENCE_20261114.md)); item editor UI
    ([evidence](../RECIPE_OPTION_SCREENS_LOCAL_EVIDENCE_20261115.md)).
-3. **"More of the picked choice"** in sales consumption.
+3. **"More of the picked choice"** in sales consumption
+   ([evidence](../RECIPE_CHOICE_EXTRAS_LOCAL_EVIDENCE_20261116.md)); see the
+   amendment below.
 4. **Clover linking per choice:** link a Clover option to a set choice once,
    creating the (item, modifier) mappings for every attached item.
 
@@ -70,3 +72,25 @@ choice groups atomically (`publishRecipe`), maps Clover items and
 - Choice and modifier names stay fixed per modifier identity, as today.
 - Until step 3, light/no ice can be set up as a fixed-product or no-change
   option only.
+
+## Amendment: percentage of the picked choice — 2026-11-16
+
+The owner chose a **percentage** rather than a fixed amount for "more of the
+picked choice", so one ice set serves every size: a larger item's larger milk
+amount gets a larger extra.
+
+- A choice in an **optional add-ons** set may set a whole percentage from 1 to
+  100 ("Light ice: 25% more of the picked choice"). Pick-one choices cannot.
+- Applying the set to an item links that percentage to the item's **one**
+  pick-one choice group, whether it comes from a set (milk) or is the item's
+  own. An item with no pick-one choice, or more than one, is not updated and
+  says why; choosing among several is not supported yet.
+- Each recipe modifier version may carry one stored extra (choice group and
+  percentage) in `recipe_modifier_extras` (migration `0048`), immutable once
+  activated like its ingredient changes.
+- Sales consumption adds, per occurrence of the modifier, that percentage of
+  each ingredient change of the option picked in that group on the same line,
+  using the picked option's own published amount (including per-item
+  overrides), rounded half away from zero to the smallest stored unit. A line
+  without its required pick is held as before, so no extra is guessed.
+- Past sales keep the version and percentage active when they occurred.

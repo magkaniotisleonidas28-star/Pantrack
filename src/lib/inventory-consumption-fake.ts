@@ -1,5 +1,5 @@
-import { choiceIssues } from './recipe-choices';
-import type { RecipeChoiceGroup } from './inventory-management-contract';
+import { choiceExtraMinor, choiceIssues } from './recipe-choices';
+import type { ModifierExtra, RecipeChoiceGroup } from './inventory-management-contract';
 import {
   INVENTORY_CONSUMPTION_CONTRACT,
   type ConsumptionIssue,
@@ -54,6 +54,7 @@ export type FakeModifierVersion = {
   activeFrom: string | null;
   activeTo: string | null;
   deltas: FakeRecipeIngredient[];
+  extra?: ModifierExtra;
 };
 
 export type FakeInventoryConsumptionFixture = {
@@ -426,6 +427,7 @@ export class FakeInventoryConsumptionPort implements InventoryConsumptionPort {
       for (const ingredient of recipe.ingredients)
         add(lineAggregates, ingredient.productId, ingredient.quantity, lineQuantity, line.lineId);
 
+      const picked = new Map<string, FakeModifierVersion>();
       for (const requestedModifier of line.modifiers) {
         const modifier = this.modifiers.find(
           (version) =>
@@ -449,9 +451,33 @@ export class FakeInventoryConsumptionPort implements InventoryConsumptionPort {
           modifierVersionId: modifier.versionId,
           quantity: requestedModifier.quantity,
         });
+        picked.set(requestedModifier.modifierId, modifier);
         const modifierQuantity = BigInt(requestedModifier.quantity);
         for (const delta of modifier.deltas)
           add(lineAggregates, delta.productId, delta.quantity, modifierQuantity, line.lineId);
+      }
+      for (const requestedModifier of line.modifiers) {
+        const extra = picked.get(requestedModifier.modifierId)?.extra;
+        if (!extra) continue;
+        const group = (recipe.choices ?? []).find((g) => g.id === extra.groupId);
+        if (!group) throw new Error('Fake modifier extra names an unknown choice.');
+        const choice = line.modifiers.find((m) => group.modifierIds.includes(m.modifierId));
+        for (const delta of (choice && picked.get(choice.modifierId)?.deltas) ?? []) {
+          const minor = signedMinor(delta.quantity.minor);
+          if (minor === null) continue;
+          add(
+            lineAggregates,
+            delta.productId,
+            {
+              dimension: delta.quantity.dimension,
+              minor: String(
+                choiceExtraMinor(minor, extra.percent, BigInt(requestedModifier.quantity)),
+              ),
+            },
+            ONE,
+            line.lineId,
+          );
+        }
       }
       for (const [productId, aggregate] of lineAggregates) {
         if (aggregate.minor < ZERO) {

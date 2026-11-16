@@ -64,7 +64,14 @@ function useNames(view: InventoryManagementView, products: Product[]) {
     list
       .map((c) => `${c.amount} ${amountUnitLabel(view, c)} ${product(c.productId)}`)
       .join(' + ') || 'No stock change';
-  return { product, item, changes };
+  const choice = (c: OptionChoice) =>
+    c.extraPercent
+      ? [
+          ...(c.changes.length ? [changes(c.changes)] : []),
+          `${c.extraPercent}% more of the picked choice`,
+        ].join(' + ')
+      : changes(c.changes);
+  return { product, item, changes, choice };
 }
 
 /** Attached sets whose latest revision has not been published onto the item. */
@@ -194,7 +201,12 @@ export default function OptionSetsManager({
       expectedRevision: draft.expectedRevision,
       name: draft.name.trim(),
       kind: draft.kind,
-      choices: draft.choices.map((c) => ({ id: c.id, name: c.name.trim(), changes: c.changes })),
+      choices: draft.choices.map((c) => ({
+        id: c.id,
+        name: c.name.trim(),
+        changes: c.changes,
+        ...(draft.kind === 'addons' && c.extraPercent ? { extraPercent: c.extraPercent } : {}),
+      })),
     };
     setPending(body);
     try {
@@ -391,7 +403,7 @@ export default function OptionSetsManager({
                     another name.
                   </p>
                 )}
-                {!c.changes.length && (
+                {!c.changes.length && !(draft.kind === 'addons' && c.extraPercent) && (
                   <p className="task-help">
                     {draft.kind === 'one'
                       ? 'Add the ingredient this choice uses.'
@@ -429,6 +441,32 @@ export default function OptionSetsManager({
                   <Plus size={16} />
                   Add ingredient
                 </Button>
+                {draft.kind === 'addons' && (
+                  <label className="option-extra-field">
+                    More of the picked choice (optional)
+                    <span>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        max={100}
+                        step={1}
+                        placeholder="e.g. 25"
+                        value={c.extraPercent ?? ''}
+                        onChange={(e) =>
+                          choice(c.id, {
+                            extraPercent: e.target.value ? Number(e.target.value) : undefined,
+                          })
+                        }
+                      />
+                      %
+                    </span>
+                    <small className="task-help">
+                      For light or no ice: also adds this share of whatever the customer picked in
+                      the item’s pick-one set. For example, 25 adds 25% more of the chosen milk.
+                    </small>
+                  </label>
+                )}
               </div>
             ))}
             <Button
@@ -534,7 +572,7 @@ export default function OptionSetsManager({
                   {s.choices.map((c) => (
                     <div key={c.id}>
                       <dt>{c.name}</dt>
-                      <dd>{names.changes(c.changes)}</dd>
+                      <dd>{names.choice(c)}</dd>
                     </div>
                   ))}
                 </dl>

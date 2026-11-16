@@ -2680,8 +2680,26 @@ export class D1InventoryManagementService implements InventoryManagementService 
       )
       .bind(companyId)
       .all<ModifierRow>();
+    const extras = await this.db
+      .prepare(
+        'SELECT recipe_id,modifier_id,version_id,group_id,percent FROM recipe_modifier_extras WHERE company_id=?',
+      )
+      .bind(companyId)
+      .all<{
+        recipe_id: string;
+        modifier_id: string;
+        version_id: string;
+        group_id: string;
+        percent: number;
+      }>();
     const modifierViews: ModifierVersionView[] = [];
     for (const row of modifiers.results) {
+      const extra = extras.results.find(
+        (e) =>
+          e.recipe_id === row.recipe_id &&
+          e.modifier_id === row.modifier_id &&
+          e.version_id === row.id,
+      );
       const deltas = await this.db
         .prepare(
           'SELECT product_id,entered_amount,entered_unit_id,dimension,quantity_minor FROM recipe_modifier_deltas WHERE company_id=? AND recipe_id=? AND modifier_id=? AND version_id=? ORDER BY position',
@@ -2709,6 +2727,7 @@ export class D1InventoryManagementService implements InventoryManagementService 
           unitId: i.entered_unit_id,
           quantity: exact(i.dimension, i.quantity_minor),
         })),
+        ...(extra ? { extra: { groupId: extra.group_id, percent: extra.percent } } : {}),
       });
     }
     return {
