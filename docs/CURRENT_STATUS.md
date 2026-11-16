@@ -19,8 +19,9 @@ suggesting the entry and a person confirming or correcting it.
 - photos from the start, not kept;
 - everyone who records waste can use it;
 - a $10 monthly cap, off by default;
-- Claude Haiku 5.5 read from the server, with a fake reader until the owner
-  authorizes paid runs.
+- the owner's existing OpenAI API account (the one used for cart
+  preparation), with a `gpt-5.4-mini` model called from the server and a fake
+  reader until the owner authorizes paid runs.
 
 The [W4 plan](WASTE_AND_MARGIN_ROADMAP.md#w4--photo-waste-suggestions) splits
 the work into steps W4a–W4f. Planning only; nothing is implemented yet.

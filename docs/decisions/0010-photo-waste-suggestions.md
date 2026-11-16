@@ -45,11 +45,24 @@ Employees, managers and owners can use it.
    request. Once the cap is reached, photo suggestions stop until the next
    month and the normal form keeps working. The feature is **off by default**;
    the owner turns it on.
-8. **Provider:** an Anthropic Claude model that reads images, called only from
-   the server with a key the owner creates and stores as a server secret.
-   Starting model: Claude Haiku 5.5 (`claude-haiku-5-5`) for cost. A move to a
-   larger model needs measured accuracy evidence and the owner's agreement.
-   Pantrack never asks for or handles the key in chat or Git.
+8. **Provider: the owner's existing OpenAI API account**, the one already used
+   for AI cart preparation ([C4 evidence](../C4_PO_CART_AI_LOCAL_EVIDENCE.md)),
+   so no new provider account is needed. The owner asked for this on
+   2026-11-16.
+   - **Model:** start with the cart's reviewed model family, `gpt-5.4-mini`,
+     pinned to a dated version. W4e confirms from OpenAI's documentation that
+     it accepts images, and its current price, before any paid run. A
+     different model needs measured accuracy evidence and the owner's
+     agreement.
+   - **Key:** called only from the hosted server with a key stored as a server
+     secret. The cart's key lives in a private file on the owner's computer for
+     the local cart worker, so the server needs its own secret. The owner can
+     paste the same key, but a separate key in the same account is recommended.
+     It can then be turned off, or given its own OpenAI spending limit, without
+     affecting cart preparation. Pantrack never asks for, reads or handles the
+     key in chat or Git.
+   - **Billing:** the API bills by use, separately from a ChatGPT subscription,
+     and API billing is already enabled for this account.
 9. **Built against a fake reader first.** Every step before the real provider
    uses a local fake that returns fixed suggestions, so nothing paid or
    external runs during development. Each paid test run needs the owner's

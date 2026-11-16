@@ -223,13 +223,16 @@ outcome with tests and an evidence record.
 | W4b | Server suggestion step with a **fake reader**: a suggestion request (photo + note) returns a proposal limited to the company's own waste items and reasons. Requests and their outcomes are recorded (migration) without the photo | No | Anonymous, wrong-company and role tests; oversized or invalid photos refused; unknown items or impossible quantities dropped; the fake reader is used in all tests |
 | W4c | Waste page screens: take or choose a photo (resized and re-encoded in the browser), add a note, see the filled-in form marked "suggested from your photo", then Save or correct. Saving links the entry to its suggestion and records whether it was changed | No | Browser check on desktop and phone with the fake reader; normal waste form unchanged; confirmed and corrected entries save through W1/W2 |
 | W4d | Owner switch (off by default) and the $10 monthly cap, checked on the server before each request, with usage shown to the owner | No | Cap reached → clear message and the normal form still works; concurrent requests cannot overspend; cap and switch tests |
-| W4e | Real reader: Claude Haiku 5.5 reading the image with a strict output format, server-side key, timeouts and no double billing on retry | **Yes**: the owner creates the Anthropic account and key, stores it as a server secret, and authorizes each paid test run | Small owner-authorized run with fictional photos (a croissant tray, a spilled latte, spilled milk) records accuracy and real cost |
+| W4e | Real reader: an OpenAI model from the cart's `gpt-5.4-mini` family, reading the image with a strict output format, using a server-side key, with timeouts and no double billing on retry | **Yes**: in the existing OpenAI API account, the owner creates a key (a separate one is recommended), stores it as a server secret, and authorizes each paid test run | Image support and price confirmed first; then a small owner-authorized run with fictional photos (a croissant tray, a spilled latte, spilled milk) records accuracy and real cost |
 | W4f | Owner trial in the café, then acceptance | **Yes**: hosted deploy and real use only with the owner's authorization | Owner uses it on real waste; how often suggestions needed correcting is recorded and reviewed |
 
-Owner actions, when their step arrives: create an Anthropic API account and
-key (W4e), add it to the server's secrets (W4e), authorize paid test runs
-(W4e), and authorize the hosted trial (W4f). Pantrack never handles the key in
-chat or Git.
+Owner actions, when their step arrives:
+- W4e: in the OpenAI API account already used for cart preparation, create a
+  key for photo waste (recommended over reusing the cart's), add it to the
+  server's secrets, and authorize each paid test run;
+- W4f: authorize the hosted trial.
+
+Pantrack never handles the key in chat or Git.
 
 ## Implementation gates
 
