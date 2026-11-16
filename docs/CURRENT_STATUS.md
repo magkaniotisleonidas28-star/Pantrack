@@ -11,6 +11,21 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Photo waste suggestions: decision and plan — 2026-11-16
+
+The owner asked to record waste from a photo plus a short note, with an AI
+suggesting the entry and a person confirming or correcting it.
+[Decision 0010](decisions/0010-photo-waste-suggestions.md) records the choices:
+- photos from the start, not kept;
+- everyone who records waste can use it;
+- a $10 monthly cap, off by default;
+- the owner's existing OpenAI API account (the one used for cart
+  preparation), with a `gpt-5.4-mini` model called from the server and a fake
+  reader until the owner authorizes paid runs.
+
+The [W4 plan](WASTE_AND_MARGIN_ROADMAP.md#w4--photo-waste-suggestions) splits
+the work into steps W4a–W4f. Planning only; nothing is implemented yet.
+
 ## Easier units for stock and recipes — 2026-11-16
 
 After trying a local preview, the owner approved five changes to how amounts

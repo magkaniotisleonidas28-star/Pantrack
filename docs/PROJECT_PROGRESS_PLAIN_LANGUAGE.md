@@ -2,6 +2,13 @@
 
 Updated: 2026-11-13 for the first real supplier decision.
 
+**Waste from a photo (planned, 2026-11-16):** you'll be able to take a photo
+of waste (say, five end-of-day croissants), add a short note, and Pantrack will
+fill in the waste form for you to check before saving. Nothing is saved
+without your confirmation. Photos aren't kept. It's capped at $10 a month, and
+it's off until you turn it on ([decision](decisions/0010-photo-waste-suggestions.md),
+[plan](WASTE_AND_MARGIN_ROADMAP.md#w4--photo-waste-suggestions)).
+
 **Easier units (2026-11-16):** setting up stock now reads like a sentence:
 "Oat milk comes in a carton that holds 64 fl oz". Pantrack guesses the
 container and unit from the name. The café picks US or metric units once.
