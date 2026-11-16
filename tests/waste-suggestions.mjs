@@ -552,6 +552,43 @@ assert.equal(
 assert.throws(() => sql.prepare("UPDATE waste_suggestions SET status='saved'").run());
 assert.throws(() => sql.prepare("UPDATE waste_suggestions SET outcome='maybe'").run());
 
+// A photo, a note, or both (owner request, 2026-11-16).
+const noteOnly = await service.suggest(
+  { companyId: 'a', operationId: crypto.randomUUID(), note: '3 croissants end of day' },
+  'staff-1',
+);
+assert.deepEqual(
+  noteOnly.entries.map((e) => [e.name, e.quantity]),
+  [['Croissant', '3']],
+);
+assert.equal(reader.last.photo, undefined, 'A note-only request sends no photo to the reader.');
+const photoOnly = await service.suggest(
+  { companyId: 'a', operationId: crypto.randomUUID(), note: '', photo: jpeg },
+  'staff-1',
+);
+assert.equal(reader.last.photo.mediaType, 'image/jpeg', 'A photo-only request reaches the reader.');
+assert.equal(photoOnly.status, 'empty', 'The fake reader cannot see photos.');
+for (const body of [{ note: '' }, { note: '   ' }])
+  assert.equal(
+    contract.wasteSuggestionRequest.safeParse({
+      companyId: 'a',
+      operationId: crypto.randomUUID(),
+      ...body,
+    }).success,
+    false,
+    'Neither a photo nor a note is refused.',
+  );
+const mixedId = crypto.randomUUID();
+await service.suggest({ companyId: 'a', operationId: mixedId, note: '1 croissant' }, 'staff-1');
+await assert.rejects(
+  service.suggest(
+    { companyId: 'a', operationId: mixedId, note: '1 croissant', photo: jpeg },
+    'staff-1',
+  ),
+  (e) => e.code === 'operation_conflict',
+  'Adding a photo to a used request conflicts.',
+);
+
 // Outcomes (W4c): only the person who asked, only for a real suggestion; "edited" outranks
 // "confirmed"; "discarded" counts only until something is saved.
 const outcomeOf = (id) =>

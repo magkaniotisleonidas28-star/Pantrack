@@ -22,8 +22,8 @@ export function reportSuggestionOutcome(
 }
 
 /**
- * "Record waste from a photo" (decision 0010). The photo and note go to the
- * server, which suggests entries; the person opens each in the normal form and
+ * "Record waste from a photo or note" (decision 0010). A photo, a note, or both go
+ * to the server, which suggests entries; the person opens each in the normal form and
  * checks it before anything is saved.
  */
 export default function PhotoWasteSuggest({
@@ -47,7 +47,7 @@ export default function PhotoWasteSuggest({
     // One reference per photo and note, so a retry is never read or billed twice.
     [attempt, setAttempt] = useState<{
       operationId: string;
-      photo: Awaited<ReturnType<typeof preparePhoto>>;
+      photo: Awaited<ReturnType<typeof preparePhoto>> | null;
     } | null>(null);
   useEffect(
     () => () => {
@@ -65,13 +65,13 @@ export default function PhotoWasteSuggest({
   }
 
   async function suggest() {
-    if (!file || busy) return;
+    if ((!file && !note.trim()) || busy) return;
     setBusy(true);
     setError('');
     try {
       const current = attempt ?? {
         operationId: crypto.randomUUID(),
-        photo: await preparePhoto(file),
+        photo: file ? await preparePhoto(file) : null,
       };
       setAttempt(current);
       const response = await fetch('/api/waste/suggestions', {
@@ -81,7 +81,9 @@ export default function PhotoWasteSuggest({
           companyId,
           operationId: current.operationId,
           note: note.trim(),
-          photo: { mediaType: current.photo.mediaType, data: current.photo.data },
+          ...(current.photo
+            ? { photo: { mediaType: current.photo.mediaType, data: current.photo.data } }
+            : {}),
         }),
       });
       const body = (await response.json().catch(() => ({}))) as {
@@ -89,13 +91,13 @@ export default function PhotoWasteSuggest({
         error?: string;
       };
       if (!response.ok || !body.result) {
-        setError(body.error || 'The photo could not be read. Try again, or use the form below.');
+        setError(body.error || 'This could not be read. Try again, or use the form below.');
         return;
       }
       setResult(body.result);
       if (body.result.status !== 'suggested') setAttempt(null);
     } catch (e) {
-      setError((e as Error).message || 'The photo could not be sent. Try again.');
+      setError((e as Error).message || 'This could not be sent. Try again.');
     } finally {
       setBusy(false);
     }
@@ -113,10 +115,10 @@ export default function PhotoWasteSuggest({
   const reasonLabel = (id: string) => WASTE_REASONS.find((r) => r.id === id)?.label ?? id;
   return (
     <section className="photo-waste" aria-labelledby="photo-waste-title">
-      <h3 id="photo-waste-title">Record waste from a photo</h3>
+      <h3 id="photo-waste-title">Record waste from a photo or note</h3>
       <p>
-        Take a photo of what is being thrown out and add a short note. Pantrack suggests the entry,
-        and you check it before anything is saved.
+        Take a photo of what is being thrown out, write a short note, or both. Pantrack suggests the
+        entry, and you check it before anything is saved.
       </p>
       {!result ? (
         <>
@@ -138,7 +140,8 @@ export default function PhotoWasteSuggest({
             />
           </label>
           <label>
-            Note <span className="task-optional-label">Helps with amounts</span>
+            Note{' '}
+            <span className="task-optional-label">Optional with a photo; helps with amounts</span>
             <textarea
               maxLength={300}
               rows={2}
@@ -154,10 +157,16 @@ export default function PhotoWasteSuggest({
           <div className="task-form-actions">
             <Button
               type="button"
-              disabled={disabled || busy || !file}
+              disabled={disabled || busy || (!file && !note.trim())}
               onClick={() => void suggest()}
             >
-              {busy ? 'Reading photo…' : attempt ? 'Try again' : 'Suggest entries'}
+              {busy
+                ? file
+                  ? 'Reading photo…'
+                  : 'Reading note…'
+                : attempt
+                  ? 'Try again'
+                  : 'Suggest entries'}
             </Button>
             {file && !busy && (
               <Button type="button" variant="ghost" onClick={() => choose(null)}>

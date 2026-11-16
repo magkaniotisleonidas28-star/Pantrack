@@ -2041,6 +2041,25 @@ assert.equal(
   1,
   'Suggestion requests are audited like waste.',
 );
+globalThis.m2env.PANTRACK_WASTE_READER = 'fake';
+const { photo: _photo, ...noteOnlyRequest } = suggestionRequest;
+void _photo;
+const noteOnlyResponse = await suggestionResponse(
+  { ...noteOnlyRequest, operationId: crypto.randomUUID() },
+  cookies.employee,
+);
+assert.equal(noteOnlyResponse.status, 200, 'A note alone is enough.');
+assert.equal(
+  (
+    await suggestionResponse(
+      { ...noteOnlyRequest, operationId: crypto.randomUUID(), note: ' ' },
+      cookies.employee,
+    )
+  ).status,
+  400,
+  'Neither a photo nor a note is refused.',
+);
+delete globalThis.m2env.PANTRACK_WASTE_READER;
 // Outcomes: only the person who asked, in their own company; nothing is recorded as waste.
 const outcomeBody = {
   companyId: 'company-a',

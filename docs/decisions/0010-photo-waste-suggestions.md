@@ -77,3 +77,11 @@ Employees, managers and owners can use it.
   accepted.
 - Keeping photos for proof is not part of this decision. If wanted later, it
   needs storage, a retention period and a new decision.
+
+## Amendment: a photo, a note, or both — 2026-11-16
+
+The owner asked that either one be enough. A suggestion request now needs a
+photo, a note, or both. A request with neither is refused. A note-only request
+sends no image to the reader, so it costs less. Everything else is unchanged:
+suggestions never save by themselves, photos are not kept, and the cap and
+switch apply to every request.

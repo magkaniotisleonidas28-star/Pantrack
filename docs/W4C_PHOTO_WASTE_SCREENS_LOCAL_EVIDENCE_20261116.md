@@ -53,6 +53,28 @@ contacted. No migration: the outcome columns came with `0051` in W4b.
 - **Fake reader:** it now matches a product's main name and ignores details
   such as "· barista", so "spilled oat milk" finds "Oat milk · barista".
 
+## A photo, a note, or both (same day)
+
+At the owner's request, the panel became **"Record waste from a photo or
+note"**, and the server accepts a photo, a note, or both
+([decision 0010 amendment](decisions/0010-photo-waste-suggestions.md#amendment-a-photo-a-note-or-both--2026-11-16)):
+- **Suggest entries** is enabled once either is given;
+- a note-only request sends no image;
+- a request with neither is refused (400);
+- the request fingerprint distinguishes a note alone from the same note with a
+  photo, so reusing a request with an added photo conflicts.
+
+Checks:
+- [`tests/waste-suggestions.mjs`](../tests/waste-suggestions.mjs): note-only,
+  photo-only (the fake reader cannot see photos, so the result is empty),
+  refusals for neither and for a note of spaces, and the conflict;
+- [`tests/m2-security.mjs`](../tests/m2-security.mjs): note-only 200 and
+  neither 400;
+- removing the "photo or note" rule made the test fail;
+- browser: the button stays disabled until a note is typed, a note-only
+  request contained no photo, and "2 croissants end of day" suggested 2 ×
+  Croissant.
+
 ## Verification
 
 The complete local pipeline passed in this worktree on 2026-11-16 with the

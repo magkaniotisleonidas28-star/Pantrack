@@ -27,9 +27,12 @@ export const wasteSuggestionRequest = z
           .max(Math.ceil(MAX_PHOTO_BYTES / 3) * 4)
           .regex(/^[A-Za-z0-9+/]+={0,2}$/),
       })
-      .strict(),
+      .strict()
+      .optional(),
   })
-  .strict();
+  .strict()
+  // A photo, a note, or both.
+  .refine((b) => !!b.photo || !!b.note, { message: 'Add a photo or a note.' });
 
 export type WasteSuggestionRequest = z.infer<typeof wasteSuggestionRequest>;
 
@@ -51,7 +54,9 @@ const signatures: Record<PhotoMediaType, (b: Uint8Array) => boolean> = {
 };
 
 /** Decodes the photo and checks it really is the stated image type and size. */
-export function readPhoto(photo: WasteSuggestionRequest['photo']): Uint8Array<ArrayBuffer> {
+export function readPhoto(
+  photo: NonNullable<WasteSuggestionRequest['photo']>,
+): Uint8Array<ArrayBuffer> {
   let bytes: Uint8Array<ArrayBuffer>;
   try {
     bytes = Uint8Array.from(atob(photo.data), (c) => c.charCodeAt(0));
@@ -92,7 +97,8 @@ export type ReaderCatalogItem = {
 };
 
 export type ReaderInput = {
-  photo: { mediaType: PhotoMediaType; bytes: Uint8Array<ArrayBuffer> };
+  /** Absent when the person sent only a note. */
+  photo?: { mediaType: PhotoMediaType; bytes: Uint8Array<ArrayBuffer> };
   note: string;
   catalog: ReaderCatalogItem[];
   reasons: WasteReason[];
@@ -183,7 +189,7 @@ const singular = (text: string) => text.replace(/(?:es|s)\b/g, '');
 const core = (name: string) => name.split(/[·(–—]| - /)[0];
 
 /**
- * A fixed, offline reader for development and tests: it ignores the photo and
+ * A fixed, offline reader for development and tests: it cannot see photos and
  * reads "5 croissants" or "spilled a latte" from the note. It costs nothing.
  */
 export const fakeWasteReader: WasteReader = {

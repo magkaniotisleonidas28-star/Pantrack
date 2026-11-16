@@ -38,7 +38,7 @@ export async function handleWasteSuggestion(req: Request, reader = wasteReader()
   } catch (error) {
     if (error instanceof z.ZodError)
       return Response.json(
-        { error: 'Choose a photo and keep the note under 300 characters.' },
+        { error: 'Add a photo or a note, and keep the note under 300 characters.' },
         { status: 400 },
       );
     if (error instanceof SuggestionError)

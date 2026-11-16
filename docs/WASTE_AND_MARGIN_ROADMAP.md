@@ -213,7 +213,8 @@ Owner request and choices on 2026-11-16:
 [decision 0010](decisions/0010-photo-waste-suggestions.md). A person takes a
 photo and adds a short note, such as "end of day". An AI suggests the waste
 entry, and the person confirms or corrects it in the normal form before saving.
-Photos are included from the start and are not kept. The cap is $10 a month,
+Photos are included from the start and are not kept; a photo, a note, or both
+can be sent (owner amendment, 2026-11-16). The cap is $10 a month,
 and everyone who can record waste can use it. Each step is its own reviewable
 outcome with tests and an evidence record.
 
