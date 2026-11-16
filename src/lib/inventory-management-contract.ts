@@ -1,3 +1,4 @@
+import type { MeasurementSystem } from './unit-preferences';
 import type { CuratedUnitId, UnitDefinition } from './inventory-quantities';
 import type { ExactQuantity, UnitDimension } from './inventory-consumption-contract';
 
@@ -269,6 +270,8 @@ export type InventoryManagementView = {
   recipes: RecipeVersionView[];
   modifiers: ModifierVersionView[];
   legacyReview: LegacyM3Review;
+  /** The café's everyday units for showing and entering amounts. */
+  measurementSystem?: MeasurementSystem;
 };
 
 export interface InventoryManagementService {

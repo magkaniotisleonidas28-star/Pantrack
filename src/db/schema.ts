@@ -1184,3 +1184,10 @@ export const cloverOptionLinks=sqliteTable('clover_option_links',{
 },t=>[primaryKey({columns:[t.companyId,t.environment,t.merchantId,t.modifierId,t.setId]}),
  index('clover_option_link_set').on(t.companyId,t.setId),
  foreignKey({columns:[t.companyId,t.setId],foreignColumns:[recipeOptionSets.companyId,recipeOptionSets.id]})]);
+// Café-wide display preferences. Changing them never changes stored amounts.
+export const companyPreferences=sqliteTable('company_preferences',{
+ companyId:text('company_id').primaryKey().references(()=>companies.id),
+ measurementSystem:text('measurement_system').notNull(),
+ updatedBy:text('updated_by').notNull(),
+ updatedAt:text('updated_at').notNull(),
+},t=>[check('company_preference_measurement_system',sql`${t.measurementSystem} IN ('us','metric')`)]);
