@@ -22,3 +22,15 @@ export function choiceIssues(
     return [];
   });
 }
+
+const HUNDRED = BigInt(100);
+
+/** The extra a "more of the picked choice" modifier adds for one picked change:
+ * `percent` of it per occurrence, rounded half away from zero to a whole minor unit. */
+export function choiceExtraMinor(minor: bigint, percent: number, occurrences: bigint): bigint {
+  const scaled = minor * BigInt(percent) * occurrences;
+  const negative = scaled < BigInt(0);
+  const absolute = negative ? -scaled : scaled;
+  const rounded = (absolute + HUNDRED / BigInt(2)) / HUNDRED;
+  return negative ? -rounded : rounded;
+}

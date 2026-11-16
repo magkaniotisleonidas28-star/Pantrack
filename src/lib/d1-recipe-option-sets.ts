@@ -2,7 +2,11 @@ import { D1InventoryManagementService, InventoryManagementError } from './d1-inv
 import { publishRecipe } from './d1-recipe-publisher';
 import { modifierChanges } from './modifier-editor';
 import { CURATED_UNIT_IDS, formatCanonical } from './inventory-quantities';
-import type { RecipeAmountInput, RecipeChoiceGroup } from './inventory-management-contract';
+import type {
+  ModifierExtra,
+  RecipeAmountInput,
+  RecipeChoiceGroup,
+} from './inventory-management-contract';
 import {
   isOptionGenerated,
   optionGroupId,
@@ -164,6 +168,16 @@ export class D1RecipeOptionSets {
         fail('Give every choice a name of up to 100 characters.');
       if (input.kind === 'one' && !choice.changes.length)
         fail('Each "pick one" choice must add an ingredient.');
+      if (choice.extraPercent !== undefined) {
+        if (input.kind !== 'addons')
+          fail('Only optional add-ons can add more of the picked choice.');
+        if (
+          !Number.isInteger(choice.extraPercent) ||
+          choice.extraPercent < 1 ||
+          choice.extraPercent > 100
+        )
+          fail('Enter a whole percentage from 1 to 100.');
+      }
       if (choice.changes.length) await stock.recipeAmounts(input.companyId, choice.changes, true);
     }
     if (await this.archived(input.companyId, input.setId))
@@ -181,7 +195,12 @@ export class D1RecipeOptionSets {
     const now = this.now(),
       revision = input.expectedRevision + 1,
       choicesJson = JSON.stringify(
-        input.choices.map((c) => ({ id: c.id, name: c.name.trim(), changes: c.changes })),
+        input.choices.map((c) => ({
+          id: c.id,
+          name: c.name.trim(),
+          changes: c.changes,
+          ...(c.extraPercent === undefined ? {} : { extraPercent: c.extraPercent }),
+        })),
       );
     const write =
       input.expectedRevision === 0
@@ -382,6 +401,7 @@ export class D1RecipeOptionSets {
         versionId: string;
         name: string;
         deltas: Array<RecipeAmountInput & { signed: boolean }>;
+        extra?: ModifierExtra;
       }> = own.map((m) => ({
         modifierId: m.modifierId,
         versionId: crypto.randomUUID(),
@@ -390,10 +410,12 @@ export class D1RecipeOptionSets {
           ...c,
           signed: direction === 'remove',
         })),
+        ...(m.extra ? { extra: m.extra } : {}),
       }));
       const choices: RecipeChoiceGroup[] = (active!.choices ?? []).filter(
         (g) => !isOptionGenerated(g.id),
       );
+      const wantsExtra = new Map<string, OptionChoice>();
       for (const link of attached) {
         const set = sets.find((s) => s.id === link.setId);
         if (!set) continue;
@@ -401,6 +423,7 @@ export class D1RecipeOptionSets {
         for (const choice of set.choices) {
           const modifierId = optionModifierId(set.id, choice.id);
           ids.push(modifierId);
+          if (choice.extraPercent) wantsExtra.set(modifierId, choice);
           modifiers.push({
             modifierId,
             versionId: crypto.randomUUID(),
@@ -414,6 +437,18 @@ export class D1RecipeOptionSets {
         }
         if (set.kind === 'one')
           choices.push({ id: optionGroupId(set.id), name: set.name, modifierIds: ids });
+      }
+      // "More of the picked choice" follows the item's one pick-one choice, such as its milk.
+      for (const modifier of modifiers) {
+        const choice = wantsExtra.get(modifier.modifierId);
+        if (!choice) continue;
+        if (choices.length !== 1)
+          fail(
+            choices.length
+              ? `“${choice.name}” adds more of the picked choice, but this item has more than one pick-one choice.`
+              : `“${choice.name}” adds more of the picked choice, but this item has no pick-one choice. Add one first, such as a milk set.`,
+          );
+        modifier.extra = { groupId: choices[0].id, percent: choice.extraPercent! };
       }
       await publishRecipe(
         this.db,

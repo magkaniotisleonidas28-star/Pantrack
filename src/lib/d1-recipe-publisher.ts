@@ -60,6 +60,14 @@ export async function publishRecipe(
   }
   if (new Set(input.choices.map((g) => g.id)).size !== input.choices.length)
     fail('Choice identities must be unique.');
+  for (const { modifierId, extra } of input.modifiers) {
+    if (!extra) continue;
+    if (!input.choices.some((g) => g.id === extra.groupId))
+      fail('An option that adds more of a picked choice needs that choice on the item.');
+    if (grouped.has(modifierId)) fail('Only an optional modifier can add more of a picked choice.');
+    if (!Number.isInteger(extra.percent) || extra.percent < 1 || extra.percent > 100)
+      fail('Enter a whole percentage from 1 to 100.');
+  }
   const service = new D1InventoryManagementService(db, { clock: { now: () => new Date(now) } });
   const ingredients = await service.recipeAmounts(input.companyId, input.ingredients);
   const prepared = [];
@@ -239,6 +247,21 @@ export async function publishRecipe(
           ),
       ),
     );
+    if (m.extra)
+      statements.push(
+        db
+          .prepare(
+            'INSERT INTO recipe_modifier_extras(company_id,recipe_id,modifier_id,version_id,group_id,percent) VALUES (?,?,?,?,?,?)',
+          )
+          .bind(
+            input.companyId,
+            input.recipeId,
+            m.modifierId,
+            m.versionId,
+            m.extra.groupId,
+            m.extra.percent,
+          ),
+      );
     statements.push(
       db
         .prepare(

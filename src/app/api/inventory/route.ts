@@ -157,6 +157,10 @@ const exactMutation = z.discriminatedUnion('action', [
               name: z.string().trim().min(1).max(100),
               // An empty list is an option with no stock effect, such as "extra hot".
               deltas: z.array(recipeAmount.extend({ signed: z.boolean() })).max(50),
+              extra: z
+                .object({ groupId: identity, percent: z.number().int().min(1).max(100) })
+                .strict()
+                .optional(),
             })
             .strict(),
         )
@@ -283,6 +287,7 @@ const exactMutation = z.discriminatedUnion('action', [
               id: optionId,
               name: z.string().trim().min(1).max(100),
               changes: z.array(recipeAmount).max(10),
+              extraPercent: z.number().int().min(1).max(100).optional(),
             })
             .strict(),
         )

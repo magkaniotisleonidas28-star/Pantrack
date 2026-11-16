@@ -407,6 +407,21 @@ export const recipeModifierDeltas=sqliteTable('recipe_modifier_deltas',{
  foreignKey({columns:[t.companyId,t.productId,t.unitId,t.unitVersion],foreignColumns:[productUnitVersions.companyId,productUnitVersions.productId,productUnitVersions.unitId,productUnitVersions.version]}),
 ]);
 
+// "More of the picked choice" (decision 0009): each occurrence of the modifier
+// also adds `percent` of the picked option's own changes from choice group `group_id`.
+export const recipeModifierExtras=sqliteTable('recipe_modifier_extras',{
+ companyId:text('company_id').notNull(),
+ recipeId:text('recipe_id').notNull(),
+ modifierId:text('modifier_id').notNull(),
+ versionId:text('version_id').notNull(),
+ groupId:text('group_id').notNull(),
+ percent:integer('percent').notNull(),
+},t=>[
+ primaryKey({columns:[t.companyId,t.recipeId,t.modifierId,t.versionId]}),
+ foreignKey({columns:[t.companyId,t.recipeId,t.modifierId,t.versionId],foreignColumns:[recipeModifierVersions.companyId,recipeModifierVersions.recipeId,recipeModifierVersions.modifierId,recipeModifierVersions.id]}),
+ check('recipe_modifier_extra_percent',sql`${t.percent} BETWEEN 1 AND 100`),
+]);
+
 export const inventoryReconciliations=sqliteTable('inventory_reconciliations',{
  companyId:text('company_id').notNull().references(()=>companies.id),
  id:text('id').notNull(),

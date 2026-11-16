@@ -120,4 +120,6 @@
 .task-form .item-option-choice .checkbox-label { align-items: flex-start; }
 .task-form .item-option-choice .checkbox-label input { margin-top: 3px; }
 .task-form .item-option-override { display: grid; grid-template-columns: minmax(0,1fr) 140px; align-items: center; gap: 12px; font-weight: 400; }
+.task-form .option-extra-field { display: grid; gap: 6px; }
+.task-form .option-extra-field > span { display: flex; align-items: center; gap: 8px; max-width: 160px; font-weight: 400; }
 @media (max-width: 640px) { .task-form .item-option-override { grid-template-columns: minmax(0,1fr); } }
