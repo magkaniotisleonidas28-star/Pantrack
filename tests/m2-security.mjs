@@ -209,6 +209,7 @@ for (const [name, path] of [
     'waste/sales',
     'waste/setup',
     'waste/review',
+    'waste/suggestions',
   ].map((n) => [n, 'src/app/api/' + n + '/route.ts']),
   ['authlib', 'src/lib/auth.ts'],
   ['fence', 'src/lib/auth-session-fence.ts'],
@@ -1946,6 +1947,98 @@ assert.equal(
     .get().n,
   2,
   'Waste mutations are audited.',
+);
+// Photo waste suggestions (decision 0010) follow the waste rules: everyone who
+// records waste may ask, only for their own company, and nothing is recorded.
+const photo = {
+  mediaType: 'image/jpeg',
+  data: Buffer.from([0xff, 0xd8, 0xff, 0xe0, ...new Array(28).fill(7)]).toString('base64'),
+};
+const suggestionRequest = {
+  companyId: 'company-a',
+  operationId: crypto.randomUUID(),
+  note: 'spilled milk',
+  photo,
+};
+const suggestionResponse = (body, cookie, extra) =>
+  call('waste/suggestions', 'POST', body, cookie, extra);
+assert.equal(
+  (await suggestionResponse(suggestionRequest, cookies.employee)).status,
+  503,
+  'Without a configured reader, photo suggestions are unavailable.',
+);
+globalThis.m2env.PANTRACK_WASTE_READER = 'fake';
+assert.equal((await suggestionResponse(suggestionRequest)).status, 401);
+for (const cookie of [cookies.other])
+  assert.equal((await suggestionResponse(suggestionRequest, cookie)).status, 403);
+assert.equal(
+  (await suggestionResponse({ ...suggestionRequest, companyId: 'company-b' }, cookies.manager))
+    .status,
+  403,
+  'Suggestions for another company are refused.',
+);
+assert.equal(
+  (
+    await suggestionResponse(suggestionRequest, cookies.employee, {
+      'Sec-Fetch-Site': 'cross-site',
+    })
+  ).status,
+  403,
+  'Cross-site suggestion requests are refused.',
+);
+assert.equal(
+  (await suggestionResponse({ ...suggestionRequest, actor: accounts.owner.id }, cookies.employee))
+    .status,
+  400,
+  'A client-supplied actor is rejected.',
+);
+assert.equal(
+  (
+    await suggestionResponse(
+      { ...suggestionRequest, photo: { ...photo, mediaType: 'image/png' } },
+      cookies.employee,
+    )
+  ).status,
+  400,
+  'A file that is not the stated image type is refused.',
+);
+const wasteBefore = sql.prepare('SELECT count(*) AS n FROM inventory_events_exact').get().n;
+const suggested = await suggestionResponse(suggestionRequest, cookies.employee);
+assert.equal(suggested.status, 200, await suggested.clone().text());
+const suggestion = (await suggested.json()).result;
+assert.equal(suggestion.status, 'suggested');
+assert.deepEqual(
+  suggestion.entries.map((e) => [e.name, e.kind, e.quantity, e.reason, e.target.form]),
+  [['Milk', 'ingredient', null, 'spilled', 'ingredient']],
+  'The fake reader suggests the company milk with its amount left to the person.',
+);
+assert.equal(
+  sql.prepare('SELECT count(*) AS n FROM inventory_events_exact').get().n,
+  wasteBefore,
+  'A suggestion records no waste.',
+);
+assert.deepEqual(
+  {
+    ...sql
+      .prepare('SELECT actor,status,note FROM waste_suggestions WHERE company_id=? AND id=?')
+      .get('company-a', suggestionRequest.operationId),
+  },
+  { actor: accounts.employee.id, status: 'suggested', note: 'spilled milk' },
+  'The request records the signed-in person, never a client-supplied one.',
+);
+assert.ok(
+  !JSON.stringify(sql.prepare('SELECT * FROM waste_suggestions').all()).includes(photo.data),
+  'The photo itself is not stored.',
+);
+delete globalThis.m2env.PANTRACK_WASTE_READER;
+assert.equal(
+  sql
+    .prepare(
+      "SELECT count(*) AS n FROM security_audit WHERE company_id='company-a' AND action='waste.succeeded' AND target=?",
+    )
+    .get(suggestionRequest.operationId).n,
+  1,
+  'Suggestion requests are audited like waste.',
 );
 assert.equal(
   (await call('waste', 'POST', wasteRequest, 'expired-cookie')).status,
