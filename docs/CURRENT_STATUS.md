@@ -33,8 +33,11 @@ history and takes its choices off every item. Step 3,
 [more of the picked choice](RECIPE_CHOICE_EXTRAS_LOCAL_EVIDENCE_20261116.md),
 adds migration `0048`: an optional add-on such as light ice can add a whole
 percentage of whichever option the customer picked in the item's pick-one set,
-applied by sales consumption. Local evidence only; Clover linking per choice
-(step 4) follows.
+applied by sales consumption. Step 4,
+[Clover linking per choice](RECIPE_OPTION_CLOVER_LINKS_LOCAL_EVIDENCE_20261116.md),
+adds migration `0049` and owner-only links from a Clover modifier to a set
+choice, resolved for every item carrying the set when its sales arrive. Local
+evidence only; no Clover account was contacted.
 
 ## Workspace header, navigation and wording — 2026-11-14
 

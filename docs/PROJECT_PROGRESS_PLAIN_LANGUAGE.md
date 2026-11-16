@@ -18,8 +18,11 @@ item using it, while past sales stay as they were
 ([record](RECIPE_OPTION_SET_REMOVAL_LOCAL_EVIDENCE_20261115.md)). Light or
 no ice can now add a percentage more of whichever milk was picked, for example
 25% more for light ice, so one ice set works for every size
-([record](RECIPE_CHOICE_EXTRAS_LOCAL_EVIDENCE_20261116.md)). Next: linking each
-choice to Clover.
+([record](RECIPE_CHOICE_EXTRAS_LOCAL_EVIDENCE_20261116.md)). Each choice can now
+be linked to its Clover option once, and every item using that set recognizes
+it in Clover sales ([record](RECIPE_OPTION_CLOVER_LINKS_LOCAL_EVIDENCE_20261116.md)).
+This completes the recipe options plan; it still needs trying with a real
+Clover sandbox.
 
 **Simpler screens (2026-11-14):** after trying a preview, the owner approved a
 cleaner layout: one header with a company menu, page sections chosen only from

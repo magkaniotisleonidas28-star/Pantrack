@@ -1166,3 +1166,21 @@ export const recipeOptionLinks=sqliteTable('recipe_option_links',{
 },t=>[primaryKey({columns:[t.companyId,t.recipeId,t.setId]}),index('recipe_option_link_set').on(t.companyId,t.setId),
  foreignKey({columns:[t.companyId,t.recipeId],foreignColumns:[recipeLineages.companyId,recipeLineages.id]}),
  foreignKey({columns:[t.companyId,t.setId],foreignColumns:[recipeOptionSets.companyId,recipeOptionSets.id]})]);
+
+// A Clover modifier linked once to an option-set choice (decision 0009 step 4).
+// Sales from any Clover item whose recipe carries that set's choice resolve to it.
+// One Clover modifier may link to one choice per set, so "Oat milk" can serve
+// both a medium and a large milk set.
+export const cloverOptionLinks=sqliteTable('clover_option_links',{
+ companyId:text('company_id').notNull(),
+ environment:text('environment').notNull(),
+ merchantId:text('merchant_id').notNull(),
+ modifierId:text('modifier_id').notNull(),
+ setId:text('set_id').notNull(),
+ choiceId:text('choice_id').notNull(),
+ modifierName:text('modifier_name').notNull(),
+ linkedBy:text('linked_by').notNull(),
+ linkedAt:text('linked_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.environment,t.merchantId,t.modifierId,t.setId]}),
+ index('clover_option_link_set').on(t.companyId,t.setId),
+ foreignKey({columns:[t.companyId,t.setId],foreignColumns:[recipeOptionSets.companyId,recipeOptionSets.id]})]);

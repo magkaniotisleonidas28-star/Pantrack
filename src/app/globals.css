@@ -630,3 +630,4 @@ body[data-workspace-theme=dark] .waste-entry-button { background: #1d2a23; color
 .sales-history li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #edf0ee; font-size: 14px; }
 .sales-history li > span { display: grid; gap: 2px; }
 .sales-history li:last-child { border-bottom: 0; }
+.clover-option-links{list-style:none;padding:0;margin:12px 0;display:grid;gap:10px}.clover-option-links li{display:grid;grid-template-columns:minmax(120px,1fr) minmax(0,2fr) auto;gap:12px;align-items:center;font-size:14px;padding:10px 0;border-bottom:1px solid #e6ebe7}.clover-option-links li>span{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.clover-option-links .sample-tag button{margin-left:6px}.clover-option-links select{max-width:220px}@media(max-width:650px){.clover-option-links li{grid-template-columns:1fr}}

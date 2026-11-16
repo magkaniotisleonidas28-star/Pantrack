@@ -578,8 +578,9 @@ export default function OptionSetsManager({
                 </dl>
                 <p>Used by: {items.map(names.item).join(', ') || 'No items yet'}</p>
                 <p>
-                  Linking these choices to their Clover options is coming soon. Until then, Clover
-                  sales that include them are held for review.
+                  For Clover sales, the owner links each choice to its Clover option once, in Setup
+                  &amp; register → Technical connections → Clover. Clover sales with a choice that
+                  is not linked are held for review.
                 </p>
                 {canManage && (
                   <div className="recipe-detail-actions">

@@ -8,6 +8,7 @@ import { callbackUrl, cloverConfig, cloverConnection, cloverTokenExpirations } f
 import { cloverSyncEnabled } from '@/lib/clover-sync';
 import { cloverPosAdapter } from '@/lib/clover-pos-adapter';
 import { requireSupported } from '@/lib/pos-adapter';
+import { D1CloverOptionLinks } from '@/lib/d1-clover-option-links';
 import { z } from 'zod';
 async function handleGET(req: Request) {
   const u = await getChatGPTUser();
@@ -25,7 +26,7 @@ async function handleGET(req: Request) {
           cloverTokenExpirations(row),
         ])
       : [null, null];
-    const [items, modifiers, recipes, recipeModifiers] = row
+    const [items, modifiers, recipes, recipeModifiers, optionSets, optionLinks] = row
       ? await Promise.all([
           db
             .prepare(
@@ -51,8 +52,19 @@ async function handleGET(req: Request) {
             )
             .bind(id)
             .all(),
+          db
+            .prepare(
+              'SELECT id,name,choices_json FROM recipe_option_sets WHERE company_id=? AND archived_at IS NULL ORDER BY name,id',
+            )
+            .bind(id)
+            .all<{ id: string; name: string; choices_json: string }>(),
+          new D1CloverOptionLinks(db).list({
+            companyId: id!,
+            environment: row.environment,
+            merchantId: row.merchant_id,
+          }),
         ])
-      : [{ results: [] }, { results: [] }, { results: [] }, { results: [] }];
+      : [{ results: [] }, { results: [] }, { results: [] }, { results: [] }, { results: [] }, []];
     return Response.json(
       {
         ready: c.ready,
@@ -67,6 +79,14 @@ async function handleGET(req: Request) {
         modifierMappings: modifiers.results,
         recipes: recipes.results,
         recipeModifiers: recipeModifiers.results,
+        optionSets: optionSets.results.map((set) => ({
+          id: set.id,
+          name: set.name,
+          choices: (JSON.parse(set.choices_json) as Array<{ id: string; name: string }>).map(
+            (choice) => ({ id: choice.id, name: choice.name }),
+          ),
+        })),
+        optionLinks,
       },
       { headers: { 'Cache-Control': 'no-store' } },
     );
@@ -94,6 +114,8 @@ async function handlePOST(req: Request) {
           'modifiers',
           'mapItem',
           'mapModifier',
+          'linkOption',
+          'unlinkOption',
           'sync',
         ]),
         offset: z.number().int().min(0).max(100000).default(0),
@@ -101,6 +123,9 @@ async function handlePOST(req: Request) {
         modifierId: z.string().min(1).max(200).optional(),
         recipeId: z.string().min(1).max(200).optional(),
         inventoryModifierId: z.string().min(1).max(200).optional(),
+        setId: z.string().min(1).max(200).optional(),
+        choiceId: z.string().min(1).max(200).optional(),
+        modifierName: z.string().min(1).max(200).optional(),
       })
       .parse(await req.json());
     if ((await companyAccess(u.userId, b.companyId))?.role !== 'owner')
@@ -162,6 +187,33 @@ async function handlePOST(req: Request) {
       return Response.json(requireSupported(await cloverPosAdapter.sync(b.companyId)), {
         headers: { 'Cache-Control': 'no-store' },
       });
+    }
+    if (b.action === 'linkOption' || b.action === 'unlinkOption') {
+      const connection = await cloverConnection(b.companyId);
+      if (!connection) throw new UserFacingError('Connect Clover first.');
+      if (!b.setId || !b.modifierId)
+        throw new UserFacingError('Choose an option set and a Clover option.');
+      const scope = {
+        companyId: b.companyId,
+        environment: connection.environment,
+        merchantId: connection.merchant_id,
+      };
+      const links = new D1CloverOptionLinks(db);
+      if (b.action === 'unlinkOption')
+        await links.unlink({ ...scope, setId: b.setId, modifierId: b.modifierId });
+      else {
+        if (!b.choiceId || !b.modifierName)
+          throw new UserFacingError('Choose a choice and a Clover option.');
+        await links.link({
+          ...scope,
+          actor: u.email,
+          setId: b.setId,
+          choiceId: b.choiceId,
+          modifierId: b.modifierId,
+          modifierName: b.modifierName,
+        });
+      }
+      return Response.json({ ok: true });
     }
     if (b.action === 'mapItem' || b.action === 'mapModifier') {
       const connection = await cloverConnection(b.companyId);
