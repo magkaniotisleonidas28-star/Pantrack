@@ -17,7 +17,9 @@ globalThis.testDB = {
         return this;
       },
       async run() {
-        return sql.prepare(query).run(...v);
+        // D1 reports changed rows under meta, as well as node:sqlite's own fields.
+        const result = sql.prepare(query).run(...v);
+        return { ...result, meta: { changes: Number(result.changes) } };
       },
       async first() {
         return sql.prepare(query).get(...v) || null;
@@ -386,10 +388,81 @@ for (const role of ['manager', 'employee']) {
   globalThis.testUser = { userId: role };
   assert.equal((await status()).status, 403);
   assert.equal((await post({ action: 'mapItem', itemId: 'x', recipeId: 'x' })).status, 403);
+  for (const action of ['linkOption', 'unlinkOption'])
+    assert.equal(
+      (
+        await post({
+          action,
+          setId: 'milk',
+          choiceId: 'oat',
+          modifierId: 'oat-id',
+          modifierName: 'Oat',
+        })
+      ).status,
+      403,
+      role + ' ' + action,
+    );
   assert.equal((await post({ action: 'sync' })).status, 403);
   assert.equal((await post({ action: 'disconnect' })).status, 403);
 }
-globalThis.testUser = { userId: 'owner' };
+globalThis.testUser = { userId: 'owner', email: 'owner@example.test' };
+// Option-set choices link to Clover options once (owner only, current merchant).
+sql
+  .prepare(
+    'INSERT INTO recipe_option_sets(company_id,id,revision,name,kind,choices_json,updated_by,updated_at) VALUES (?,?,1,?,?,?,?,?)',
+  )
+  .run(
+    'company',
+    'milk',
+    'Milk',
+    'one',
+    JSON.stringify([
+      { id: 'whole', name: 'Whole', changes: [] },
+      { id: 'oat', name: 'Oat', changes: [] },
+    ]),
+    'owner',
+    'now',
+  );
+const link = {
+  action: 'linkOption',
+  setId: 'milk',
+  choiceId: 'oat',
+  modifierId: 'oat-id',
+  modifierName: 'Oat milk',
+};
+for (const [body, message] of [
+  [{ setId: 'missing' }, 'Choose an existing option set.'],
+  [{ choiceId: 'soy' }, 'Choose a choice from this option set.'],
+  [{ choiceId: undefined }, 'Choose a choice and a Clover option.'],
+])
+  assert.equal((await (await post({ ...link, ...body })).json()).error, message);
+assert.equal(
+  (await post({ ...link, companyId: 'other-company' })).status,
+  403,
+  'linking for another company',
+);
+assert.equal((await post(link)).status, 200);
+assert.equal((await post({ ...link, choiceId: 'whole', modifierName: 'Oat milk' })).status, 200);
+assert.deepEqual((await (await status()).json()).optionLinks, [
+  { modifierId: 'oat-id', modifierName: 'Oat milk', setId: 'milk', choiceId: 'whole' },
+]);
+assert.deepEqual((await (await status()).json()).optionSets, [
+  {
+    id: 'milk',
+    name: 'Milk',
+    choices: [
+      { id: 'whole', name: 'Whole' },
+      { id: 'oat', name: 'Oat' },
+    ],
+  },
+]);
+assert.deepEqual(
+  { ...sql.prepare('SELECT environment,merchant_id,linked_by FROM clover_option_links').get() },
+  { environment: 'sandbox', merchant_id: 'merchant1', linked_by: 'owner@example.test' },
+);
+assert.equal((await post({ ...link, action: 'unlinkOption' })).status, 200);
+assert.deepEqual((await (await status()).json()).optionLinks, []);
+assert.equal((await post(link)).status, 200);
 sql
   .prepare('INSERT INTO clover_item_mappings VALUES (?,?,?,?,?)')
   .run('company', 'sandbox', 'merchant1', 'latte-id', 'recipe-id');
@@ -436,6 +509,9 @@ const retained = () => ({
     )
     .all('company'),
   history: sql.prepare('SELECT event_key FROM sales_events WHERE company_id=?').all('company'),
+  optionLinks: sql
+    .prepare('SELECT modifier_id,set_id,choice_id FROM clover_option_links WHERE company_id=?')
+    .all('company'),
   stock: sql
     .prepare('SELECT id,product_id,data FROM inventory_events WHERE company_id=?')
     .all('company'),

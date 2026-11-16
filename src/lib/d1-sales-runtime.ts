@@ -1,4 +1,5 @@
 import { UserFacingError } from '@/lib/user-facing-error';
+import { D1CloverOptionLinks } from '@/lib/d1-clover-option-links';
 import { D1InventoryConsumptionPort } from '@/lib/d1-inventory-consumption';
 import { D1SalesEventStore } from '@/lib/d1-sales-event-store';
 import {
@@ -131,6 +132,30 @@ export class D1SalesMappingPort implements SalesMappingPort {
         )
         .first<{ inventory_modifier_id: string }>();
       if (row) return { status: 'mapped' as const, modifierId: row.inventory_modifier_id };
+      // Otherwise, a Clover option linked once to an option-set choice.
+      const item = await this.db
+        .prepare(
+          'SELECT recipe_id FROM clover_item_mappings WHERE company_id=? AND environment=? AND merchant_id=? AND item_id=?',
+        )
+        .bind(
+          input.companyId,
+          input.source.environment,
+          input.source.merchantId,
+          input.externalItemId,
+        )
+        .first<{ recipe_id: string }>();
+      const linked =
+        item &&
+        (await new D1CloverOptionLinks(this.db).resolve(
+          {
+            companyId: input.companyId,
+            environment: input.source.environment,
+            merchantId: input.source.merchantId,
+          },
+          item.recipe_id,
+          input.externalModifierId,
+        ));
+      if (linked) return { status: 'mapped' as const, modifierId: linked };
     }
     return { status: 'unknown_modifier' as const };
   }

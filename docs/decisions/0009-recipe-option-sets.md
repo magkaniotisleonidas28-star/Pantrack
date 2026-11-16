@@ -63,7 +63,10 @@ choice groups atomically (`publishRecipe`), maps Clover items and
    ([evidence](../RECIPE_CHOICE_EXTRAS_LOCAL_EVIDENCE_20261116.md)); see the
    amendment below.
 4. **Clover linking per choice:** link a Clover option to a set choice once,
-   creating the (item, modifier) mappings for every attached item.
+   creating the (item, modifier) mappings for every attached item. Built as
+   links resolved at sale time against the item's recipe, so items attached
+   later are covered too; a per-item modifier mapping still takes priority
+   ([evidence](../RECIPE_OPTION_CLOVER_LINKS_LOCAL_EVIDENCE_20261116.md)).
 
 ## Consequences
 
