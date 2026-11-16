@@ -1191,3 +1191,27 @@ export const companyPreferences=sqliteTable('company_preferences',{
  updatedBy:text('updated_by').notNull(),
  updatedAt:text('updated_at').notNull(),
 },t=>[check('company_preference_measurement_system',sql`${t.measurementSystem} IN ('us','metric')`)]);
+
+// Photo waste suggestions (decision 0010). One row per request; the photo itself
+// is never stored, only a SHA-256 fingerprint so a repeated request is recognised.
+export const wasteSuggestions=sqliteTable('waste_suggestions',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ id:text('id').notNull(),
+ actor:text('actor').notNull(),
+ fingerprint:text('fingerprint').notNull(),
+ note:text('note').notNull(),
+ status:text('status').notNull(),
+ provider:text('provider'),
+ model:text('model'),
+ inputTokens:integer('input_tokens').notNull().default(0),
+ outputTokens:integer('output_tokens').notNull().default(0),
+ costMicroUsd:integer('cost_micro_usd').notNull().default(0),
+ entriesJson:text('entries_json').notNull().default('[]'),
+ createdAt:text('created_at').notNull(),
+ completedAt:text('completed_at'),
+ // What the person did with the suggestion, recorded by the Waste page (W4c).
+ outcome:text('outcome'),
+ outcomeAt:text('outcome_at'),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),index('waste_suggestion_company_created').on(t.companyId,t.createdAt),
+ check('waste_suggestion_status',sql`${t.status} IN ('pending','suggested','empty','failed')`),
+ check('waste_suggestion_outcome',sql`${t.outcome} IS NULL OR ${t.outcome} IN ('confirmed','edited','discarded')`)]);
