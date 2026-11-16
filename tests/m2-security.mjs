@@ -210,6 +210,7 @@ for (const [name, path] of [
     'waste/setup',
     'waste/review',
     'waste/suggestions',
+    'waste/suggestions/outcome',
   ].map((n) => [n, 'src/app/api/' + n + '/route.ts']),
   ['authlib', 'src/lib/auth.ts'],
   ['fence', 'src/lib/auth-session-fence.ts'],
@@ -2040,6 +2041,33 @@ assert.equal(
   1,
   'Suggestion requests are audited like waste.',
 );
+// Outcomes: only the person who asked, in their own company; nothing is recorded as waste.
+const outcomeBody = {
+  companyId: 'company-a',
+  operationId: suggestionRequest.operationId,
+  outcome: 'confirmed',
+};
+const outcome = (body, cookie, extra) =>
+  call('waste/suggestions/outcome', 'POST', body, cookie, extra);
+assert.equal((await outcome(outcomeBody)).status, 401);
+assert.equal((await outcome(outcomeBody, cookies.other)).status, 403);
+assert.equal(
+  (await outcome({ ...outcomeBody, companyId: 'company-b' }, cookies.manager)).status,
+  403,
+);
+assert.equal(
+  (await outcome(outcomeBody, cookies.employee, { 'Sec-Fetch-Site': 'cross-site' })).status,
+  403,
+);
+assert.equal(
+  (await outcome(outcomeBody, cookies.manager)).status,
+  404,
+  'Only the person who asked records what happened to it.',
+);
+assert.equal((await outcome({ ...outcomeBody, outcome: 'maybe' }, cookies.employee)).status, 400);
+const recorded = await outcome(outcomeBody, cookies.employee);
+assert.equal(recorded.status, 200);
+assert.equal((await recorded.json()).result.outcome, 'confirmed');
 assert.equal(
   (await call('waste', 'POST', wasteRequest, 'expired-cookie')).status,
   401,

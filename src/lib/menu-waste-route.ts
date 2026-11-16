@@ -4,6 +4,7 @@ import { companyAccess } from './company-access';
 import { database } from '@/db/raw';
 import { exactInventoryPreviewEnabled } from './exact-inventory-gate';
 import { D1MenuWasteService } from './d1-menu-waste';
+import { wasteReader } from './waste-suggestion-route';
 import { InventoryManagementError } from './d1-inventory-management';
 export async function handleMenuWaste(
   req: Request,
@@ -23,9 +24,13 @@ export async function handleMenuWaste(
     if (req.method === 'GET') {
       if (kind === 'items') {
         const member = await companyAccess(user.userId, companyId);
-        return Response.json(
-          await service.options(companyId!, member?.role === 'owner' || member?.role === 'manager'),
-        );
+        return Response.json({
+          ...(await service.options(
+            companyId!,
+            member?.role === 'owner' || member?.role === 'manager',
+          )),
+          photoSuggestions: wasteReader() !== null,
+        });
       }
       if (kind === 'sales') {
         const params = z

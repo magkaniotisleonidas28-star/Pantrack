@@ -134,3 +134,17 @@
 .task-form .recipe-amount-hint { font-size: 13px; color: var(--muted-foreground); align-self: end; padding-bottom: 10px; }
 .unit-preference { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--muted-foreground); }
 .unit-preference select { width: auto; }
+/* Record waste from a photo (decision 0010). */
+.photo-waste { display: grid; gap: 12px; margin: 0 0 24px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--card, var(--background)); }
+.photo-waste h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.photo-waste > p { margin: 0; font-size: 14px; color: var(--muted-foreground); }
+.photo-waste-pick { position: relative; display: grid; place-items: center; min-height: 120px; border: 1px dashed var(--border); border-radius: 8px; cursor: pointer; overflow: hidden; }
+.photo-waste-pick span { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.photo-waste-pick img { display: block; max-width: 100%; max-height: 240px; object-fit: contain; }
+.photo-waste-pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.photo-waste-result { display: grid; gap: 10px; }
+.photo-waste-result > p { margin: 0; font-size: 14px; }
+.photo-waste-entry { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 0; border-top: 1px solid var(--border); }
+.photo-waste-entry small { display: block; margin-top: 2px; color: var(--muted-foreground); }
+.photo-waste-saved { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--primary); }
+.photo-waste-banner { margin: 8px 0 0; padding: 8px 12px; border-radius: 6px; background: var(--muted); font-size: 14px; color: var(--foreground); }

@@ -24,6 +24,15 @@ import {
   type PendingWasteSave,
 } from '@/lib/waste-client';
 
+/** A photo suggestion to open in the form for checking (decision 0010). */
+export type IngredientPrefill = {
+  key: number;
+  productId: string;
+  amount: string;
+  reason: string;
+  note: string;
+};
+
 function WasteRecorderClient({
   companyId,
   email,
@@ -32,6 +41,8 @@ function WasteRecorderClient({
   onSaved,
   launchCount = 0,
   showButton = true,
+  prefill,
+  onEntrySaved,
 }: {
   companyId: string;
   email: string;
@@ -40,6 +51,9 @@ function WasteRecorderClient({
   onSaved?: () => void;
   launchCount?: number;
   showButton?: boolean;
+  prefill?: IngredientPrefill | null;
+  /** Reports each saved waste entry, so a photo suggestion can tell if it was changed. */
+  onEntrySaved?: (entry: { productId: string; amount: string; reason: string }) => void;
 }) {
   const storageKey = wasteStorageKey(companyId, email);
   const [restored] = useState(() => recoverIngredientWaste(storageKey, companyId));
@@ -78,6 +92,21 @@ function WasteRecorderClient({
     dirty = !saved && !!(productId || amount || reason || note || pending || editingShortcuts);
   const frozen = busy || !!pending;
   const loading = explicitLoading || loadedLaunch !== launchCount;
+  const [observedPrefill, setObservedPrefill] = useState(prefill?.key ?? 0),
+    [suggested, setSuggested] = useState(false);
+  if (prefill && prefill.key !== observedPrefill) {
+    setObservedPrefill(prefill.key);
+    if (!pending) {
+      setProductId(prefill.productId);
+      setAmount(prefill.amount);
+      setReason(prefill.reason);
+      setNote(prefill.note);
+      setSaved(false);
+      setError('');
+      setSuggested(true);
+      setOpen(true);
+    }
+  }
   if (observedLaunch !== launchCount) {
     setObservedLaunch(launchCount);
     if (launchCount > 0) {
@@ -161,6 +190,7 @@ function WasteRecorderClient({
     } catch {}
   }
   function reset() {
+    setSuggested(false);
     setProductId('');
     setAmount('');
     setReason('');
@@ -257,6 +287,12 @@ function WasteRecorderClient({
       } else {
         remember(favorites, [productId, ...recent.filter((id) => id !== productId)].slice(0, 6));
         setSaved(true);
+        setSuggested(false);
+        onEntrySaved?.({
+          productId: attempt.request.productId,
+          amount: attempt.request.amount,
+          reason: attempt.request.reason,
+        });
         onSaved?.();
         void load();
       }
@@ -405,6 +441,11 @@ function WasteRecorderClient({
                     Choose another ingredient
                   </Button>
                   <h2>{item?.name || productId}</h2>
+                  {suggested && productId === prefill?.productId && !editingShortcuts && (
+                    <p className="photo-waste-banner" role="status">
+                      Suggested from your photo. Check the amount and reason before saving.
+                    </p>
+                  )}
                   {editingShortcuts ? (
                     <>
                       <p>Quantity shortcuts · {item?.unitLabel}. Up to six per ingredient.</p>

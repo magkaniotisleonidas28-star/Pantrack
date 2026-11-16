@@ -9,8 +9,9 @@ without your confirmation. Photos aren't kept. It's capped at $10 a month, and
 it's off until you turn it on ([decision](decisions/0010-photo-waste-suggestions.md),
 [plan](WASTE_AND_MARGIN_ROADMAP.md#w4--photo-waste-suggestions)). The server
 side is built and tested with a pretend reader
-([record](W4B_PHOTO_WASTE_SUGGESTIONS_LOCAL_EVIDENCE_20261116.md)). Next is the
-Waste page screen.
+([record](W4B_PHOTO_WASTE_SUGGESTIONS_LOCAL_EVIDENCE_20261116.md)), and so is the
+Waste page screen ([record](W4C_PHOTO_WASTE_SCREENS_LOCAL_EVIDENCE_20261116.md)).
+Next are the on/off switch and the $10 monthly cap.
 
 **Easier units (2026-11-16):** setting up stock now reads like a sentence:
 "Oat milk comes in a carton that holds 64 fl oz". Pantrack guesses the

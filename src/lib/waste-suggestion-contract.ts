@@ -33,6 +33,15 @@ export const wasteSuggestionRequest = z
 
 export type WasteSuggestionRequest = z.infer<typeof wasteSuggestionRequest>;
 
+/** What the person did with a suggestion: saved as suggested, saved after changes, or not used. */
+export const wasteSuggestionOutcome = z
+  .object({
+    companyId: z.string().trim().min(1).max(200),
+    operationId: z.string().uuid(),
+    outcome: z.enum(['confirmed', 'edited', 'discarded']),
+  })
+  .strict();
+
 const signatures: Record<PhotoMediaType, (b: Uint8Array) => boolean> = {
   'image/jpeg': (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
   'image/png': (b) => [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((v, i) => b[i] === v),
@@ -63,7 +72,8 @@ export class SuggestionError extends Error {
       | 'operation_conflict'
       | 'reader_unavailable'
       | 'reader_failed'
-      | 'not_enabled',
+      | 'not_enabled'
+      | 'not_found',
     message: string,
   ) {
     super(message);
@@ -169,6 +179,8 @@ const words = (text: string) =>
     .replace(/[^a-z0-9 ]+/g, ' ')
     .trim();
 const singular = (text: string) => text.replace(/(?:es|s)\b/g, '');
+/** The main part of a name, before details such as "· barista" or "(1 L)". */
+const core = (name: string) => name.split(/[·(–—]| - /)[0];
 
 /**
  * A fixed, offline reader for development and tests: it ignores the photo and
@@ -180,11 +192,11 @@ export const fakeWasteReader: WasteReader = {
     const reason = reasonWords.find(([pattern]) => pattern.test(input.note))?.[1] ?? 'other';
     const entries = input.catalog
       .filter((item) => {
-        const name = singular(words(item.name));
+        const name = singular(words(core(item.name)));
         return name && singular(note).includes(name);
       })
       .map((item) => {
-        const name = singular(words(item.name));
+        const name = singular(words(core(item.name)));
         const count = new RegExp(`(\\d+)\\s+${name.replace(/\s+/g, '\\s+')}`).exec(singular(note));
         return {
           ref: item.ref,

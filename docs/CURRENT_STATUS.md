@@ -27,8 +27,12 @@ The [W4 plan](WASTE_AND_MARGIN_ROADMAP.md#w4--photo-waste-suggestions) splits
 the work into steps W4a–W4f. W4b,
 [the server step with a fake reader](W4B_PHOTO_WASTE_SUGGESTIONS_LOCAL_EVIDENCE_20261116.md),
 adds migration `0051` and an endpoint that turns a photo and note into checked
-suggestions without recording waste or storing the photo. Local evidence only;
-no paid or external service was called.
+suggestions without recording waste or storing the photo. W4c,
+[the Waste page screens](W4C_PHOTO_WASTE_SCREENS_LOCAL_EVIDENCE_20261116.md),
+adds "Record waste from a photo": the photo is resized in the browser,
+suggestions open the normal forms for checking, and each records whether it
+was saved as suggested, changed, or not used. Local evidence only; no paid or
+external service was called.
 
 ## Easier units for stock and recipes — 2026-11-16
 

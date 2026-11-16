@@ -6,6 +6,7 @@ import {
   checkedEntries,
   readPhoto,
   SuggestionError,
+  wasteSuggestionOutcome,
   wasteSuggestionRequest,
   type ReaderCatalogItem,
   type SuggestedEntry,
@@ -209,5 +210,29 @@ export class D1WasteSuggestions {
       )
       .run();
     return { operationId: request.operationId, status, entries, message: messages[status] };
+  }
+
+  /**
+   * Records what the person did, for measuring accuracy (W4f). Only the person
+   * who asked can record it. "Edited" outranks "confirmed", and "discarded"
+   * applies only when nothing was saved from the suggestion.
+   */
+  async recordOutcome(input: unknown, actor: string) {
+    const b = wasteSuggestionOutcome.parse(input);
+    await this.db
+      .prepare(
+        `UPDATE waste_suggestions SET outcome=?,outcome_at=? WHERE company_id=? AND id=? AND actor=? AND status='suggested'
+        AND (outcome IS NULL OR (outcome='confirmed' AND ?='edited') OR (outcome='discarded' AND ?<>'discarded'))`,
+      )
+      .bind(b.outcome, this.now(), b.companyId, b.operationId, actor, b.outcome, b.outcome)
+      .run();
+    const row = await this.db
+      .prepare(
+        "SELECT outcome FROM waste_suggestions WHERE company_id=? AND id=? AND actor=? AND status='suggested'",
+      )
+      .bind(b.companyId, b.operationId, actor)
+      .first<{ outcome: string | null }>();
+    if (!row) throw new SuggestionError('not_found', 'This suggestion is no longer available.');
+    return { operationId: b.operationId, outcome: row.outcome };
   }
 }
