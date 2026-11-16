@@ -1,7 +1,7 @@
 # Quick waste recording and menu analysis roadmap
 
-Prepared: 2026-09-30. Updated: 2026-10-01. Status: W1/W2 implemented for local review;
-W3 and P1–P4 remain planned. The owner approved a roadmap alongside
+Prepared: 2026-09-30. Updated: 2026-11-16. Status: W1/W2 implemented for local review;
+W3, W4 and P1–P4 remain planned. The owner approved a roadmap alongside
 [C3 Baldor preparation](C3_BALDOR_PREPARATION.md).
 
 ## Goal and starting point
@@ -41,6 +41,7 @@ not rename the existing A/B/C milestone checklist or reopen accepted M3/M4 work.
 | P2 — Menu margins | A; uses P1 and recipe versions | Manager menu-cost and margin section | Per-item/modifier calculations explain every input and preserve cost/recipe versions |
 | P3 — Sales and waste analysis | B revenue handoff; A reporting; C price-source handoff | Popularity, contribution estimates, price trends, waste trends | Validated revenue and coverage before actual period results; waste is not charged twice |
 | P4 — Business profitability | Owner chooses expense sources; A/C implement | Labor, rent, utilities, other expenses | Separate scope and accounting rules agreed before implementation |
+| W4 — Photo waste suggestions | C; uses W1/W2 save path | Photo plus note → AI-suggested waste entry, confirmed by a person | See [W4](#w4--photo-waste-suggestions); suggestions never save on their own; $10 monthly cap |
 
 While supplier access is pending, W1/W2 worker usability review is the next
 unblocked product step, followed by a separate P1 cost-foundation outcome. Keep
@@ -205,6 +206,30 @@ P4 is a separate later feature for labor, rent, utilities, and other expenses.
 Choose expense sources and allocation/time-period rules with the owner before
 building overall business profit. Do not claim full business profitability from
 ingredient-only calculations.
+
+## W4 — Photo waste suggestions
+
+Owner request and choices on 2026-11-16:
+[decision 0010](decisions/0010-photo-waste-suggestions.md). A person takes a
+photo and adds a short note, such as "end of day". An AI suggests the waste
+entry, and the person confirms or corrects it in the normal form before saving.
+Photos are included from the start and are not kept. The cap is $10 a month,
+and everyone who can record waste can use it. Each step is its own reviewable
+outcome with tests and an evidence record.
+
+| Step | Outcome | Paid or external? | Done when |
+| --- | --- | --- | --- |
+| W4a | Decision 0010 and this plan | No | Owner reviewed and merged |
+| W4b | Server suggestion step with a **fake reader**: a suggestion request (photo + note) returns a proposal limited to the company's own waste items and reasons. Requests and their outcomes are recorded (migration) without the photo | No | Anonymous, wrong-company and role tests; oversized or invalid photos refused; unknown items or impossible quantities dropped; the fake reader is used in all tests |
+| W4c | Waste page screens: take or choose a photo (resized and re-encoded in the browser), add a note, see the filled-in form marked "suggested from your photo", then Save or correct. Saving links the entry to its suggestion and records whether it was changed | No | Browser check on desktop and phone with the fake reader; normal waste form unchanged; confirmed and corrected entries save through W1/W2 |
+| W4d | Owner switch (off by default) and the $10 monthly cap, checked on the server before each request, with usage shown to the owner | No | Cap reached → clear message and the normal form still works; concurrent requests cannot overspend; cap and switch tests |
+| W4e | Real reader: Claude Haiku 5.5 reading the image with a strict output format, server-side key, timeouts and no double billing on retry | **Yes**: the owner creates the Anthropic account and key, stores it as a server secret, and authorizes each paid test run | Small owner-authorized run with fictional photos (a croissant tray, a spilled latte, spilled milk) records accuracy and real cost |
+| W4f | Owner trial in the café, then acceptance | **Yes**: hosted deploy and real use only with the owner's authorization | Owner uses it on real waste; how often suggestions needed correcting is recorded and reviewed |
+
+Owner actions, when their step arrives: create an Anthropic API account and
+key (W4e), add it to the server's secrets (W4e), authorize paid test runs
+(W4e), and authorize the hosted trial (W4f). Pantrack never handles the key in
+chat or Git.
 
 ## Implementation gates
 
