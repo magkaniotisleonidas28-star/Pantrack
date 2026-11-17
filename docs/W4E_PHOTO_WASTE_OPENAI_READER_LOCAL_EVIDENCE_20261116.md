@@ -126,6 +126,32 @@ hidden.
   and would fail the same way on Workers.
 - **Next:** rerunning the 2 photos needs the owner's fresh authorization.
 
+## Authorized rerun with the same 2 photos — 2026-11-16
+
+After the fix, the owner gave a fresh authorization: "I authorize a rerun of
+the paid test with the same 2 photos". The run used the local preview with the
+real reader, the Waste page's own photo preparation, and the note "end of day"
+for each photo. The browser-side guard allowed at most 2 suggestion requests;
+exactly 2 were made, and the browser made no other outside requests. The
+preview was then switched back to the fake reader.
+
+| Photo | Time | Tokens (in / out) | Cost | Suggested (all "End of day") |
+| --- | --- | --- | --- | --- |
+| 1: display case, four trays | 3.4 s | 1,012 / 126 | $0.001326 | 4 × Plain croissant, 2 × Pistachio croissant, 2 × Biscoff croissant, 4 × Chocolate croissant |
+| 2: display case, tart, pastries, muffins | 2.3 s | 972 / 147 | $0.001391 | 2 × Banana walnut muffin, 2 × Blueberry muffin, 1 × Chocolate croissant, 2 × Hazelnut croissant, 1 × Pistachio croissant |
+
+- **Total cost:** $0.002717, recorded from the reported usage at the reviewed
+  rates, under a tenth of the $0.05 per-request reserve.
+- **Answers:** both were complete and in the strict format; every suggested
+  item was one of the café's listed items.
+- **Not suggested from photo 2:** the large round tart on the left and the
+  smaller pastries next to it. Whether the counts and pastry types are right
+  needs the owner's actual counts. An untrained look suggests photo 2 may show
+  powdered almond croissants where "Hazelnut croissant" was suggested.
+- **Outcomes:** the script dismissed both suggestions ("discarded") after
+  reading them, so no waste was recorded. These outcomes are test artifacts,
+  not accuracy data.
+
 ## Not covered (needs the owner)
 
 - The owner-authorized paid check with fictional photos: real accuracy and
