@@ -152,6 +152,37 @@ preview was then switched back to the fake reader.
   reading them, so no waste was recorded. These outcomes are test artifacts,
   not accuracy data.
 
+### Accuracy against the owner's actual counts
+
+The owner supplied the actual contents:
+- **Photo 1:** 4 plain, 1 chocolate, 3 pistachio, 3 hazelnut and 3 Biscoff
+  croissants (14 pieces).
+- **Photo 2:** 4 sabayah, 2 hummus tomato roasted croissants, 2 apple tarts,
+  3 blueberry muffins, 1 banana walnut muffin, 2 almond muffins (not on the
+  café's list) and 2 almond croissants (16 pieces).
+
+| Photo | Right item | Exact count | Wrong item suggested | Missed |
+| --- | --- | --- | --- | --- |
+| 1 | 4 of 5 (plain, pistachio 2 of 3, Biscoff 2 of 3, chocolate 4 of 1) | 1 (plain) | none | hazelnut, apparently counted as chocolate |
+| 2 | 2 of 6 listed (banana walnut 2 of 1, blueberry 2 of 3) | 0 | chocolate, hazelnut (the almond croissants), pistachio | sabayah, hummus tomato roasted croissant, apple tart, almond croissant |
+
+- **Photo 1** (tidy rows of croissants) was mostly right on items but off on
+  counts.
+- **Photo 2** (mixed pastries) was poor: wrong items appeared and most
+  pastry types were missed.
+- **Photo size is a likely factor.** Both photos were thin cropped strips,
+  1024 × 309 and 1307 × 220 pixels, so each pastry was only about 50–80
+  pixels across, seen through display glass.
+- **Lookalikes:** several pastries look alike, and the reader had only their
+  names.
+- **"Almond muffin"** is not on the café's list, so it could not be
+  suggested.
+
+**Conclusion:** without the person's check this is not accurate enough to
+record waste automatically. The design always requires that check, so the
+café trial (W4f) should only go ahead after the improvements the owner
+chooses.
+
 ## Not covered (needs the owner)
 
 - The owner-authorized paid check with fictional photos: real accuracy and
