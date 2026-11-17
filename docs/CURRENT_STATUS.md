@@ -35,8 +35,14 @@ was saved as suggested, changed, or not used. W4d,
 [the owner switch and monthly cap](W4D_PHOTO_WASTE_SWITCH_AND_CAP_LOCAL_EVIDENCE_20261116.md),
 adds migration `0052`: suggestions are off until the owner turns them on, and
 each company's requests are capped at $10 a month on the server, safe under
-simultaneous requests. Local evidence only; no paid or external service was
-called.
+simultaneous requests. W4e's first part,
+[the OpenAI reader](W4E_PHOTO_WASTE_OPENAI_READER_LOCAL_EVIDENCE_20261116.md),
+confirms that `gpt-5.4-mini-2026-03-17` reads images at the cart's reviewed
+prices. It sends one bounded request (worst case $0.028, under the $0.05
+reserve) with `store: false`, and it is used only with an explicit server
+setting and the owner's key. Local evidence only; no paid or external
+service was called. The paid check waits for the owner's key
+([setup](PHOTO_WASTE_OPENAI_SETUP.md)) and authorization.
 
 ## Easier units for stock and recipes — 2026-11-16
 

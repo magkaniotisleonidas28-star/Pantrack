@@ -13,7 +13,10 @@ side is built and tested with a pretend reader
 Waste page screen ([record](W4C_PHOTO_WASTE_SCREENS_LOCAL_EVIDENCE_20261116.md)).
 The on/off switch (yours alone, off until you turn it on) and the $10 monthly
 cap are built too ([record](W4D_PHOTO_WASTE_SWITCH_AND_CAP_LOCAL_EVIDENCE_20261116.md)).
-Next is connecting the real AI through your OpenAI account, which needs you.
+The connection to your OpenAI account is built and tested without spending
+anything ([record](W4E_PHOTO_WASTE_OPENAI_READER_LOCAL_EVIDENCE_20261116.md)).
+Next, you add a key ([how](PHOTO_WASTE_OPENAI_SETUP.md)) and approve a small
+paid test with sample photos.
 
 **Easier units (2026-11-16):** setting up stock now reads like a sentence:
 "Oat milk comes in a carton that holds 64 fl oz". Pantrack guesses the
