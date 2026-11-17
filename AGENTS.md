@@ -58,6 +58,8 @@ this file concise; detailed workflow and prompt templates live in
   the transition as evidence and keep signal ownership checks strict.
 - Test the actual resource lifecycle with injected dependencies, and persist the
   inputs to refusal decisions before evaluating them; helper mocks alone are insufficient.
+- Server code runs on Cloudflare Workers, not Node: never pass `redirect: 'error'`
+  to `fetch` (Workers throws before sending). Use `'manual'` and refuse non-2xx.
 
 ## Verification
 

@@ -4,6 +4,7 @@ import { getChatGPTUser } from './chatgpt-auth';
 import { database } from '@/db/raw';
 import { exactInventoryPreviewEnabled } from './exact-inventory-gate';
 import { D1WasteSuggestions } from './d1-waste-suggestions';
+import { createOpenAIWasteReader } from './openai-waste-reader';
 import {
   fakeWasteReader,
   SuggestionError,
@@ -12,12 +13,19 @@ import {
 } from './waste-suggestion-contract';
 
 /**
- * The reader behind photo suggestions. Until the real reader is connected (W4e),
- * only the offline fake can be chosen, and only by explicit server setting.
+ * The reader behind photo suggestions, chosen only by explicit server settings:
+ * "openai" with the owner's key stored as the OPENAI_WASTE_API_KEY secret, or
+ * the offline "fake" for local development. Anything else means unavailable.
  */
 export function wasteReader(): WasteReader | null {
-  const choice = (env as unknown as { PANTRACK_WASTE_READER?: string }).PANTRACK_WASTE_READER;
-  return choice === 'fake' ? fakeWasteReader : null;
+  const settings = env as unknown as {
+    PANTRACK_WASTE_READER?: string;
+    OPENAI_WASTE_API_KEY?: string;
+  };
+  if (settings.PANTRACK_WASTE_READER === 'fake') return fakeWasteReader;
+  if (settings.PANTRACK_WASTE_READER === 'openai' && settings.OPENAI_WASTE_API_KEY?.trim())
+    return createOpenAIWasteReader({ apiKey: settings.OPENAI_WASTE_API_KEY.trim() });
+  return null;
 }
 
 const suggestionStatus: Partial<Record<SuggestionError['code'], number>> = {

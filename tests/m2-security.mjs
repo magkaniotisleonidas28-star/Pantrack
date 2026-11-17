@@ -2104,6 +2104,30 @@ assert.equal(
   'Neither a photo nor a note is refused.',
 );
 delete globalThis.m2env.PANTRACK_WASTE_READER;
+// W4e: the real reader counts as connected only with "openai" and the owner's key.
+const connectedWith = async (reader, apiKey) => {
+  globalThis.m2env.PANTRACK_WASTE_READER = reader;
+  if (apiKey === undefined) delete globalThis.m2env.OPENAI_WASTE_API_KEY;
+  else globalThis.m2env.OPENAI_WASTE_API_KEY = apiKey;
+  const items = await (await call('waste/items', 'GET', null, cookies.employee)).json();
+  return items.photoSuggestions.connected;
+};
+assert.equal(await connectedWith('openai', undefined), false, 'no key, no reader');
+assert.equal(await connectedWith('openai', '   '), false, 'a blank key is no key');
+assert.equal(await connectedWith('openai', 'sk-test-key'), true);
+assert.equal(await connectedWith('something-else', 'sk-test-key'), false, 'only explicit settings');
+assert.equal(
+  (
+    await suggestionResponse(
+      { ...suggestionRequest, operationId: crypto.randomUUID() },
+      cookies.employee,
+    )
+  ).status,
+  503,
+  'Unavailable without an explicit reader setting.',
+);
+delete globalThis.m2env.PANTRACK_WASTE_READER;
+delete globalThis.m2env.OPENAI_WASTE_API_KEY;
 // Outcomes: only the person who asked, in their own company; nothing is recorded as waste.
 const outcomeBody = {
   companyId: 'company-a',
