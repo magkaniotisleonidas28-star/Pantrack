@@ -62,7 +62,9 @@ assert.deepEqual(result, {
 const [request] = sent;
 assert.equal(request.url, 'https://api.openai.com/v1/responses');
 assert.equal(request.init.method, 'POST');
-assert.equal(request.init.redirect, 'error');
+// Only fetch options Cloudflare Workers supports: it has no "error" redirect
+// mode and throws before sending (found in the first authorized paid check).
+assert.equal(request.init.redirect, 'manual');
 assert.equal(request.init.headers.authorization, `Bearer ${key}`);
 assert.ok(request.init.signal instanceof AbortSignal);
 const body = request.body;
@@ -125,6 +127,7 @@ assert.equal(sent.length, 0, 'Nothing is sent when the bound exceeds the reserve
 
 // Every failure is one generic error: nothing from the provider, the URL or the key.
 const failures = [
+  ['redirect', new Response(null, { status: 302, headers: { location: 'https://example.test' } })],
   ['HTTP error', new Response('{"error":{"message":"bad key ' + key + '"}}', { status: 401 })],
   ['incomplete', answer(entries, undefined, { status: 'incomplete' })],
   [

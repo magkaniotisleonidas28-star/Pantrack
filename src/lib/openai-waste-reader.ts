@@ -119,7 +119,9 @@ export function createOpenAIWasteReader(options: {
       try {
         const response = await transport('https://api.openai.com/v1/responses', {
           method: 'POST',
-          redirect: 'error',
+          // Workers has no "error" mode (it throws before sending); a redirect is
+          // returned as-is and refused below because only 2xx is accepted.
+          redirect: 'manual',
           signal,
           headers: {
             authorization: `Bearer ${options.apiKey}`,
@@ -137,7 +139,8 @@ export function createOpenAIWasteReader(options: {
             },
           }),
         });
-        if (!response.ok || !response.body) throw new Error('WASTE_READER_FAILED');
+        if (response.status < 200 || response.status > 299 || !response.body)
+          throw new Error('WASTE_READER_FAILED');
         const stream = response.body.getReader();
         const decoder = new TextDecoder();
         let raw = '',

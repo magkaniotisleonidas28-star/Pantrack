@@ -95,6 +95,37 @@ changes staged: `pnpm typecheck`, `pnpm test` (182 suites), `pnpm db:check`
   - an unbounded catalog;
   - choosing the reader without the explicit setting.
 
+## First authorized paid check: stopped before sending — 2026-11-16
+
+The owner created a separate "Pantrack photo waste" key and saved it in the
+photo worktree's ignored `.dev.vars`. Its presence was checked without reading
+it. The owner then authorized "a paid test with 2 photos": two display-case
+photos of end-of-day pastries, with no people visible. The owner's 11 pastries
+were added to the local test café as fictional local items (Almond croissant,
+Blueberry muffin, Banana walnut muffin, Apple tart, Hummus tomato roasted
+croissant, Sabayah, Plain croissant, Chocolate croissant, Pistachio croissant,
+Hazelnut croissant and Biscoff croissant), and the generic "Croissant" was
+hidden.
+
+- **Result:** both requests failed in about 20 ms. No request reached OpenAI
+  and nothing was billed. Cloudflare's
+  [Request documentation](https://developers.cloudflare.com/workers/runtime-apis/request/)
+  says "Workers does not implement the `error` mode", and passing it throws
+  "before any request is sent". The reader had copied `redirect: 'error'` from
+  the cart, which runs in Node. A browser-side guard allowed at most the 2
+  authorized suggestion requests; exactly 2 were made, and the browser made no
+  other outside requests.
+- **Local accounting:** both failed reads kept their $0.05 reserves in the
+  local database, as designed.
+- **Fix:** the reader now uses `redirect: 'manual'` and accepts only 2xx
+  responses. The test asserts the Workers-supported mode, and a 302 response
+  is refused. AGENTS.md gains a prevention rule, since `clover.ts` had already
+  met the same limit.
+- **Separate finding, not changed here:** `src/lib/vendor-adapter.ts`
+  (supplier connector calls on the server) still passes `redirect: 'error'`
+  and would fail the same way on Workers.
+- **Next:** rerunning the 2 photos needs the owner's fresh authorization.
+
 ## Not covered (needs the owner)
 
 - The owner-authorized paid check with fictional photos: real accuracy and
