@@ -148,3 +148,6 @@
 .photo-waste-entry small { display: block; margin-top: 2px; color: var(--muted-foreground); }
 .photo-waste-saved { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--primary); }
 .photo-waste-banner { margin: 8px 0 0; padding: 8px 12px; border-radius: 6px; background: var(--muted); font-size: 14px; color: var(--foreground); }
+.photo-waste-owner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin: 0 0 12px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; }
+.photo-waste-owner small { display: block; margin-top: 2px; max-width: 60ch; color: var(--muted-foreground); }
+.photo-waste-owner .waste-error { flex-basis: 100%; }

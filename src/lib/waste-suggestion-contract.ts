@@ -12,6 +12,38 @@ export type PhotoMediaType = (typeof PHOTO_MEDIA_TYPES)[number];
 /** The browser resizes photos first; this bounds what the server will read. */
 export const MAX_PHOTO_BYTES = 1_500_000;
 export const MAX_SUGGESTED_ENTRIES = 5;
+/** The monthly spending cap per company: $10, in millionths of a dollar. */
+export const MONTHLY_CAP_MICRO_USD = 10_000_000;
+/**
+ * Held against the cap while a request is being read, and kept when a read fails
+ * (it may still have been billed). The real reader (W4e) keeps each request below it.
+ */
+export const REQUEST_RESERVE_MICRO_USD = 50_000;
+
+/** The cap resets on the first of each calendar month, UTC. */
+export function monthStart(now: Date) {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+}
+
+export const wastePhotoSwitch = z
+  .object({ companyId: z.string().trim().min(1).max(200), enabled: z.boolean() })
+  .strict();
+
+/** What the Waste page needs to know about photo suggestions. */
+export type PhotoSuggestionStatus = {
+  /** A reader is configured on this server. */
+  connected: boolean;
+  /** The owner has turned suggestions on. */
+  enabled: boolean;
+  /** This month's cap leaves no room for another request. */
+  limitReached: boolean;
+};
+
+export type PhotoSuggestionUsage = PhotoSuggestionStatus & {
+  spentMicroUsd: number;
+  capMicroUsd: number;
+  monthStart: string;
+};
 
 export const wasteSuggestionRequest = z
   .object({
@@ -78,6 +110,7 @@ export class SuggestionError extends Error {
       | 'reader_unavailable'
       | 'reader_failed'
       | 'not_enabled'
+      | 'cap_reached'
       | 'not_found',
     message: string,
   ) {

@@ -6,8 +6,13 @@ import {
   checkedEntries,
   readPhoto,
   SuggestionError,
+  monthStart,
+  MONTHLY_CAP_MICRO_USD,
+  REQUEST_RESERVE_MICRO_USD,
+  wastePhotoSwitch,
   wasteSuggestionOutcome,
   wasteSuggestionRequest,
+  type PhotoSuggestionUsage,
   type ReaderCatalogItem,
   type SuggestedEntry,
   type WasteReader,
@@ -144,18 +149,42 @@ export class D1WasteSuggestions {
     const prior = await existing();
     if (prior) return replay(prior);
     const catalog = await this.catalog(request.companyId);
+    if (!(await this.enabled(request.companyId)))
+      throw new SuggestionError(
+        'not_enabled',
+        'Photo suggestions are turned off. Use the waste form, or ask the owner to turn them on.',
+      );
     // Claim the request before reading, so concurrent repeats cannot read it twice.
+    // The claim holds a reserve against this month's cap in the same statement, so
+    // simultaneous requests can never spend past it.
+    const now = this.now();
     const claim = await this.db
       .prepare(
-        `INSERT INTO waste_suggestions(company_id,id,actor,fingerprint,note,status,created_at)
-        VALUES (?,?,?,?,?,'pending',?) ON CONFLICT(company_id,id) DO NOTHING`,
+        `INSERT INTO waste_suggestions(company_id,id,actor,fingerprint,note,status,cost_micro_usd,created_at)
+        SELECT ?,?,?,?,?,'pending',?,? WHERE (SELECT COALESCE(SUM(cost_micro_usd),0) FROM waste_suggestions WHERE company_id=? AND created_at>=?)+?<=?
+        ON CONFLICT(company_id,id) DO NOTHING`,
       )
-      .bind(request.companyId, request.operationId, actor, fingerprint, request.note, this.now())
+      .bind(
+        request.companyId,
+        request.operationId,
+        actor,
+        fingerprint,
+        request.note,
+        REQUEST_RESERVE_MICRO_USD,
+        now,
+        request.companyId,
+        monthStart(new Date(now)),
+        REQUEST_RESERVE_MICRO_USD,
+        MONTHLY_CAP_MICRO_USD,
+      )
       .run();
     if (claim.meta.changes !== 1) {
       const raced = await existing();
-      if (!raced) throw new SuggestionError('reader_failed', messages.failed);
-      return replay(raced);
+      if (raced) return replay(raced);
+      throw new SuggestionError(
+        'cap_reached',
+        "This month's $10 limit for photo suggestions is reached. Use the waste form.",
+      );
     }
     let status: 'suggested' | 'empty' | 'failed' = 'failed',
       entries: ResolvedSuggestion[] = [],
@@ -190,6 +219,8 @@ export class D1WasteSuggestions {
       status = entries.length ? 'suggested' : 'empty';
     } catch {
       status = 'failed';
+      // A failed read may still have been billed, so its reserve stays counted.
+      usage.cost = REQUEST_RESERVE_MICRO_USD;
     }
     await this.db
       .prepare(
@@ -234,5 +265,50 @@ export class D1WasteSuggestions {
       .first<{ outcome: string | null }>();
     if (!row) throw new SuggestionError('not_found', 'This suggestion is no longer available.');
     return { operationId: b.operationId, outcome: row.outcome };
+  }
+
+  /** Whether the owner has turned photo suggestions on (off by default). */
+  async enabled(companyId: string) {
+    const row = await this.db
+      .prepare('SELECT enabled FROM waste_photo_settings WHERE company_id=?')
+      .bind(companyId)
+      .first<{ enabled: number }>();
+    return row?.enabled === 1;
+  }
+
+  /** The switch, and what this month's requests have cost so far, counting pending reserves. */
+  async usage(companyId: string, connected: boolean): Promise<PhotoSuggestionUsage> {
+    const start = monthStart(new Date(this.now()));
+    const [enabled, spent] = await Promise.all([
+      this.enabled(companyId),
+      this.db
+        .prepare(
+          'SELECT COALESCE(SUM(cost_micro_usd),0) AS spent FROM waste_suggestions WHERE company_id=? AND created_at>=?',
+        )
+        .bind(companyId, start)
+        .first<{ spent: number }>(),
+    ]);
+    const spentMicroUsd = spent?.spent ?? 0;
+    return {
+      connected,
+      enabled,
+      limitReached: spentMicroUsd + REQUEST_RESERVE_MICRO_USD > MONTHLY_CAP_MICRO_USD,
+      spentMicroUsd,
+      capMicroUsd: MONTHLY_CAP_MICRO_USD,
+      monthStart: start,
+    };
+  }
+
+  /** The owner's switch; requests already read are unaffected. */
+  async setEnabled(input: unknown, actor: string) {
+    const b = wastePhotoSwitch.parse(input);
+    await this.db
+      .prepare(
+        `INSERT INTO waste_photo_settings(company_id,enabled,updated_by,updated_at) VALUES (?,?,?,?)
+        ON CONFLICT(company_id) DO UPDATE SET enabled=excluded.enabled,updated_by=excluded.updated_by,updated_at=excluded.updated_at`,
+      )
+      .bind(b.companyId, b.enabled ? 1 : 0, actor, this.now())
+      .run();
+    return { enabled: b.enabled };
   }
 }

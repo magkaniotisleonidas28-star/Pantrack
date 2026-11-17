@@ -283,6 +283,18 @@ const reader = {
   },
 };
 const service = new D1WasteSuggestions(db, reader, { clock });
+// Off by default (W4d): nothing is read until the owner turns suggestions on.
+assert.equal(await service.enabled('a'), false);
+await assert.rejects(
+  service.suggest(
+    { companyId: 'a', operationId: crypto.randomUUID(), note: '5 croissants' },
+    'staff-1',
+  ),
+  (e) => e.code === 'not_enabled',
+);
+assert.equal(calls, 0, 'Nothing is read while suggestions are off.');
+assert.equal(sql.prepare('SELECT count(*) n FROM waste_suggestions').get().n, 0);
+for (const companyId of ['a', 'b']) await service.setEnabled({ companyId, enabled: true }, 'owner');
 const ask = (note, extra = {}) =>
   service.suggest(
     { companyId: 'a', operationId: crypto.randomUUID(), note, photo: jpeg, ...extra },
@@ -633,5 +645,127 @@ assert.deepEqual(
   barista.entries.map((e) => [e.ref, e.reason]),
   [['i9', 'spilled']],
 );
+
+// W4d: the $10 monthly cap, counted per company and calendar month (UTC).
+const capService = new D1WasteSuggestions(db, reader, { clock });
+const spentNow = async () => (await capService.usage('a', true)).spentMicroUsd;
+const cost = (micro) => ({
+  entries: [],
+  provider: 'test',
+  model: 't',
+  inputTokens: 1,
+  outputTokens: 1,
+  costMicroUsd: micro,
+});
+now = '2026-05-03T10:00:00.000Z';
+assert.equal(await spentNow(), 0, 'A new month starts at zero.');
+const usage = await capService.usage('a', true);
+assert.deepEqual(
+  { ...usage, spentMicroUsd: undefined },
+  {
+    connected: true,
+    enabled: true,
+    limitReached: false,
+    spentMicroUsd: undefined,
+    capMicroUsd: 10_000_000,
+    monthStart: '2026-05-01T00:00:00.000Z',
+  },
+);
+nextOutput = cost(1234);
+await capService.suggest(
+  { companyId: 'a', operationId: crypto.randomUUID(), note: 'x' },
+  'staff-1',
+);
+assert.equal(await spentNow(), 1234, 'Actual cost replaces the reserve once read.');
+// A failed read keeps its reserve, since it may have been billed.
+nextFailure = new Error('timeout');
+await capService.suggest(
+  { companyId: 'a', operationId: crypto.randomUUID(), note: 'x' },
+  'staff-1',
+);
+assert.equal(await spentNow(), 1234 + contract.REQUEST_RESERVE_MICRO_USD);
+// Room for exactly two more reserves: five simultaneous requests, two are read.
+nextOutput = cost(10_000_000 - 1234 - 3 * contract.REQUEST_RESERVE_MICRO_USD);
+await capService.suggest(
+  { companyId: 'a', operationId: crypto.randomUUID(), note: 'x' },
+  'staff-1',
+);
+assert.equal(await spentNow(), 10_000_000 - 2 * contract.REQUEST_RESERVE_MICRO_USD);
+let release;
+const gate = new Promise((resolve) => (release = resolve));
+const gated = new D1WasteSuggestions(
+  db,
+  {
+    async read() {
+      calls++;
+      await gate;
+      return cost(contract.REQUEST_RESERVE_MICRO_USD);
+    },
+  },
+  { clock },
+);
+const before5 = calls;
+const five = [1, 2, 3, 4, 5].map(() =>
+  gated.suggest({ companyId: 'a', operationId: crypto.randomUUID(), note: 'x' }, 'staff-1'),
+);
+const settled5 = Promise.allSettled(five);
+await new Promise((resolve) => setTimeout(resolve, 50));
+release();
+const outcomes = await settled5;
+assert.equal(calls - before5, 2, 'Only requests that fit under the cap are read.');
+assert.equal(
+  outcomes.filter((o) => o.status === 'rejected' && o.reason.code === 'cap_reached').length,
+  3,
+);
+assert.equal(await spentNow(), 10_000_000, 'Never past the cap.');
+assert.equal((await capService.usage('a', true)).limitReached, true);
+const beforeCap = calls;
+await assert.rejects(
+  capService.suggest(
+    { companyId: 'a', operationId: crypto.randomUUID(), note: '5 croissants' },
+    'staff-1',
+  ),
+  (e) => e.code === 'cap_reached',
+);
+assert.equal(calls, beforeCap);
+// Another company and the next month are unaffected.
+assert.equal((await capService.usage('b', true)).limitReached, false);
+now = '2026-06-01T00:00:00.000Z';
+assert.equal(await spentNow(), 0);
+assert.equal(
+  (
+    await capService.suggest(
+      { companyId: 'a', operationId: crypto.randomUUID(), note: '1 croissant' },
+      'staff-1',
+    )
+  ).status,
+  'suggested',
+);
+// Turning suggestions off stops new requests; replays of earlier ones still answer.
+const kept = crypto.randomUUID();
+await capService.suggest({ companyId: 'a', operationId: kept, note: '2 croissants' }, 'staff-1');
+await capService.setEnabled({ companyId: 'a', enabled: false }, 'owner');
+assert.equal(
+  (await capService.suggest({ companyId: 'a', operationId: kept, note: '2 croissants' }, 'staff-1'))
+    .status,
+  'suggested',
+);
+await assert.rejects(
+  capService.suggest(
+    { companyId: 'a', operationId: crypto.randomUUID(), note: '2 croissants' },
+    'staff-1',
+  ),
+  (e) => e.code === 'not_enabled',
+);
+assert.deepEqual(
+  {
+    ...sql
+      .prepare("SELECT enabled,updated_by FROM waste_photo_settings WHERE company_id='a'")
+      .get(),
+  },
+  { enabled: 0, updated_by: 'owner' },
+);
+await assert.rejects(capService.setEnabled({ companyId: 'a', enabled: 'yes' }, 'owner'));
+assert.throws(() => sql.prepare('UPDATE waste_photo_settings SET enabled=2').run());
 
 console.log('Waste suggestions passed.');

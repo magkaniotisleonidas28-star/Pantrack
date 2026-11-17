@@ -12,7 +12,7 @@ import { WASTE_REASONS } from '@/lib/waste-contract';
 import { menuWasteSubmission, menuWasteSetup, menuWasteReview, type MenuWasteOptions, type MenuWasteItem, type MenuWasteReceipt, type WasteSaleChoice } from '@/lib/menu-waste-contract';
 import { sendSaveRequest, wasteStorageKey, wasteEffectiveAt } from '@/lib/waste-client';
 import WasteRecorder, { type IngredientPrefill } from './waste-recorder';
-import PhotoWasteSuggest, { reportSuggestionOutcome, type SuggestionOutcome } from './photo-waste-suggest';
+import PhotoWasteSuggest, { PhotoWasteOwner, reportSuggestionOutcome, type SuggestionOutcome } from './photo-waste-suggest';
 import type { ResolvedSuggestion } from '@/lib/d1-waste-suggestions';
 import {TaskSection,ChoiceField} from './task-form';
 import {RefreshCw} from 'lucide-react';
@@ -237,7 +237,7 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
     const body = <div className="menu-waste-content">
   {error && <div role="alert" className="waste-error">{error}</div>}{notice && <p role="status">{notice}</p>}
   {/* Kept mounted so a photo's other suggestions stay after one is saved. */}
-  {options?.photoSuggestions && <div hidden={view !== 'record' || !!saved || !!item}><PhotoWasteSuggest companyId={companyId} disabled={frozen} saved={suggestionsSaved} onUse={openSuggestion}/></div>}
+  {options?.photoSuggestions?.connected && (options.photoSuggestions.enabled || role === 'owner') && <div hidden={view !== 'record' || !!saved || !!item}>{role === 'owner' && <PhotoWasteOwner companyId={companyId} enabled={options.photoSuggestions.enabled} onChange={() => void load()}/>}{options.photoSuggestions.enabled && <PhotoWasteSuggest companyId={companyId} disabled={frozen} limitReached={options.photoSuggestions.limitReached} saved={suggestionsSaved} onUse={openSuggestion}/>}</div>}
   {pending && pending.kind !== 'entry' && <div className="notice">This save needs confirmation. Details are frozen.<Button disabled={busy} onClick={() => void send(pending)}>{busy ? 'Saving…' : 'Retry same save'}</Button></div>}
   {loading && !options ? <p role="status">Loading café items…</p> : view === 'setup' && manager ? <>
    <h2>Café item setup</h2><p>Ready-made food comes from your catalog. Drinks and food made here use active recipes.</p><label>Find a catalog item<Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search croissants, bagels…"/></label>

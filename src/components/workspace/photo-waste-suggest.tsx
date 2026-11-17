@@ -5,6 +5,83 @@ import { Button } from '@/components/ui/button';
 import { WASTE_REASONS } from '@/lib/waste-contract';
 import { preparePhoto } from '@/lib/photo-prepare';
 import type { ResolvedSuggestion, WasteSuggestionResult } from '@/lib/d1-waste-suggestions';
+import type { PhotoSuggestionUsage } from '@/lib/waste-suggestion-contract';
+
+const dollars = (micro: number) => '$' + (micro / 1_000_000).toFixed(2);
+
+/**
+ * The owner's switch for photo suggestions and this month's spending (decision 0010).
+ * Off until the owner turns it on; capped at $10 a month.
+ */
+export function PhotoWasteOwner({
+  companyId,
+  enabled,
+  onChange,
+}: {
+  companyId: string;
+  enabled: boolean;
+  onChange: () => void;
+}) {
+  const [usage, setUsage] = useState<PhotoSuggestionUsage | null>(null),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('');
+  useEffect(() => {
+    let current = true;
+    fetch('/api/waste/suggestions/settings?companyId=' + encodeURIComponent(companyId), {
+      cache: 'no-store',
+    })
+      .then((r) => (r.ok ? (r.json() as Promise<PhotoSuggestionUsage>) : null))
+      .then((u) => {
+        if (current) setUsage(u);
+      })
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+  }, [companyId, enabled]);
+  async function toggle(next: boolean) {
+    setBusy(true);
+    setError('');
+    try {
+      const r = await fetch('/api/waste/suggestions/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId, enabled: next }),
+      });
+      if (!r.ok) throw new Error(((await r.json().catch(() => ({}))) as { error?: string }).error);
+      onChange();
+    } catch (e) {
+      setError((e as Error).message || 'The setting could not be saved. Try again.');
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="photo-waste-owner">
+      <div>
+        <strong>Photo and note suggestions are {enabled ? 'on' : 'off'}</strong>
+        <small>
+          {enabled
+            ? `${usage ? dollars(usage.spentMicroUsd) : '…'} of ${dollars(usage?.capMicroUsd ?? 10_000_000)} used this month. They stop at the limit until next month.`
+            : 'When on, everyone who records waste can get a suggested entry from a photo or a note. Each one uses your OpenAI account, up to $10 a month.'}
+        </small>
+      </div>
+      <Button
+        type="button"
+        variant={enabled ? 'ghost' : 'default'}
+        disabled={busy}
+        onClick={() => void toggle(!enabled)}
+      >
+        {busy ? 'Saving…' : enabled ? 'Turn off' : 'Turn on'}
+      </Button>
+      {error && (
+        <p role="alert" className="waste-error">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export type SuggestionOutcome = 'confirmed' | 'edited' | 'discarded';
 
@@ -29,11 +106,14 @@ export function reportSuggestionOutcome(
 export default function PhotoWasteSuggest({
   companyId,
   disabled,
+  limitReached = false,
   saved,
   onUse,
 }: {
   companyId: string;
   disabled: boolean;
+  /** This month's $10 limit is used up; the normal form still works. */
+  limitReached?: boolean;
   /** Suggestions already saved, keyed by operation ID and reference. */
   saved: Record<string, SuggestionOutcome>;
   onUse: (entry: ResolvedSuggestion, suggestion: { operationId: string; note: string }) => void;
@@ -120,7 +200,12 @@ export default function PhotoWasteSuggest({
         Take a photo of what is being thrown out, write a short note, or both. Pantrack suggests the
         entry, and you check it before anything is saved.
       </p>
-      {!result ? (
+      {limitReached && !result ? (
+        <p role="status" className="photo-waste-banner">
+          This month&apos;s $10 limit for suggestions is reached. Use the waste form below; it
+          starts again next month.
+        </p>
+      ) : !result ? (
         <>
           <label className="photo-waste-pick">
             {preview ? (

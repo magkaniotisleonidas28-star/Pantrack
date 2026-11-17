@@ -1215,3 +1215,11 @@ export const wasteSuggestions=sqliteTable('waste_suggestions',{
 },t=>[primaryKey({columns:[t.companyId,t.id]}),index('waste_suggestion_company_created').on(t.companyId,t.createdAt),
  check('waste_suggestion_status',sql`${t.status} IN ('pending','suggested','empty','failed')`),
  check('waste_suggestion_outcome',sql`${t.outcome} IS NULL OR ${t.outcome} IN ('confirmed','edited','discarded')`)]);
+
+// The owner's switch for photo waste suggestions (decision 0010): off until turned on.
+export const wastePhotoSettings=sqliteTable('waste_photo_settings',{
+ companyId:text('company_id').primaryKey().references(()=>companies.id),
+ enabled:integer('enabled').notNull(),
+ updatedBy:text('updated_by').notNull(),
+ updatedAt:text('updated_at').notNull(),
+},t=>[check('waste_photo_settings_enabled',sql`${t.enabled} IN (0,1)`)]);

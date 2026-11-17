@@ -11,7 +11,9 @@ it's off until you turn it on ([decision](decisions/0010-photo-waste-suggestions
 side is built and tested with a pretend reader
 ([record](W4B_PHOTO_WASTE_SUGGESTIONS_LOCAL_EVIDENCE_20261116.md)), and so is the
 Waste page screen ([record](W4C_PHOTO_WASTE_SCREENS_LOCAL_EVIDENCE_20261116.md)).
-Next are the on/off switch and the $10 monthly cap.
+The on/off switch (yours alone, off until you turn it on) and the $10 monthly
+cap are built too ([record](W4D_PHOTO_WASTE_SWITCH_AND_CAP_LOCAL_EVIDENCE_20261116.md)).
+Next is connecting the real AI through your OpenAI account, which needs you.
 
 **Easier units (2026-11-16):** setting up stock now reads like a sentence:
 "Oat milk comes in a carton that holds 64 fl oz". Pantrack guesses the
