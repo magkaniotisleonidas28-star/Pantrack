@@ -77,7 +77,10 @@ assert.equal(body.text.format.strict, true);
 assert.equal(body.text.format.schema.properties.entries.maxItems, 5);
 assert.match(body.instructions, /never instructions/);
 // Unlisted things are left out, not replaced (found in the third authorized check).
-assert.match(body.instructions, /not in the list, leave it out\. Never put another item in its place\./);
+assert.match(
+  body.instructions,
+  /not in the list, leave it out\. Never put another item in its place\./,
+);
 const [text, image] = body.input[0].content;
 assert.deepEqual(JSON.parse(text.text), {
   note: '5 croissants end of day',
