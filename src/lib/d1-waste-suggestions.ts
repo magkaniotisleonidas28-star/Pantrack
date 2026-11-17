@@ -6,6 +6,7 @@ import {
   checkedEntries,
   readPhoto,
   SuggestionError,
+  wasteSuggestionOutcome,
   wasteSuggestionRequest,
   type ReaderCatalogItem,
   type SuggestedEntry,
@@ -44,7 +45,7 @@ async function sha256(bytes: Uint8Array<ArrayBuffer>) {
 const messages = {
   suggested: 'Check the suggestion, change anything that is wrong, then save.',
   empty: 'Pantrack could not match this to your items. Fill in the waste form instead.',
-  failed: 'The photo could not be read. Fill in the waste form, or try another photo.',
+  failed: 'This could not be read. Fill in the waste form, or try again.',
 };
 
 /**
@@ -109,7 +110,7 @@ export class D1WasteSuggestions {
     if (row.status === 'pending')
       throw new SuggestionError(
         'operation_conflict',
-        'This photo is still being read. Wait a moment, then try again.',
+        'This is still being read. Wait a moment, then try again.',
       );
     return {
       operationId,
@@ -121,9 +122,9 @@ export class D1WasteSuggestions {
 
   async suggest(input: unknown, actor: string): Promise<WasteSuggestionResult> {
     const request = wasteSuggestionRequest.parse(input);
-    const bytes = readPhoto(request.photo);
+    const bytes = request.photo ? readPhoto(request.photo) : null;
     const fingerprint = await sha256(
-      new TextEncoder().encode(JSON.stringify([request.note, await sha256(bytes)])),
+      new TextEncoder().encode(JSON.stringify([request.note, bytes ? await sha256(bytes) : null])),
     );
     const existing = () =>
       this.db
@@ -167,7 +168,7 @@ export class D1WasteSuggestions {
       };
     try {
       const output = await this.reader.read({
-        photo: { mediaType: request.photo.mediaType, bytes },
+        ...(request.photo && bytes ? { photo: { mediaType: request.photo.mediaType, bytes } } : {}),
         note: request.note,
         catalog: catalog.map((c) => c.item),
         reasons: ['end_of_day', 'spilled', 'spoiled', 'preparation_error', 'other'],
@@ -209,5 +210,29 @@ export class D1WasteSuggestions {
       )
       .run();
     return { operationId: request.operationId, status, entries, message: messages[status] };
+  }
+
+  /**
+   * Records what the person did, for measuring accuracy (W4f). Only the person
+   * who asked can record it. "Edited" outranks "confirmed", and "discarded"
+   * applies only when nothing was saved from the suggestion.
+   */
+  async recordOutcome(input: unknown, actor: string) {
+    const b = wasteSuggestionOutcome.parse(input);
+    await this.db
+      .prepare(
+        `UPDATE waste_suggestions SET outcome=?,outcome_at=? WHERE company_id=? AND id=? AND actor=? AND status='suggested'
+        AND (outcome IS NULL OR (outcome='confirmed' AND ?='edited') OR (outcome='discarded' AND ?<>'discarded'))`,
+      )
+      .bind(b.outcome, this.now(), b.companyId, b.operationId, actor, b.outcome, b.outcome)
+      .run();
+    const row = await this.db
+      .prepare(
+        "SELECT outcome FROM waste_suggestions WHERE company_id=? AND id=? AND actor=? AND status='suggested'",
+      )
+      .bind(b.companyId, b.operationId, actor)
+      .first<{ outcome: string | null }>();
+    if (!row) throw new SuggestionError('not_found', 'This suggestion is no longer available.');
+    return { operationId: b.operationId, outcome: row.outcome };
   }
 }

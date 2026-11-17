@@ -27,11 +27,23 @@ export const wasteSuggestionRequest = z
           .max(Math.ceil(MAX_PHOTO_BYTES / 3) * 4)
           .regex(/^[A-Za-z0-9+/]+={0,2}$/),
       })
-      .strict(),
+      .strict()
+      .optional(),
   })
-  .strict();
+  .strict()
+  // A photo, a note, or both.
+  .refine((b) => !!b.photo || !!b.note, { message: 'Add a photo or a note.' });
 
 export type WasteSuggestionRequest = z.infer<typeof wasteSuggestionRequest>;
+
+/** What the person did with a suggestion: saved as suggested, saved after changes, or not used. */
+export const wasteSuggestionOutcome = z
+  .object({
+    companyId: z.string().trim().min(1).max(200),
+    operationId: z.string().uuid(),
+    outcome: z.enum(['confirmed', 'edited', 'discarded']),
+  })
+  .strict();
 
 const signatures: Record<PhotoMediaType, (b: Uint8Array) => boolean> = {
   'image/jpeg': (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
@@ -42,7 +54,9 @@ const signatures: Record<PhotoMediaType, (b: Uint8Array) => boolean> = {
 };
 
 /** Decodes the photo and checks it really is the stated image type and size. */
-export function readPhoto(photo: WasteSuggestionRequest['photo']): Uint8Array<ArrayBuffer> {
+export function readPhoto(
+  photo: NonNullable<WasteSuggestionRequest['photo']>,
+): Uint8Array<ArrayBuffer> {
   let bytes: Uint8Array<ArrayBuffer>;
   try {
     bytes = Uint8Array.from(atob(photo.data), (c) => c.charCodeAt(0));
@@ -63,7 +77,8 @@ export class SuggestionError extends Error {
       | 'operation_conflict'
       | 'reader_unavailable'
       | 'reader_failed'
-      | 'not_enabled',
+      | 'not_enabled'
+      | 'not_found',
     message: string,
   ) {
     super(message);
@@ -82,7 +97,8 @@ export type ReaderCatalogItem = {
 };
 
 export type ReaderInput = {
-  photo: { mediaType: PhotoMediaType; bytes: Uint8Array<ArrayBuffer> };
+  /** Absent when the person sent only a note. */
+  photo?: { mediaType: PhotoMediaType; bytes: Uint8Array<ArrayBuffer> };
   note: string;
   catalog: ReaderCatalogItem[];
   reasons: WasteReason[];
@@ -169,9 +185,11 @@ const words = (text: string) =>
     .replace(/[^a-z0-9 ]+/g, ' ')
     .trim();
 const singular = (text: string) => text.replace(/(?:es|s)\b/g, '');
+/** The main part of a name, before details such as "· barista" or "(1 L)". */
+const core = (name: string) => name.split(/[·(–—]| - /)[0];
 
 /**
- * A fixed, offline reader for development and tests: it ignores the photo and
+ * A fixed, offline reader for development and tests: it cannot see photos and
  * reads "5 croissants" or "spilled a latte" from the note. It costs nothing.
  */
 export const fakeWasteReader: WasteReader = {
@@ -180,11 +198,11 @@ export const fakeWasteReader: WasteReader = {
     const reason = reasonWords.find(([pattern]) => pattern.test(input.note))?.[1] ?? 'other';
     const entries = input.catalog
       .filter((item) => {
-        const name = singular(words(item.name));
+        const name = singular(words(core(item.name)));
         return name && singular(note).includes(name);
       })
       .map((item) => {
-        const name = singular(words(item.name));
+        const name = singular(words(core(item.name)));
         const count = new RegExp(`(\\d+)\\s+${name.replace(/\s+/g, '\\s+')}`).exec(singular(note));
         return {
           ref: item.ref,

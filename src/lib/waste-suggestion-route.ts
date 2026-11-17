@@ -38,7 +38,7 @@ export async function handleWasteSuggestion(req: Request, reader = wasteReader()
   } catch (error) {
     if (error instanceof z.ZodError)
       return Response.json(
-        { error: 'Choose a photo and keep the note under 300 characters.' },
+        { error: 'Add a photo or a note, and keep the note under 300 characters.' },
         { status: 400 },
       );
     if (error instanceof SuggestionError)
@@ -53,5 +53,29 @@ export async function handleWasteSuggestion(req: Request, reader = wasteReader()
       { error: 'The photo could not be read. Use the waste form.', code: 'reader_failed' },
       { status: 503 },
     );
+  }
+}
+
+/** Records what the person did with a suggestion; it never records or changes waste. */
+export async function handleWasteSuggestionOutcome(req: Request) {
+  if (!exactInventoryPreviewEnabled())
+    return Response.json(
+      { error: 'Waste recording is not enabled.', code: 'preview_disabled' },
+      { status: 404 },
+    );
+  try {
+    const user = await getChatGPTUser();
+    if (!user) return Response.json({ error: 'Please sign in again.' }, { status: 401 });
+    const result = await new D1WasteSuggestions(database(), fakeWasteReader).recordOutcome(
+      await req.json(),
+      user.userId,
+    );
+    return Response.json({ ok: true, result });
+  } catch (error) {
+    if (error instanceof z.ZodError)
+      return Response.json({ error: 'Invalid suggestion outcome.' }, { status: 400 });
+    if (error instanceof SuggestionError && error.code === 'not_found')
+      return Response.json({ error: error.message, code: error.code }, { status: 404 });
+    return Response.json({ error: 'The outcome could not be recorded.' }, { status: 503 });
   }
 }

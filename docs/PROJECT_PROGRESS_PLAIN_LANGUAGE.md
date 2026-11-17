@@ -3,14 +3,15 @@
 Updated: 2026-11-13 for the first real supplier decision.
 
 **Waste from a photo (planned, 2026-11-16):** you'll be able to take a photo
-of waste (say, five end-of-day croissants), add a short note, and Pantrack will
+of waste (say, five end-of-day croissants), write a short note, or both, and Pantrack will
 fill in the waste form for you to check before saving. Nothing is saved
 without your confirmation. Photos aren't kept. It's capped at $10 a month, and
 it's off until you turn it on ([decision](decisions/0010-photo-waste-suggestions.md),
 [plan](WASTE_AND_MARGIN_ROADMAP.md#w4--photo-waste-suggestions)). The server
 side is built and tested with a pretend reader
-([record](W4B_PHOTO_WASTE_SUGGESTIONS_LOCAL_EVIDENCE_20261116.md)). Next is the
-Waste page screen.
+([record](W4B_PHOTO_WASTE_SUGGESTIONS_LOCAL_EVIDENCE_20261116.md)), and so is the
+Waste page screen ([record](W4C_PHOTO_WASTE_SCREENS_LOCAL_EVIDENCE_20261116.md)).
+Next are the on/off switch and the $10 monthly cap.
 
 **Easier units (2026-11-16):** setting up stock now reads like a sentence:
 "Oat milk comes in a carton that holds 64 fl oz". Pantrack guesses the

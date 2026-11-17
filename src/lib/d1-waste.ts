@@ -1,5 +1,6 @@
 import { D1InventoryManagementService, InventoryManagementError } from './d1-inventory-management';
 import { curatedUnit, customUnit, toCanonical, readCanonical } from './inventory-quantities';
+import { shortUnitLabel } from './unit-preferences';
 import {
   shortcutSubmission,
   wasteSubmission,
@@ -71,7 +72,8 @@ export class D1WasteService {
             configId: row.config_id,
             version: row.version,
             unitId: row.stock_unit_id,
-            unitLabel: row.label,
+            // Standard units show their short name ("fl oz"), product measures their own label.
+            unitLabel: row.kind === 'curated' ? shortUnitLabel(row.stock_unit_id) : row.label,
             shortcuts:
               settingsRow?.config_id === row.config_id
                 ? JSON.parse(settingsRow.shortcuts_json)

@@ -552,4 +552,86 @@ assert.equal(
 assert.throws(() => sql.prepare("UPDATE waste_suggestions SET status='saved'").run());
 assert.throws(() => sql.prepare("UPDATE waste_suggestions SET outcome='maybe'").run());
 
+// A photo, a note, or both (owner request, 2026-11-16).
+const noteOnly = await service.suggest(
+  { companyId: 'a', operationId: crypto.randomUUID(), note: '3 croissants end of day' },
+  'staff-1',
+);
+assert.deepEqual(
+  noteOnly.entries.map((e) => [e.name, e.quantity]),
+  [['Croissant', '3']],
+);
+assert.equal(reader.last.photo, undefined, 'A note-only request sends no photo to the reader.');
+const photoOnly = await service.suggest(
+  { companyId: 'a', operationId: crypto.randomUUID(), note: '', photo: jpeg },
+  'staff-1',
+);
+assert.equal(reader.last.photo.mediaType, 'image/jpeg', 'A photo-only request reaches the reader.');
+assert.equal(photoOnly.status, 'empty', 'The fake reader cannot see photos.');
+for (const body of [{ note: '' }, { note: '   ' }])
+  assert.equal(
+    contract.wasteSuggestionRequest.safeParse({
+      companyId: 'a',
+      operationId: crypto.randomUUID(),
+      ...body,
+    }).success,
+    false,
+    'Neither a photo nor a note is refused.',
+  );
+const mixedId = crypto.randomUUID();
+await service.suggest({ companyId: 'a', operationId: mixedId, note: '1 croissant' }, 'staff-1');
+await assert.rejects(
+  service.suggest(
+    { companyId: 'a', operationId: mixedId, note: '1 croissant', photo: jpeg },
+    'staff-1',
+  ),
+  (e) => e.code === 'operation_conflict',
+  'Adding a photo to a used request conflicts.',
+);
+
+// Outcomes (W4c): only the person who asked, only for a real suggestion; "edited" outranks
+// "confirmed"; "discarded" counts only until something is saved.
+const outcomeOf = (id) =>
+  sql.prepare('SELECT outcome FROM waste_suggestions WHERE id=?').get(id).outcome;
+const record = (operationId, outcome, actor = 'staff-1', companyId = 'a') =>
+  service.recordOutcome({ companyId, operationId, outcome }, actor);
+const asked = await ask('2 croissants end of day');
+assert.equal((await record(asked.operationId, 'discarded')).outcome, 'discarded');
+assert.equal((await record(asked.operationId, 'confirmed')).outcome, 'confirmed');
+assert.equal((await record(asked.operationId, 'discarded')).outcome, 'confirmed');
+assert.equal((await record(asked.operationId, 'edited')).outcome, 'edited');
+assert.equal((await record(asked.operationId, 'confirmed')).outcome, 'edited');
+await assert.rejects(
+  record(asked.operationId, 'confirmed', 'staff-2'),
+  (e) => e.code === 'not_found',
+);
+await assert.rejects(
+  record(asked.operationId, 'confirmed', 'staff-1', 'b'),
+  (e) => e.code === 'not_found',
+);
+await assert.rejects(record(nothing.operationId, 'confirmed'), (e) => e.code === 'not_found');
+await assert.rejects(record(crypto.randomUUID(), 'confirmed'), (e) => e.code === 'not_found');
+await assert.rejects(record(asked.operationId, 'maybe'));
+assert.equal(outcomeOf(asked.operationId), 'edited');
+// Someone else's refused attempt leaves the record exactly as it was.
+const mine = await ask('4 croissants end of day');
+await record(mine.operationId, 'confirmed');
+await assert.rejects(record(mine.operationId, 'edited', 'staff-2'), (e) => e.code === 'not_found');
+assert.equal(outcomeOf(mine.operationId), 'confirmed');
+assert.ok(
+  sql.prepare('SELECT outcome_at FROM waste_suggestions WHERE id=?').get(asked.operationId)
+    .outcome_at,
+);
+// The fake reader matches a product's main name, ignoring details after "·".
+const barista = await fakeWasteReader.read({
+  photo: reader.last.photo,
+  note: 'spilled oat milk',
+  catalog: [{ ref: 'i9', name: 'Oat milk · barista', kind: 'ingredient', unit: 'fl oz' }],
+  reasons: [],
+});
+assert.deepEqual(
+  barista.entries.map((e) => [e.ref, e.reason]),
+  [['i9', 'spilled']],
+);
+
 console.log('Waste suggestions passed.');

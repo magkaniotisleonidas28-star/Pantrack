@@ -11,7 +11,9 @@ import { AlertDialog, AlertDialogContent, AlertDialogTitle, AlertDialogDescripti
 import { WASTE_REASONS } from '@/lib/waste-contract';
 import { menuWasteSubmission, menuWasteSetup, menuWasteReview, type MenuWasteOptions, type MenuWasteItem, type MenuWasteReceipt, type WasteSaleChoice } from '@/lib/menu-waste-contract';
 import { sendSaveRequest, wasteStorageKey, wasteEffectiveAt } from '@/lib/waste-client';
-import WasteRecorder from './waste-recorder';
+import WasteRecorder, { type IngredientPrefill } from './waste-recorder';
+import PhotoWasteSuggest, { reportSuggestionOutcome, type SuggestionOutcome } from './photo-waste-suggest';
+import type { ResolvedSuggestion } from '@/lib/d1-waste-suggestions';
 import {TaskSection,ChoiceField} from './task-form';
 import {RefreshCw} from 'lucide-react';
 export type WasteSection = 'record' | 'setup' | 'review';
@@ -62,6 +64,8 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
     const [error, setError] = useState(restored.pending ? 'A previous save needs confirmation. Retry the same save.' : ''), [notice, setNotice] = useState(''), [search, setSearch] = useState(''), [selected, setSelected] = useState(entry ? itemKey({kind:entry.sourceKind,id:entry.sourceId}) : ''), [quantity, setQuantity] = useState(entry ? String(entry.quantity) : '1'), [reason, setReason] = useState(entry?.reason ?? ''), [note, setNote] = useState(entry?.note ?? ''), [mode, setMode] = useState<'unsold' | 'replacement' | 'sold'>(entry?.mode ?? 'unsold'), [modifiers, setModifiers] = useState<Record<string, number>>(Object.fromEntries((entry?.modifiers ?? []).map(m=>[m.id,m.perItem])));
     const [favorites, setFavorites] = useState<string[]>(restored.favorites), [recent, setRecent] = useState<string[]>(restored.recent), [pending, setPending] = useState<Pending | null>(restored.pending), [busy, setBusy] = useState(false), [saved, setSaved] = useState<MenuWasteReceipt | null>(null), [sales, setSales] = useState<WasteSaleChoice[]>([]), [saleKey, setSaleKey] = useState(''), [salesLoading, setSalesLoading] = useState(false);
     const [held, setHeld] = useState<Held[]>([]), [reviewId, setReviewId] = useState(''), [ingredientLaunch, setIngredientLaunch] = useState(0), [ingredientDirty, setIngredientDirty] = useState(false);
+    // A photo suggestion being checked in a form, and which suggestions were saved (decision 0010).
+    const [fromSuggestion, setFromSuggestion] = useState<{ operationId: string; ref: string; key: string; quantity: string; reason: string } | null>(null), [ingredientPrefill, setIngredientPrefill] = useState<IngredientPrefill | null>(null), [ingredientSuggestion, setIngredientSuggestion] = useState<{ operationId: string; ref: string; productId: string; amount: string; reason: string } | null>(null), [suggestionsSaved, setSuggestionsSaved] = useState<Record<string, SuggestionOutcome>>({});
     const manager = role === 'owner' || role === 'manager', lock = useRef(false), serverTime = useRef({ at: 0, received: 0 });
     const loading = explicitLoading || loadedVersion !== requestVersion;
     if (observedLaunch !== launchCount) { setObservedLaunch(launchCount); if (launchCount > 0) setOpen(true); }
@@ -113,7 +117,22 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
         localStorage.setItem(storage, JSON.stringify({ favorites: f, recent: r }));
     }
     catch { } }
-    function reset() { setSelected(''); setQuantity('1'); setReason(''); setNote(''); setMode('unsold'); setModifiers({}); setSaleKey(''); setSaved(null); setError(''); setNotice(''); }
+    function markSuggestion(operationId: string, ref: string, outcome: SuggestionOutcome) {
+        reportSuggestionOutcome(companyId, operationId, outcome);
+        setSuggestionsSaved(old => ({ ...old, [operationId + ':' + ref]: outcome }));
+    }
+    function openSuggestion(entry: ResolvedSuggestion, suggestion: { operationId: string; note: string }) {
+        if (entry.target.form === 'ingredient') {
+            setIngredientSuggestion({ operationId: suggestion.operationId, ref: entry.ref, productId: entry.target.productId, amount: entry.quantity ?? '', reason: entry.reason });
+            setIngredientPrefill({ key: Date.now(), productId: entry.target.productId, amount: entry.quantity ?? '', reason: entry.reason, note: suggestion.note });
+            return;
+        }
+        const key = itemKey({ kind: entry.target.sourceKind, id: entry.target.sourceId });
+        if (!options?.items.some(i => itemKey(i) === key && i.ready)) { setError('This item is no longer ready for waste. Choose it from the list instead.'); return; }
+        setSelected(key); setQuantity(entry.quantity ?? '1'); setReason(entry.reason); setNote(suggestion.note); setMode('unsold'); setModifiers({}); setError('');
+        setFromSuggestion({ operationId: suggestion.operationId, ref: entry.ref, key, quantity: entry.quantity ?? '1', reason: entry.reason });
+    }
+    function reset() { setFromSuggestion(null); setSelected(''); setQuantity('1'); setReason(''); setNote(''); setMode('unsold'); setModifiers({}); setSaleKey(''); setSaved(null); setError(''); setNotice(''); }
     function close(v: boolean) { if (v) {
         setOpen(true);
         return;
@@ -167,6 +186,10 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
                     return;
                 }
                 if (attempt.kind === 'entry') {
+                    const suggestion = fromSuggestion;
+                    if (suggestion && suggestion.key === itemKey({ kind: attempt.request.sourceKind, id: attempt.request.sourceId }))
+                        markSuggestion(suggestion.operationId, suggestion.ref, String(attempt.request.quantity) === suggestion.quantity && attempt.request.reason === suggestion.reason ? 'confirmed' : 'edited');
+                    setFromSuggestion(null);
                     setSaved(r as MenuWasteReceipt);
                     remember(favorites, [selected, ...recent.filter(i => i !== selected)].slice(0, 6));
                     onSaved();
@@ -213,6 +236,8 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
     const reviewSale = sales.find(s => JSON.stringify([s.applicationKey, s.lineId]) === saleKey);
     const body = <div className="menu-waste-content">
   {error && <div role="alert" className="waste-error">{error}</div>}{notice && <p role="status">{notice}</p>}
+  {/* Kept mounted so a photo's other suggestions stay after one is saved. */}
+  {options?.photoSuggestions && <div hidden={view !== 'record' || !!saved || !!item}><PhotoWasteSuggest companyId={companyId} disabled={frozen} saved={suggestionsSaved} onUse={openSuggestion}/></div>}
   {pending && pending.kind !== 'entry' && <div className="notice">This save needs confirmation. Details are frozen.<Button disabled={busy} onClick={() => void send(pending)}>{busy ? 'Saving…' : 'Retry same save'}</Button></div>}
   {loading && !options ? <p role="status">Loading café items…</p> : view === 'setup' && manager ? <>
    <h2>Café item setup</h2><p>Ready-made food comes from your catalog. Drinks and food made here use active recipes.</p><label>Find a catalog item<Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search croissants, bagels…"/></label>
@@ -227,7 +252,7 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
    <Button variant="ghost" disabled={frozen} onClick={() => { setIngredientLaunch(n => n + 1); setOpen(false); }}>Record ingredient waste</Button>
   </> : <form className="waste-form task-form" onSubmit={save}>
    <Button type="button" className="task-back" variant="ghost" disabled={frozen} onClick={reset}><ArrowLeft size={16}/>Choose another item</Button>
-   <header className="task-form-heading"><h2>{item?.name || selected}</h2><p>Record the quantity, reason, and whether its stock has already been counted through a sale.</p></header>
+   <header className="task-form-heading"><h2>{item?.name || selected}</h2><p>Record the quantity, reason, and whether its stock has already been counted through a sale.</p>{fromSuggestion?.key === selected && <p className="photo-waste-banner" role="status">Suggested from your photo. Check the number, reason and situation before saving.</p>}</header>
    <fieldset disabled={frozen}>
      <TaskSection title="Waste details" description="Enter the number of finished items, then choose why they were wasted.">
        <div className="waste-quantity-row"><label>Number of items<Input autoFocus required type="number" min="1" max="999" step="1" value={quantity} onChange={e => setQuantity(e.target.value)}/></label><div className="waste-shortcuts" role="group" aria-label="Quick quantities">{[1, 2, 5].map(n => <Button key={n} type="button" variant="outline" aria-pressed={quantity === String(n)} onClick={() => setQuantity(String(n))}>{n}</Button>)}</div></div>
@@ -255,7 +280,7 @@ function MenuWasteRecorderClient({ companyId, email, role, page, section = 'reco
     return <>
   {(enabled || pending) && page && <section className="menu-waste-page task-form"><div className="page-heading"><div><h1>Waste</h1><p>Record the café item. Its stock or recipe ingredients are handled for you.</p></div><Button type="button" variant="ghost" disabled={loading||frozen} onClick={()=>{setError('');void load();}}><RefreshCw size={16}/>Refresh</Button></div>{body}</section>}
   <Sheet open={open && !page} onOpenChange={close}><SheetContent className="waste-sheet" showCloseButton={!frozen}><SheetTitle>Record café-item waste</SheetTitle><SheetDescription>Ready-made food and recipe-based drinks.</SheetDescription>{onSection && <Button variant="outline" disabled={busy} onClick={() => { setOpen(false); onSection('record'); }}>Open Waste page</Button>}{body}</SheetContent></Sheet>
-  <WasteRecorder companyId={companyId} email={email} role={role} showButton={false} launchCount={ingredientLaunch} onDirtyChange={setIngredientDirty} onSaved={onSaved}/>
+  <WasteRecorder companyId={companyId} email={email} role={role} showButton={false} launchCount={ingredientLaunch} onDirtyChange={setIngredientDirty} onSaved={onSaved} prefill={ingredientPrefill} onEntrySaved={saved => { const suggestion = ingredientSuggestion; if (suggestion && saved.productId === suggestion.productId) markSuggestion(suggestion.operationId, suggestion.ref, (suggestion.amount === '' || saved.amount === suggestion.amount) && saved.reason === suggestion.reason ? 'confirmed' : 'edited'); setIngredientSuggestion(null); }}/>
   <AlertDialog open={discard} onOpenChange={setDiscard}><AlertDialogContent className="waste-discard-dialog"><AlertDialogTitle>Discard this unfinished entry?</AlertDialogTitle><AlertDialogDescription>No waste has been saved. Your order draft stays in place.</AlertDialogDescription><AlertDialogFooter><AlertDialogCancel>Keep entry</AlertDialogCancel><AlertDialogAction onClick={() => { reset(); setOpen(false); }}>Discard entry</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
  </>;
 }

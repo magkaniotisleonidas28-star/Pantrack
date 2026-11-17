@@ -71,6 +71,8 @@ export type MenuWasteOptions = {
   enabled: true;
   serverNow: string;
   items: MenuWasteItem[];
+  /** Whether "record waste from a photo" is available (decision 0010). */
+  photoSuggestions?: boolean;
 };
 
 export type MenuWasteReceipt = {
