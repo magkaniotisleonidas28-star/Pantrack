@@ -178,6 +178,43 @@ The owner supplied the actual contents:
 - **"Almond muffin"** is not on the café's list, so it could not be
   suggested.
 
+## Third authorized check: 8 per-tray crops with type notes — 2026-11-16
+
+The owner suggested splitting the photos into smaller images, gave per-tray
+counts and authorized "a paid test with 8 cropped images". Each tray or group
+was cropped locally from the two photos and enlarged 2× (no new detail), then
+sent separately. The notes named what was shown but not how many, such as
+"end of day pistachio croissants", so counting stayed with the photo. Exactly 8
+requests were made, with a hard stop on a ninth; the browser made no other
+outside requests. The preview was then switched back to the fake reader.
+
+| Crop | Actual | Suggested | Item | Count |
+| --- | --- | --- | --- | --- |
+| p1 tray 1 | 4 plain | 5 plain | right | +1 |
+| p1 tray 2 | 1 chocolate | 1 chocolate | right | exact |
+| p1 tray 3 | 3 pistachio | 6 pistachio | right | +3 |
+| p1 tray 4 | 3 hazelnut, 3 Biscoff | 1 hazelnut, 1 Biscoff | both right | −2, −2 |
+| p2 left | 4 sabayah pieces | 1 sabayah | right | −3 (one round pastry cut in pieces) |
+| p2 middle | 2 hummus tomato, 2 apple tart | 2 hummus tomato, 2 apple tart | both right | exact, exact |
+| p2 muffins | 3 blueberry, 1 banana walnut, 2 almond muffins (not listed) | 1 blueberry, 1 banana walnut, **1 Medium Hot Latte, 1 Plain croissant** | 2 right, 2 wrong | −2, exact |
+| p2 right | 2 almond croissant | 2 almond croissant | right | exact |
+
+- **Item types:** all 11 listed pastry types were identified (6 of 11 from the
+  whole photos). Wrong items fell from 3 to 2. Both wrong items came from the
+  crop whose note named almond muffins, which are not on the list: the model
+  put something else in their place.
+- **Exact counts:** 5 of 11 (1 of 11 before). The rest were still off, often
+  by several. The crops are enlarged from very small photos, and some include
+  the edge of the next tray.
+- **Cost:** $0.007517 for 8 requests, $0.0008–0.0012 each, at 855–1,020
+  input and 39–105 output tokens.
+
+**Follow-up made after this check:** the reader's instructions now say that
+when the note names something not on the list, it is left out and never
+replaced by another item. This targets the two wrong items above. It is
+covered by the reader test, but its effect has not been measured with a paid
+request.
+
 **Conclusion:** without the person's check this is not accurate enough to
 record waste automatically. The design always requires that check, so the
 café trial (W4f) should only go ahead after the improvements the owner
