@@ -1,5 +1,6 @@
 import type { RecipeChoiceGroup } from './inventory-management-contract';
 import { z } from 'zod';
+import type { PhotoSuggestionStatus } from './waste-suggestion-contract';
 import type { WasteReason } from './inventory-management-contract';
 import type { SelectedRecipeVersion } from './inventory-consumption-contract';
 const id = z.string().trim().min(1).max(200);
@@ -71,8 +72,8 @@ export type MenuWasteOptions = {
   enabled: true;
   serverNow: string;
   items: MenuWasteItem[];
-  /** Whether "record waste from a photo" is available (decision 0010). */
-  photoSuggestions?: boolean;
+  /** Whether "record waste from a photo or note" is available (decision 0010). */
+  photoSuggestions?: PhotoSuggestionStatus;
 };
 
 export type MenuWasteReceipt = {

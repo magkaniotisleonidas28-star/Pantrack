@@ -211,6 +211,7 @@ for (const [name, path] of [
     'waste/review',
     'waste/suggestions',
     'waste/suggestions/outcome',
+    'waste/suggestions/settings',
   ].map((n) => [n, 'src/app/api/' + n + '/route.ts']),
   ['authlib', 'src/lib/auth.ts'],
   ['fence', 'src/lib/auth-session-fence.ts'],
@@ -1969,6 +1970,49 @@ assert.equal(
   'Without a configured reader, photo suggestions are unavailable.',
 );
 globalThis.m2env.PANTRACK_WASTE_READER = 'fake';
+// W4d: off by default, and only the owner turns it on or sees spending.
+assert.equal(
+  (await suggestionResponse(suggestionRequest, cookies.employee)).status,
+  403,
+  'Suggestions are off until the owner turns them on.',
+);
+const settingsBody = { companyId: 'company-a', enabled: true };
+const settings = (method, body, cookie, extra) =>
+  call('waste/suggestions/settings', method, body, cookie, extra);
+assert.equal((await settings('POST', settingsBody)).status, 401);
+for (const cookie of [cookies.manager, cookies.employee, cookies.other]) {
+  assert.equal(
+    (await settings('POST', settingsBody, cookie)).status,
+    403,
+    'only the owner switches',
+  );
+  assert.equal((await settings('GET', null, cookie)).status, 403, 'only the owner sees spending');
+}
+assert.equal(
+  (await settings('POST', { ...settingsBody, companyId: 'company-b' }, cookies.owner)).status,
+  403,
+  'not for another company',
+);
+assert.equal(
+  (await settings('POST', settingsBody, cookies.owner, { 'Sec-Fetch-Site': 'cross-site' })).status,
+  403,
+);
+assert.equal(
+  (await settings('POST', { ...settingsBody, enabled: 'yes' }, cookies.owner)).status,
+  400,
+);
+assert.equal((await settings('POST', settingsBody, cookies.owner)).status, 200);
+const ownerUsage = await (await settings('GET', null, cookies.owner)).json();
+assert.deepEqual(
+  [ownerUsage.connected, ownerUsage.enabled, ownerUsage.limitReached, ownerUsage.capMicroUsd],
+  [true, true, false, 10_000_000],
+);
+const staffItems = await (await call('waste/items', 'GET', null, cookies.employee)).json();
+assert.deepEqual(
+  staffItems.photoSuggestions,
+  { connected: true, enabled: true, limitReached: false },
+  'Staff see availability, not spending.',
+);
 assert.equal((await suggestionResponse(suggestionRequest)).status, 401);
 for (const cookie of [cookies.other])
   assert.equal((await suggestionResponse(suggestionRequest, cookie)).status, 403);

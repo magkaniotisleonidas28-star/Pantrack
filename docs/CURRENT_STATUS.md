@@ -31,8 +31,12 @@ suggestions without recording waste or storing the photo. W4c,
 [the Waste page screens](W4C_PHOTO_WASTE_SCREENS_LOCAL_EVIDENCE_20261116.md),
 adds "Record waste from a photo": the photo is resized in the browser,
 suggestions open the normal forms for checking, and each records whether it
-was saved as suggested, changed, or not used. Local evidence only; no paid or
-external service was called.
+was saved as suggested, changed, or not used. W4d,
+[the owner switch and monthly cap](W4D_PHOTO_WASTE_SWITCH_AND_CAP_LOCAL_EVIDENCE_20261116.md),
+adds migration `0052`: suggestions are off until the owner turns them on, and
+each company's requests are capped at $10 a month on the server, safe under
+simultaneous requests. Local evidence only; no paid or external service was
+called.
 
 ## Easier units for stock and recipes — 2026-11-16
 

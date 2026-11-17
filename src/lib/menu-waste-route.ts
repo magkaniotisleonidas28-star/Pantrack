@@ -4,7 +4,7 @@ import { companyAccess } from './company-access';
 import { database } from '@/db/raw';
 import { exactInventoryPreviewEnabled } from './exact-inventory-gate';
 import { D1MenuWasteService } from './d1-menu-waste';
-import { wasteReader } from './waste-suggestion-route';
+import { photoSuggestionStatus } from './waste-suggestion-route';
 import { InventoryManagementError } from './d1-inventory-management';
 export async function handleMenuWaste(
   req: Request,
@@ -29,7 +29,7 @@ export async function handleMenuWaste(
             companyId!,
             member?.role === 'owner' || member?.role === 'manager',
           )),
-          photoSuggestions: wasteReader() !== null,
+          photoSuggestions: await photoSuggestionStatus(companyId!),
         });
       }
       if (kind === 'sales') {

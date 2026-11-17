@@ -8,12 +8,14 @@ export type Permission='read'|'operate'|'integrations'|'members'|'finance'|'paus
 export function permitted(role:string,permission:Permission){
   return role==='owner'||role==='manager'&&['read','operate','pause','recordWaste','countDeliveries'].includes(permission)||role==='employee'&&['read','recordWaste','countDeliveries'].includes(permission);
 }
-type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts'|'purchasing'|'deliveries';
+type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts'|'waste-photo'|'purchasing'|'deliveries';
 export function routePermission(family:Family,method:string,action?:string):Permission{
   if(family==='purchasing')return 'operate';
   // Staff count deliveries; only owners and managers approve, send a count back or close the order.
   if(family==='deliveries')return ['approve','recount','close'].includes(action||'')?'operate':'countDeliveries';
   if(family==='waste')return 'recordWaste';
+  // Only the owner turns paid photo suggestions on or off and sees their spending.
+  if(family==='waste-photo')return 'integrations';
   if(family==='waste-shortcuts')return 'operate';
   if(family==='members'||family==='companies')return 'members';
   if(family==='payments')return 'finance';
@@ -35,7 +37,7 @@ export function withCompanyRoute(family:Family,handler:(req:Request)=>Promise<Re
         const member=await companyAccess(user.userId,companyId);
         if(!member||!permitted(member.role,routePermission(family,req.method,body?.action)))return Response.json({error:'You do not have permission for this company action.'},{status:403});
       }
-      const logged=mutation&&['companies','inventory','register','clover','payments','automation','waste','waste-shortcuts'].includes(family);
+      const logged=mutation&&['companies','inventory','register','clover','payments','automation','waste','waste-shortcuts','waste-photo'].includes(family);
       const target=(family==='waste'||family==='waste-shortcuts')&&typeof body?.operationId==='string'
         ?body.operationId.slice(0,80):typeof body?.action==='string'?body.action.slice(0,80):'';
       if(logged)await audit(typeof companyId==='string'?companyId:null,user.userId,family+'.attempt',target).run();
