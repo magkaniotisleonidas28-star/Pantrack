@@ -47,6 +47,11 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   assert.ok(ready, 'Home page must load locally');
+  const home = await (await fetch(origin)).text();
+  assert.ok(
+    home.includes('id="auth-email"') && home.includes('id="auth-password"'),
+    'Signed-out home page shows the sign-in form directly',
+  );
   for (const path of ['/auth', '/auth/callback', '/auth/signout', '/invite']) {
     assert.equal((await fetch(origin + path)).status, 200, 'M2 page ' + path);
   }

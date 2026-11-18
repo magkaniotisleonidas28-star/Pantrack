@@ -1,4 +1,9 @@
 import AuthForm from '../auth-form';
+import AuthShell from '../auth-shell';
 export default function Page() {
-  return <AuthForm mode="callback" />;
+  return (
+    <AuthShell>
+      <AuthForm mode="callback" />
+    </AuthShell>
+  );
 }

@@ -1,27 +1,124 @@
 'use client';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Circle, CircleAlert, CircleCheck, Eye, EyeOff, MailCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
+  hasPasswordSpecialCharacter,
   isValidNewPassword,
   NEW_PASSWORD_MIN_LENGTH,
   NEW_PASSWORD_REQUIREMENT,
 } from '@/lib/password-policy';
+
+type Action = 'signin' | 'signup' | 'recover';
+type Notice = { kind: 'error' | 'ok'; text: string } | null;
+const noSubscription = () => () => {};
+
+function PasswordField({
+  value,
+  onChange,
+  isNew,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  isNew: boolean;
+  label: string;
+}) {
+  const [shown, setShown] = useState(false);
+  const longEnough = value.length >= NEW_PASSWORD_MIN_LENGTH,
+    special = hasPasswordSpecialCharacter(value);
+  return (
+    <div className="auth-field">
+      <label htmlFor="auth-password">{label}</label>
+      <div className="auth-password">
+        <Input
+          id="auth-password"
+          type={shown ? 'text' : 'password'}
+          autoComplete={isNew ? 'new-password' : 'current-password'}
+          minLength={isNew ? NEW_PASSWORD_MIN_LENGTH : 1}
+          aria-describedby={isNew ? 'new-password-requirement' : undefined}
+          required
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <button
+          type="button"
+          className="auth-reveal"
+          aria-label={shown ? 'Hide password' : 'Show password'}
+          aria-pressed={shown}
+          onClick={() => setShown(!shown)}
+        >
+          {shown ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+      {isNew && (
+        <ul
+          id="new-password-requirement"
+          className="auth-rules"
+          aria-label={NEW_PASSWORD_REQUIREMENT}
+        >
+          {(
+            [
+              [longEnough, `At least ${NEW_PASSWORD_MIN_LENGTH} characters`],
+              [special, 'At least one symbol, like ! or #'],
+            ] as const
+          ).map(([met, text]) => (
+            <li key={text} data-met={met ? 'yes' : 'no'}>
+              {met ? (
+                <CircleCheck size={15} aria-hidden="true" />
+              ) : (
+                <Circle size={15} aria-hidden="true" />
+              )}
+              {text}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function AuthForm({
   mode = 'signin',
 }: {
   mode?: 'signin' | 'signout' | 'callback';
 }) {
-  const [action, setAction] = useState('signin'),
+  const [action, setAction] = useState<Action>('signin'),
     [email, setEmail] = useState(''),
     [password, setPassword] = useState(''),
-    [message, setMessage] = useState(''),
+    [notice, setNotice] = useState<Notice>(null),
+    [sentTo, setSentTo] = useState(''),
     [busy, setBusy] = useState(false),
     [recovery, setRecovery] = useState(false);
+
+  // After a password reset the page reopens with ?updated=1; show that once until the next action.
+  const justUpdated = useSyncExternalStore(
+      noSubscription,
+      () => mode === 'signin' && new URLSearchParams(location.search).get('updated') === '1',
+      () => false,
+    ),
+    [updatedSeen, setUpdatedSeen] = useState(false);
+  const shownNotice: Notice =
+    notice ??
+    (justUpdated && !updatedSeen
+      ? { kind: 'ok', text: 'Password updated. Sign in with your new password.' }
+      : null);
+
+  function switchTo(next: Action) {
+    setUpdatedSeen(true);
+    setAction(next);
+    setNotice(null);
+    setPassword('');
+    setSentTo('');
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    setMessage('');
+    setNotice(null);
+    setUpdatedSeen(true);
     try {
       const query = new URLSearchParams(location.search);
       const chosen =
@@ -49,11 +146,10 @@ export default function AuthForm({
       if (d.recovery) {
         setRecovery(true);
         history.replaceState(null, '', '/auth/callback');
-        setMessage('Enter your new password.');
         return;
       }
       if (chosen === 'password') {
-        location.assign('/auth');
+        location.assign('/auth?updated=1');
         return;
       }
       if (['signin', 'verify', 'signout'].includes(chosen)) {
@@ -66,109 +162,170 @@ export default function AuthForm({
             ? url.pathname + url.search
             : '/',
         );
-      } else setMessage(d.message);
+      } else setSentTo(email);
     } catch (e) {
-      setMessage((e as Error).message);
+      setNotice({ kind: 'error', text: (e as Error).message });
     } finally {
       setBusy(false);
     }
   }
-  return (
-    <main className="signin-page">
-      <section className="signin-card">
-        <a className="brand" href="/">
-          pantrack.
+
+  const noticeBox = shownNotice && (
+    <p
+      className={`auth-notice auth-notice-${shownNotice.kind}`}
+      role={shownNotice.kind === 'error' ? 'alert' : 'status'}
+    >
+      {shownNotice.kind === 'error' ? (
+        <CircleAlert size={17} aria-hidden="true" />
+      ) : (
+        <CircleCheck size={17} aria-hidden="true" />
+      )}
+      <span>{shownNotice.text}</span>
+    </p>
+  );
+
+  if (sentTo)
+    return (
+      <div className="auth-form auth-sent" role="status">
+        <span className="auth-sent-icon" aria-hidden="true">
+          <MailCheck size={26} />
+        </span>
+        <h1>Check your email</h1>
+        <p className="auth-lead">
+          If <strong>{sentTo}</strong> can be used, we’ve sent it a link to{' '}
+          {action === 'signup' ? 'confirm your new account' : 'choose a new password'}. The link
+          works once.
+        </p>
+        <p className="auth-hint">Nothing after a few minutes? Check your spam folder.</p>
+        <button type="button" className="auth-back" onClick={() => switchTo('signin')}>
+          <ArrowLeft size={15} aria-hidden="true" /> Back to sign in
+        </button>
+      </div>
+    );
+
+  if (mode === 'signout')
+    return (
+      <form onSubmit={submit} className="auth-form">
+        <h1>Sign out of Pantrack?</h1>
+        <p className="auth-lead">You’ll need your email and password to come back in.</p>
+        {noticeBox}
+        <Button className="auth-submit" disabled={busy}>
+          {busy ? 'Signing out…' : 'Sign out'}
+        </Button>
+        <Link className="auth-back" href="/">
+          <ArrowLeft size={15} aria-hidden="true" /> Stay signed in
+        </Link>
+      </form>
+    );
+
+  if (mode === 'callback' && !recovery)
+    return (
+      <form onSubmit={submit} className="auth-form">
+        <h1>Confirm your email</h1>
+        <p className="auth-lead">Press the button to finish. This link only works once.</p>
+        {noticeBox}
+        <Button className="auth-submit" disabled={busy}>
+          {busy ? 'Confirming…' : 'Confirm and continue'}
+        </Button>
+        <a className="auth-back" href="/auth">
+          <ArrowLeft size={15} aria-hidden="true" /> Back to sign in
         </a>
-        <h1>
-          {mode === 'signout'
-            ? 'Sign out'
-            : recovery
-              ? 'Reset password'
-              : mode === 'callback'
-                ? 'Confirm your email link'
-                : action === 'signup'
-                  ? 'Create an account'
-                  : action === 'recover'
-                    ? 'Recover your account'
-                    : 'Welcome back'}
-        </h1>
-        <form onSubmit={submit} className="product-form">
-          {mode === 'signin' && (
-            <label>
-              Email
-              <Input
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
-          )}
-          {(recovery || (mode === 'signin' && action !== 'recover')) && (
-            <label>
-              Password
-              <Input
-                type="password"
-                autoComplete={recovery || action === 'signup' ? 'new-password' : 'current-password'}
-                minLength={recovery || action === 'signup' ? NEW_PASSWORD_MIN_LENGTH : 1}
-                aria-describedby={
-                  recovery || action === 'signup' ? 'new-password-requirement' : undefined
-                }
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              {(recovery || action === 'signup') && (
-                <small id="new-password-requirement">{NEW_PASSWORD_REQUIREMENT}</small>
-              )}
-            </label>
-          )}
-          {mode === 'callback' && !recovery && (
-            <p>Continue to confirm this single-use email link.</p>
-          )}
-          <Button disabled={busy}>
-            {busy
-              ? 'Working…'
-              : mode === 'signout'
-                ? 'Sign out'
-                : recovery
-                  ? 'Save new password'
-                  : mode === 'callback'
-                    ? 'Continue'
-                    : action === 'recover'
-                      ? 'Send recovery email'
-                      : action === 'signup'
-                        ? 'Create account'
-                        : 'Sign in'}
-          </Button>
-          {message && <p role="status">{message}</p>}
-        </form>
-        {mode === 'signin' && (
-          <div className="company-actions">
-            {['signin', 'signup', 'recover']
-              .filter((v) => v !== action)
-              .map((v) => (
-                <Button
-                  variant="ghost"
-                  key={v}
-                  onClick={() => {
-                    setAction(v);
-                    setMessage('');
-                    setPassword('');
-                  }}
-                >
-                  {v === 'signin'
-                    ? 'Sign in'
-                    : v === 'signup'
-                      ? 'Create account'
-                      : 'Forgot password?'}
-                </Button>
-              ))}
-          </div>
-        )}
-        <a href="/">Back to Pantrack</a>
-      </section>
-    </main>
+      </form>
+    );
+
+  if (recovery)
+    return (
+      <form onSubmit={submit} className="auth-form">
+        <h1>Choose a new password</h1>
+        <p className="auth-lead">You’ll use it the next time you sign in.</p>
+        <PasswordField value={password} onChange={setPassword} isNew label="New password" />
+        {noticeBox}
+        <Button className="auth-submit" disabled={busy}>
+          {busy ? 'Saving…' : 'Save new password'}
+        </Button>
+      </form>
+    );
+
+  if (action === 'recover')
+    return (
+      <form onSubmit={submit} className="auth-form">
+        <h1>Reset your password</h1>
+        <p className="auth-lead">Enter your email and we’ll send a link to choose a new one.</p>
+        <div className="auth-field">
+          <label htmlFor="auth-email">Email</label>
+          <Input
+            id="auth-email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        {noticeBox}
+        <Button className="auth-submit" disabled={busy}>
+          {busy ? 'Sending…' : 'Send reset link'}
+        </Button>
+        <button type="button" className="auth-back" onClick={() => switchTo('signin')}>
+          <ArrowLeft size={15} aria-hidden="true" /> Back to sign in
+        </button>
+      </form>
+    );
+
+  const signup = action === 'signup';
+  return (
+    <form onSubmit={submit} className="auth-form">
+      <div className="auth-tabs" role="tablist" aria-label="Sign in or create an account">
+        {(['signin', 'signup'] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            role="tab"
+            aria-selected={action === v}
+            onClick={() => switchTo(v)}
+          >
+            {v === 'signin' ? 'Sign in' : 'Create account'}
+          </button>
+        ))}
+      </div>
+      <h1>{signup ? 'Create your account' : 'Welcome back'}</h1>
+      <p className="auth-lead">
+        {signup
+          ? 'Start with your email. Next you can set up your café, or join your team’s.'
+          : 'Sign in to your café’s stock, recipes and orders.'}
+      </p>
+      <div className="auth-field">
+        <label htmlFor="auth-email">Email</label>
+        <Input
+          id="auth-email"
+          type="email"
+          autoComplete="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+      <PasswordField
+        value={password}
+        onChange={setPassword}
+        isNew={signup}
+        label={signup ? 'Choose a password' : 'Password'}
+      />
+      {!signup && (
+        <button type="button" className="auth-link auth-forgot" onClick={() => switchTo('recover')}>
+          Forgot password?
+        </button>
+      )}
+      {noticeBox}
+      <Button className="auth-submit" disabled={busy}>
+        {busy
+          ? signup
+            ? 'Creating account…'
+            : 'Signing in…'
+          : signup
+            ? 'Create account'
+            : 'Sign in'}
+      </Button>
+    </form>
   );
 }
