@@ -5,69 +5,117 @@ import {Input} from '@/components/ui/input';
 import type {Product} from '@/lib/pantry';
 import type {InventoryManagementView} from '@/lib/inventory-management-contract';
 import type {UnitDimension} from '@/lib/inventory-consumption-contract';
-import {CURATED_UNIT_IDS,curatedUnit,customUnit,formatCanonical,toCanonical,type CuratedUnitId,type UnitDefinition} from '@/lib/inventory-quantities';
-import {formatInUnit,packageTotal} from '@/lib/stock-pack-quantities';
-import {CONTAINER_SUGGESTIONS,DEFAULT_MEASUREMENT_SYSTEM,everydayUnit,fractionOfPack,guessPackaging,measureFactor,plural,preferredUnits,shortUnitLabel} from '@/lib/unit-preferences';
+import { CURATED_UNIT_IDS, curatedUnit, type CuratedUnitId } from '@/lib/inventory-quantities';
+import { CONTAINER_SUGGESTIONS, DEFAULT_MEASUREMENT_SYSTEM, everydayUnit, plural, preferredUnits, shortUnitLabel } from '@/lib/unit-preferences';
 import {sendSaveRequest} from '@/lib/waste-client';
 import {TaskSection,ChoiceField} from './task-form';
+import {
+  buildStockEntryRequest,
+  stockEntryDefaults,
+  stockEntryGuess,
+  stockEntryMeasureText,
+  stockEntryMode,
+  stockEntryPreview,
+  type OpenPart,
+  type StockEntryAction,
+  type StockEntryBasis,
+  type StockEntryDraft,
+  type StockEntryRequest,
+} from './stock-entry-model';
 
 const localNow=()=>new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,19);
-const canonicalId=(dimension:string):CuratedUnitId=>dimension==='mass'?'g':dimension==='volume'?'mL':'each';
 const dimensionNames:Record<UnitDimension,string>={volume:'Liquid',mass:'Weight',count:'Items'};
 const capital=(text:string)=>text.replace(/^./,c=>c.toUpperCase());
-type OpenPart='0'|'1'|'2'|'3'|'exact';
-/** How much one of a product's own measures holds, in everyday units, for editing. */
-function measureText(m:UnitDefinition|null|undefined,system:'us'|'metric'){
- if(m?.kind!=='custom')return '';
- try{return formatInUnit(toCanonical('1',m,m),curatedUnit(everydayUnit(system,m.dimension)),3);}catch{return '';}
-}
-
 export default function StockEntry({companyId,products,view,initialProductId,onReload,onSaved,onDirtyChange}:{
  companyId:string;products:Product[];view:InventoryManagementView;initialProductId?:string;
  onReload:()=>Promise<void>;onSaved:()=>void;onDirtyChange:(dirty:boolean)=>void;
 }){
- const system=view.measurementSystem??DEFAULT_MEASUREMENT_SYSTEM;
- const initial=view.records.find(r=>r.productId===initialProductId);
- const initialGuess=initial?null:guessPackaging(products.find(p=>p.id===initialProductId)?.name??'');
- const initialUnit=initial?.measurementUnit??(initialGuess?curatedUnit(everydayUnit(system,initialGuess.dimension)):null);
- const [identity]=useState(()=>({product:crypto.randomUUID(),operation:crypto.randomUUID(),unit:crypto.randomUUID()}));
- const [productId,setProductId]=useState(initialProductId??''),[name,setName]=useState(''),[supplier,setSupplier]=useState(''),[sku,setSku]=useState('');
- const [unit,setUnit]=useState<CuratedUnitId|''>(initialUnit?(initialUnit.kind==='curated'?initialUnit.id as CuratedUnitId:canonicalId(initialUnit.dimension)):'');
- const [pack,setPack]=useState(initial?.purchase?.label??initialGuess?.container??'');
- const [packAmount,setPackAmount]=useState(initial?.purchase?.enteredAmount??(initial?.purchase?formatCanonical(initial.purchase.quantity):''));
- const [contentUnitId,setContentUnitId]=useState(initial?.purchase?.enteredUnitId===initialUnit?.id&&initialUnit?.kind==='custom'?identity.unit:initial?.purchase?.enteredUnitId??(initial?canonicalId(initial.dimension):initialUnit?.id??''));
- const [packagingTouched,setPackagingTouched]=useState(!!initial);
- const [amount,setAmount]=useState(''),[packages,setPackages]=useState(''),[remainder,setRemainder]=useState(''),[openPart,setOpenPart]=useState<OpenPart>('0');
- const [basis,setBasis]=useState<'packages'|'measured'>('packages'),[action,setAction]=useState<'receive'|'count'|'use'|'incoming'|'configure'>('receive');
- const [time,setTime]=useState(localNow()),[note,setNote]=useState(''),[fromIncoming,setFromIncoming]=useState(false);
- const [custom,setCustom]=useState(initialUnit?.kind==='custom'),[customLabel,setCustomLabel]=useState(initialUnit?.kind==='custom'?initialUnit.label:'pump');
- const [dimension,setDimension]=useState<UnitDimension>(initialUnit?.dimension??'volume');
- const [measureAmount,setMeasureAmount]=useState(()=>measureText(initialUnit,system));
- const [measureUnitId,setMeasureUnitId]=useState<CuratedUnitId>(everydayUnit(system,initialUnit?.dimension??'volume'));
- const [measureEdited,setMeasureEdited]=useState(false);
- const [dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[pending,setPending]=useState<Record<string,unknown>|null>(null),[saved,setSaved]=useState(false);
- const lock=useRef(false),record=view.records.find(r=>r.productId===productId),isNew=productId==='new';
- const setup=isNew||(!!productId&&!record)||action==='configure',opening=setup&&!record;
- const scope={companyId,productId:isNew?identity.product:productId};
+  const system = view.measurementSystem ?? DEFAULT_MEASUREMENT_SYSTEM;
+  const initial = view.records.find((record) => record.productId === initialProductId);
+  const [identity] = useState(() => ({
+    product: crypto.randomUUID(),
+    operation: crypto.randomUUID(),
+    unit: crypto.randomUUID(),
+  }));
+  const defaults = stockEntryDefaults(
+    initial,
+    initial ? '' : (products.find((product) => product.id === initialProductId)?.name ?? ''),
+    system,
+    identity.unit,
+  );
+  const [productId, setProductId] = useState(initialProductId ?? '');
+  const [name, setName] = useState('');
+  const [supplier, setSupplier] = useState('');
+  const [sku, setSku] = useState('');
+  const [unit, setUnit] = useState(defaults.unit);
+  const [pack, setPack] = useState(defaults.pack);
+  const [packAmount, setPackAmount] = useState(defaults.packAmount);
+  const [contentUnitId, setContentUnitId] = useState(defaults.contentUnitId);
+  const [packagingTouched, setPackagingTouched] = useState(defaults.packagingTouched);
+  const [amount, setAmount] = useState('');
+  const [packages, setPackages] = useState('');
+  const [remainder, setRemainder] = useState('');
+  const [openPart, setOpenPart] = useState<OpenPart>('0');
+  const [basis, setBasis] = useState<StockEntryBasis>('packages');
+  const [action, setAction] = useState<StockEntryAction>('receive');
+  const [time, setTime] = useState(localNow());
+  const [note, setNote] = useState('');
+  const [fromIncoming, setFromIncoming] = useState(false);
+  const [custom, setCustom] = useState(defaults.custom);
+  const [customLabel, setCustomLabel] = useState(defaults.customLabel);
+  const [dimension, setDimension] = useState(defaults.dimension);
+  const [measureAmount, setMeasureAmount] = useState(() =>
+    stockEntryMeasureText(defaults.measurement, defaults.measureUnitId),
+  );
+  const [measureUnitId, setMeasureUnitId] = useState(defaults.measureUnitId);
+  const [measureEdited, setMeasureEdited] = useState(false);
+ const [dirty,setDirty]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[pending,setPending]=useState<StockEntryRequest|null>(null),[saved,setSaved]=useState(false);
+  const lock = useRef(false);
+  const record = view.records.find((record) => record.productId === productId);
+  const { isNew, setup, opening } = stockEntryMode(productId, record, action);
  const productName=isNew?name.trim():products.find(p=>p.id===productId)?.name??'';
  useEffect(()=>{onDirtyChange(dirty||!!pending);return()=>onDirtyChange(false);},[dirty,pending,onDirtyChange]);
  useEffect(()=>{const warn=(e:BeforeUnloadEvent)=>{if(dirty||pending){e.preventDefault();e.returnValue='';}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);},[dirty,pending]);
 
- // A guess from the name fills in the container and units until the person changes them.
- function applyGuess(productName:string){
-   const guess=guessPackaging(productName);if(!guess)return;
-   setPack(guess.container);setUnit(everydayUnit(system,guess.dimension));setContentUnitId(everydayUnit(system,guess.dimension));setDimension(guess.dimension);setMeasureUnitId(everydayUnit(system,guess.dimension));
- }
- function chooseProduct(id:string){
-   const r=view.records.find(r=>r.productId===id),m=r?.measurementUnit??null;
-   setProductId(id);setAction('receive');setAmount('');setPackages('');setRemainder('');setOpenPart('0');setFromIncoming(false);setBasis('packages');
-   setCustom(m?.kind==='custom');setCustomLabel(m?.kind==='custom'?m.label:'pump');setMeasureEdited(false);setMeasureAmount(measureText(m,system));setMeasureUnitId(everydayUnit(system,m?.dimension??'volume'));
-   setUnit(m?(m.kind==='curated'?m.id as CuratedUnitId:canonicalId(m.dimension)):'');setDimension(m?.dimension??'volume');
-   setPack(r?.purchase?.label??'');setPackAmount(r?.purchase?.enteredAmount??(r?.purchase?formatCanonical(r.purchase.quantity):''));
-   setContentUnitId(r?.purchase?.enteredUnitId===m?.id&&m?.kind==='custom'?identity.unit:r?.purchase?.enteredUnitId??(r?canonicalId(r.dimension):''));
-   setPackagingTouched(!!r);
-   if(!r)applyGuess(products.find(p=>p.id===id)?.name??'');
- }
+  // A guess from the name fills in the container and units until the person changes them.
+  function applyGuess(productName: string) {
+    const guess = stockEntryGuess(productName, system);
+    if (!guess) return;
+    setPack(guess.pack);
+    setUnit(guess.unit);
+    setContentUnitId(guess.unit);
+    setDimension(guess.dimension);
+    setMeasureUnitId(guess.unit);
+  }
+
+  function chooseProduct(id: string) {
+    const selected = view.records.find((record) => record.productId === id);
+    const defaults = stockEntryDefaults(
+      selected,
+      selected ? '' : (products.find((product) => product.id === id)?.name ?? ''),
+      system,
+      identity.unit,
+    );
+    setProductId(id);
+    setAction('receive');
+    setAmount('');
+    setPackages('');
+    setRemainder('');
+    setOpenPart('0');
+    setFromIncoming(false);
+    setBasis('packages');
+    setUnit(defaults.unit);
+    setPack(defaults.pack);
+    setPackAmount(defaults.packAmount);
+    setContentUnitId(defaults.contentUnitId);
+    setCustom(defaults.custom);
+    setCustomLabel(defaults.customLabel);
+    setDimension(defaults.dimension);
+    setMeasureEdited(false);
+    setMeasureAmount(stockEntryMeasureText(defaults.measurement, defaults.measureUnitId));
+    setMeasureUnitId(defaults.measureUnitId);
+    setPackagingTouched(defaults.packagingTouched);
+  }
  function chooseContentUnit(id:string){
    setContentUnitId(id);setPackagingTouched(true);
    if(!id||id===identity.unit)return;
@@ -76,34 +124,12 @@ export default function StockEntry({companyId,products,view,initialProductId,onR
  }
  function touch(){setDirty(true);setError('');}
  const contentDimension:UnitDimension|null=custom?dimension:unit?curatedUnit(unit).dimension:null;
- function customFactor(){
-   const saved=record?.measurementUnit;
-   if(!measureEdited&&saved?.kind==='custom')return {numerator:saved.numerator,denominator:saved.denominator};
-   const factor=measureFactor(measureAmount,measureUnitId);return {numerator:factor.numerator,denominator:factor.denominator};
- }
- function setupMeasurement():UnitDefinition{return custom?customUnit({...scope,id:identity.unit,version:1,label:customLabel,dimension,...customFactor()}):curatedUnit(unit);}
- let measurement:UnitDefinition|null=null,packQuantity:ReturnType<typeof toCanonical>|null=null,preview='',packagePreview='',remainderInput={remainder:'0',remainderUnitId:''};
- try{
-   measurement=setup?setupMeasurement():record?.measurementUnit??null;
-   if(measurement){
-     packQuantity=setup?toCanonical(packAmount,contentUnitId===measurement.id||contentUnitId===identity.unit?measurement:curatedUnit(contentUnitId),scope,{dimension:measurement.dimension}):record?.purchase?.quantity??null;
-     // Shown in the unit typed for the container when it is a standard one, such as 1 lb.
-     const packEveryday=packQuantity&&curatedUnit(setup&&contentUnitId&&contentUnitId!==identity.unit&&curatedUnit(contentUnitId).dimension===packQuantity.dimension?contentUnitId:everydayUnit(system,packQuantity.dimension));
-     if(packQuantity&&packEveryday&&BigInt(packQuantity.minor)>BigInt(0))packagePreview=`One ${(setup?pack:record?.purchase?.label)||'container'} holds ${formatInUnit(packQuantity,packEveryday,2)} ${shortUnitLabel(packEveryday)}${measurement.kind==='custom'?`, about ${formatInUnit(packQuantity,measurement,0)} ${plural(measurement.label,2)}`:''}.`;
-     // An open container is entered as a share of it, or as an exact amount in everyday units.
-     remainderInput=measurement.dimension==='count'||openPart==='exact'
-       ?{remainder:remainder||'0',remainderUnitId:measurement.dimension==='count'?measurement.id:everydayUnit(system,measurement.dimension)}
-       :{remainder:packQuantity?formatCanonical(fractionOfPack(packQuantity,Number(openPart))):'0',remainderUnitId:canonicalId(measurement.dimension)};
-     if((opening||!setup)&&productId){
-       const counted=opening||action==='count';
-       const total=basis==='packages'&&action!=='use'&&packQuantity
-         ?packageTotal(packQuantity,{packages,...(counted?remainderInput:{remainder:'0',remainderUnitId:measurement.id})},measurement,scope)
-         :toCanonical(amount,measurement,scope);
-       const everyday=curatedUnit(everydayUnit(system,total.dimension));
-       preview=(opening?'Opening stock: ':action==='count'?'New physical total: ':action==='incoming'?'Expected incoming: ':action==='use'?'Stock used: ':'Stock increase: ')+formatInUnit(total,everyday,2)+' '+shortUnitLabel(everyday);
-     }
-   }
- }catch{/* Incomplete fields have no calculation preview; the server validates the save. */}
+  const draft: StockEntryDraft = {
+    companyId, productId, record, identity, system, action, basis, unit, pack, packAmount,
+    contentUnitId, custom, customLabel, dimension, measureAmount, measureUnitId, measureEdited,
+    packages, remainder, openPart, amount, name, supplier, sku, time, note, fromIncoming,
+  };
+  const { measurement, preview, packagePreview, remainderInput } = stockEntryPreview(draft);
  const measuredLabel=measurement?(measurement.kind==='custom'?plural(measurement.label,2):shortUnitLabel(measurement)):custom?plural(customLabel,2):unit?shortUnitLabel(unit):'';
  const hasPackages=setup||!!record?.purchase;
  const packLabel=(setup?pack:record?.purchase?.label)||'container';
@@ -112,18 +138,7 @@ export default function StockEntry({companyId,products,view,initialProductId,onR
  async function save(e:React.FormEvent){
    e.preventDefault();if(lock.current)return;lock.current=true;setBusy(true);setError('');
    try{
-     let body=pending;
-     if(!body){
-       const common={companyId,productId:scope.productId,operationId:identity.operation,effectiveAt:new Date(time).toISOString()};
-       if(setup){
-         if(!unit&&!custom)throw new Error('Choose what one container holds, such as 64 fl oz.');
-         body={...common,action:isNew?'createStockExact':'configureExact',...(isNew?{name,supplier,sku}:{}),stockUnit:custom?{kind:'custom',id:identity.unit,label:customLabel.trim(),dimension,...customFactor()}:{kind:'curated',id:unit},purchaseUnitLabel:pack.trim(),purchaseAmount:packAmount,purchaseContentUnitId:contentUnitId,...(record?{expectedConfigId:record.configId}:{}),...(opening?(basis==='packages'?{openingPackages:{packages,...remainderInput}}:{openingAmount:amount}):{})};
-       }else if(basis==='packages'&&action!=='use'&&record?.purchase){
-         body={...common,action:'packageStockExact',configId:record.configId,expectedVersion:record.version,movement:action,quantity:{packages,...(withRemainder?remainderInput:{remainder:'0',remainderUnitId:record.stockUnitId})},note,...(action==='receive'?{fromIncoming}:{})};
-       }else{
-         body={...common,action:action==='count'?'countExact':'movementExact',...(action==='count'?{}:{movement:action,fromIncoming}),amount,unitId:record!.stockUnitId,expectedVersion:record!.version,note};
-       }
-     }
+     const body = pending ?? buildStockEntryRequest(draft, remainderInput);
      setPending(body);const outcome=await sendSaveRequest('/api/inventory',body,fetch,!!pending);
      if(outcome.kind==='saved'){setSaved(true);setPending(null);setDirty(false);try{await onReload();onSaved();}catch{setError('Stock saved. Refresh the list before making another change.');}}
      else{setError(outcome.message);if(outcome.kind==='rejected')setPending(null);}
