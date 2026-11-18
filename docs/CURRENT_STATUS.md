@@ -11,6 +11,21 @@ October 24 that the hosted app still contains test data.
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
 
+## Development release of `ac8de80` — 2026-11-17
+
+At the owner's request and authorization, `ac8de80` is live on
+`pantrack-dev` ([release record](C2_DEV_RELEASE_20261117.md)):
+- the hosted database moved from migration `0023` to `0052`, after a
+  backup/restore rehearsal;
+- the cutover backup was byte-identical to the rehearsed one;
+- all 452 original records were preserved;
+- the schema is identical to a fresh build;
+- maintenance lasted about 1.5 minutes.
+
+Clover sync, purchasing, schedules and photo suggestions remain off. The
+owner's sign-in review and fictional hosted walkthroughs are pending. This
+supersedes the deferred October 24 packet.
+
 ## Photo waste suggestions: decision and plan — 2026-11-16
 
 The owner asked to record waste from a photo plus a short note, with an AI
