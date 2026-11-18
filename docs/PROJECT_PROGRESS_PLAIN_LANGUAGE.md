@@ -2,6 +2,14 @@
 
 Updated: 2026-11-13 for the first real supplier decision.
 
+**Sign-in screens (2026-11-18):** signing in now happens on the first page
+you see, with a short description of Pantrack beside it. You can switch
+between "Sign in" and "Create account", show your password while typing, and
+watch the password rules tick off. Mistakes show in a red box, and after
+signing up or asking for a new password you see a clear "Check your email"
+page. The confirm, sign-out and invitation pages match
+([record](SIGNIN_SCREENS_LOCAL_EVIDENCE_20261118.md)).
+
 **Waste from a photo (planned, 2026-11-16):** you'll be able to take a photo
 of waste (say, five end-of-day croissants), write a short note, or both, and Pantrack will
 fill in the waste form for you to check before saving. Nothing is saved

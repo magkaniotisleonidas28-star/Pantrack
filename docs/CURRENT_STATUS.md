@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-16
+Updated: 2026-11-18
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -43,6 +43,17 @@ reserve) with `store: false`, and it is used only with an explicit server
 setting and the owner's key. Local evidence only; no paid or external
 service was called. The paid check waits for the owner's key
 ([setup](PHOTO_WASTE_OPENAI_SETUP.md)) and authorization.
+
+## Sign-in screens — 2026-11-18
+
+After reviewing a local preview, the owner approved new
+[sign-in screens](SIGNIN_SCREENS_LOCAL_EVIDENCE_20261118.md). The signed-out
+home page now shows the sign-in form directly beside a short café-focused
+description. It has Sign in / Create account tabs, a show-password button, a
+live password checklist, clear error and success boxes, and a "Check your
+email" screen. Confirm, sign-out and invitation pages use the same frame. Only
+the screens changed: sign-in requests, password rules and authorization are
+unchanged. Local evidence only, with sign-in requests faked in browser checks.
 
 ## Easier units for stock and recipes — 2026-11-16
 
