@@ -2,6 +2,15 @@
 
 Updated: 2026-11-13 for the first real supplier decision.
 
+**Order page by supplier (2026-11-19):** the New order page now shows one
+list per supplier that you can open and close, so it stays tidy as you add
+products. Each supplier's heading shows how many products you've added, their
+cost, and how close you are to that supplier's minimum order. With many
+products, the lists start closed, and Pantrack remembers which ones you
+opened. Searching opens the suppliers that match. The category buttons now
+match your own products, and "In my order" shows just what you've chosen
+([record](ORDER_SUPPLIER_GROUPS_LOCAL_EVIDENCE_20261119.md)).
+
 **Sign-in screens (2026-11-18):** signing in now happens on the first page
 you see, with a short description of Pantrack beside it. You can switch
 between "Sign in" and "Create account", show your password while typing, and

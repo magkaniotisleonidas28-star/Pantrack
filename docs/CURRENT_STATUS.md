@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-18
+Updated: 2026-11-19
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,18 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## New order page grouped by supplier — 2026-11-19
+
+At the owner's request, the
+[order page](ORDER_SUPPLIER_GROUPS_LOCAL_EVIDENCE_20261119.md) now lists products
+in one collapsible list per supplier (A–Z). Each heading shows its product
+count, what is in the order, the subtotal and progress toward a known supplier
+minimum. Lists start closed when there are more than 20 products and are
+remembered per company in the browser. Search opens matching suppliers.
+Category filters come from the products themselves, and an "In my order"
+filter shows only chosen products. Rows are more compact. No API, schema or
+authorization change. Local evidence only.
 
 ## Development release of `ac8de80` — 2026-11-17
 
