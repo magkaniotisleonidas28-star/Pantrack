@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-20
+Updated: 2026-11-21
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -51,6 +51,15 @@ R1d, [delivery schedule per supplier](R1D_DELIVERY_RHYTHM_LOCAL_EVIDENCE_2026112
 adds an optional "order every N days" (1–60) and "delivery takes N days"
 (0–60) to each purchasing supplier profile. They are saved as a new profile
 version by owners and managers. No schema change. Local evidence only.
+
+R1e part 1, [suggested levels](R1E_SUGGESTED_LEVELS_LOCAL_EVIDENCE_20261121.md),
+shows a suggested level for each product on Usage & accuracy. The level is
+measured daily use × (delivery days + days between orders), plus Balanced
+spare sized by daily variation. A recent run-out adds a step of caution. Each
+suggestion comes with a plain explanation. Owners and managers choose **Use
+this level**, which saves a restocking-settings version with the level and
+the measured daily use. Seen-number and repeat checks apply. No schema change.
+Part 2 adds the caution choice and Ignore. Local evidence only.
 
 ## New order page grouped by supplier — 2026-11-19
 

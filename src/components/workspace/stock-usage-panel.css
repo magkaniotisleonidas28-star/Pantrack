@@ -103,3 +103,49 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* R1e: the suggested level under each product. */
+.stock-level {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border, #dfe7e1);
+  background: color-mix(in srgb, #215743 5%, transparent);
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+.stock-level h4 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--muted-foreground, #6e7d76);
+}
+.stock-level p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 75ch;
+}
+.stock-level .stock-level-headline {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--foreground, #20392f);
+}
+.stock-level[data-status='suggested'] {
+  border-color: #b9d6c4;
+}
+.stock-level p[data-kind='ok'] {
+  color: #24603f;
+}
+.stock-level p[data-kind='error'] {
+  color: #9f3a30;
+}
+.sidebar-workspace[data-workspace-theme='dark'] .stock-level {
+  background: color-mix(in srgb, #b5e6c7 6%, transparent);
+  border-color: #45604c;
+}
+.sidebar-workspace[data-workspace-theme='dark'] .stock-level p[data-kind='ok'] {
+  color: #9fd9b4;
+}
