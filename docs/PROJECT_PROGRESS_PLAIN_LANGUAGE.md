@@ -21,7 +21,9 @@ only shows information; nothing changes
 ([record](R1B_USAGE_ACCURACY_LOCAL_EVIDENCE_20261120.md)). Anyone can now tap **We ran out**
 next to Record waste. It doesn't change stock; a manager sees the report on
 the stock list and either confirms that none is left (setting it to zero) or
-dismisses it ([record](R1C_RUN_OUT_REPORTS_LOCAL_EVIDENCE_20261120.md)).
+dismisses it ([record](R1C_RUN_OUT_REPORTS_LOCAL_EVIDENCE_20261120.md)). Each supplier can now
+have a delivery schedule: how often you order and how many days delivery takes
+([record](R1D_DELIVERY_RHYTHM_LOCAL_EVIDENCE_20261120.md)).
 
 **Order page by supplier (2026-11-19):** the New order page now shows one
 list per supplier that you can open and close, so it stays tidy as you add

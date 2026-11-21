@@ -4,7 +4,7 @@ import {useRequestScope} from '@/hooks/use-request-scope';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import type {D1PurchasingSuppliers} from '@/lib/d1-purchasing-suppliers';
-import type {SupplierProfile,SupplierVersion,MappingVersion} from '@/lib/purchasing-supplier-contract';
+import {deliveryRhythmText,type SupplierProfile,type SupplierVersion,type MappingVersion} from '@/lib/purchasing-supplier-contract';
 import {CURATED_UNIT_IDS,curatedUnit,unitLabel,type UnitDefinition} from '@/lib/inventory-quantities';
 import {draftStockDisplay} from '@/lib/supplier-order-draft';
 import {supplierRequest,purchasingCents,purchasingDollars,PurchasingRequestError,emailAcceptanceLabel} from './purchasing-client';
@@ -16,13 +16,19 @@ type History=Awaited<ReturnType<D1PurchasingSuppliers['history']>>;
 type Stocks=Awaited<ReturnType<D1PurchasingSuppliers['stocks']>>['stocks'];
 type MapForm={id:string;version:number;accountId:string;locationId:string;productId:string;sku:string;description:string;unitLabel:string;packAmount:string;unitKey:string;estimate:string};
 const unitKey=(unit:UnitDefinition)=>`${unit.id}:${unit.version}`;
+// Both or neither: a half-entered delivery schedule is refused before saving.
+function rhythm(every:string,takes:string){const a=every.trim(),b=takes.trim();if(!a&&!b)return null;
+  const order=Number(a),delivery=Number(b);
+  if(!a||!b||!Number.isInteger(order)||!Number.isInteger(delivery)||order<1||order>60||delivery<0||delivery>60)
+    throw Error('Enter both delivery schedule numbers in whole days: order every 1–60 days, delivery in 0–60 days.');
+  return {orderEveryDays:order,deliveryDays:delivery};}
 const newProfile=():SupplierProfile=>{const accountId=crypto.randomUUID();return {name:'',email:null,telephone:'',paymentTerms:'',minimumOrderMinor:null,deliveryFeeMinor:null,
   orderingInstructions:'',notes:'',emailAcceptance:{status:'unknown',note:''},accounts:[{id:accountId,reference:'',status:'active'}],
   locations:[{id:crypto.randomUUID(),accountId,reference:'',address:'',status:'active'}]};};
 export default function PurchasingSuppliers({companyId,active,onEnabledChange,onDirtyChange,onSaved}:{companyId:string;active:boolean;onEnabledChange:(v:boolean)=>void;onDirtyChange:(v:boolean)=>void;onSaved:()=>void}){
   const [enabled,setEnabled]=useState(false),[list,setList]=useState<SupplierList>({suppliers:[],hasMore:false}),[offset,setOffset]=useState(0);
   const [current,setCurrent]=useState<SupplierVersion|null>(null),[profile,setProfile]=useState<SupplierProfile|null>(null),[profileId,setProfileId]=useState('');
-  const [minimum,setMinimum]=useState(''),[fee,setFee]=useState(''),[reason,setReason]=useState(''),[archiveReason,setArchiveReason]=useState('');
+  const [minimum,setMinimum]=useState(''),[fee,setFee]=useState(''),[orderEvery,setOrderEvery]=useState(''),[deliveryDays,setDeliveryDays]=useState(''),[reason,setReason]=useState(''),[archiveReason,setArchiveReason]=useState('');
   const [maps,setMaps]=useState<MappingList>({mappings:[],hasMore:false}),[mapOffset,setMapOffset]=useState(0),[mapForm,setMapForm]=useState<MapForm|null>(null);
   const [stocks,setStocks]=useState<Stocks>([]);
   const productId=mapForm?.productId??'',unitSource=JSON.stringify([companyId,current?.id,mapForm?.id,productId]);
@@ -35,7 +41,7 @@ export default function PurchasingSuppliers({companyId,active,onEnabledChange,on
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[uncertain,setUncertain]=useState(false);
   const [baseline,setBaseline]=useState('');
   const pending=useRef<Record<string,unknown>|null>(null),lock=useRef(false);
-  const profileText=JSON.stringify({profile,minimum,fee});
+  const profileText=JSON.stringify({profile,minimum,fee,orderEvery,deliveryDays});
   const dirty=!!profile&&profileText!==baseline||!!mapForm;
   useEffect(()=>onDirtyChange(dirty||uncertain),[dirty,uncertain,onDirtyChange]);
   useEffect(()=>{let live=true;void supplierRequest<SupplierList>(companyId).then(data=>{if(live){setList(data);setEnabled(true);onEnabledChange(true);}})
@@ -54,10 +60,11 @@ export default function PurchasingSuppliers({companyId,active,onEnabledChange,on
       if(valid())setUnitView({source:unitSource,config:{productId,id:data.config.id,version:data.config.version},units:[...CURATED_UNIT_IDS.map(curatedUnit).filter(u=>u.dimension===data.config.dimension),...data.units]});
     }).catch(e=>{if(valid())setError(e.message);});},[companyId,productId,unitSource,beginUnits]);
   function adopt(p:SupplierVersion){setCurrent(p);setProfileId(p.id);setProfile(structuredClone(p.profile));const min=purchasingDollars(p.profile.minimumOrderMinor),f=purchasingDollars(p.profile.deliveryFeeMinor);
-    setMinimum(min);setFee(f);setBaseline(JSON.stringify({profile:p.profile,minimum:min,fee:f}));setReason('');setMapForm(null);setMapOffset(0);setArchiveReason('');}
+    const every=String(p.profile.deliveryRhythm?.orderEveryDays??''),takes=String(p.profile.deliveryRhythm?.deliveryDays??'');setOrderEvery(every);setDeliveryDays(takes);
+    setMinimum(min);setFee(f);setBaseline(JSON.stringify({profile:p.profile,minimum:min,fee:f,orderEvery:every,deliveryDays:takes}));setReason('');setMapForm(null);setMapOffset(0);setArchiveReason('');}
   function discard(){return !dirty||window.confirm('Discard unsaved supplier or mapping changes?');}
   async function open(id:string){if(!discard())return;try{const data=await supplierRequest<{supplier:SupplierVersion}>(companyId,`&supplierId=${encodeURIComponent(id)}`);adopt(data.supplier);setHistory({versions:[],hasMore:false});setHistoryId('');}catch(e){setError((e as Error).message);}}
-  function newSupplier(){if(!discard())return;const p=newProfile();setCurrent(null);setProfileId(crypto.randomUUID());setProfile(p);setMinimum('');setFee('');setBaseline('');setReason('');setMapForm(null);setMaps({mappings:[],hasMore:false});setHistoryId('');setHistory({versions:[],hasMore:false});}
+  function newSupplier(){if(!discard())return;const p=newProfile();setCurrent(null);setProfileId(crypto.randomUUID());setProfile(p);setMinimum('');setFee('');setOrderEvery('');setDeliveryDays('');setBaseline('');setReason('');setMapForm(null);setMaps({mappings:[],hasMore:false});setHistoryId('');setHistory({versions:[],hasMore:false});}
   async function showHistory(id:string,kind:'profile'|'mapping',page=0){try{setHistory(await supplierRequest<History>(companyId,`&view=history&${kind==='profile'?'supplierId':'mappingId'}=${encodeURIComponent(id)}&offset=${page}`));setHistoryId(id);setHistoryKind(kind);setHistoryOffset(page);}catch(e){setError((e as Error).message);}}
   async function save(body:Record<string,unknown>){if(lock.current)return;lock.current=true;setBusy(true);pending.current=body;setError('');setNotice('');
     try{const data=await supplierRequest<{supplier?:SupplierVersion;mapping?:MappingVersion}>(companyId,'',body);pending.current=null;setUncertain(false);
@@ -68,7 +75,7 @@ export default function PurchasingSuppliers({companyId,active,onEnabledChange,on
   }
   function saveProfile(event:React.FormEvent){event.preventDefault();if(!profile||busy||uncertain)return;
     try{void save({action:'save_profile',companyId,operationId:crypto.randomUUID(),supplierId:profileId,expectedVersion:current?.version??0,reason,
-      profile:{...profile,minimumOrderMinor:minimum.trim()?purchasingCents(minimum):null,deliveryFeeMinor:fee.trim()?purchasingCents(fee):null}});}catch(e){setError((e as Error).message);}}
+      profile:{...profile,minimumOrderMinor:minimum.trim()?purchasingCents(minimum):null,deliveryFeeMinor:fee.trim()?purchasingCents(fee):null,deliveryRhythm:rhythm(orderEvery,deliveryDays)}});}catch(e){setError((e as Error).message);}}
   function startMapping(mapping?:MappingVersion){if(mapForm&&!window.confirm('Discard the unsaved mapping?'))return;if(!current)return;
     const account=current.profile.accounts.find(a=>a.status==='active'),location=current.profile.locations.find(l=>l.status==='active'&&l.accountId===account?.id);
     setMapForm(mapping?{id:mapping.id,version:mapping.version,accountId:mapping.accountId,locationId:mapping.locationId,productId:mapping.productId,sku:mapping.sku,
@@ -97,6 +104,9 @@ export default function PurchasingSuppliers({companyId,active,onEnabledChange,on
         <label>Payment terms<textarea maxLength={1000} value={profile.paymentTerms} onChange={e=>setProfile({...profile,paymentTerms:e.target.value})}/></label>
         <label>Estimated minimum order (USD, optional)<Input inputMode="decimal" value={minimum} onChange={e=>setMinimum(e.target.value)}/></label>
         <label>Estimated delivery fee (USD, optional)<Input inputMode="decimal" value={fee} onChange={e=>setFee(e.target.value)}/></label>
+        <label>Order every (days, optional)<Input type="number" inputMode="numeric" min={1} max={60} step={1} value={orderEvery} onChange={e=>setOrderEvery(e.target.value)} aria-describedby="delivery-rhythm-help"/></label>
+        <label>Delivery takes (days, optional)<Input type="number" inputMode="numeric" min={0} max={60} step={1} value={deliveryDays} onChange={e=>setDeliveryDays(e.target.value)} aria-describedby="delivery-rhythm-help"/></label>
+        <p id="delivery-rhythm-help" className="po-field-help">How often you usually order from this supplier, and how many days an order takes to arrive (0 for the same day). Pantrack uses these to suggest how much to keep.</p>
         <label>Delivery rules and ordering cutoff<textarea maxLength={1000} value={profile.orderingInstructions} onChange={e=>setProfile({...profile,orderingInstructions:e.target.value})}/></label>
         <label>Notes<textarea maxLength={1000} value={profile.notes} onChange={e=>setProfile({...profile,notes:e.target.value})}/></label>
         <label>Email PO acceptance<select value={profile.emailAcceptance.status} onChange={e=>setProfile({...profile,emailAcceptance:{...profile.emailAcceptance,status:e.target.value as SupplierProfile['emailAcceptance']['status']}})}><option value="unknown">Unknown</option><option value="not_accepted">Not accepted</option><option value="manager_reported_accepted">Manager-reported accepted</option></select><small>This records a report and does not enable sending.</small></label>
@@ -113,7 +123,7 @@ export default function PurchasingSuppliers({companyId,active,onEnabledChange,on
       <div className="inventory-actions"><Button type="submit">Save supplier profile</Button><Button type="button" variant="outline" onClick={()=>{if(current)adopt(current);else{setProfile(null);setMapForm(null);}}}>Reset unsaved fields</Button></div>
       <p>Blank estimates mean unavailable. Ordering rules are recorded for review and are not automatically enforced.</p>
     </fieldset></form>}
-    {current&&<section><p>{current.status} · Email report: {emailAcceptanceLabel(current.profile.emailAcceptance.status)} · {current.emailAcceptanceReportedBy} · {new Date(current.emailAcceptanceReportedAt).toLocaleString()}</p>
+    {current&&<section><p>{deliveryRhythmText(current.profile.deliveryRhythm)}</p><p>{current.status} · Email report: {emailAcceptanceLabel(current.profile.emailAcceptance.status)} · {current.emailAcceptanceReportedBy} · {new Date(current.emailAcceptanceReportedAt).toLocaleString()}</p>
       <Button disabled={blocked} variant="outline" onClick={()=>void showHistory(current.id,'profile')}>View supplier version history</Button>
       {current.status==='active'&&<div className="inventory-actions"><label>Supplier archive reason<Input value={archiveReason} maxLength={500} onChange={e=>setArchiveReason(e.target.value)}/></label><Button disabled={blocked||dirty||archiveReason.trim().length<4} variant="outline" onClick={()=>void save({action:'archive_profile',companyId,operationId:crypto.randomUUID(),supplierId:current.id,expectedVersion:current.version,reason:archiveReason})}>Archive supplier</Button></div>}
       <h2>Supplier inventory mappings</h2><Button disabled={blocked||dirty||current.status!=='active'} onClick={()=>startMapping()}>Add inventory mapping</Button>
