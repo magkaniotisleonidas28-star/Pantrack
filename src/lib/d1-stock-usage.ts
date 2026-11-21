@@ -10,7 +10,7 @@ import {
 /** Stock changes that put deliveries on the shelf. */
 const RECEIVED = "('receive','order_receipt')";
 /** Stock changes that Pantrack records as use: sales, waste, manual use and sales corrections. */
-const RECORDED_USE = "('use','waste','sale_consumption','sale_correction')";
+export const RECORDED_USE = "('use','waste','sale_consumption','sale_correction')";
 /** Counts older than the window are still read so the first period in it has a start. */
 const COUNT_LOOKBACK_DAYS = USAGE_WINDOW_DAYS + 120;
 const DAY_MS = 86_400_000;
