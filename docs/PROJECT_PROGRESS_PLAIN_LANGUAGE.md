@@ -14,7 +14,11 @@ including what never gets recorded. It will suggest each product's level from
 that and from how often each supplier delivers, plus some spare. You accept or
 ignore each suggestion. Anyone can tap "We just ran out", which helps Pantrack
 learn. ([plan](STOCK_LEVELS_AND_ALERTS_ROADMAP.md),
-[decision](decisions/0011-reliable-stock-levels.md))
+[decision](decisions/0011-reliable-stock-levels.md)) The first part is built: Inventory → Usage &
+accuracy shows how much of each product is really used, how much of that never
+got recorded, and how close your last counts were to Pantrack's estimate. It
+only shows information; nothing changes
+([record](R1B_USAGE_ACCURACY_LOCAL_EVIDENCE_20261120.md)).
 
 **Order page by supplier (2026-11-19):** the New order page now shows one
 list per supplier that you can open and close, so it stays tidy as you add

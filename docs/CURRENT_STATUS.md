@@ -29,6 +29,17 @@ R1 choices:
 
 Planning only; no code or schema change.
 
+R1b, [usage and accuracy](R1B_USAGE_ACCURACY_LOCAL_EVIDENCE_20261120.md),
+adds a read-only Inventory → Usage & accuracy section. For each product it
+shows:
+- real daily use measured from count to count;
+- how much more or less was used than recorded (sales, waste, manual use);
+- how far recent counts were from Pantrack's estimate;
+- whether there is enough history for suggestions.
+
+Late sales are placed in the period when they happened. No schema change.
+Local evidence only.
+
 ## New order page grouped by supplier — 2026-11-19
 
 At the owner's request, the
