@@ -1,0 +1,113 @@
+/* R1c: "We ran out" reports. */
+.run-out-dialog {
+  max-width: 460px !important;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.run-out-form {
+  display: grid;
+  gap: 14px;
+}
+.run-out-form fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  display: grid;
+  gap: 4px;
+}
+.run-out-form fieldset label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e2e8e4);
+  cursor: pointer;
+  font-size: 14px;
+}
+.run-out-form fieldset label[data-selected='true'] {
+  border-color: #215743;
+  background: color-mix(in srgb, #215743 7%, transparent);
+}
+.run-out-form fieldset label small {
+  margin-left: auto;
+  font-size: 12px;
+  color: #926b27;
+}
+.run-out-note {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.run-out-note input {
+  font-weight: 400;
+}
+.run-out-form p[data-kind='ok'] {
+  margin: 0;
+  color: #24603f;
+  font-size: 14px;
+}
+.run-out-form p[data-kind='error'] {
+  margin: 0;
+  color: #9f3a30;
+  font-size: 14px;
+}
+.run-out-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted-foreground, #6e7d76);
+}
+.run-out-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.run-out-reviews {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border: 1px solid #ecd9b0;
+  border-radius: 10px;
+  background: #fbf5e8;
+}
+.run-out-reviews h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+.run-out-reviews ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.run-out-reviews li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.run-out-reviews li small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #6e7d76;
+}
+.run-out-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.sidebar-workspace[data-workspace-theme='dark'] .run-out-reviews {
+  background: #2a2416;
+  border-color: #5c4b26;
+}
+.sidebar-workspace[data-workspace-theme='dark'] .run-out-reviews li small {
+  color: #c9d6cd;
+}

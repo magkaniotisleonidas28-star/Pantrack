@@ -1223,3 +1223,32 @@ export const wastePhotoSettings=sqliteTable('waste_photo_settings',{
  updatedBy:text('updated_by').notNull(),
  updatedAt:text('updated_at').notNull(),
 },t=>[check('waste_photo_settings_enabled',sql`${t.enabled} IN (0,1)`)]);
+
+// R1c (decision 0011): "We just ran out" reports from any company member. A report never
+// changes stock; it is kept as evidence that a product ran short.
+export const runOutReports=sqliteTable('run_out_reports',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ id:text('id').notNull(),
+ productId:text('product_id').notNull(),
+ reportedBy:text('reported_by').notNull(),
+ reporterEmail:text('reporter_email').notNull(),
+ note:text('note').notNull(),
+ reportedAt:text('reported_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.id]}),index('run_out_report_company_product').on(t.companyId,t.productId,t.reportedAt),
+ check('run_out_report_note',sql`length(${t.note}) <= 200`)]);
+
+// One outcome per report, written once: an owner or manager confirms it as a zero count
+// (saved in the same batch as that count) or dismisses it.
+export const runOutResolutions=sqliteTable('run_out_resolutions',{
+ companyId:text('company_id').notNull(),
+ reportId:text('report_id').notNull(),
+ operationId:text('operation_id').notNull(),
+ outcome:text('outcome').notNull(),
+ countId:text('count_id'),
+ resolvedBy:text('resolved_by').notNull(),
+ resolvedAt:text('resolved_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.reportId]}),
+ foreignKey({columns:[t.companyId,t.reportId],foreignColumns:[runOutReports.companyId,runOutReports.id]}),
+ index('run_out_resolution_operation').on(t.companyId,t.operationId),
+ check('run_out_resolution_outcome',sql`${t.outcome} IN ('confirmed','dismissed')`),
+ check('run_out_resolution_count',sql`(${t.outcome} = 'confirmed') = (${t.countId} IS NOT NULL)`)]);

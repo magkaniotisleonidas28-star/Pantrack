@@ -25,6 +25,7 @@ import {AlertDialog,AlertDialogContent,AlertDialogTitle,AlertDialogDescription,A
 import {Skeleton} from '@/components/ui/skeleton';
 import {money,suppliers,type Product,type Order} from '@/lib/pantry';
 import OrderProductList from './order-product-list';
+import {RunOutButton} from './run-out';
 import {orderCategories} from './order-product-groups';
 const fresh=():Product=>({id:crypto.randomUUID(),name:'',supplier:'',sku:'',pack:'',unit:'case',price:0,category:'Other',url:'',sample:false});
 async function request(companyId:string,body?:Record<string,unknown>){const r=await fetch('/api/workspace?companyId='+encodeURIComponent(companyId),body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,companyId})}:undefined);const d=await r.json() as {error?:string;products:Product[];orders:Order[];order:Order;removedId?:string};if(!r.ok)throw new Error(d.error||'Unable to complete request.');return d;}
@@ -104,7 +105,7 @@ return <div className="app sidebar-workspace" data-workspace-theme={theme}>
   <a className="brand" href="/"><span><Package size={22}/></span>pantrack<span className="brand-period">.</span></a>
   <div className="topbar-company">{companyMenu??<strong>{companyName}</strong>}</div>
   <div className="workspace-name"><ChevronRight size={14}/><span>{activeLabel}</span></div>
-  <Button className="waste-entry-button" type="button" variant="outline" aria-label="Record waste" disabled={!wasteEnabled} onClick={()=>{setWasteSection('record');setWasteLaunch(n=>n+1);}}><Trash2 size={16}/><span className="waste-entry-label">Record waste</span></Button>
+  <Button className="waste-entry-button" type="button" variant="outline" aria-label="Record waste" disabled={!wasteEnabled} onClick={()=>{setWasteSection('record');setWasteLaunch(n=>n+1);}}><Trash2 size={16}/><span className="waste-entry-label">Record waste</span></Button><RunOutButton companyId={companyId} products={products}/>
   <button type="button" className="workspace-theme-toggle" aria-label={theme==='dark'?'Switch to light mode':'Switch to dark mode'} aria-pressed={theme==='dark'} onClick={toggleTheme}>{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</button>
   <span className="account" title={email}>{email.split('@')[0]} <span className="avatar">{email.slice(0,1).toUpperCase()}</span></span>
 </header>

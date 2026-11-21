@@ -40,6 +40,13 @@ shows:
 Late sales are placed in the period when they happened. No schema change.
 Local evidence only.
 
+R1c, [run-out reports](R1C_RUN_OUT_REPORTS_LOCAL_EVIDENCE_20261120.md), adds
+a "We ran out" button for every role, next to "Record waste". A report never
+changes stock. Owners and managers see open reports on the stock list, and
+can confirm one as a zero count (saved in the same batch) or dismiss it.
+Migration `0053` adds report and outcome tables. A new narrow `reportRunOut`
+permission lets employees report without counting stock. Local evidence only.
+
 ## New order page grouped by supplier — 2026-11-19
 
 At the owner's request, the

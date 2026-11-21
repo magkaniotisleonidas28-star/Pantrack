@@ -372,6 +372,13 @@
       "when": 1794873670931,
       "tag": "0052_waste_photo_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "6",
+      "when": 1795222570695,
+      "tag": "0053_run_out_reports",
+      "breakpoints": true
     }
   ]
 }
