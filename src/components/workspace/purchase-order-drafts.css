@@ -72,3 +72,10 @@
 .po-preview #po-editor fieldset.po-section{display:block;border:0;border-bottom:1px solid var(--border);border-radius:0;padding:0 0 24px;margin:0 0 24px}
 .po-preview #po-editor legend{float:none;width:100%;padding:0;margin:0 0 16px}
 .po-preview #po-editor .po-section>label+label{margin-top:16px}
+
+/* R1d: the delivery schedule help spans the whole form row. */
+.po-fields .po-field-help {
+  grid-column: 1 / -1;
+  margin: -6px 0 4px;
+  font-size: 13px;
+}

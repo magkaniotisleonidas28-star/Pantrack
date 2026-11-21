@@ -47,6 +47,11 @@ can confirm one as a zero count (saved in the same batch) or dismiss it.
 Migration `0053` adds report and outcome tables. A new narrow `reportRunOut`
 permission lets employees report without counting stock. Local evidence only.
 
+R1d, [delivery schedule per supplier](R1D_DELIVERY_RHYTHM_LOCAL_EVIDENCE_20261120.md),
+adds an optional "order every N days" (1–60) and "delivery takes N days"
+(0–60) to each purchasing supplier profile. They are saved as a new profile
+version by owners and managers. No schema change. Local evidence only.
+
 ## New order page grouped by supplier — 2026-11-19
 
 At the owner's request, the

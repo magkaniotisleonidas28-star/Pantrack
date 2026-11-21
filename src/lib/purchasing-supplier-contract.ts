@@ -9,6 +9,14 @@ const minor = z
   .regex(/^(0|[1-9]\d{0,11})$/)
   .nullable();
 const status = z.enum(['active', 'archived']);
+/** R1d (decision 0011): how often the café orders and how long delivery takes, in whole days. */
+export const deliveryRhythmSchema = z
+  .object({
+    orderEveryDays: z.number().int().min(1).max(60),
+    deliveryDays: z.number().int().min(0).max(60),
+  })
+  .strict();
+export type DeliveryRhythm = z.infer<typeof deliveryRhythmSchema>;
 export const supplierProfileSchema = z
   .object({
     name: id,
@@ -18,6 +26,8 @@ export const supplierProfileSchema = z
     minimumOrderMinor: minor,
     deliveryFeeMinor: minor,
     orderingInstructions: note,
+    // Optional; profiles saved before R1d have none.
+    deliveryRhythm: deliveryRhythmSchema.nullable().optional(),
     notes: note,
     emailAcceptance: z
       .object({ status: z.enum(['unknown', 'not_accepted', 'manager_reported_accepted']), note })
@@ -197,4 +207,13 @@ export function registryParse<T>(schema: z.ZodType<T>, value: unknown): T {
 export function registryId(value: string) {
   if (!id.safeParse(value).success)
     registryFail('invalid_request', 'Choose a valid company or record.');
+}
+
+/** Plain wording for a delivery rhythm, e.g. "Order every 7 days · delivery takes 2 days". */
+export function deliveryRhythmText(rhythm: DeliveryRhythm | null | undefined): string {
+  if (!rhythm) return 'Delivery schedule not set';
+  const days = (n: number) => (n === 1 ? '1 day' : `${n} days`);
+  return `Order every ${days(rhythm.orderEveryDays)} · delivery ${
+    rhythm.deliveryDays === 0 ? 'the same day' : 'takes ' + days(rhythm.deliveryDays)
+  }`;
 }
