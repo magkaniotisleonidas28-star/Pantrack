@@ -1,0 +1,105 @@
+/* Inventory → Usage & accuracy (R1b): one row per product, four facts each. */
+.stock-usage .inventory-stock-search {
+  margin: 4px 0 12px;
+}
+.stock-usage-empty {
+  padding: 24px 0;
+  color: var(--muted-foreground, #6e7d76);
+}
+.stock-usage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border, #e2e8e4);
+}
+.stock-usage-list > li {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border, #e2e8e4);
+}
+.stock-usage-list h3 {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 650;
+}
+.stock-usage-list dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+}
+.stock-usage-list dt {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--muted-foreground, #6e7d76);
+  margin-bottom: 3px;
+}
+.stock-usage-list dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.stock-usage-list dd small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted-foreground, #6e7d76);
+}
+.stock-usage-list > li[data-status='enough'] dl > div:last-child dd {
+  color: #2c7a55;
+}
+.stock-usage-note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #926b27;
+}
+.stock-usage-list details {
+  margin-top: 10px;
+  font-size: 13px;
+}
+.stock-usage-list summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #215743;
+}
+.stock-usage-list details ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+.stock-usage-list details li {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.stock-usage-list details li span:first-child {
+  min-width: 90px;
+  color: var(--muted-foreground, #6e7d76);
+}
+.sidebar-workspace[data-workspace-theme='dark'] .stock-usage-list summary {
+  color: #b5e6c7;
+}
+.sidebar-workspace[data-workspace-theme='dark'] .stock-usage-note {
+  color: #e6c78a;
+}
+.sidebar-workspace[data-workspace-theme='dark']
+  .stock-usage-list
+  > li[data-status='enough']
+  dl
+  > div:last-child
+  dd {
+  color: #9fd9b4;
+}
+
+@media (max-width: 760px) {
+  .stock-usage-list dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 420px) {
+  .stock-usage-list dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

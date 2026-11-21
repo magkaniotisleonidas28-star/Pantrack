@@ -2,9 +2,11 @@ export const inventorySections = [
   { id: 'stock', label: 'Stock' },
   { id: 'recipes', label: 'Recipes' },
   { id: 'plan', label: 'Purchasing plan' },
+  { id: 'usage', label: 'Usage & accuracy' },
   { id: 'activity', label: 'Activity' },
 ] as const;
-export const legacyInventorySections = inventorySections;
+// Usage & accuracy (R1b) reads exact stock history, so the older stock mode does not offer it.
+export const legacyInventorySections = inventorySections.filter((item) => item.id !== 'usage');
 export const exactInventorySections = inventorySections;
 export const supplierSections = [
   { id: 'vendors', label: 'Your suppliers' },
