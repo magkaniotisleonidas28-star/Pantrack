@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-19
+Updated: 2026-11-20
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,24 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Stock levels, alerts, expiry and invoices: plan — 2026-11-20
+
+The owner proposed four ideas, and the
+[roadmap](STOCK_LEVELS_AND_ALERTS_ROADMAP.md) orders them as:
+- R1, reliable stock levels;
+- R2, low-stock and run-out alerts;
+- R3, expiry reminders;
+- R4, supplier invoices.
+
+[Decision 0011](decisions/0011-reliable-stock-levels.md) records the owner's
+R1 choices:
+- Pantrack suggests each product's level and an owner or manager approves it;
+- Balanced caution by default, with levels worked out from measured use and
+  each supplier's delivery rhythm;
+- anyone can report "We just ran out".
+
+Planning only; no code or schema change.
 
 ## New order page grouped by supplier — 2026-11-19
 

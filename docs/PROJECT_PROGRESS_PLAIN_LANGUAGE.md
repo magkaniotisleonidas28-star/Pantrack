@@ -2,6 +2,20 @@
 
 Updated: 2026-11-13 for the first real supplier decision.
 
+**Stock you can trust, then alerts (planned, 2026-11-20):** your four ideas
+are planned in this order:
+- stock levels that allow for real-world inaccuracy;
+- low-stock alerts;
+- expiry reminders;
+- invoices.
+
+For the first, Pantrack will learn from your counts how much is really used,
+including what never gets recorded. It will suggest each product's level from
+that and from how often each supplier delivers, plus some spare. You accept or
+ignore each suggestion. Anyone can tap "We just ran out", which helps Pantrack
+learn. ([plan](STOCK_LEVELS_AND_ALERTS_ROADMAP.md),
+[decision](decisions/0011-reliable-stock-levels.md))
+
 **Order page by supplier (2026-11-19):** the New order page now shows one
 list per supplier that you can open and close, so it stays tidy as you add
 products. Each supplier's heading shows how many products you've added, their
