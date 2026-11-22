@@ -61,6 +61,13 @@ this level**, which saves a restocking-settings version with the level and
 the measured daily use. Seen-number and repeat checks apply. No schema change.
 Part 2 adds the caution choice and Ignore. Local evidence only.
 
+R1e part 2, [caution choice and Ignore](R1E2_CAUTION_IGNORE_LOCAL_EVIDENCE_20261121.md),
+adds a café-wide Lean / Balanced / Cautious choice (Balanced by default) and a
+per-product override, chosen by owners and managers. It also adds **Ignore**,
+which hides a suggestion until its numbers change. Migration `0054` adds the
+caution and ignore tables. R1e is complete; R1f, the owner's café trial, is
+next. Local evidence only.
+
 ## New order page grouped by supplier — 2026-11-19
 
 At the owner's request, the

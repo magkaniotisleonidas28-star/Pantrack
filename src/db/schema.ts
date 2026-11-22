@@ -1252,3 +1252,25 @@ export const runOutResolutions=sqliteTable('run_out_resolutions',{
  index('run_out_resolution_operation').on(t.companyId,t.operationId),
  check('run_out_resolution_outcome',sql`${t.outcome} IN ('confirmed','dismissed')`),
  check('run_out_resolution_count',sql`(${t.outcome} = 'confirmed') = (${t.countId} IS NOT NULL)`)]);
+
+// R1e part 2 (decision 0011): how careful suggested levels are. One row per company for the café
+// setting (product_id '*') and one per product that overrides it. Owners and managers change them.
+export const stockLevelCautions=sqliteTable('stock_level_cautions',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ productId:text('product_id').notNull(),
+ caution:text('caution').notNull(),
+ updatedBy:text('updated_by').notNull(),
+ updatedAt:text('updated_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.productId]}),
+ check('stock_level_caution_value',sql`${t.caution} IN ('lean','balanced','cautious')`)]);
+
+// A suggestion an owner or manager chose to ignore. It stays hidden only while the suggested
+// level is still the one ignored; new numbers show it again.
+export const stockLevelIgnores=sqliteTable('stock_level_ignores',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ productId:text('product_id').notNull(),
+ levelMinor:text('level_minor').notNull(),
+ ignoredBy:text('ignored_by').notNull(),
+ ignoredAt:text('ignored_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.productId]}),
+ check('stock_level_ignore_level',sql`${t.levelMinor} GLOB '[0-9]*' AND ${t.levelMinor} NOT GLOB '*[^0-9]*'`)]);

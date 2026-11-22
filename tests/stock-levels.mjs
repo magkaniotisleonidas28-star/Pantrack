@@ -517,4 +517,136 @@ assert.deepEqual(await accepted.json(), {
 globalThis.levelsEnabled = false;
 assert.equal((await get('a')).status, 404, 'Preview off');
 assert.equal((await post(body)).status, 404);
+// --- Part 2: caution choice and Ignore -----------------------------------------------------
+globalThis.levelsEnabled = true;
+const owner = { companyId: 'a', userId: 'olive', role: 'owner' };
+const beansAt = async () => find(await levels.read('a'), 'beans');
+const spareFor = (factor) => String(Math.ceil(2 * 9 + factor * dailyVariation(beanDays) * 3));
+assert.equal((await levels.read('a')).caution, 'balanced', 'Balanced until changed');
+await rejects(
+  levels.setCaution(
+    { companyId: 'a', productId: '*', caution: 'lean' },
+    { ...manager, role: 'employee' },
+  ),
+  'forbidden',
+);
+await rejects(
+  levels.setCaution({ companyId: 'a', productId: '*', caution: 'cafe' }, manager),
+  'not_suggested',
+);
+await rejects(
+  levels.setCaution({ companyId: 'a', productId: 'nothing', caution: 'lean' }, manager),
+  'not_suggested',
+);
+await levels.setCaution({ companyId: 'a', productId: '*', caution: 'cautious' }, manager);
+view = await levels.read('a');
+assert.equal(view.caution, 'cautious');
+assert.equal(find(view, 'beans').appliedCaution, 'cautious');
+assert.equal(find(view, 'beans').level.minor, spareFor(2.33));
+// A product's own caution overrides the café's; 'cafe' makes it follow the café again.
+await levels.setCaution({ companyId: 'a', productId: 'beans', caution: 'lean' }, owner);
+view = await levels.read('a');
+assert.deepEqual(view.productCautions, { beans: 'lean' });
+assert.equal(find(view, 'beans').caution, 'lean');
+assert.equal(find(view, 'beans').level.minor, spareFor(1.04));
+assert.equal(find(view, 'milk').caution, 'cautious', 'Other products follow the café');
+await levels.setCaution({ companyId: 'a', productId: 'beans', caution: 'balanced' }, owner);
+assert.equal((await beansAt()).level.minor, spareFor(1.65), 'Changing it again replaces it');
+await levels.setCaution({ companyId: 'a', productId: 'beans', caution: 'cafe' }, owner);
+assert.deepEqual((await levels.read('a')).productCautions, {});
+assert.equal((await beansAt()).level.minor, spareFor(2.33));
+assert.equal(
+  sql
+    .prepare("SELECT updated_by FROM stock_level_cautions WHERE company_id='a' AND product_id='*'")
+    .get().updated_by,
+  'max',
+);
+// Ignore hides only the suggestion that was seen; new numbers show it again.
+const cautiousLevel = (await beansAt()).level.minor;
+await rejects(
+  levels.ignore({ companyId: 'a', productId: 'beans', expectedLevelMinor: '1' }, manager),
+  'stale',
+);
+await rejects(
+  levels.ignore({ companyId: 'a', productId: 'cups', expectedLevelMinor: '1' }, manager),
+  'not_suggested',
+);
+await rejects(
+  levels.ignore(
+    { companyId: 'a', productId: 'beans', expectedLevelMinor: cautiousLevel },
+    { ...manager, role: 'employee' },
+  ),
+  'forbidden',
+);
+await levels.ignore(
+  { companyId: 'a', productId: 'beans', expectedLevelMinor: cautiousLevel },
+  manager,
+);
+assert.deepEqual((await levels.read('a')).ignored, { beans: true });
+await levels.setCaution({ companyId: 'a', productId: '*', caution: 'lean' }, manager);
+assert.deepEqual((await levels.read('a')).ignored, {}, 'A different suggestion is shown again');
+await levels.setCaution({ companyId: 'a', productId: '*', caution: 'cautious' }, manager);
+assert.deepEqual(
+  (await levels.read('a')).ignored,
+  { beans: true },
+  'The ignored numbers stay ignored',
+);
+await rejects(
+  levels.unignore({ companyId: 'a', productId: 'beans' }, { ...manager, role: 'employee' }),
+  'forbidden',
+);
+await levels.unignore({ companyId: 'a', productId: 'beans' }, manager);
+assert.deepEqual((await levels.read('a')).ignored, {});
+// Stock and saved levels are untouched by caution and ignore changes.
+assert.equal(
+  sql
+    .prepare("SELECT count(*) n FROM replenishment_settings_versions WHERE product_id='beans'")
+    .get().n,
+  2,
+);
+// The tables refuse unknown cautions and malformed levels.
+assert.throws(() =>
+  sql.prepare("INSERT INTO stock_level_cautions VALUES('a','x','maybe','u','t')").run(),
+);
+for (const bad of ['-1', 'abc', '1.5', ''])
+  assert.throws(
+    () => sql.prepare("INSERT INTO stock_level_ignores VALUES('a','x',?,'u','t')").run(bad),
+    bad,
+  );
+// Route: employees cannot change these; owners and managers can; bad input is refused.
+globalThis.levelsRole = 'employee';
+assert.equal(
+  (await post({ action: 'set_caution', companyId: 'a', productId: '*', caution: 'lean' })).status,
+  403,
+);
+assert.equal((await post({ action: 'unignore', companyId: 'a', productId: 'beans' })).status, 403);
+globalThis.levelsRole = 'manager';
+assert.equal(
+  (await post({ action: 'set_caution', companyId: 'a', productId: '*', caution: 'reckless' }))
+    .status,
+  400,
+);
+assert.equal(
+  (await post({ action: 'set_caution', companyId: 'b', productId: '*', caution: 'lean' })).status,
+  403,
+);
+assert.equal(
+  (await post({ action: 'set_caution', companyId: 'a', productId: '*', caution: 'balanced' }))
+    .status,
+  200,
+);
+const routeLevel = (await beansAt()).level.minor;
+const ignoredByRoute = await post({
+  action: 'ignore',
+  companyId: 'a',
+  productId: 'beans',
+  expectedLevelMinor: routeLevel,
+});
+assert.equal(ignoredByRoute.status, 200);
+assert.deepEqual((await (await get('a')).json()).ignored, { beans: true });
+assert.equal(
+  (await post({ action: 'ignore', companyId: 'a', productId: 'beans', expectedLevelMinor: '1' }))
+    .status,
+  409,
+);
 console.log('Stock levels passed.');
