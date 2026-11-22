@@ -11,7 +11,7 @@ import {
   type ProductUsage,
 } from '@/lib/stock-usage';
 import type { StockLevelsView } from '@/lib/d1-stock-levels';
-import type { LevelSuggestion } from '@/lib/stock-levels';
+import type { Caution, LevelSuggestion } from '@/lib/stock-levels';
 import { Button } from '@/components/ui/button';
 import { formatEveryday, friendlyContainers, type MeasurementSystem } from '@/lib/unit-preferences';
 import { StockSearch } from './inventory-layout';
@@ -81,12 +81,29 @@ function explanation(
     parts.push(
       `It ran out ${s.runOutReports === 1 ? 'once' : plural(s.runOutReports, 'time')} in the last 4 weeks, so extra spare is included.`,
     );
+  parts.push(
+    `Spare is sized to run short about ${cautionLabels[s.appliedCaution].odds} (${cautionLabels[s.appliedCaution].name}).`,
+  );
   if (s.supplierCount > 1)
     parts.push(
       `This uses ${s.supplier.supplierName}'s schedule, the longest of this product's ${s.supplierCount} suppliers.`,
     );
   return parts.join(' ');
 }
+
+const cautionLabels: Record<Caution, { name: string; odds: string; hint: string }> = {
+  lean: {
+    name: 'Lean',
+    odds: '1 delivery in 7',
+    hint: 'Less stock and waste; runs short more often',
+  },
+  balanced: { name: 'Balanced', odds: '1 delivery in 20', hint: 'Runs short only now and then' },
+  cautious: {
+    name: 'Cautious',
+    odds: '1 delivery in 100',
+    hint: 'Rarely runs short; more on the shelf',
+  },
+};
 
 const waiting: Record<Exclude<LevelSuggestion['status'], 'suggested'>, string> = {
   needs_history: 'A suggestion needs the history described above.',
@@ -122,6 +139,27 @@ export default function StockUsagePanel({
       null,
     );
   const operations = useRef(new Map<string, string>());
+  // Caution and Ignore are plain settings: sending the same choice twice changes nothing more.
+  async function change(productId: string, body: Record<string, unknown>, done: string) {
+    if (saving) return;
+    setSaving(productId);
+    setSaved(null);
+    try {
+      const response = await fetch('/api/inventory/levels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId, productId, ...body }),
+      });
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) throw new Error(result.error || 'Could not save. Please retry.');
+      setSaved({ productId, kind: 'ok', text: done });
+    } catch (error) {
+      setSaved({ productId, kind: 'error', text: (error as Error).message });
+    } finally {
+      setSaving('');
+      setRefresh((n) => n + 1);
+    }
+  }
   async function accept(s: LevelSuggestion) {
     if (!s.level || saving) return;
     const reference = operations.current.get(s.productId) ?? crypto.randomUUID();
@@ -196,6 +234,41 @@ export default function StockUsagePanel({
           </p>
         </div>
       </div>
+      {result?.view && (
+        <div className="stock-caution" role="group" aria-labelledby="stock-caution-title">
+          <h3 id="stock-caution-title">How careful should suggestions be?</h3>
+          {canManage ? (
+            <div className="stock-caution-choices">
+              {(['lean', 'balanced', 'cautious'] as const).map((c) => (
+                <label key={c} data-selected={result.view!.caution === c}>
+                  <input
+                    type="radio"
+                    name="stock-caution"
+                    checked={result.view!.caution === c}
+                    disabled={!!saving}
+                    onChange={() =>
+                      void change('*', { action: 'set_caution', caution: c }, 'Saved for the café.')
+                    }
+                  />
+                  <span>
+                    <strong>{cautionLabels[c].name}</strong>
+                    <small>
+                      {cautionLabels[c].hint} (about {cautionLabels[c].odds})
+                    </small>
+                  </span>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <p>Suggestions use the {cautionLabels[result.view.caution].name} setting.</p>
+          )}
+          {saved?.productId === '*' && (
+            <p role={saved.kind === 'error' ? 'alert' : 'status'} data-kind={saved.kind}>
+              {saved.text}
+            </p>
+          )}
+        </div>
+      )}
       <StockSearch value={search} onChange={setSearch} />
       {result?.error && !loading && (
         <div role="alert" className="error">
@@ -263,6 +336,7 @@ export default function StockUsagePanel({
                   const level = suggestion(usage.productId);
                   if (!level) return null;
                   const same = !!level.level && level.current?.minor === level.level.minor;
+                  const ignored = !!result?.view?.ignored[usage.productId];
                   return (
                     <div className="stock-level" data-status={level.status}>
                       <h4>Suggested level</h4>
@@ -276,19 +350,87 @@ export default function StockUsagePanel({
                                 : ` (now ${amount(level.current, system, record)})`
                               : ' (no level set yet)'}
                           </p>
-                          <p>{explanation(level, system, record)}</p>
+                          {ignored ? (
+                            <p>
+                              You chose to ignore this suggestion. It shows again when the numbers
+                              change.
+                            </p>
+                          ) : (
+                            <p>{explanation(level, system, record)}</p>
+                          )}
                           {canManage && !same && (
-                            <Button
-                              variant="outline"
-                              disabled={!!saving}
-                              onClick={() => void accept(level)}
-                            >
-                              {saving === usage.productId ? 'Saving…' : 'Use this level'}
-                            </Button>
+                            <div className="stock-level-actions">
+                              {ignored ? (
+                                <Button
+                                  variant="outline"
+                                  disabled={!!saving}
+                                  onClick={() =>
+                                    void change(
+                                      usage.productId,
+                                      { action: 'unignore' },
+                                      'Showing the suggestion again.',
+                                    )
+                                  }
+                                >
+                                  Show it again
+                                </Button>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    disabled={!!saving}
+                                    onClick={() => void accept(level)}
+                                  >
+                                    {saving === usage.productId ? 'Saving…' : 'Use this level'}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    disabled={!!saving}
+                                    onClick={() =>
+                                      void change(
+                                        usage.productId,
+                                        {
+                                          action: 'ignore',
+                                          expectedLevelMinor: level.level!.minor,
+                                        },
+                                        'Ignored until the numbers change.',
+                                      )
+                                    }
+                                  >
+                                    Ignore
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           )}
                         </>
                       ) : (
                         <p>{waiting[level.status as keyof typeof waiting]}</p>
+                      )}
+                      {canManage && (
+                        <label className="stock-level-caution">
+                          Caution for this product
+                          <select
+                            value={result?.view?.productCautions[usage.productId] ?? 'cafe'}
+                            disabled={!!saving}
+                            onChange={(e) =>
+                              void change(
+                                usage.productId,
+                                { action: 'set_caution', caution: e.target.value },
+                                'Caution saved for this product.',
+                              )
+                            }
+                          >
+                            <option value="cafe">
+                              Café setting ({cautionLabels[result!.view!.caution].name})
+                            </option>
+                            {(['lean', 'balanced', 'cautious'] as const).map((c) => (
+                              <option key={c} value={c}>
+                                {cautionLabels[c].name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
                       )}
                       {saved?.productId === usage.productId && (
                         <p

@@ -28,7 +28,14 @@ export type StockLevelsView = Readonly<{
   suggestions: readonly LevelSuggestion[];
   /** The current settings version per product, needed to accept a suggestion. */
   settingsVersions: Readonly<Record<string, number>>;
+  /** Products with their own caution, overriding the café setting. */
+  productCautions: Readonly<Record<string, Caution>>;
+  /** Products whose current suggestion an owner or manager chose to ignore. */
+  ignored: Readonly<Record<string, boolean>>;
 }>;
+
+export const CAFE = '*';
+const CAUTIONS: readonly Caution[] = ['lean', 'balanced', 'cautious'];
 
 export class StockLevelError extends Error {
   constructor(
@@ -63,7 +70,7 @@ export class D1StockLevels {
     const usage = await new D1StockUsage(this.db, this.clock).read(companyId);
     const windowStart = new Date(nowMs - RECENT_USE_DAYS * DAY_MS).toISOString(),
       runOutStart = new Date(nowMs - RUN_OUT_WINDOW_DAYS * DAY_MS).toISOString();
-    const [daily, first, suppliers, runOuts, settings] = await Promise.all([
+    const [daily, first, suppliers, runOuts, settings, cautions, ignores] = await Promise.all([
       this.db
         .prepare(
           `SELECT product_id,dimension,substr(effective_at,1,10) AS day,
@@ -118,9 +125,23 @@ export class D1StockLevels {
           dimension: UnitDimension;
           settings_json: string;
         }>(),
+      this.db
+        .prepare('SELECT product_id,caution FROM stock_level_cautions WHERE company_id=?')
+        .bind(companyId)
+        .all<{ product_id: string; caution: Caution }>(),
+      this.db
+        .prepare('SELECT product_id,level_minor FROM stock_level_ignores WHERE company_id=?')
+        .bind(companyId)
+        .all<{ product_id: string; level_minor: string }>(),
     ]);
     const firstUse = new Map(first.results.map((r) => [r.product_id, r.first_at]));
-    const caution: Caution = 'balanced';
+    const known = (value: string): value is Caution => CAUTIONS.includes(value as Caution);
+    const cafeRow = cautions.results.find((r) => r.product_id === CAFE);
+    const caution: Caution = cafeRow && known(cafeRow.caution) ? cafeRow.caution : 'balanced';
+    const productCautions: Record<string, Caution> = {};
+    for (const row of cautions.results)
+      if (row.product_id !== CAFE && known(row.caution))
+        productCautions[row.product_id] = row.caution;
     const settingsVersions: Record<string, number> = {};
     const suggestions = usage.products.map((product) => {
       // Whole UTC days after the first recorded use (or the window start) and before today, each
@@ -187,10 +208,17 @@ export class D1StockLevels {
           runOuts.results.find((r) => r.product_id === product.productId)?.n ?? 0,
         ),
         currentTarget,
-        caution,
+        caution: productCautions[product.productId] ?? caution,
       });
     });
-    return { usage, caution, suggestions, settingsVersions };
+    // An ignored suggestion stays hidden only while the suggested level is the one ignored.
+    const ignored: Record<string, boolean> = {};
+    for (const row of ignores.results) {
+      const current = suggestions.find((s) => s.productId === row.product_id);
+      if (current?.status === 'suggested' && current.level?.minor === row.level_minor)
+        ignored[row.product_id] = true;
+    }
+    return { usage, caution, suggestions, settingsVersions, productCautions, ignored };
   }
 
   /**
@@ -281,5 +309,92 @@ export class D1StockLevels {
         throw new StockLevelError('conflict', 'That action reference was already used.');
       throw error;
     }
+  }
+
+  private manager(actor: SettingsActor) {
+    if (actor.role !== 'owner' && actor.role !== 'manager')
+      throw new StockLevelError('forbidden', 'An owner or manager changes suggestion settings.');
+  }
+
+  /**
+   * Sets the café's caution (productId '*'), or one product's. 'cafe' removes a product's own
+   * setting so it follows the café again.
+   */
+  async setCaution(
+    input: { companyId: string; productId: string; caution: Caution | 'cafe' },
+    actor: SettingsActor,
+  ) {
+    this.manager(actor);
+    if (input.productId === CAFE && input.caution === 'cafe')
+      throw new StockLevelError('not_suggested', 'Choose Lean, Balanced or Cautious for the café.');
+    if (input.productId !== CAFE) {
+      const stocked = await this.db
+        .prepare('SELECT 1 AS ok FROM inventory_balances_exact WHERE company_id=? AND product_id=?')
+        .bind(input.companyId, input.productId)
+        .first<{ ok: number }>();
+      if (!stocked) throw new StockLevelError('not_suggested', 'This product has no stock set up.');
+    }
+    if (input.caution === 'cafe') {
+      await this.db
+        .prepare('DELETE FROM stock_level_cautions WHERE company_id=? AND product_id=?')
+        .bind(input.companyId, input.productId)
+        .run();
+      return { productId: input.productId, caution: 'cafe' as const };
+    }
+    await this.db
+      .prepare(
+        `INSERT INTO stock_level_cautions(company_id,product_id,caution,updated_by,updated_at) VALUES(?,?,?,?,?)
+        ON CONFLICT(company_id,product_id) DO UPDATE SET caution=excluded.caution,
+          updated_by=excluded.updated_by,updated_at=excluded.updated_at`,
+      )
+      .bind(
+        input.companyId,
+        input.productId,
+        input.caution,
+        actor.userId,
+        this.clock.now().toISOString(),
+      )
+      .run();
+    return { productId: input.productId, caution: input.caution };
+  }
+
+  /** Hides the suggestion that was seen, until its numbers change. */
+  async ignore(
+    input: { companyId: string; productId: string; expectedLevelMinor: string },
+    actor: SettingsActor,
+  ) {
+    this.manager(actor);
+    const suggestion = (await this.read(input.companyId)).suggestions.find(
+      (s) => s.productId === input.productId,
+    );
+    if (suggestion?.status !== 'suggested' || !suggestion.level)
+      throw new StockLevelError('not_suggested', 'There is no suggestion for this product now.');
+    if (suggestion.level.minor !== input.expectedLevelMinor)
+      throw new StockLevelError('stale', 'The numbers changed. Review the new suggestion first.');
+    await this.db
+      .prepare(
+        `INSERT INTO stock_level_ignores(company_id,product_id,level_minor,ignored_by,ignored_at) VALUES(?,?,?,?,?)
+        ON CONFLICT(company_id,product_id) DO UPDATE SET level_minor=excluded.level_minor,
+          ignored_by=excluded.ignored_by,ignored_at=excluded.ignored_at`,
+      )
+      .bind(
+        input.companyId,
+        input.productId,
+        input.expectedLevelMinor,
+        actor.userId,
+        this.clock.now().toISOString(),
+      )
+      .run();
+    return { productId: input.productId, ignored: true };
+  }
+
+  /** Shows an ignored suggestion again. */
+  async unignore(input: { companyId: string; productId: string }, actor: SettingsActor) {
+    this.manager(actor);
+    await this.db
+      .prepare('DELETE FROM stock_level_ignores WHERE company_id=? AND product_id=?')
+      .bind(input.companyId, input.productId)
+      .run();
+    return { productId: input.productId, ignored: false };
   }
 }
