@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-21
+Updated: 2026-11-22
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,30 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## Clover at the pilot café: decision and plan — 2026-11-22
+
+The owner asked to connect Clover at the pilot café.
+[Decision 0012](decisions/0012-clover-pilot-connection.md) records the owner's
+choices:
+- the pilot runs on `pilot.pantrack.app`, which the owner reports is online
+  and this repository does not yet record;
+- the Clover developer account is registered as an individual;
+- Clover items and options can be marked **Not tracked**;
+- Pantrack checks Clover automatically every 10 minutes.
+
+A code review found gaps for real use:
+- one unusual order (a custom amount, an item sold by weight, 100 or more
+  lines, or inconsistent refund details) stops all syncing at the same
+  checkpoint;
+- anything not linked to a recipe pauses the whole sale;
+- there is no automatic check;
+- removing the app in Clover is not shown clearly.
+
+The [roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md) orders P1 to P7: the local
+fixes, then a sandbox session for real-café cases, then the owner's setup
+checklist and go-live. Each outside step needs the owner's go-ahead. Clover
+sync remains off on every hosted site; nothing was contacted.
 
 ## Stock levels, alerts, expiry and invoices: plan — 2026-11-20
 
