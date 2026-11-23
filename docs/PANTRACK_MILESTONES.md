@@ -1320,6 +1320,8 @@ B6's fake-backed local adapter is complete; see [local evidence](M5_B6_LOCAL_EVI
 The owner accepted M5 on 2026-09-29 for the tested development sandbox scope;
 see the [B7 decision](M5_B7_ACCEPTANCE_REVIEW.md). Polling recovery is required
 when a webhook is missed or fails. Pilot and production acceptance are separate.
+The pilot connection is planned in [decision 0012](decisions/0012-clover-pilot-connection.md)
+and the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md) (steps P0–P7).
 
 ### Tasks
 

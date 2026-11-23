@@ -1,6 +1,20 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-13 for the first real supplier decision.
+Updated: 2026-11-22 for the Clover pilot plan.
+
+**Clover at the pilot café (planned, 2026-11-22):** Pantrack already works
+with Clover's test system. Before a real café, four things get fixed:
+- one unusual sale must never stop the rest from coming in;
+- items you don't track (gift cards, "to go") can be marked **Not tracked**;
+- Pantrack checks Clover by itself every 10 minutes;
+- you're told clearly if the app is removed in Clover.
+
+Then come a test session for real-café cases such as voids and sizes, and a
+step-by-step setup guide. You apply to Clover for a developer account as an
+individual and for a private live app, and Clover approves both. The pilot
+runs on pilot.pantrack.app. Nothing goes live without your go-ahead
+([plan](CLOVER_PILOT_CONNECTION_ROADMAP.md),
+[decision](decisions/0012-clover-pilot-connection.md)).
 
 **Stock you can trust, then alerts (planned, 2026-11-20):** your four ideas
 are planned in this order:
