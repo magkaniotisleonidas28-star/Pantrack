@@ -1,6 +1,6 @@
 # Pantrack current status
 
-Updated: 2026-11-22
+Updated: 2026-11-23
 
 This is the authoritative progress summary for Pantrack. It separates
 work that has passed evidence checks from prototype features and future work.
@@ -10,6 +10,25 @@ October 24 that the hosted app still contains test data.
 
 For the short milestone and A/B/C checklists, use the
 [plain-language progress guide](PROJECT_PROGRESS_PLAIN_LANGUAGE.md).
+
+## New look, step 1 of 4: Mercury style and menu — 2026-11-23
+
+The owner reviewed a design preview based on research of comparable apps on
+Mobbin and chose the Mercury-style look. Four official changes follow, one at
+a time:
+1. look, font and menu;
+2. home page and stock list;
+3. shorter wording;
+4. one Suppliers page.
+
+[Step 1](UI_MERCURY_LOOK_LOCAL_EVIDENCE_20261123.md) adds:
+- the Mercury-style look;
+- Inter, hosted inside Pantrack;
+- a grouped side menu that stays in view;
+- a tab bar and bottom-sheet dialogs on phones;
+- a waste-row padding fix.
+
+There is no API, schema or permission change. Local evidence only.
 
 ## Clover at the pilot café: decision and plan — 2026-11-22
 

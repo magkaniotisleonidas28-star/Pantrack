@@ -92,7 +92,11 @@ try {
       origin + '/signin-with-chatgpt?return_to=' + encodeURIComponent('/?company=' + companyId),
     );
     if (viewport.width < 700) {
-      await page.getByRole('button', { name: 'Open workspace navigation' }).click();
+      // Phones open the full menu from the tab bar's More button.
+      await page
+        .getByRole('navigation', { name: 'Main sections' })
+        .getByRole('button', { name: 'More', exact: true })
+        .click();
     }
     await page.getByRole('button', { name: 'Spending limits', exact: true }).first().click();
     const panel = page.locator('[data-spending-limits]');

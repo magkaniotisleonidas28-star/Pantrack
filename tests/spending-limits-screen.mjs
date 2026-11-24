@@ -7,7 +7,7 @@ const panel = readFileSync('src/components/workspace/spending-limits.tsx', 'utf8
   workspace = readFileSync('src/components/workspace/workspace.tsx', 'utf8');
 assert.match(
   workspace,
-  /\.\.\.\(role==='owner'&&limitsEnabled\?\[\{value:'spending-limits',label:'Spending limits',icon:Gauge\}\]:\[\]\)/,
+  /\.\.\.\(role==='owner'&&limitsEnabled\?\[\{value:'spending-limits',label:'Spending limits',icon:Gauge,group:'Settings'\}\]:\[\]\)/,
   'Menu entry for owners with the preview on only',
 );
 assert.match(
