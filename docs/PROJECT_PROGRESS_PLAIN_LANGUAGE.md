@@ -2,19 +2,19 @@
 
 Updated: 2026-11-23 for the new look.
 
-**New look (in progress, 2026-11-23):** you chose the Mercury-style design
-from the preview. The first step is ready:
-- a calmer look with pages on white panels;
-- a modern font;
-- a grouped menu that stays in view;
-- a tab bar at the bottom on phones.
-
-Step 2 adds the home page and the stock list with coloured status labels and
-filter buttons ([record](UI_HOME_STOCK_LIST_LOCAL_EVIDENCE_20261123.md)).
-Step 3 cuts the long text across the site, including the stock and recipe
-setup screens ([record](UI_SHORTER_WORDING_LOCAL_EVIDENCE_20261123.md)). One
-Suppliers page comes next
-([step 1 record](UI_MERCURY_LOOK_LOCAL_EVIDENCE_20261123.md)).
+**New look (2026-11-23):** you chose the Mercury-style design from the
+preview, and it is built in four steps:
+1. **The look:** a calmer style with pages on white panels, a modern font, a
+   grouped menu that stays in view, and a tab bar at the bottom on phones
+   ([record](UI_MERCURY_LOOK_LOCAL_EVIDENCE_20261123.md)).
+2. **Home and stock:** a home page, and a stock list with coloured status
+   labels and filter buttons
+   ([record](UI_HOME_STOCK_LIST_LOCAL_EVIDENCE_20261123.md)).
+3. **Shorter text** across the site, including the stock and recipe setup
+   screens ([record](UI_SHORTER_WORDING_LOCAL_EVIDENCE_20261123.md)).
+4. **One Suppliers page:** the two supplier pages are joined into one, with a
+   list, a card and tabs
+   ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
 
 **Clover at the pilot café (planned, 2026-11-22):** Pantrack already works
 with Clover's test system. Before a real café, four things get fixed:

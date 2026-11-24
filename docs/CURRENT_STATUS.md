@@ -43,6 +43,15 @@ across 22 workspace screens:
 - the stock-setup and recipe help is one line each;
 - longer explanations sit behind closed "Why?" and "Details" links.
 
+[Step 4](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md) adds one "Suppliers"
+menu item:
+- the versioned supplier list, redesigned as a list with a card and Details,
+  Products and History tabs;
+- the automation pages, still coming soon, below it.
+
+The older supplier list is kept where the newer list is off. Moving its data
+is a separate decision.
+
 ## Clover at the pilot café: decision and plan — 2026-11-22
 
 The owner asked to connect Clover at the pilot café.
