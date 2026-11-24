@@ -9,7 +9,38 @@ import { cloverSyncEnabled } from '@/lib/clover-sync';
 import { cloverPosAdapter } from '@/lib/clover-pos-adapter';
 import { requireSupported } from '@/lib/pos-adapter';
 import { D1CloverOptionLinks } from '@/lib/d1-clover-option-links';
+import { cloverSource } from '@/lib/clover-orders';
+import { D1SalesMappingPort } from '@/lib/d1-sales-runtime';
+import {
+  UNLINKED_SCAN_LIMIT,
+  findUnlinkedClover,
+  heldCloverSale,
+  type HeldCloverSale,
+} from '@/lib/clover-unlinked';
 import { z } from 'zod';
+/** Clover items and options that the most recent paused sales are waiting on. */
+async function unlinkedClover(
+  db: D1Database,
+  companyId: string,
+  row: { environment: string; merchant_id: string },
+) {
+  const held = await db
+    .prepare(
+      "SELECT e.occurred_at,e.normalized_json,s.last_reason FROM sales_events e JOIN sales_event_states s ON s.company_id=e.company_id AND s.event_key=e.event_key WHERE e.company_id=? AND e.provider='clover' AND e.environment=? AND e.merchant_id=? AND s.state='held' ORDER BY e.occurred_at DESC,e.event_key LIMIT ?",
+    )
+    .bind(companyId, row.environment, row.merchant_id, UNLINKED_SCAN_LIMIT + 1)
+    .all<{ occurred_at: string; normalized_json: string; last_reason: string | null }>();
+  const sales = held.results
+    .slice(0, UNLINKED_SCAN_LIMIT)
+    .map(heldCloverSale)
+    .filter((sale): sale is HeldCloverSale => sale !== null);
+  return findUnlinkedClover(sales, new D1SalesMappingPort(db), {
+    companyId,
+    source: cloverSource(companyId, row.environment, row.merchant_id),
+    more: held.results.length > UNLINKED_SCAN_LIMIT,
+  });
+}
+
 async function handleGET(req: Request) {
   const u = await getChatGPTUser();
   if (!u) return Response.json({ error: 'Please sign in.' }, { status: 401 });
@@ -65,6 +96,8 @@ async function handleGET(req: Request) {
           }),
         ])
       : [{ results: [] }, { results: [] }, { results: [] }, { results: [] }, { results: [] }, []];
+    // A summary that can't be worked out is left out; the connection still loads.
+    const unlinked = row ? await unlinkedClover(db, id!, row).catch(() => null) : null;
     return Response.json(
       {
         ready: c.ready,
@@ -87,6 +120,7 @@ async function handleGET(req: Request) {
           ),
         })),
         optionLinks,
+        unlinked,
       },
       { headers: { 'Cache-Control': 'no-store' } },
     );

@@ -52,6 +52,23 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Unlinked Clover items banner — 2026-11-23
+
+The first idea from the approved Mobbin shortlist
+([evidence](CLOVER_UNLINKED_BANNER_LOCAL_EVIDENCE_20261123.md)). For owners:
+- the Sales page shows a Clover pill ("Clover · checked 4 min ago") with
+  **Sync now**;
+- a banner lists Clover items and options that paused sales are waiting on,
+  and each can be linked to a recipe on the spot;
+- a note says how many paused sales are ready to try again;
+- Home gets a matching To-do item.
+
+`GET /api/clover` (owners only) adds an `unlinked` summary. It re-checks the
+latest 200 paused Clover sales with the same lookup rules as sales
+processing. There is no schema or permission change. **Not tracked** follows
+with Clover pilot step P2. Local evidence only; no Clover account was
+contacted.
+
 ## Clover at the pilot café: decision and plan — 2026-11-22
 
 The owner asked to connect Clover at the pilot café.

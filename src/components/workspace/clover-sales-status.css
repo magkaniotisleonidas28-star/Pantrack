@@ -1,0 +1,135 @@
+/* Clover status pill and the unlinked-items banner on the Sales page. */
+.clover-pill {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.clover-pill-message {
+  flex-basis: 100%;
+  text-align: right;
+}
+.clover-unlinked {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.clover-banner {
+  --banner-fg: #8a5a12;
+  --banner-bg: #fdf6e7;
+  --banner-line: #f1dfb8;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--banner-line);
+  border-radius: 12px;
+  background: var(--banner-bg);
+}
+.clover-banner[data-tone='good'] {
+  --banner-fg: #1f6b45;
+  --banner-bg: #eef7f1;
+  --banner-line: #cfe6d8;
+}
+.clover-banner > svg {
+  flex: 0 0 auto;
+  color: var(--banner-fg);
+}
+.clover-banner-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+.clover-banner-text strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--banner-fg);
+}
+.clover-banner-text span {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.clover-link-list {
+  display: grid;
+  gap: 8px;
+  padding: 6px 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card, #fff);
+}
+.clover-link-list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.clover-link-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+}
+.clover-link-list li + li {
+  border-top: 1px solid var(--border);
+}
+.clover-link-name {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+.clover-link-name strong {
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.clover-link-name small {
+  margin: 0;
+}
+.clover-link-choice {
+  flex: 0 1 240px;
+  min-width: 0;
+}
+.clover-link-choice select {
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--input);
+  border-radius: 8px;
+  background: var(--background);
+  font: inherit;
+  font-size: 13px;
+}
+@media (max-width: 650px) {
+  .clover-banner {
+    flex-wrap: wrap;
+  }
+  .clover-banner .clover-banner-text {
+    flex-basis: calc(100% - 32px);
+  }
+  .clover-link-list li {
+    flex-wrap: wrap;
+  }
+  .clover-link-name {
+    flex-basis: 100%;
+  }
+  .clover-link-choice {
+    flex: 1;
+  }
+  .clover-pill {
+    justify-content: flex-start;
+  }
+  .clover-pill-message {
+    text-align: left;
+  }
+}
+.sidebar-workspace[data-workspace-theme='dark'] .clover-banner {
+  --banner-fg: #f3cf8d;
+  --banner-bg: #2f2716;
+  --banner-line: #4a3b1d;
+}
+.sidebar-workspace[data-workspace-theme='dark'] .clover-banner[data-tone='good'] {
+  --banner-fg: #a6e3bd;
+  --banner-bg: #1b3326;
+  --banner-line: #2c4a39;
+}

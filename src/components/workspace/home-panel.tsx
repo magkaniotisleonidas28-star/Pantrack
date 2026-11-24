@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge, type StatusTone } from '@/components/ui/status-badge';
 import { money, type Order, type Product } from '@/lib/pantry';
 import { stockState, type StockState } from '@/lib/stock-status';
+import { timeAgo, unlinkedHeadline, type UnlinkedCloverSummary } from '@/lib/clover-unlinked';
 import { useLevelTargets } from './use-level-targets';
 import './home-stock.css';
 
@@ -28,6 +29,7 @@ type Clover = {
   connected: boolean;
   syncEnabled: boolean;
   sync?: { lastSuccess?: string | null; heldCount?: number } | null;
+  unlinked?: UnlinkedCloverSummary | null;
 };
 
 async function getJson<T>(url: string): Promise<T | null> {
@@ -178,6 +180,14 @@ export default function HomePanel({
       tab: 'inventory',
       action: 'Count',
     },
+    !!clover?.unlinked?.entries.length && {
+      key: 'clover-links',
+      title: unlinkedHeadline(clover.unlinked.entries),
+      detail: `Link them so ${clover.unlinked.waitingSales} paused sale${clover.unlinked.waitingSales === 1 ? '' : 's'} can come off stock.`,
+      time: `${Math.max(2, clover.unlinked.entries.length)} min`,
+      tab: 'sales',
+      action: 'Link',
+    },
     paused &&
       paused > 0 && {
         key: 'paused',
@@ -294,7 +304,7 @@ export default function HomePanel({
               <p className="home-small">
                 {clover?.connected
                   ? clover.sync?.lastSuccess
-                    ? `Last checked ${new Date(clover.sync.lastSuccess).toLocaleString()}`
+                    ? `Last checked ${timeAgo(clover.sync.lastSuccess, now) ?? new Date(clover.sync.lastSuccess).toLocaleString()}`
                     : 'No sync yet.'
                   : 'Connect Clover so sales take ingredients off your stock.'}
               </p>
