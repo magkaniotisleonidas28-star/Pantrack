@@ -1,0 +1,516 @@
+/* Pantrack's standard look (owner-approved 2026-11-23), inspired by Mercury on Mobbin:
+   one soft surface for the top bar and menu, each page on a white rounded panel, smaller
+   crisper type, pill buttons and quieter colour. Also: a grouped side menu that stays in view,
+   a tab bar on phones, and dialogs that slide up from the bottom on phones. */
+
+.sidebar-workspace {
+  font-feature-settings: 'cv11', 'ss01';
+}
+.sidebar-workspace :is(h1, h2) {
+  letter-spacing: -0.02em;
+}
+.sidebar-workspace .num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Grouped side menu. */
+.sidebar-group-heading {
+  height: 26px;
+  margin: 10px 0 2px;
+  padding: 0 15px;
+  display: flex;
+  align-items: flex-end;
+}
+.sidebar-group:first-child .sidebar-group-heading {
+  margin-top: 0;
+}
+.sidebar-group-heading span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8a978f;
+  white-space: nowrap;
+}
+.sidebar-workspace .workspace-sidebar:not(:hover, :focus-within) .sidebar-group-heading {
+  height: 1px;
+  margin: 9px 10px;
+  padding: 0;
+  background: #e6ebe8;
+}
+.workspace-navigation-sheet .sidebar-group-heading span {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* The side menu runs the full height and stays in view while scrolling. */
+@media (min-width: 761px) and (hover: hover) {
+  .sidebar-workspace .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .sidebar-workspace .workspace-shell {
+    min-height: calc(100vh - 68px);
+  }
+  .sidebar-workspace .workspace-sidebar {
+    position: sticky;
+    top: 68px;
+    align-self: start;
+    height: calc(100vh - 68px);
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+}
+
+/* Phones: a tab bar at the bottom, and dialogs that slide up from the bottom. */
+.bottom-tab-bar {
+  display: none;
+}
+@media (max-width: 760px), (hover: none) {
+  .sidebar-workspace .mobile-workspace-nav {
+    display: none;
+  }
+  .bottom-tab-bar {
+    position: fixed;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding: 6px 6px max(6px, env(safe-area-inset-bottom));
+    background: #ffffffef;
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #e1e6e3;
+  }
+  .bottom-tab-bar button {
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    padding: 6px 0;
+    border-radius: 10px;
+    color: #6a776f;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .bottom-tab-bar button[aria-current='page'] {
+    color: #215743;
+    background: #eaf2ed;
+  }
+  .sidebar-workspace[data-workspace-theme='dark'] .bottom-tab-bar {
+    background: #0f1d16ef;
+    border-color: #365043;
+  }
+  .sidebar-workspace[data-workspace-theme='dark'] .bottom-tab-bar button {
+    color: #a9c0b0;
+  }
+  .sidebar-workspace[data-workspace-theme='dark'] .bottom-tab-bar button[aria-current='page'] {
+    color: #c2f0d0;
+    background: #244533;
+  }
+  .sidebar-workspace main {
+    padding-bottom: 150px;
+  }
+  .order-total-dock {
+    bottom: calc(70px + env(safe-area-inset-bottom)) !important;
+  }
+  [data-slot='dialog-content'],
+  [data-slot='alert-dialog-content'] {
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    translate: none !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0 !important;
+    padding-top: 30px !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  }
+  [data-slot='dialog-content']::before,
+  [data-slot='alert-dialog-content']::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    width: 40px;
+    height: 5px;
+    margin-left: -20px;
+    border-radius: 3px;
+    background: #cfd8d2;
+  }
+}
+
+/* Waste item rows keep their inner padding, so text never touches the highlight. */
+.menu-waste-page.task-form .menu-waste-item > button:first-child {
+  padding-left: 12px;
+  border-radius: 10px;
+}
+.menu-waste-page.task-form .menu-waste-item > button:last-child {
+  border-radius: 10px;
+}
+
+/* The Mercury look. */
+.sidebar-workspace.look-mercury {
+  --polish-canvas: #f3f2ee;
+  --polish-panel: #ffffff;
+  --polish-line: #e9e7e1;
+  --polish-ink: #1d2420;
+  --polish-soft: #6b716c;
+  --background: var(--polish-canvas);
+  --border: var(--polish-line);
+  --input: #e3e1da;
+  --muted: #f6f5f1;
+  --accent: #eef3ef;
+  --radius: 0.75rem;
+  background: var(--polish-canvas);
+  color: var(--polish-ink);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One surface for top bar and menu. */
+.sidebar-workspace.look-mercury .topbar {
+  height: 56px;
+  background: var(--polish-canvas) !important;
+  border-bottom: 0;
+  padding: 0 16px 0 18px;
+  gap: 16px;
+}
+.sidebar-workspace.look-mercury .topbar {
+  flex-wrap: nowrap;
+}
+@media (min-width: 761px) {
+  .sidebar-workspace.look-mercury .brand {
+    font-size: 21px;
+    width: auto;
+    letter-spacing: -0.04em;
+  }
+}
+.sidebar-workspace.look-mercury .brand > span:first-child {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+}
+.sidebar-workspace.look-mercury .workspace-name span {
+  font-size: 12px;
+  color: var(--polish-soft);
+}
+.sidebar-workspace.look-mercury
+  :is(.waste-entry-button, .topbar-company button, .workspace-theme-toggle) {
+  height: 32px;
+  border-radius: 999px;
+  border-color: transparent;
+  background: #e9e7e1;
+  box-shadow: none;
+  font-size: 13px;
+  color: var(--polish-ink);
+}
+.sidebar-workspace.look-mercury :is(.waste-entry-button, .topbar-company button):hover {
+  background: #e0ddd5;
+}
+.sidebar-workspace.look-mercury .workspace-theme-toggle {
+  width: 32px;
+  flex-basis: 32px;
+}
+.sidebar-workspace.look-mercury .avatar {
+  width: 28px;
+  height: 28px;
+  background: #215743;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.sidebar-workspace.look-mercury .account {
+  font-size: 12px;
+  color: var(--polish-soft);
+}
+
+.sidebar-workspace.look-mercury .workspace-sidebar {
+  background: transparent;
+  border-right: 0;
+  box-shadow: none !important;
+  padding: 8px 8px 16px;
+}
+.sidebar-workspace.look-mercury .sidebar-main-item {
+  min-height: 34px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a514c;
+}
+.sidebar-workspace.look-mercury .sidebar-main-item:hover {
+  background: #e9e7e1;
+}
+.sidebar-workspace.look-mercury .sidebar-main-item[data-active='true'] {
+  background: #fff;
+  color: var(--polish-ink);
+  box-shadow:
+    0 1px 2px #1d24201a,
+    0 0 0 1px #1d24200d;
+  font-weight: 600;
+}
+.sidebar-workspace.look-mercury .sidebar-main-item[data-active='true'] svg {
+  color: #215743;
+}
+.sidebar-workspace.look-mercury .sidebar-subsections {
+  padding-left: 30px;
+}
+.sidebar-workspace.look-mercury .sidebar-subsections button {
+  padding: 6px 10px;
+  font-size: 12.5px;
+  border-radius: 7px;
+  color: #5d635f;
+}
+.sidebar-workspace.look-mercury .sidebar-subsections button[aria-current='page'] {
+  background: transparent;
+  color: #215743;
+  font-weight: 600;
+}
+.sidebar-workspace.look-mercury .sidebar-group-heading span {
+  color: #9a9e98;
+}
+.sidebar-workspace.look-mercury
+  .workspace-sidebar:not(:hover, :focus-within)
+  .sidebar-group-heading {
+  background: #e3e1da;
+}
+@media (min-width: 761px) and (hover: hover) {
+  .sidebar-workspace.look-mercury .workspace-sidebar {
+    top: 56px;
+    height: calc(100vh - 56px);
+  }
+  .sidebar-workspace.look-mercury .workspace-shell {
+    min-height: calc(100vh - 56px);
+  }
+  /* Each page sits on a white rounded panel. */
+  .sidebar-workspace.look-mercury .workspace-body {
+    margin: 0 10px 10px 0;
+    background: var(--polish-panel);
+    border: 1px solid var(--polish-line);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px #1d24200d;
+    min-height: calc(100vh - 66px);
+  }
+}
+.sidebar-workspace.look-mercury main {
+  padding: 22px 32px 0;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+/* Quieter, crisper type. */
+.sidebar-workspace.look-mercury h1 {
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  margin: 2px 0 4px;
+}
+.sidebar-workspace.look-mercury h2 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.sidebar-workspace.look-mercury p {
+  font-size: 13.5px;
+  color: var(--polish-soft);
+}
+.sidebar-workspace.look-mercury .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 500;
+  color: var(--polish-soft);
+}
+.sidebar-workspace.look-mercury .page-heading {
+  margin: 8px 0 18px;
+}
+.sidebar-workspace.look-mercury .demo-banner {
+  border: 0;
+  background: #f6f5f1;
+  border-radius: 10px;
+  font-size: 12px;
+  padding: 9px 12px;
+}
+
+/* Pill buttons; secondary buttons are soft grey, not outlined. */
+.sidebar-workspace.look-mercury [data-slot='button'] {
+  border-radius: 999px;
+  box-shadow: none;
+  font-weight: 600;
+}
+.sidebar-workspace.look-mercury [data-slot='button'][data-variant='outline'] {
+  background: #f1f0eb;
+  border-color: transparent;
+  color: var(--polish-ink);
+}
+.sidebar-workspace.look-mercury [data-slot='button'][data-variant='outline']:hover {
+  background: #e7e5df;
+}
+.sidebar-workspace.look-mercury
+  [data-slot='button']:is([data-variant='default'], :not([data-variant])) {
+  background: #1f4d3b;
+}
+.sidebar-workspace.look-mercury [data-slot='input'],
+.sidebar-workspace.look-mercury main select {
+  border-radius: 10px;
+  background: #fff;
+  border-color: #e3e1da;
+  box-shadow: none;
+}
+
+/* Cards and tables: hairlines, no heavy boxes. */
+.sidebar-workspace.look-mercury
+  :is(
+    .home-card,
+    .home-figure,
+    .catalog-card,
+    .product-panel,
+    .basket,
+    .history-card,
+    .guided-setup-callout,
+    .stock-level,
+    .empty
+  ) {
+  border-color: var(--polish-line);
+  border-radius: 14px;
+  box-shadow: none;
+}
+.sidebar-workspace.look-mercury .home-figure {
+  border-top-width: 1px !important;
+  background: #fbfaf8;
+}
+.sidebar-workspace.look-mercury .home-figure strong {
+  font-size: 30px;
+  font-weight: 650;
+}
+.sidebar-workspace.look-mercury .home-figure[data-tone='bad'] .home-figure-label svg {
+  color: #d9493b;
+}
+.sidebar-workspace.look-mercury .home-figure[data-tone='warn'] .home-figure-label svg {
+  color: #d4962b;
+}
+.sidebar-workspace.look-mercury .guided-setup-callout {
+  background: #f6f5f1;
+}
+.sidebar-workspace.look-mercury .inventory-table {
+  border: 1px solid var(--polish-line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.sidebar-workspace.look-mercury .dense-table [data-slot='table-head'] {
+  background: #fbfaf8;
+  font-size: 11.5px;
+  color: #7a7f7a;
+}
+.sidebar-workspace.look-mercury .dense-table [data-slot='table-cell'] {
+  font-size: 13.5px;
+}
+.sidebar-workspace.look-mercury .filter-chips button {
+  height: 30px;
+  border-color: transparent;
+  background: #f1f0eb;
+  font-size: 12.5px;
+}
+.sidebar-workspace.look-mercury .filter-chips button[aria-pressed='true'] {
+  background: var(--polish-ink);
+  color: #fff;
+}
+.sidebar-workspace.look-mercury .status-badge {
+  font-weight: 500;
+  font-size: 11.5px;
+}
+.sidebar-workspace.look-mercury footer {
+  font-size: 12px;
+  padding: 28px 0 18px;
+}
+
+/* Phone: the white panel fills the screen; tab bar matches the canvas. */
+@media (max-width: 760px), (hover: none) {
+  .sidebar-workspace.look-mercury main {
+    padding: 14px 16px 150px;
+  }
+  .sidebar-workspace.look-mercury .bottom-tab-bar {
+    background: #f3f2eef2;
+    border-color: var(--polish-line);
+  }
+  .sidebar-workspace.look-mercury .bottom-tab-bar button[aria-current='page'] {
+    background: #fff;
+    color: var(--polish-ink);
+    box-shadow: 0 1px 2px #1d24201a;
+  }
+}
+
+/* Dark version of the polished look. */
+.sidebar-workspace.look-mercury[data-workspace-theme='dark'] {
+  --polish-canvas: #0d1511;
+  --polish-panel: #141e19;
+  --polish-line: #24332b;
+  --polish-ink: #e8efe9;
+  --polish-soft: #9fb1a5;
+  --muted: #18241e;
+  --input: #2b3b32;
+}
+.sidebar-workspace.look-mercury[data-workspace-theme='dark']
+  :is(
+    .waste-entry-button,
+    .topbar-company button,
+    .workspace-theme-toggle,
+    .filter-chips button,
+    [data-slot='button'][data-variant='outline']
+  ) {
+  background: #1c2a23;
+  color: #e8efe9;
+}
+.sidebar-workspace.look-mercury[data-workspace-theme='dark'] .sidebar-main-item {
+  color: #b7c6bc;
+}
+.sidebar-workspace.look-mercury[data-workspace-theme='dark'] .sidebar-main-item:hover {
+  background: #18241e;
+}
+.sidebar-workspace.look-mercury[data-workspace-theme='dark']
+  .sidebar-main-item[data-active='true'] {
+  background: #1c2a23;
+  color: #e8efe9;
+  box-shadow: none;
+}
+.sidebar-workspace.look-mercury[data-workspace-theme='dark']
+  :is(.home-figure, .dense-table [data-slot='table-head'], .demo-banner, .guided-setup-callout) {
+  background: #18241e;
+}
+.sidebar-workspace.look-mercury[data-workspace-theme='dark'] [data-slot='input'] {
+  background: #141e19;
+}
+
+@media (max-width: 760px) {
+  .sidebar-workspace.look-mercury .topbar {
+    height: 56px;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .sidebar-workspace.look-mercury .account {
+    font-size: 0;
+    gap: 0;
+  }
+  .sidebar-workspace.look-mercury .account .avatar {
+    font-size: 12px;
+  }
+}
+.sidebar-workspace.look-mercury[data-workspace-theme='dark']
+  [data-slot='button']:is([data-variant='default'], :not([data-variant])) {
+  background: #68be8a;
+  color: #102318;
+}
+.sidebar-workspace.look-mercury[data-workspace-theme='dark']
+  .workspace-sidebar:not(:hover, :focus-within)
+  .sidebar-group-heading {
+  background: #24332b;
+}

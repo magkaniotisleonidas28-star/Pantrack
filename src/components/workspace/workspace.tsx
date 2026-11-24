@@ -11,7 +11,8 @@ import WeeklySchedules from './weekly-schedules';
 import InventoryPanel from './inventory-panel';
 import ProductCatalog from './product-catalog';
 import PaymentMethods from './payment-methods';
-import {CalendarClock,CreditCard,Gauge,Menu,ChevronRight,Moon,Sun,Trash2,X,Receipt} from 'lucide-react';
+import {CalendarClock,CreditCard,Gauge,Menu,ChevronRight,Moon,Sun,Trash2,X,Receipt,MoreHorizontal} from 'lucide-react';
+import './workspace-look.css';
 import {Sheet,SheetTrigger,SheetContent,SheetTitle,SheetDescription} from '@/components/ui/sheet';
 import {useCallback,useEffect,useRef,useState,useSyncExternalStore,type ReactNode} from 'react';
 import {useRequestScope} from '@/hooks/use-request-scope';
@@ -61,25 +62,27 @@ const [showOrderDock,setShowOrderDock]=useState(false);
 const orderTotalRef=useRef<HTMLDivElement|null>(null);
 useEffect(()=>{if(tab!=='order')return;const totalRow=orderTotalRef.current;if(!totalRow)return;const observer=new IntersectionObserver(([entry])=>setShowOrderDock(!entry.isIntersecting));observer.observe(totalRow);return()=>{observer.disconnect();setShowOrderDock(false);};},[tab]);
 const changeInventoryMode=useCallback((mode:InventoryMode)=>{setInventoryMode(mode);const choices=mode==='exact'?exactInventorySections:legacyInventorySections;setInventorySection(current=>choices.some(item=>item.id===current)?current:'stock');},[]);
-const navigation=[
-  {value:'order',label:'New order',icon:ShoppingBag},
-  {value:'inventory',label:'Inventory',icon:Package},
-  {value:'sales',label:'Sales',icon:Receipt},
-  ...(wasteEnabled?[{value:'waste',label:'Waste',icon:Trash2}]:[]),
-  {value:'catalog',label:'Product catalog',icon:BookOpen},
-  {value:'history',label:'Order history',icon:History},
-  ...(poEnabled?[{value:'purchasing',label:'Purchase-order drafts',icon:ShoppingBag}]:[]),
-  ...(registryEnabled?[{value:'purchasing-suppliers',label:'Purchasing suppliers',icon:Truck}]:[]),
-  ...(weeklyEnabled?[{value:'weekly-drafts',label:'Weekly drafts',icon:CalendarClock}]:[]),
-  {value:'suppliers',label:'Suppliers & automation',icon:Truck},
-  ...(role==='owner'&&limitsEnabled?[{value:'spending-limits',label:'Spending limits',icon:Gauge}]:[]),
-  ...(role==='owner'?[{value:'payments',label:'Payment methods',icon:CreditCard},{value:'setup',label:'Setup & register',icon:Check}]:[]),
+// Menu groups: everyday work first, then buying, then settings.
+const navigation:Array<{value:string;label:string;icon:typeof Package;group:string}>=[
+  {value:'order',label:'New order',icon:ShoppingBag,group:'Today'},
+  {value:'inventory',label:'Inventory',icon:Package,group:'Today'},
+  {value:'sales',label:'Sales',icon:Receipt,group:'Today'},
+  ...(wasteEnabled?[{value:'waste',label:'Waste',icon:Trash2,group:'Today'}]:[]),
+  {value:'catalog',label:'Product catalog',icon:BookOpen,group:'Buying'},
+  {value:'history',label:'Order history',icon:History,group:'Buying'},
+  ...(poEnabled?[{value:'purchasing',label:'Purchase-order drafts',icon:ShoppingBag,group:'Buying'}]:[]),
+  ...(registryEnabled?[{value:'purchasing-suppliers',label:'Purchasing suppliers',icon:Truck,group:'Buying'}]:[]),
+  ...(weeklyEnabled?[{value:'weekly-drafts',label:'Weekly drafts',icon:CalendarClock,group:'Buying'}]:[]),
+  {value:'suppliers',label:'Suppliers & automation',icon:Truck,group:'Buying'},
+  ...(role==='owner'&&limitsEnabled?[{value:'spending-limits',label:'Spending limits',icon:Gauge,group:'Settings'}]:[]),
+  ...(role==='owner'?[{value:'payments',label:'Payment methods',icon:CreditCard,group:'Settings'},{value:'setup',label:'Setup & register',icon:Check,group:'Settings'}]:[]),
 ];
 const subsections=tab==='inventory'?(inventoryMode==='exact'?exactInventorySections:legacyInventorySections):tab==='waste'?[{id:'record',label:'Record waste'},{id:'setup',label:'Item setup'},{id:'review',label:wasteHeld?`Needs review (${wasteHeld})`:'Needs review'}]:tab==='suppliers'&&role==='owner'?supplierSections:tab==='sales'?salesSections:[];
 const activeSubsection=tab==='inventory'?inventorySection:tab==='waste'?wasteSection:tab==='sales'?salesSection:supplierSection;
 const activeLabel=[navigation.find(item=>item.value===tab)?.label,subsections.find(item=>item.id===activeSubsection)?.label].filter(Boolean).join(' / ');
 function chooseSubsection(id:string){if(tab==='inventory')setInventorySection(id as InventorySection);else if(tab==='waste')setWasteSection(id as WasteSection);else if(tab==='sales')setSalesSection(id as SalesSection);else setSupplierSection(id as SupplierSection);setNavigationOpen(false);}
-function renderNavigation(mobile=false){return <nav aria-label="Workspace sections" className="sidebar-navigation">{navigation.map(({value,label,icon:Icon})=><div className="sidebar-group" key={value}>
+function renderNavigation(mobile=false){return <nav aria-label="Workspace sections" className="sidebar-navigation">{navigation.map(({value,label,icon:Icon,group},index)=><div className="sidebar-group" key={value}>
+  {group!==navigation[index-1]?.group&&<div className="sidebar-group-heading" aria-hidden="true"><span className="sidebar-item-label">{group}</span></div>}
   <button type="button" className="sidebar-main-item" aria-label={label} title={label} aria-current={tab===value&&!subsections.length?'page':undefined} data-active={tab===value} onClick={event=>{if(!mobile)event.currentTarget.focus();setTab(value);if(mobile&&value!=='inventory'&&value!=='waste'&&value!=='sales'&&!(value==='suppliers'&&role==='owner'))setNavigationOpen(false);}}><Icon size={18}/><span className="sidebar-item-label">{label}</span>{value==='history'&&orders.length>0&&<span className="count sidebar-item-label">{orders.length}</span>}</button>
   {tab===value&&subsections.length>0&&<div className="sidebar-subsections">{subsections.map(item=><button type="button" key={item.id} aria-current={activeSubsection===item.id?'page':undefined} onClick={()=>chooseSubsection(item.id)}>{item.label}{'soon' in item&&item.soon&&<span className="soon-badge">Soon</span>}</button>)}</div>}
 </div>)}</nav>;}
@@ -100,7 +103,7 @@ async function saveProduct(e:React.FormEvent){e.preventDefault();if(!editing||bu
 async function removeOrder(){if(!removing||lock.current)return;lock.current=true;setBusy(true);setError('');try{await request(companyId,{action:'remove',id:removing.id});setOrders(o=>o.filter(x=>x.id!==removing.id));if(detail?.id===removing.id)setDetail(null);setRemoving(null);setNotice('Prepared order removed from this company’s history.');}catch(e){setError((e as Error).message);}finally{lock.current=false;setBusy(false);}}
 function download(o:Order,supplier:string){const rows=[['PREPARED ORDER — NOT SENT'],['Supplier',supplier],['Order reference',o.id],['Created',o.created],['Prices are estimates; tax and delivery excluded'],['Product','SKU','Pack size','Unit','Quantity','Estimated unit price','Estimated line total'],...o.items.filter(p=>p.supplier===supplier).map(p=>[p.name,p.sku,p.pack,p.unit,p.quantity,money(p.price),money(p.price*p.quantity)])];const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/^[=+@-]/,"'$&").replaceAll('"','""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));a.download='prepared-order-'+supplier.replace(/[^a-z0-9]/gi,'-')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 const summary=(list:typeof items)=>[...new Set(list.map(p=>p.supplier))].map(s=>{const lines=list.filter(p=>p.supplier===s),subtotal=lines.reduce((a,p)=>a+p.quantity*p.price,0),minimum=suppliers.find(x=>x.name===s)?.minimum;return <section className="supplier-summary" key={s}><div className="between"><strong>{s}</strong><span>{money(subtotal)}</span></div>{lines.map(p=><div className="review-line" key={p.id}><span>{p.name}<small>{p.sku} · {p.pack}</small></span><strong>{p.quantity} {p.unit}{p.quantity!==1?'s':''}</strong></div>)}{minimum&&subtotal<minimum*100?<p className="warning">Below sample minimum of {money(minimum*100)}.</p>:null}<small>Prices are estimates. Check them with the supplier when you order.</small></section>;});
-return <div className="app sidebar-workspace" data-workspace-theme={theme}>
+return <div className="app sidebar-workspace look-mercury" data-workspace-theme={theme}>
 <header className="topbar">
   <a className="brand" href="/"><span><Package size={22}/></span>pantrack<span className="brand-period">.</span></a>
   <div className="topbar-company">{companyMenu??<strong>{companyName}</strong>}</div>
@@ -144,6 +147,7 @@ return <div className="app sidebar-workspace" data-workspace-theme={theme}>
 {tab==='suppliers'&&<section>{role==='owner'?<VendorAutomation section={supplierSection} companyId={companyId} products={products}/>:<ManagerOperations companyId={companyId}/>}</section>}
 {<section hidden={tab!=='inventory'}><InventoryPanel onFocusHandled={()=>setStockFocus(undefined)} onCatalogReload={async()=>{const data=await request(companyId);setProducts(data.products);setInventoryRefresh(n=>n+1);}} refreshKey={inventoryRefresh} section={inventorySection} onSectionChange={setInventorySection} onDirtyChange={setInventoryDirty} focusProductId={stockFocus} onModeChange={changeInventoryMode} companyId={companyId} products={products} role={role} hasDraft={items.length>0} onStage={q=>{setQty(q);key.current='';setTab('order');setNotice('Replenishment plan loaded. Review quantities, prices, and suppliers before saving.');}}/></section>}{tab==='sales'&&<SalesPanel key={salesSection} companyId={companyId} role={role} section={salesSection} onInventoryChanged={()=>setInventoryRefresh(n=>n+1)}/>}{tab==='payments'&&<section><PaymentMethods companyId={companyId} companyName={companyName} hasDraft={items.length>0}/></section>}
 <footer>pantrack. <span>Prepared with care. Ordered with confidence.</span><a href="/auth/signout" target="_top">Sign out</a></footer></main></div></div>
+<nav className="bottom-tab-bar" aria-label="Main sections">{[{value:'order',label:'Order',icon:ShoppingBag},{value:'inventory',label:'Stock',icon:Package},{value:'sales',label:'Sales',icon:Receipt},...(wasteEnabled?[{value:'waste',label:'Waste',icon:Trash2}]:[])].map(({value,label,icon:Icon})=><button type="button" key={value} aria-current={tab===value?'page':undefined} onClick={()=>{setTab(value);if(value==='inventory')setInventorySection('stock');}}><Icon size={20}/><span>{label}</span></button>)}<button type="button" aria-expanded={navigationOpen} onClick={()=>setNavigationOpen(true)}><MoreHorizontal size={20}/><span>More</span></button></nav>
 <AlertDialog open={!!removing} onOpenChange={open=>!open&&!busy&&setRemoving(null)}><AlertDialogContent><AlertDialogTitle>Remove prepared order?</AlertDialogTitle><AlertDialogDescription>Order {removing?.id.slice(0,8).toUpperCase()} will be removed from {companyName}’s history. This cannot be undone. Nothing has been sent to a supplier.</AlertDialogDescription>{error&&<p className="error" role="alert">{error}</p>}<AlertDialogFooter><AlertDialogCancel disabled={busy}>Keep order</AlertDialogCancel><Button variant="destructive" disabled={busy} onClick={removeOrder}>{busy?'Removing…':'Remove order'}</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>
 <Dialog open={review} onOpenChange={v=>!busy&&setReview(v)}><DialogContent className="order-dialog"><DialogTitle>Review your order</DialogTitle><DialogDescription>Check quantities and pack sizes. Saving prepares an order; it does not send it or charge you.</DialogDescription>{summary(items)}<div className="between total"><span>Estimated subtotal</span><strong>{money(total)}</strong></div><p className="muted">Tax, delivery, stock, and supplier cutoffs are unverified. Sample minimums are guidance only.</p>{error&&<p className="error" role="alert">{error}</p>}<Button disabled={busy||!items.length} onClick={prepare}>{busy?'Saving…':'Save prepared order'}</Button></DialogContent></Dialog>
 <Dialog open={!!detail} onOpenChange={v=>!v&&setDetail(null)}><DialogContent className="order-dialog"><DialogTitle>Order {detail?.id.slice(0,8).toUpperCase()}</DialogTitle><DialogDescription>Prepared — not sent. Download one file per supplier for review and manual ordering.</DialogDescription>{detail&&summary(detail.items)}{detail&&[...new Set(detail.items.map(p=>p.supplier))].map(s=><Button variant="outline" key={s} onClick={()=>download(detail,s)}><Download size={16}/>Export {s}</Button>)}</DialogContent></Dialog>
