@@ -30,6 +30,13 @@ a time:
 
 There is no API, schema or permission change. Local evidence only.
 
+[Step 2](UI_HOME_STOCK_LIST_LOCAL_EVIDENCE_20261123.md) adds:
+- a home page (key figures, to-do list, Clover card, recent orders);
+- a stock list with status badges, filter chips with counts and phone rows.
+
+"Running low" uses an interim rule, under 30% of the saved level, until R2
+alerts are decided.
+
 ## Clover at the pilot café: decision and plan — 2026-11-22
 
 The owner asked to connect Clover at the pilot café.
