@@ -178,7 +178,7 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
   if(!enabled)return <p>Purchase-order draft preview is unavailable. {error}</p>;
   return <FieldErrors.Provider value={invalid}><section className="po-preview" aria-label="Purchase-order drafts">
     <header className="po-heading"><div><h1>{editor?(selected?'Edit purchase-order draft':'New purchase-order draft'):selected?'Purchase-order draft':'Purchase orders'}</h1>
-      <p>{editor?'Prepare the details, then save a revision for review.':selected?statusLabel(selected.status):'Prepare and review supplier orders. Nothing is approved or sent here.'}</p></div>
+      {selected&&!editor&&<p>{statusLabel(selected.status)}</p>}</div>
       {!editor&&!selected&&<Button disabled={blocked} onClick={()=>{clearFeedback();openEditor(emptyEditor());}}><Plus size={16}/> New draft</Button>}
       {(editor||selected)&&<Button variant="ghost" disabled={blocked} onClick={back}><ArrowLeft size={16}/> All drafts</Button>}
     </header>
@@ -194,12 +194,12 @@ function DraftWorkspace({companyId,active,refreshKey=0,onEnabledChange,onDirtyCh
           <option value="">All statuses</option><option value="draft">Draft</option><option value="reviewed">Reviewed</option><option value="canceled">Canceled</option></select></label>
         <label>Supplier<Input name="history-supplier" maxLength={200} placeholder="Supplier name or ID" value={filterDraft.supplier} disabled={blocked} onChange={e=>patchHistoryFilters({supplier:e.target.value})}/></label>
         <div className="po-history-product"><label>Product or item<Input name="history-product" maxLength={200} placeholder="Saved description, SKU or product ID" value={filterDraft.product??''} disabled={blocked} aria-describedby="po-history-product-help" onChange={e=>patchHistoryFilters({product:e.target.value||undefined})}/></label>
-          <small id="po-history-product-help">Find orders containing a matching item in the current saved revision. Exports keep every line of each matching order.</small></div>
+          <small id="po-history-product-help">Orders that include this item.</small></div>
         <label>From<Input name="history-from" type="date" min={HISTORY_DATE_MIN} max={HISTORY_DATE_MAX} value={filterDraft.from??''} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>patchHistoryDate('from',e.target.value)}/></label>
         <label>To<Input name="history-to" type="date" min={HISTORY_DATE_MIN} max={HISTORY_DATE_MAX} value={filterDraft.to??''} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>patchHistoryDate('to',e.target.value)}/></label>
         <label>Date time zone<select value={dateTimeZone} disabled={blocked} aria-describedby="po-history-date-help" onChange={e=>changeDateTimeZone(e.target.value as HistoryDateTimeZone)}>
           <option value="America/New_York">New York (America/New_York)</option><option value="UTC">UTC</option></select></label>
-        <small id="po-history-date-help" className="po-history-date-help">Filter by the original creation date. From and To include the whole day in {dateTimeZone}, including daylight-saving changes. Leave either date blank for an open range.</small>
+        <small id="po-history-date-help" className="po-history-date-help">By date created ({dateTimeZone}). Leave blank for any date.</small>
         {filterError&&<p role="alert" className="error po-history-date-help">{filterError}</p>}
         <div className="po-history-filter-actions"><Button type="submit" variant="outline" disabled={blocked}>Apply filters</Button><Button type="button" variant="ghost" disabled={blocked} onClick={clearHistoryFilters}>Clear filters</Button></div>
       </form>

@@ -514,3 +514,36 @@
   .sidebar-group-heading {
   background: #24332b;
 }
+
+/* Extra detail sits behind a small link such as "Why this level?" or "Details". */
+details.more-info {
+  margin-top: 6px;
+}
+details.more-info > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #215743;
+}
+details.more-info > summary::-webkit-details-marker {
+  display: none;
+}
+details.more-info > summary::after {
+  content: '›';
+  font-size: 14px;
+  transition: transform 120ms ease;
+}
+details.more-info[open] > summary::after {
+  transform: rotate(90deg);
+}
+details.more-info > :not(summary) {
+  margin-top: 6px;
+  font-size: 13px;
+}
+.sidebar-workspace[data-workspace-theme='dark'] details.more-info > summary {
+  color: #8bd6a7;
+}

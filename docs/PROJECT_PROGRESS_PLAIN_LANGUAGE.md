@@ -11,7 +11,9 @@ from the preview. The first step is ready:
 
 Step 2 adds the home page and the stock list with coloured status labels and
 filter buttons ([record](UI_HOME_STOCK_LIST_LOCAL_EVIDENCE_20261123.md)).
-Shorter wording and one Suppliers page come next
+Step 3 cuts the long text across the site, including the stock and recipe
+setup screens ([record](UI_SHORTER_WORDING_LOCAL_EVIDENCE_20261123.md)). One
+Suppliers page comes next
 ([step 1 record](UI_MERCURY_LOOK_LOCAL_EVIDENCE_20261123.md)).
 
 **Clover at the pilot café (planned, 2026-11-22):** Pantrack already works

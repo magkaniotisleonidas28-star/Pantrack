@@ -122,10 +122,7 @@ export default function RegisterProvider({
     <>
       <section className="catalog-card" style={{ margin: '24px 0' }}>
         <h2>This company’s register</h2>
-        <p>
-          Select the POS used by this business. Provider selection stores your preference;
-          connection availability is shown below.
-        </p>
+        <p>Choose your point-of-sale system.</p>
         {error && (
           <p role="alert" className="error">
             {error}
@@ -206,10 +203,7 @@ export default function RegisterProvider({
       <details className="setup-advanced">
         <summary>
           Technical connections
-          <small>
-            For whoever set up Pantrack: the Clover app, the automatic sales address and access
-            tokens.
-          </small>
+          <small>Clover app, sales address and tokens.</small>
         </summary>
         {saved?.provider === 'clover' && (
           <CloverConnection

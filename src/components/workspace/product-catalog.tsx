@@ -29,7 +29,6 @@ export default function ProductCatalog({
       <div className="page-heading">
         <div>
           <h1>Product catalog</h1>
-          <p>Save exact SKUs, packaging, and supplier links.</p>
         </div>
         <div className="inventory-actions">
           {onWasteSetup && (

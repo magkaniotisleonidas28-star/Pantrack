@@ -227,11 +227,6 @@ export default function StockUsagePanel({
       <div className="inventory-section-heading">
         <div>
           <h2>How much is really used</h2>
-          <p>
-            Pantrack compares what your counts show was really used with what it recorded from
-            sales, waste and manual use over the last 8 weeks, and suggests how much of each product
-            to keep. Nothing changes unless an owner or manager chooses Use this level.
-          </p>
         </div>
       </div>
       {result?.view && (
@@ -351,12 +346,12 @@ export default function StockUsagePanel({
                               : ' (no level set yet)'}
                           </p>
                           {ignored ? (
-                            <p>
-                              You chose to ignore this suggestion. It shows again when the numbers
-                              change.
-                            </p>
+                            <p>Ignored until the numbers change.</p>
                           ) : (
-                            <p>{explanation(level, system, record)}</p>
+                            <details className="more-info">
+                              <summary>Why this level?</summary>
+                              <p>{explanation(level, system, record)}</p>
+                            </details>
                           )}
                           {canManage && !same && (
                             <div className="stock-level-actions">

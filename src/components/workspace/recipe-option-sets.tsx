@@ -326,10 +326,7 @@ export default function OptionSetsManager({
       >
         <header className="task-form-heading">
           <h2>{draft.expectedRevision ? 'Edit option set' : 'Add option set'}</h2>
-          <p>
-            Set the choices and amounts once. Every item this set is attached to uses them, and
-            saving updates those items. Past sales keep the amounts that applied at the time.
-          </p>
+          <p>Saving updates every item that uses this set.</p>
         </header>
         {error && (
           <p className="error" role="alert">
@@ -337,10 +334,7 @@ export default function OptionSetsManager({
           </p>
         )}
         <fieldset disabled={busy || !!pending}>
-          <TaskSection
-            title="Set details"
-            description="A name that tells sets apart, for example “Milk: Medium iced”."
-          >
+          <TaskSection title="Set details">
             <label>
               Set name
               <Input
@@ -359,21 +353,17 @@ export default function OptionSetsManager({
                 {
                   value: 'one',
                   label: kindLabels.one,
-                  description: 'Like milk: Clover asks for one choice on every sale.',
+                  description: 'Like milk. Pick one.',
                 },
                 {
                   value: 'addons',
                   label: kindLabels.addons,
-                  description:
-                    'Like syrups or light ice: added only when the customer asks, and several may be picked.',
+                  description: 'Like syrups. Pick any.',
                 },
               ]}
             />
           </TaskSection>
-          <TaskSection
-            title="Choices"
-            description="Use the same names as the options in Clover. A choice can add one or more ingredients, or change nothing."
-          >
+          <TaskSection title="Choices" description="As named in Clover.">
             {draft.choices.map((c, index) => (
               <div className="task-option-row" key={c.id}>
                 <div className="task-option-header">
@@ -397,17 +387,12 @@ export default function OptionSetsManager({
                     Remove choice
                   </Button>
                 </div>
-                {c.existing && (
-                  <p className="task-help">
-                    Saved choice names stay fixed so sales keep matching. Add a new choice to use
-                    another name.
-                  </p>
-                )}
+                {c.existing && <p className="task-help">Saved names can’t change.</p>}
                 {!c.changes.length && !(draft.kind === 'addons' && c.extraPercent) && (
                   <p className="task-help">
                     {draft.kind === 'one'
                       ? 'Add the ingredient this choice uses.'
-                      : 'No stock change. Pantrack records the choice without using stock.'}
+                      : 'Uses no stock.'}
                   </p>
                 )}
                 {c.changes.map((value, n) => (
@@ -462,8 +447,7 @@ export default function OptionSetsManager({
                       %
                     </span>
                     <small className="task-help">
-                      For light or no ice: also adds this share of whatever the customer picked in
-                      the item’s pick-one set. For example, 25 adds 25% more of the chosen milk.
+                      E.g. light ice: 25 adds 25% more of the chosen milk.
                     </small>
                   </label>
                 )}
@@ -486,10 +470,7 @@ export default function OptionSetsManager({
               </p>
             )}
           </TaskSection>
-          <TaskSection
-            title="Items using this set"
-            description="Attach a set to an item from that item’s details under Items."
-          >
+          <TaskSection title="Items using this set">
             <p className="task-help">
               {items.length
                 ? `Saving updates ${items.map(names.item).join(', ')}.`
@@ -524,10 +505,7 @@ export default function OptionSetsManager({
   return (
     <div className="recipe-browser task-form">
       <div className="recipe-list-toolbar">
-        <p>
-          Set the amounts once, then attach a set to every item that offers those choices, such as
-          one milk set for all your medium iced items.
-        </p>
+        <p>Shared choices, like milk or syrups.</p>
         {canManage && (
           <Button type="button" disabled={loading || busy} onClick={() => open()}>
             <Plus size={16} />
@@ -577,11 +555,7 @@ export default function OptionSetsManager({
                   ))}
                 </dl>
                 <p>Used by: {items.map(names.item).join(', ') || 'No items yet'}</p>
-                <p>
-                  For Clover sales, the owner links each choice to its Clover option once, in Setup
-                  &amp; register → Technical connections → Clover. Clover sales with a choice that
-                  is not linked are held for review.
-                </p>
+
                 {canManage && (
                   <div className="recipe-detail-actions">
                     <Button
@@ -621,7 +595,7 @@ export default function OptionSetsManager({
           <h3>No option sets yet</h3>
           <p>
             {canManage
-              ? 'Create one for each group of choices several items share: milk for your medium iced items, your syrups, or light and no ice.'
+              ? 'One for each shared group of choices, like milk or syrups.'
               : 'An owner or manager can create option sets.'}
           </p>
         </div>

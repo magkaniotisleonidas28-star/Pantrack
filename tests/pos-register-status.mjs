@@ -122,9 +122,9 @@ assert.equal(data.availability.capabilities.webhooks, false);
 assert.equal(data.availability.fallbacks.csv, true);
 assert.equal(data.availability.fallbacks.bridge, 'disabled');
 const toastHtml = renderToStaticMarkup(Status({ name: 'Toast', availability: data.availability }));
-assert.match(toastHtml, /Toast native integration: setup required/);
-assert.match(toastHtml, /Direct Toast sales sync is not available yet/);
-assert.match(toastHtml, /CSV import: available/);
+assert.match(toastHtml, /Toast: setup required/);
+assert.match(toastHtml, /Not available yet\. Use CSV imports for now\./);
+assert.match(toastHtml, /CSV import available/);
 assert.ok(!toastHtml.includes('Toast authorized'));
 
 globalThis.posStatusUser = null;
@@ -164,7 +164,7 @@ assert.equal(availability.fallbacks.bridge, 'configured');
 assert.equal(availability.native.state, 'setup_required');
 assert.match(
   renderToStaticMarkup(Status({ name: 'Toast', availability })),
-  /no accepted requests yet/,
+  /set up, nothing received yet/,
 );
 sql
   .prepare('UPDATE register_settings SET last_received=? WHERE company_id=?')
@@ -216,7 +216,7 @@ assert.equal(availability.native.sync, 'unavailable');
 assert.equal(availability.native.reason, 'status_unavailable');
 assert.match(
   renderToStaticMarkup(Status({ name: 'Clover', availability })),
-  /Connection status could not be checked/,
+  /Couldn’t check the connection/,
 );
 sql.prepare('DELETE FROM clover_connections WHERE company_id=?').run('company-a');
 availability = (await (await get()).json()).availability;

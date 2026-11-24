@@ -26,7 +26,6 @@ export function InventoryLayout({
         <div>
           <div className="eyebrow">Inventory</div>
           <h1>{inventorySections.find((item) => item.id === section)?.label}</h1>
-          <p>Track stock, recipes and what to reorder.</p>
         </div>
         <Button variant="ghost" disabled={loading} onClick={onRefresh}>
           <RefreshCw size={16} />
