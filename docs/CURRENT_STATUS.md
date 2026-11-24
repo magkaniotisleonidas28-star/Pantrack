@@ -37,6 +37,12 @@ There is no API, schema or permission change. Local evidence only.
 "Running low" uses an interim rule, under 30% of the saved level, until R2
 alerts are decided.
 
+[Step 3](UI_SHORTER_WORDING_LOCAL_EVIDENCE_20261123.md) shortens wording
+across 22 workspace screens:
+- the lines under page titles are removed;
+- the stock-setup and recipe help is one line each;
+- longer explanations sit behind closed "Why?" and "Details" links.
+
 ## Clover at the pilot café: decision and plan — 2026-11-22
 
 The owner asked to connect Clover at the pilot café.

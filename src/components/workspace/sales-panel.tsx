@@ -202,13 +202,6 @@ export default function SalesPanel({
         <div>
           <div className="eyebrow">Sales</div>
           <h1>{label}</h1>
-          <p>
-            {section === 'record'
-              ? 'Enter what you sold. Pantrack lowers ingredient stock using your recipes.'
-              : section === 'history'
-                ? 'Sales you’ve recorded, newest first.'
-                : 'Ways Pantrack will help you understand your sales.'}
-          </p>
         </div>
       </div>
       {error && (

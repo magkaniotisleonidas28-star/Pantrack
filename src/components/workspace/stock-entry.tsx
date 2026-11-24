@@ -150,23 +150,23 @@ export default function StockEntry({companyId,products,view,initialProductId,onR
  const otherUnits=(d?:UnitDimension|null)=>CURATED_UNIT_IDS.filter(id=>(!d||curatedUnit(id).dimension===d)&&!preferredUnits(system,curatedUnit(id).dimension).includes(id));
 
  return <form className="stock-entry recipe-builder task-form" onSubmit={save}>
-   <header className="task-form-heading"><h2>{record?'Update stock':'Add stock'}</h2><p>{record?'Record a delivery, check your actual stock, or change how this item comes.':'Choose an item, say how it comes, then count what you have.'}</p></header>
+   <header className="task-form-heading"><h2>{record?'Update stock':'Add stock'}</h2></header>
    {error&&<p role="alert" className="error">{error}</p>}
    <fieldset disabled={disabled} onChange={touch}>
-     <TaskSection title="Stock item" description="Use an item already in your catalog, or add a new ingredient or ready-made product.">
+     <TaskSection title="Stock item">
        <ChoiceField compact label="Choose an item type" value={isNew?'new':'existing'} onChange={value=>{chooseProduct(value==='new'?'new':'');touch();}} options={[{value:'existing',label:'Existing item'},{value:'new',label:'New item'}]}/>
        {isNew?<>
          <label>Item name<Input required maxLength={150} placeholder="e.g. Oat milk or espresso beans" value={name} onChange={e=>setName(e.target.value)} onBlur={()=>{if(!packagingTouched)applyGuess(name);}}/></label>
-         <details className="task-disclosure"><summary>Add supplier details (optional)</summary><div className="task-field-pair"><label>Supplier<Input maxLength={100} value={supplier} onChange={e=>setSupplier(e.target.value)}/></label><label>Supplier SKU<Input maxLength={100} value={sku} onChange={e=>setSku(e.target.value)}/></label></div><p className="task-help">Price stays unknown until you add purchasing details in Product catalog.</p></details>
+         <details className="task-disclosure"><summary>Add supplier details (optional)</summary><div className="task-field-pair"><label>Supplier<Input maxLength={100} value={supplier} onChange={e=>setSupplier(e.target.value)}/></label><label>Supplier SKU<Input maxLength={100} value={sku} onChange={e=>setSku(e.target.value)}/></label></div><p className="task-help">Add a price later in Product catalog.</p></details>
        </>:<label>Catalog item<select required value={productId} onChange={e=>chooseProduct(e.target.value)}><option value="">Choose an item</option>{products.map(p=><option value={p.id} key={p.id}>{p.name}</option>)}</select></label>}
      </TaskSection>
-     {record&&<TaskSection title="Stock update" description="A delivery adds to stock. A physical count sets the total you actually have.">
+     {record&&<TaskSection title="Stock update">
        <label>What would you like to record?<select value={action} onChange={e=>{setAction(e.target.value as typeof action);setBasis(e.target.value==='use'?'measured':'packages');setPackages('');setRemainder('');setOpenPart('0');setAmount('');}}>
          <option value="receive">Receive a delivery</option><option value="count">Record a physical count</option><option value="use">Record extra ingredient use</option><option value="incoming">Set expected incoming stock</option><option value="configure">Change how it comes or is measured</option>
        </select></label>
-       <p className="task-help">{action==='receive'?'Enter only the new delivery. This amount is added to your current stock.':action==='count'?'Count everything remaining. This total replaces the current estimate.':action==='incoming'?'Enter the full amount still expected to arrive. This does not increase on-hand stock.':action==='use'?'Enter extra ingredients used outside recorded sales or waste.':'Your current stock total and all past records stay the same.'}</p>
+       <p className="task-help">{action==='receive'?'Just this delivery. It’s added to stock.':action==='count'?'Everything left. Replaces the estimate.':action==='incoming'?'What’s still on its way.':action==='use'?'Use that wasn’t a sale or waste.':'Stock stays the same.'}</p>
      </TaskSection>}
-     {setup&&productId&&<TaskSection title="How it comes" description="Say what you buy. Pantrack works out amounts for recipes and counts.">
+     {setup&&productId&&<TaskSection title="How it comes" description="How you buy it.">
        <div className="pack-sentence">
          <span>{productName||'It'} comes in a</span>
          <Input required aria-label="Container" list="stock-container-suggestions" maxLength={100} placeholder="carton" value={pack} onChange={e=>{setPack(e.target.value);setPackagingTouched(true);}}/>
@@ -200,7 +200,7 @@ export default function StockEntry({companyId,products,view,initialProductId,onR
          {custom&&<p className="task-help">Recipes can then say “2 {plural(customLabel||'pump',2)}”, or still use {shortUnitLabel(everydayUnit(system,dimension))}.</p>}
        </details>}
      </TaskSection>}
-     {productId&&(opening||!setup)&&<TaskSection title={opening?'What you have now':action==='count'?'Physical count':action==='incoming'?'Incoming quantity':action==='use'?'Quantity used':'Delivery quantity'} description={opening?'Count what is on the shelf now. This is the starting point.':action==='count'?'Count full containers, then say how full the open one is.':action==='receive'?`Enter the ${plural(packLabel,2)} received in this delivery.`:undefined}>
+     {productId&&(opening||!setup)&&<TaskSection title={opening?'What you have now':action==='count'?'Physical count':action==='incoming'?'Incoming quantity':action==='use'?'Quantity used':'Delivery quantity'} description={opening?'Count what’s on the shelf.':action==='count'?'Full ones, plus the open one.':undefined}>
        {hasPackages&&action!=='use'&&<ChoiceField compact label="Enter quantity as" value={basis} onChange={setBasis} options={[{value:'packages',label:capital(plural(packLabel,2))},{value:'measured',label:`Exact total (${measuredLabel||'amount'})`}]}/>}
        {basis==='packages'&&action!=='use'&&hasPackages?<>
          <label>{action==='receive'&&!opening?`${capital(plural(packLabel,2))} received`:`Full ${plural(packLabel,2)}`}<Input required inputMode="numeric" type="number" min="0" max="1000000" step="1" placeholder="0" value={packages} onChange={e=>setPackages(e.target.value)}/></label>
@@ -214,7 +214,7 @@ export default function StockEntry({companyId,products,view,initialProductId,onR
        {preview&&<p role="status" className="task-calculation"><small>{opening?'Starting inventory':'Stock update preview'}</small><strong>{preview}</strong></p>}
        {productId&&!setup&&action==='receive'&&<label className="checkbox-label"><input type="checkbox" checked={fromIncoming} onChange={e=>setFromIncoming(e.target.checked)}/>This delivery was already recorded as incoming</label>}
      </TaskSection>}
-     {productId&&<TaskSection title="Entry details" description="The entry uses the current time. Change it if you are recording an earlier count or delivery.">
+     {productId&&<TaskSection title="Entry details" description="Uses the time now.">
        <details className="task-disclosure"><summary>Change time{!setup?' or add a note':''}</summary><label>Occurred at<Input required type="datetime-local" step="1" value={time} onChange={e=>setTime(e.target.value)}/></label>{!setup&&<label>Note (optional)<Input maxLength={300} value={note} onChange={e=>setNote(e.target.value)}/></label>}</details>
      </TaskSection>}
      <div className="task-form-actions"><Button type="submit" disabled={!productId}>{setup?(record?'Save changes':'Save item & stock'):action==='count'?'Save physical count':action==='receive'?'Save delivery':'Save stock update'}</Button>{!disabled&&<Button type="button" variant="ghost" onClick={()=>{if(!dirty||window.confirm('Discard this stock edit?'))onSaved();}}>Cancel</Button>}</div>

@@ -12,7 +12,6 @@ import {
 } from '@/lib/purchase-order-history-download';
 import {
   HISTORY_EXPORT_MAX_ORDERS,
-  HISTORY_EXPORT_MAX_LINES,
   type PurchaseOrderHistoryExportRequest,
   type PurchaseOrderHistoryExportSnapshot,
 } from '@/lib/purchase-order-history-export-contract';
@@ -65,7 +64,7 @@ export default function PurchaseOrderHistoryDownloads({
       <small>
         {pendingFilters
           ? 'Apply your filter changes before exporting.'
-          : `Includes every matching page, up to ${HISTORY_EXPORT_MAX_ORDERS} saved drafts and ${HISTORY_EXPORT_MAX_LINES} lines. Canceled records remain labeled as history.`}
+          : `Up to ${HISTORY_EXPORT_MAX_ORDERS} orders.`}
       </small>
       <div className="po-actions">
         <Button

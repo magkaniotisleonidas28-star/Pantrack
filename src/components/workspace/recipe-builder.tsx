@@ -244,11 +244,7 @@ export default function RecipeBuilder({
     >
       <header className="task-form-heading">
         <h2>{review ? 'Review item' : editing ? 'Edit item' : 'Add item'}</h2>
-        <p>
-          {review
-            ? 'Check the quantities for one item before saving.'
-            : 'List what one item always uses. Shared choices such as milk or syrups come from option sets; add modifiers here only for choices this item alone has.'}
-        </p>
+        {review && <p>Check the amounts for one item.</p>}
       </header>
       {editing && !editing.ingredients.length && (
         <p className="task-help">
@@ -265,7 +261,7 @@ export default function RecipeBuilder({
         <fieldset disabled={disabled}>
           <TaskSection
             title="Item details"
-            description="Use the same name as the button in Clover. Each size is its own item."
+            description="As named in Clover. Each size is its own item."
           >
             <label>
               Item name
@@ -280,12 +276,10 @@ export default function RecipeBuilder({
           </TaskSection>
           <TaskSection
             title="Always uses"
-            description="The quantities used every time one item is made, including cups or packaging. Leave out anything the customer chooses, such as milk."
+            description="For one item, including the cup. Leave out milk and other choices."
           >
             {!view.records.length && (
-              <p className="notice">
-                Set up at least one stock item under Stock → Add stock before adding an item.
-              </p>
+              <p className="notice">Add stock items first (Stock → Add stock).</p>
             )}
             {model.ingredients.map((i, index) => (
               <div className="task-ingredient-row" key={index}>
@@ -318,9 +312,8 @@ export default function RecipeBuilder({
           </TaskSection>
           <TaskSection
             title="Pick-one choices for this item"
-            description="Only for a choice no other item shares. The customer picks exactly one option, and only that option’s ingredients are used. Shared choices like milk belong in an option set."
+            description="Rarely needed. Shared choices like milk go in option sets."
           >
-            {!model.choices.length && <p className="task-help">Optional. Most items need none.</p>}
             {model.carried.length > 0 && (
               <p className="task-help">
                 {model.carried.length} option-set choice{model.carried.length === 1 ? '' : 's'}{' '}
@@ -478,7 +471,7 @@ export default function RecipeBuilder({
           </TaskSection>
           <TaskSection
             title="Modifiers for this item only"
-            description="Optional changes only this item has, such as an extra shot or whipped cream. Each one applies only when the customer asks for it. A modifier with no ingredient changes uses no stock."
+            description="Extras only this item has, like an extra shot."
           >
             {!model.rules.some((r) => !grouped.has(r.modifierId)) && (
               <p className="task-help">No modifiers added.</p>
@@ -508,11 +501,7 @@ export default function RecipeBuilder({
                       Remove modifier
                     </Button>
                   </div>
-                  {!r.changes.length && (
-                    <p className="task-help">
-                      No stock change. Sales with this modifier use no extra ingredients.
-                    </p>
-                  )}
+                  {!r.changes.length && <p className="task-help">Uses no stock.</p>}
                   {r.changes.map((c, index) => (
                     <div className="task-option-row" key={index}>
                       <label>
@@ -628,10 +617,7 @@ export default function RecipeBuilder({
           <h3 ref={reviewHeading} tabIndex={-1}>
             {model.name}
           </h3>
-          <TaskSection
-            title="For one item"
-            description="These ingredients are used every time this item is made."
-          >
+          <TaskSection title="For one item">
             <dl className="task-review-lines">
               {model.ingredients.map((i, index) => (
                 <div key={index}>
@@ -691,10 +677,6 @@ export default function RecipeBuilder({
                 ))}
             </TaskSection>
           )}
-          <p className="task-help">
-            Saving makes this item and its choices available together. Previous versions remain in
-            history.
-          </p>
           <div className="task-form-actions">
             <Button type="button" disabled={busy || saved} onClick={() => void save()}>
               {busy ? 'Saving…' : pending ? 'Retry same save' : 'Save item'}

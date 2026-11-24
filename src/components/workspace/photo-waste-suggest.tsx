@@ -63,7 +63,7 @@ export function PhotoWasteOwner({
         <small>
           {enabled
             ? `${usage ? dollars(usage.spentMicroUsd) : '…'} of ${dollars(usage?.capMicroUsd ?? 10_000_000)} used this month. They stop at the limit until next month.`
-            : 'When on, everyone who records waste can get a suggested entry from a photo or a note. Each one uses your OpenAI account, up to $10 a month.'}
+            : 'Suggest waste from a photo or note. Up to $10 a month.'}
         </small>
       </div>
       <Button

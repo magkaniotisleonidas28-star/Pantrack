@@ -119,7 +119,7 @@ export default function RecipeModifiers({companyId, recipeId, view, products, ca
     </article>;
   }
   return <div className="recipe-modifiers">
-    <p>Orders include choices such as “extra shot.” These rules tell Pantrack which ingredients that choice adds or removes. Set them up once, not with every order.</p>
+    <p>What extras like “extra shot” add or remove.</p>
     {error && <p role="alert" className="error">{error}</p>}
     {notice && <p role="status" className="notice">{notice}</p>}
     {pending && <Button type="button" disabled={busy} onClick={() => void perform()}>{busy ? 'Confirming…' : 'Retry the same change'}</Button>}
@@ -136,7 +136,7 @@ export default function RecipeModifiers({companyId, recipeId, view, products, ca
         </select></label>}
         {copySource && <p className="muted">This is an independent copy. Check the quantities for this recipe before activating it. POS connections need a separate mapping for the copy.</p>}
         <label>Modifier name<Input required maxLength={100} value={editor.name} readOnly={editor.existing} onChange={event => setEditor({...editor, name: event.target.value})}/></label>
-        {editor.existing && <p className="muted">Changes are saved as a draft. The active rule stays in use until you activate the reviewed draft.</p>}
+        {editor.existing && <p className="muted">Saved as a draft until you activate it.</p>}
         {editor.changes.map((row, index) => {
           const record = view.records.find(value => value.productId === row.productId);
           const unitIds = CURATED_UNIT_IDS.filter(id => curatedUnit(id).dimension === record?.dimension);
