@@ -1,0 +1,15 @@
+/* One status style used everywhere: good, warn, bad and neutral. */
+.status-badge {
+  --badge-fg: #4f5d56; --badge-bg: #eef1ef; --badge-dot: #8a978f;
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px 3px 8px;
+  border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 18px; white-space: nowrap;
+  color: var(--badge-fg); background: var(--badge-bg);
+}
+.status-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--badge-dot); flex: 0 0 6px; }
+.status-badge[data-tone=good] { --badge-fg: #1f6b45; --badge-bg: #e7f4ec; --badge-dot: #2f9a62; }
+.status-badge[data-tone=warn] { --badge-fg: #8a5a12; --badge-bg: #fbf0dc; --badge-dot: #d4962b; }
+.status-badge[data-tone=bad] { --badge-fg: #a33a2f; --badge-bg: #fdecea; --badge-dot: #d9493b; }
+.sidebar-workspace[data-workspace-theme=dark] .status-badge { --badge-fg: #c9d6cd; --badge-bg: #26372e; --badge-dot: #8fa597; }
+.sidebar-workspace[data-workspace-theme=dark] .status-badge[data-tone=good] { --badge-fg: #a6e3bd; --badge-bg: #1d3a2a; --badge-dot: #5fcb8b; }
+.sidebar-workspace[data-workspace-theme=dark] .status-badge[data-tone=warn] { --badge-fg: #f3cf8d; --badge-bg: #3a2f17; --badge-dot: #e6aa3f; }
+.sidebar-workspace[data-workspace-theme=dark] .status-badge[data-tone=bad] { --badge-fg: #f5aaa2; --badge-bg: #3d1f1c; --badge-dot: #ee6b5d; }

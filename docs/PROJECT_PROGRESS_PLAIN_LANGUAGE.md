@@ -9,8 +9,10 @@ from the preview. The first step is ready:
 - a grouped menu that stays in view;
 - a tab bar at the bottom on phones.
 
-Next come the home page and stock list, shorter wording, and one Suppliers
-page ([record](UI_MERCURY_LOOK_LOCAL_EVIDENCE_20261123.md)).
+Step 2 adds the home page and the stock list with coloured status labels and
+filter buttons ([record](UI_HOME_STOCK_LIST_LOCAL_EVIDENCE_20261123.md)).
+Shorter wording and one Suppliers page come next
+([step 1 record](UI_MERCURY_LOOK_LOCAL_EVIDENCE_20261123.md)).
 
 **Clover at the pilot café (planned, 2026-11-22):** Pantrack already works
 with Clover's test system. Before a real café, four things get fixed:
