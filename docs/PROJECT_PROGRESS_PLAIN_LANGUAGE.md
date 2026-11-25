@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-25 for Clover fixes P1 and P2.
+Updated: 2026-11-25 for Clover fixes P1 to P3.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,16 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover fix P3 (2026-11-25): Pantrack checks Clover by itself.**
+- Every 10 minutes Pantrack reads new Clover sales on its own, so you don't
+  rely on Clover's notices or on pressing **Sync now**.
+- If it falls behind, for example after a day offline, it catches up in one
+  go.
+- Two checks at once never count a sale twice, and a problem with one café
+  doesn't stop the others.
+- It stays off until Clover sync is switched on for the pilot, with your
+  go-ahead ([record](CLOVER_P3_SCHEDULED_SYNC_LOCAL_EVIDENCE_20261125.md)).
 
 **Clover fix P2 (2026-11-25): "Not tracked".**
 - In the yellow banner on the Sales page, you or a manager can mark things

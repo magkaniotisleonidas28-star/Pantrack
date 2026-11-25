@@ -20,6 +20,9 @@ migration was needed.
 P2 built locally on 2026-11-25
 ([evidence](CLOVER_P2_NOT_TRACKED_LOCAL_EVIDENCE_20261125.md)) with migration
 0055.
+P3 built locally on 2026-11-25
+([evidence](CLOVER_P3_SCHEDULED_SYNC_LOCAL_EVIDENCE_20261125.md)); no
+migration.
 
 | Step | Outcome | Schema? | Done when |
 | --- | --- | --- | --- |

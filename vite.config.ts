@@ -82,7 +82,7 @@ export default defineConfig(async ({ command }) => {
                     ? '.sites-runtime/usability-preview/wrangler.jsonc'
                     : 'wrangler.local.jsonc',
               config: {
-                main: 'vinext/server/fetch-handler',
+                main: 'src/worker.ts',
                 ...(exactLocalReview
                   ? { vars: { PANTRACK_EXACT_INVENTORY_PREVIEW: 'enabled' } }
                   : {}),
