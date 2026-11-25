@@ -8,7 +8,7 @@ export type Permission='read'|'operate'|'integrations'|'members'|'finance'|'paus
 export function permitted(role:string,permission:Permission){
   return role==='owner'||role==='manager'&&['read','operate','pause','recordWaste','countDeliveries','reportRunOut'].includes(permission)||role==='employee'&&['read','recordWaste','countDeliveries','reportRunOut'].includes(permission);
 }
-type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts'|'waste-photo'|'purchasing'|'deliveries'|'run-out';
+type Family='companies'|'workspace'|'inventory'|'sales'|'register'|'clover'|'clover-not-tracked'|'payments'|'automation'|'members'|'waste'|'waste-shortcuts'|'waste-photo'|'purchasing'|'deliveries'|'run-out';
 export function routePermission(family:Family,method:string,action?:string):Permission{
   if(family==='purchasing')return 'operate';
   // Staff count deliveries; only owners and managers approve, send a count back or close the order.
@@ -21,6 +21,8 @@ export function routePermission(family:Family,method:string,action?:string):Perm
   if(family==='waste-shortcuts')return 'operate';
   if(family==='members'||family==='companies')return 'members';
   if(family==='payments')return 'finance';
+  // Owners and managers mark Clover items Not tracked (decision 0012); the rest of Clover is the owner's.
+  if(family==='clover-not-tracked')return 'operate';
   if(family==='clover'||family==='register'&&method!=='GET')return 'integrations';
   if(family==='automation')return method==='GET'||['run','approve','reconcile','dismiss','received'].includes(action||'')?'operate':action==='pause'?'pause':'integrations';
   return method==='GET'?'read':'operate';
@@ -39,7 +41,7 @@ export function withCompanyRoute(family:Family,handler:(req:Request)=>Promise<Re
         const member=await companyAccess(user.userId,companyId);
         if(!member||!permitted(member.role,routePermission(family,req.method,body?.action)))return Response.json({error:'You do not have permission for this company action.'},{status:403});
       }
-      const logged=mutation&&['companies','inventory','register','clover','payments','automation','waste','waste-shortcuts','waste-photo','run-out'].includes(family);
+      const logged=mutation&&['companies','inventory','register','clover','clover-not-tracked','payments','automation','waste','waste-shortcuts','waste-photo','run-out'].includes(family);
       const target=(family==='waste'||family==='waste-shortcuts')&&typeof body?.operationId==='string'
         ?body.operationId.slice(0,80):typeof body?.action==='string'?body.action.slice(0,80):'';
       if(logged)await audit(typeof companyId==='string'?companyId:null,user.userId,family+'.attempt',target).run();

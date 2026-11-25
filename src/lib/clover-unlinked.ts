@@ -45,11 +45,11 @@ export async function findUnlinkedClover(
   mapping: SalesMappingPort,
   input: { companyId: string; source: SalesSourceBinding; more?: boolean },
 ): Promise<UnlinkedCloverSummary> {
-  const lookups = new Map<string, Promise<boolean>>();
-  const linked = (key: string, check: () => Promise<{ status: string }>) => {
+  const lookups = new Map<string, Promise<string>>();
+  const lookup = (key: string, check: () => Promise<{ status: string }>) => {
     let found = lookups.get(key);
     if (!found) {
-      found = check().then((result) => result.status === 'mapped');
+      found = check().then((result) => result.status);
       lookups.set(key, found);
     }
     return found;
@@ -61,7 +61,7 @@ export async function findUnlinkedClover(
     const missing = new Map<string, Omit<UnlinkedCloverEntry, 'pausedSales' | 'lastSeen'>>();
     for (const line of sale.lines) {
       const item = { itemId: line.externalItemId, variation: line.externalVariationId };
-      const itemLinked = await linked(`item\u0000${item.itemId}\u0000${item.variation ?? ''}`, () =>
+      const itemStatus = await lookup(`item\u0000${item.itemId}\u0000${item.variation ?? ''}`, () =>
         mapping.resolveLine({
           companyId: input.companyId,
           source: input.source,
@@ -69,13 +69,15 @@ export async function findUnlinkedClover(
           externalVariationId: item.variation,
         }),
       );
-      if (!itemLinked) {
+      // A Not tracked item takes nothing, so its options don't matter.
+      if (itemStatus === 'not_tracked') continue;
+      if (itemStatus !== 'mapped') {
         missing.set(`item\u0000${item.itemId}`, { kind: 'item', itemId: item.itemId });
         continue;
       }
       for (const modifier of line.modifiers) {
         const key = `option\u0000${item.itemId}\u0000${modifier.externalModifierId}`;
-        const optionLinked = await linked(`${key}\u0000${item.variation ?? ''}`, () =>
+        const optionStatus = await lookup(`${key}\u0000${item.variation ?? ''}`, () =>
           mapping.resolveModifier({
             companyId: input.companyId,
             source: input.source,
@@ -84,7 +86,7 @@ export async function findUnlinkedClover(
             externalModifierId: modifier.externalModifierId,
           }),
         );
-        if (!optionLinked)
+        if (optionStatus !== 'mapped' && optionStatus !== 'not_tracked')
           missing.set(key, {
             kind: 'option',
             itemId: item.itemId,

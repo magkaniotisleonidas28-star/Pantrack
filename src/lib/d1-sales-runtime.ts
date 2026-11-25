@@ -81,8 +81,9 @@ export class D1SalesMappingPort implements SalesMappingPort {
           input.externalItemId,
         )
         .first<{ recipe_id: string }>();
-      return row
-        ? { status: 'mapped' as const, recipeId: row.recipe_id }
+      if (row) return { status: 'mapped' as const, recipeId: row.recipe_id };
+      return (await this.notTracked(input.companyId, input.source, 'item', input.externalItemId))
+        ? { status: 'not_tracked' as const }
         : { status: 'unknown_item' as const };
     }
     const row = await this.db
@@ -156,8 +157,25 @@ export class D1SalesMappingPort implements SalesMappingPort {
           input.externalModifierId,
         ));
       if (linked) return { status: 'mapped' as const, modifierId: linked };
+      if (await this.notTracked(input.companyId, input.source, 'option', input.externalModifierId))
+        return { status: 'not_tracked' as const };
     }
     return { status: 'unknown_modifier' as const };
+  }
+
+  /** A Clover item or option marked Not tracked for this merchant (decision 0012, P2). */
+  private async notTracked(
+    companyId: string,
+    source: SalesSourceBinding,
+    kind: 'item' | 'option',
+    externalId: string,
+  ) {
+    return !!(await this.db
+      .prepare(
+        'SELECT 1 AS found FROM clover_not_tracked WHERE company_id=? AND environment=? AND merchant_id=? AND kind=? AND external_id=?',
+      )
+      .bind(companyId, source.environment, source.merchantId, kind, externalId)
+      .first());
   }
 }
 

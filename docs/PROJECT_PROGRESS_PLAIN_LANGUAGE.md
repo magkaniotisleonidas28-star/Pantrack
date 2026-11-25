@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-25 for Clover fix P1.
+Updated: 2026-11-25 for Clover fixes P1 and P2.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,17 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover fix P2 (2026-11-25): "Not tracked".**
+- In the yellow banner on the Sales page, you or a manager can mark things
+  Pantrack doesn't count, like gift cards, bottled drinks or "to go",
+  **Not tracked**.
+- Those lines then take nothing from stock, and the rest of the sale still
+  does.
+- Anything new that nobody has marked or linked still pauses, so nothing is
+  skipped by accident.
+- A "Not tracked" list shows who marked what and when, with **Undo**
+  ([record](CLOVER_P2_NOT_TRACKED_LOCAL_EVIDENCE_20261125.md)).
 
 **Clover fix P1 (2026-11-25): one odd sale can't stop the rest.**
 - Before, a single sale Pantrack couldn't read stopped every later sale from
