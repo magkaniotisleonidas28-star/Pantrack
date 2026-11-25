@@ -7,6 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { InventoryManagementView } from '@/lib/inventory-management-contract';
 import SalesExceptions from './sales-exceptions';
+import {
+  CloverStatusPill,
+  CloverUnlinkedBanner,
+  useCloverSalesStatus,
+} from './clover-sales-status';
 import { salesSections, type SalesSection } from './workspace-navigation';
 
 type Recipe = { id: string; name: string };
@@ -62,12 +67,16 @@ export default function SalesPanel({
   role,
   section,
   onInventoryChanged,
+  onSection,
 }: {
   companyId: string;
   role: string;
   section: SalesSection;
   onInventoryChanged: () => void;
+  onSection?: (section: SalesSection) => void;
 }) {
+  const clover = useCloverSalesStatus(companyId, role === 'owner');
+  const showClover = !!clover.status && (clover.status.connected || clover.status.ready);
   const [recipes, setRecipes] = useState<Recipe[]>([]),
     [imports, setImports] = useState<SalesImport[]>([]),
     [exact, setExact] = useState<InventoryManagementView | null>(null),
@@ -203,7 +212,26 @@ export default function SalesPanel({
           <div className="eyebrow">Sales</div>
           <h1>{label}</h1>
         </div>
+        {showClover && clover.status && (
+          <CloverStatusPill
+            companyId={companyId}
+            status={clover.status}
+            onChanged={clover.reload}
+          />
+        )}
       </div>
+      {showClover && clover.status?.connected && (
+        <CloverUnlinkedBanner
+          companyId={companyId}
+          status={clover.status}
+          onChanged={clover.reload}
+          onReviewPaused={() => {
+            if (section === 'record')
+              document.querySelector('.sales-entry')?.scrollIntoView({ behavior: 'smooth' });
+            else onSection?.('record');
+          }}
+        />
+      )}
       {error && (
         <div role="alert" className="error">
           {error}

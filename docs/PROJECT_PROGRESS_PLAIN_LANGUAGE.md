@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-23 for the new look.
+Updated: 2026-11-23 for the new look and the unlinked Clover items banner.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,17 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Unlinked Clover items (2026-11-23):** the first idea from the shortlist.
+- On the Sales page you can see when Pantrack last checked Clover.
+- A yellow banner lists the Clover items that sales are stuck on, such as a
+  new muffin nobody linked to a recipe yet. You can link each one right
+  there.
+- A green note tells you when stuck sales are ready to try again.
+- Home shows the same reminder.
+
+The "Not tracked" button for things like gift cards comes with the Clover fix
+for it ([record](CLOVER_UNLINKED_BANNER_LOCAL_EVIDENCE_20261123.md)).
 
 **Clover at the pilot café (planned, 2026-11-22):** Pantrack already works
 with Clover's test system. Before a real café, four things get fixed:
