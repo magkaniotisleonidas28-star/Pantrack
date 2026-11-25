@@ -30,6 +30,7 @@ type Clover = {
   syncEnabled: boolean;
   sync?: { lastSuccess?: string | null; heldCount?: number } | null;
   unlinked?: UnlinkedCloverSummary | null;
+  accessRemoved?: { reason: 'app_removed' | 'access_refused'; at: string } | null;
 };
 
 async function getJson<T>(url: string): Promise<T | null> {
@@ -289,7 +290,9 @@ export default function HomePanel({
             <section className="home-card" aria-labelledby="home-pos">
               <div className="home-card-head">
                 <h2 id="home-pos">Clover</h2>
-                {clover ? (
+                {clover?.accessRemoved ? (
+                  <StatusBadge tone="bad">Access removed</StatusBadge>
+                ) : clover ? (
                   clover.connected ? (
                     <StatusBadge tone={clover.syncEnabled ? 'good' : 'neutral'}>
                       {clover.syncEnabled ? 'Connected' : 'Connected · sync off'}
@@ -302,18 +305,25 @@ export default function HomePanel({
                 )}
               </div>
               <p className="home-small">
-                {clover?.connected
-                  ? clover.sync?.lastSuccess
-                    ? `Last checked ${timeAgo(clover.sync.lastSuccess, now) ?? new Date(clover.sync.lastSuccess).toLocaleString()}`
-                    : 'No sync yet.'
-                  : 'Connect Clover so sales take ingredients off your stock.'}
+                {clover?.accessRemoved
+                  ? clover.accessRemoved.reason === 'app_removed'
+                    ? 'Pantrack was removed in Clover, so sales aren’t being read. Reconnect to continue.'
+                    : 'Clover refused Pantrack’s access, so sales aren’t being read. Reconnect to continue.'
+                  : clover?.connected
+                    ? clover.sync?.lastSuccess
+                      ? `Last checked ${timeAgo(clover.sync.lastSuccess, now) ?? new Date(clover.sync.lastSuccess).toLocaleString()}`
+                      : 'No sync yet.'
+                    : 'Connect Clover so sales take ingredients off your stock.'}
               </p>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => onNavigate(clover?.connected ? 'sales' : 'setup')}
+                onClick={() =>
+                  onNavigate(clover?.connected && !clover.accessRemoved ? 'sales' : 'setup')
+                }
               >
-                <Settings2 size={14} /> {clover?.connected ? 'Sales' : 'Set up'}
+                <Settings2 size={14} />{' '}
+                {clover?.accessRemoved ? 'Reconnect' : clover?.connected ? 'Sales' : 'Set up'}
               </Button>
             </section>
           )}

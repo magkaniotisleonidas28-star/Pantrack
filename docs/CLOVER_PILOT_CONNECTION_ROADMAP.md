@@ -23,6 +23,10 @@ P2 built locally on 2026-11-25
 P3 built locally on 2026-11-25
 ([evidence](CLOVER_P3_SCHEDULED_SYNC_LOCAL_EVIDENCE_20261125.md)); no
 migration.
+P4 built locally on 2026-11-25
+([evidence](CLOVER_P4_ACCESS_REMOVED_LOCAL_EVIDENCE_20261125.md)) with
+migration 0056. That completes the local steps P1 to P4; P5 (sandbox
+session) needs a release to the development site and the owner's go-ahead.
 
 | Step | Outcome | Schema? | Done when |
 | --- | --- | --- | --- |
