@@ -40,7 +40,7 @@ export async function runScheduledCloverSync(
   const environment = cloverConfig().environment;
   const cafes = await db
     .prepare(
-      'SELECT s.company_id FROM clover_sync_state s JOIN clover_connections c ON c.company_id=s.company_id AND c.environment=s.environment AND c.merchant_id=s.merchant_id WHERE s.environment=? ORDER BY s.checkpoint ASC,s.company_id ASC',
+      'SELECT s.company_id FROM clover_sync_state s JOIN clover_connections c ON c.company_id=s.company_id AND c.environment=s.environment AND c.merchant_id=s.merchant_id WHERE s.environment=? AND NOT EXISTS(SELECT 1 FROM clover_access_removals r WHERE r.company_id=s.company_id) ORDER BY s.checkpoint ASC,s.company_id ASC',
     )
     .bind(environment)
     .all<{ company_id: string }>();

@@ -10,6 +10,7 @@ import { cloverPosAdapter } from '@/lib/clover-pos-adapter';
 import { requireSupported } from '@/lib/pos-adapter';
 import { D1CloverOptionLinks } from '@/lib/d1-clover-option-links';
 import { D1CloverNotTracked, unlinkedClover } from '@/lib/d1-clover-not-tracked';
+import { cloverAccessRemoval } from '@/lib/clover-access';
 import { z } from 'zod';
 async function handleGET(req: Request) {
   const u = await getChatGPTUser();
@@ -91,6 +92,7 @@ async function handleGET(req: Request) {
         })),
         optionLinks,
         unlinked,
+        accessRemoved: await cloverAccessRemoval(db, id!),
       },
       { headers: { 'Cache-Control': 'no-store' } },
     );
@@ -143,6 +145,8 @@ async function handlePOST(req: Request) {
       await db.batch([
         db.prepare('DELETE FROM clover_connections WHERE company_id=?').bind(b.companyId),
         db.prepare('DELETE FROM clover_oauth_states WHERE company_id=?').bind(b.companyId),
+        // The owner chose to disconnect, so an earlier removal notice no longer applies.
+        db.prepare('DELETE FROM clover_access_removals WHERE company_id=?').bind(b.companyId),
       ]);
       return Response.json({
         message: 'Clover disconnected from Pantrack. You can also revoke app access in Clover.',

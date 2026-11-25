@@ -24,6 +24,7 @@ export type CloverSalesStatus = {
   recipes: Array<{ recipe_id: string; name: string }>;
   recipeModifiers: Array<{ recipe_id: string; modifier_id: string; name: string }>;
   unlinked?: UnlinkedCloverSummary | null;
+  accessRemoved?: { reason: 'app_removed' | 'access_refused'; at: string } | null;
 };
 
 type Names = { items: Record<string, string>; options: Record<string, string> };
@@ -78,6 +79,7 @@ async function cloverAction(
     nextOffset?: number | null;
     created?: number;
     held?: number;
+    url?: string;
   };
   if (!response.ok) throw new Error(data.error || 'Clover request failed.');
   return data;
@@ -117,9 +119,26 @@ export function CloverStatusPill({
       await onChanged();
     }
   }
+  async function reconnect() {
+    if (busy) return;
+    setBusy(true);
+    setMessage('');
+    try {
+      const result = await cloverAction(companyId, 'connect');
+      if (result.url) window.location.assign(result.url);
+    } catch (cause) {
+      setMessage((cause as Error).message);
+      setBusy(false);
+    }
+  }
   return (
     <div className="clover-pill">
       <StatusBadge tone={pill.tone}>{pill.label}</StatusBadge>
+      {status.accessRemoved && (
+        <Button size="sm" disabled={busy} onClick={() => void reconnect()}>
+          Reconnect Clover
+        </Button>
+      )}
       {status.connected && status.syncEnabled && status.sync && (
         <Button size="sm" variant="outline" disabled={busy} onClick={() => void sync()}>
           <RefreshCw size={14} aria-hidden="true" /> {busy ? 'Checking…' : 'Sync now'}

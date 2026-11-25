@@ -178,6 +178,7 @@ export type CloverPillInput = {
   connected: boolean;
   syncEnabled: boolean;
   sync?: { lastSuccess?: string | null; lastError?: string | null } | null;
+  accessRemoved?: { reason: string; at: string } | null;
 };
 
 /** The Clover status pill shown beside the Sales page title. */
@@ -185,6 +186,8 @@ export function cloverPill(
   status: CloverPillInput,
   now: number,
 ): { tone: 'good' | 'warn' | 'bad' | 'neutral'; label: string } {
+  // Clover access ended without the owner disconnecting (decision 0012, P4).
+  if (status.accessRemoved) return { tone: 'bad', label: 'Clover access removed — reconnect' };
   if (!status.connected) return { tone: 'neutral', label: 'Clover not connected' };
   if (!status.syncEnabled) return { tone: 'neutral', label: 'Clover connected · sync off' };
   if (status.sync?.lastError) return { tone: 'bad', label: 'Clover sync problem' };

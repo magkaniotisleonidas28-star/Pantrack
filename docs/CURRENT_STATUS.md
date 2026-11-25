@@ -52,6 +52,27 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover P4: Clover access removed — 2026-11-25
+
+Step P4 of the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md)
+([evidence](CLOVER_P4_ACCESS_REMOVED_LOCAL_EVIDENCE_20261125.md)):
+- **Removal in Clover.** An authenticated Clover Apps `DELETE` notice for this
+  app deletes the café's tokens and records `app_removed`, even while sync is
+  off.
+- **Refused access.** A token Clover refuses records `access_refused`. The
+  tokens are kept, and a later working request clears it.
+- **Either way:**
+  - automatic checks and order notices stop syncing that café;
+  - links, marks, the checkpoint and history are kept;
+  - the owner sees "Clover access removed — reconnect" on Sales, Home and
+    Setup.
+- **Clearing it.** Reconnecting the same Clover account, or disconnecting,
+  clears the notice. A different account is still refused.
+- **Migration 0056** adds `clover_access_removals`.
+
+Clover's documentation doesn't say which notice type a removal sends; P5
+records it. Local evidence only.
+
 ## Clover P3: automatic check every 10 minutes — 2026-11-25
 
 Step P3 of the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md)

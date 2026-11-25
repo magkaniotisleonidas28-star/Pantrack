@@ -1304,3 +1304,14 @@ export const cloverNotTrackedChanges=sqliteTable('clover_not_tracked_changes',{
  index('clover_not_tracked_change_history').on(t.companyId,t.environment,t.merchantId,t.at),
  check('clover_not_tracked_change_kind',sql`${t.kind} IN ('item','option')`),
  check('clover_not_tracked_change_action',sql`${t.action} IN ('mark','unmark')`)]);
+
+// Clover pilot step P4 (decision 0012): Clover access ended without the owner disconnecting,
+// because the app was removed in Clover or Clover refused Pantrack's access. Tokens are deleted
+// and syncing stops; history and links are kept. Reconnecting or disconnecting clears the row.
+export const cloverAccessRemovals=sqliteTable('clover_access_removals',{
+ companyId:text('company_id').primaryKey().references(()=>companies.id),
+ environment:text('environment').notNull(),
+ merchantId:text('merchant_id').notNull(),
+ reason:text('reason').notNull(),
+ removedAt:text('removed_at').notNull(),
+},t=>[check('clover_access_removal_reason',sql`${t.reason} IN ('app_removed','access_refused')`)]);

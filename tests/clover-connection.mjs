@@ -210,9 +210,15 @@ try {
       : workingFetch(url, init);
   const failed = await post({ action: 'menu' });
   assert.equal(failed.status, 400);
+  // Clover refused the refresh token: decision 0012 step P4 records it and asks to reconnect.
   assert.equal(
     (await failed.json()).error,
-    'Clover authorization expired. Reconnect your account.',
+    'Clover access was removed. Reconnect Clover to keep sales coming in.',
+  );
+  assert.equal(
+    sql.prepare('SELECT reason FROM clover_access_removals WHERE company_id=?').get('company')
+      .reason,
+    'access_refused',
   );
 } finally {
   Date.now = realNow;

@@ -144,6 +144,12 @@ export async function GET(req: Request) {
           now,
           now,
         ),
+      // Reconnecting clears an earlier "Clover access was removed" notice (decision 0012, P4).
+      db
+        .prepare(
+          'DELETE FROM clover_access_removals WHERE company_id=? AND EXISTS(SELECT 1 FROM clover_connections WHERE company_id=? AND environment=? AND merchant_id=? AND last_checked=? AND lease_until<?)',
+        )
+        .bind(companyId, companyId, c.environment, merchant, new Date(now).toISOString(), now),
       db
         .prepare(
           'INSERT INTO security_audit(id,company_id,actor,action,target,created) SELECT ?,?,?,?,?,? WHERE EXISTS(SELECT 1 FROM clover_connections WHERE company_id=? AND environment=? AND merchant_id=? AND last_checked=? AND lease_until<?)',

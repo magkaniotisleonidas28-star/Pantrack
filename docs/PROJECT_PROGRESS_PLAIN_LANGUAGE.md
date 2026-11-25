@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-25 for Clover fixes P1 to P3.
+Updated: 2026-11-25 for Clover fixes P1 to P4.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,16 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover fix P4 (2026-11-25): you're told if Clover access ends.**
+- If the café removes Pantrack in Clover, or Clover stops letting Pantrack in,
+  Pantrack stops reading sales.
+- You see **"Clover access removed — reconnect"** on the Sales page, on Home
+  and in Setup, with a **Reconnect** button.
+- Your recipe links, Not tracked marks and sales history are all kept.
+- Reconnecting the same Clover account carries on where it left off. A
+  different Clover account can't be swapped in
+  ([record](CLOVER_P4_ACCESS_REMOVED_LOCAL_EVIDENCE_20261125.md)).
 
 **Clover fix P3 (2026-11-25): Pantrack checks Clover by itself.**
 - Every 10 minutes Pantrack reads new Clover sales on its own, so you don't

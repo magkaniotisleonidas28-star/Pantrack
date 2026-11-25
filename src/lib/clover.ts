@@ -2,6 +2,11 @@ import { UserFacingError } from '@/lib/user-facing-error';
 import { env } from 'cloudflare:workers';
 import { database } from '@/db/raw';
 import { encrypt, decrypt } from '@/lib/vendor-adapter';
+import {
+  CloverAccessRefused,
+  clearCloverAccessRefused,
+  recordCloverAccessRemoved,
+} from '@/lib/clover-access';
 import { z } from 'zod';
 import { appOrigin } from '@/lib/auth';
 export const cloverOrigin = appOrigin;
@@ -81,18 +86,25 @@ async function refreshTokens(refreshToken: string) {
   });
   if (response.ok) return tokens.parse(await response.json());
   if (response.status === 401 && response.headers.get('X-Clover-Recovery-Available') === 'true') {
-    return tokens.parse(
-      await cloverJson(c.api + '/oauth/v2/recovery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: c.clientId,
-          client_secret: c.clientSecret,
-          recovery_token: refreshToken,
+    try {
+      return tokens.parse(
+        await cloverJson(c.api + '/oauth/v2/recovery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: c.clientId,
+            client_secret: c.clientSecret,
+            recovery_token: refreshToken,
+          }),
         }),
-      }),
-    );
+      );
+    } catch (error) {
+      if (error instanceof CloverHttpError && error.status === 401) throw new CloverAccessRefused();
+      throw error;
+    }
   }
+  // Clover refused the refresh token: access was removed or revoked (decision 0012, P4).
+  if (response.status === 401) throw new CloverAccessRefused();
   throw new UserFacingError('Clover authorization expired. Reconnect your account.');
 }
 
@@ -145,8 +157,7 @@ export async function withClover<T>(
     const scope = 'clover:' + companyId;
     let t = tokens.parse(JSON.parse(await decrypt(c.secret, scope)));
     if (t.access_token_expiration * 1000 < Date.now() + 60000) {
-      if (t.refresh_token_expiration * 1000 < Date.now())
-        throw new UserFacingError('Clover authorization expired. Reconnect your account.');
+      if (t.refresh_token_expiration * 1000 < Date.now()) throw new CloverAccessRefused();
       t = await refreshTokens(t.refresh_token);
       const saved = await db
         .prepare('UPDATE clover_connections SET secret=? WHERE company_id=? AND lease_until=?')
@@ -155,12 +166,29 @@ export async function withClover<T>(
       if ((saved.meta?.changes ?? (saved as unknown as { changes: number }).changes) !== 1)
         throw new UserFacingError('Clover token rotation could not be saved.');
     }
-    const result = await fn(c, t.access_token);
+    let result: T;
+    try {
+      result = await fn(c, t.access_token);
+    } catch (error) {
+      // A current access token that Clover rejects has been revoked.
+      if (error instanceof CloverHttpError && error.status === 401) throw new CloverAccessRefused();
+      throw error;
+    }
     await db
       .prepare('UPDATE clover_connections SET last_checked=? WHERE company_id=? AND lease_until=?')
       .bind(new Date().toISOString(), companyId, lease)
       .run();
+    await clearCloverAccessRefused(db, companyId);
     return result;
+  } catch (error) {
+    if (error instanceof CloverAccessRefused)
+      await recordCloverAccessRemoved(db, {
+        companyId,
+        environment: c.environment,
+        merchantId: c.merchant_id,
+        reason: 'access_refused',
+      });
+    throw error;
   } finally {
     await db
       .prepare('UPDATE clover_connections SET lease_until=0 WHERE company_id=? AND lease_until=?')
