@@ -14,6 +14,10 @@ that exact action. Supplier submission and automatic purchasing stay off.
 
 ## Steps
 
+Progress: P1 built locally on 2026-11-25
+([evidence](CLOVER_P1_UNREADABLE_ORDERS_LOCAL_EVIDENCE_20261125.md)); no
+migration was needed.
+
 | Step | Outcome | Schema? | Done when |
 | --- | --- | --- | --- |
 | P0 | Decision 0012 and this plan | No | Owner reviewed and merged |

@@ -52,6 +52,21 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover P1: one unusual order can't stop syncing — 2026-11-25
+
+Step P1 of the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md)
+([evidence](CLOVER_P1_UNREADABLE_ORDERS_LOCAL_EVIDENCE_20261125.md)):
+- **What gets paused.** A Clover order Pantrack can't read safely is received
+  as its own paused sale, with no lines and a plain reason: custom amount,
+  sold by weight, very large order, refund mismatch, or unreadable details.
+- **Syncing moves on.** The checkpoint advances past it.
+- **Review.** Trying again keeps it paused; Dismiss records the review. A
+  later change in Clover is read as a new revision and applied once.
+- **The Sales review list** shows the reason in plain words.
+
+There is no migration, and no API or permission change. Local evidence only;
+no Clover account was contacted.
+
 ## Unlinked Clover items banner — 2026-11-23
 
 The first idea from the approved Mobbin shortlist

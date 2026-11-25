@@ -1,3 +1,4 @@
+import { CLOVER_PAUSE_REASONS } from '@/lib/sales-event-model';
 import {
   SALES_EVENT_CONTRACT,
   SalesIngestionError,
@@ -115,7 +116,15 @@ function validPersistedEvent(event: SalesEventV1) {
     !timestamp(event.occurredAt) ||
     !timestamp(event.receivedAt) ||
     !Array.isArray(event.lines) ||
+    (event.unreadable !== undefined &&
+      !(
+        event.source.kind === 'native' &&
+        event.source.provider === 'clover' &&
+        CLOVER_PAUSE_REASONS.has(event.unreadable) &&
+        event.lines.length === 0
+      )) ||
     (event.lines.length < 1 &&
+      event.unreadable === undefined &&
       !(
         event.source.kind === 'native' &&
         event.source.provider === 'clover' &&
