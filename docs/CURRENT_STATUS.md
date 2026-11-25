@@ -52,6 +52,25 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover P3: automatic check every 10 minutes — 2026-11-25
+
+Step P3 of the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md)
+([evidence](CLOVER_P3_SCHEDULED_SYNC_LOCAL_EVIDENCE_20261125.md)):
+- **The Worker.** It now has its own entry (`src/worker.ts`). The entry passes
+  requests to vinext and adds a 10-minute Cloudflare trigger
+  (`*/10 * * * *` in `wrangler.jsonc`).
+- **Each run:**
+  - syncs every connected café with sales sync on, furthest behind first;
+  - catches up a long gap in up to 6 passes;
+  - skips a café that is already syncing;
+  - keeps one café's error from stopping the others.
+- **Sync off.** While `PANTRACK_CLOVER_SYNC_ENABLED` is off, as on every
+  hosted site today, it does nothing.
+- **Going live.** The trigger runs on a hosted site only after a release
+  there, with the owner's go-ahead.
+
+There is no migration, and no API or permission change. Local evidence only.
+
 ## Clover P2: Not tracked items and options — 2026-11-25
 
 Step P2 of the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md)

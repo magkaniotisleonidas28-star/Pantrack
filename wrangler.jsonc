@@ -8,7 +8,10 @@
     "PANTRACK_EXACT_INVENTORY_PREVIEW": "enabled",
     "PANTRACK_CLOVER_SYNC_ENABLED": "disabled",
   },
-  "main": "vinext/server/fetch-handler",
+  "main": "src/worker.ts",
+  // Clover pilot step P3: Pantrack checks Clover every 10 minutes. It does nothing
+  // while PANTRACK_CLOVER_SYNC_ENABLED is off.
+  "triggers": { "crons": ["*/10 * * * *"] },
   "assets": {
     "directory": "dist/client",
     "not_found_handling": "none",
