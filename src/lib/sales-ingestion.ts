@@ -21,6 +21,7 @@ import {
   type SalesMappingPort,
   type SalesEventStore,
   SALES_EVENT_CONTRACT,
+  CLOVER_PAUSE_REASONS,
   SalesIngestionError,
   leaseRecoveryOptions,
   salesEventAuditFragment,
@@ -40,6 +41,7 @@ export {
   type SalesTimeQuality,
   type SalesEventState,
   type HeldReason,
+  type CloverPauseReason,
   type SalesSourceBinding,
   type SalesEventDraftV1,
   type SalesEventV1,
@@ -229,17 +231,30 @@ function normalizeDraft(
       'invalid_occurrence_time',
       'Occurrence time must be valid RFC 3339 and not in the future.',
     );
+  const nativeClover = source.kind === 'native' && source.provider === 'clover';
+  if (
+    draft.unreadable !== undefined &&
+    (!nativeClover || !CLOVER_PAUSE_REASONS.has(draft.unreadable))
+  )
+    throw new SalesIngestionError(
+      'invalid_unreadable',
+      'Only a Clover order can be paused as unreadable.',
+    );
   const emptyCloverCancellation =
     Array.isArray(draft.lines) &&
     draft.lines.length === 0 &&
-    source.kind === 'native' &&
-    source.provider === 'clover' &&
+    nativeClover &&
     draft.eventType === 'cancellation' &&
     draft.orderStatus === 'canceled' &&
     draft.preparationStatus === 'unknown';
+  // An unreadable Clover order carries no lines: nothing can come off stock.
+  const unreadableClover =
+    draft.unreadable !== undefined && Array.isArray(draft.lines) && draft.lines.length === 0;
+  if (draft.unreadable !== undefined && !unreadableClover)
+    throw new SalesIngestionError('invalid_lines', 'An unreadable Clover order carries no lines.');
   if (
     !Array.isArray(draft.lines) ||
-    (draft.lines.length < 1 && !emptyCloverCancellation) ||
+    (draft.lines.length < 1 && !emptyCloverCancellation && !unreadableClover) ||
     draft.lines.length > MAX_LINES
   )
     throw new SalesIngestionError(
@@ -305,6 +320,7 @@ function normalizeDraft(
     occurredAt: new Date(occurred).toISOString(),
     timeQuality: draft.timeQuality,
     lines,
+    ...(draft.unreadable ? { unreadable: draft.unreadable } : {}),
   };
 }
 
@@ -394,6 +410,7 @@ export class SalesIngestionService {
       receivedAt,
       timeQuality: normalized.timeQuality,
       lines: normalized.lines,
+      ...(normalized.unreadable ? { unreadable: normalized.unreadable } : {}),
       integrity: {
         sourcePayloadSha256: sourceHash,
         payloadExpiresAt: new Date(Date.parse(receivedAt) + RETENTION_MS).toISOString(),
@@ -579,6 +596,13 @@ export class SalesIngestionService {
 
   private async policy(record: SalesEventRecord) {
     const event = record.event;
+    // A Clover order Pantrack couldn't read stays paused until a person reviews it.
+    if (event.unreadable)
+      return {
+        held: [event.unreadable] as HeldReason[],
+        lines: [] as SalesEventV1['lines'],
+        occurredAt: event.occurredAt,
+      };
     const previous =
       (
         await this.store.latestAppliedConsumption(

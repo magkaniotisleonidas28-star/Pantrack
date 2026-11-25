@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-23 for the new look and the unlinked Clover items banner.
+Updated: 2026-11-25 for Clover fix P1.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,17 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover fix P1 (2026-11-25): one odd sale can't stop the rest.**
+- Before, a single sale Pantrack couldn't read stopped every later sale from
+  coming in. That included an amount typed in at the register, something sold
+  by weight, a huge order, or a refund that doesn't add up.
+- Now that one sale is set aside as **paused**, with the reason in plain
+  words, and everything after it keeps coming in.
+- Nothing from the paused sale comes off stock. You check it in Clover, then
+  dismiss it or record it by hand. If the order is fixed in Clover, Pantrack
+  picks up the fixed version once
+  ([record](CLOVER_P1_UNREADABLE_ORDERS_LOCAL_EVIDENCE_20261125.md)).
 
 **Unlinked Clover items (2026-11-23):** the first idea from the shortlist.
 - On the Sales page you can see when Pantrack last checked Clover.

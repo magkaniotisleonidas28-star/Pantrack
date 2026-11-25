@@ -28,7 +28,27 @@ export type SalesTimeQuality = 'provider' | 'confirmed' | 'inferred';
 export type SalesEventState =
   'received' | 'processing' | 'applied' | 'held' | 'failed' | 'dismissed' | 'superseded';
 
+/**
+ * A Clover order Pantrack can't read safely is received as its own paused sale
+ * with one of these reasons, so syncing moves on (decision 0012, step P1).
+ */
+export type CloverPauseReason =
+  | 'clover_custom_amount'
+  | 'clover_sold_by_weight'
+  | 'clover_order_too_large'
+  | 'clover_refund_mismatch'
+  | 'clover_unreadable_order';
+
+export const CLOVER_PAUSE_REASONS: ReadonlySet<string> = new Set<CloverPauseReason>([
+  'clover_custom_amount',
+  'clover_sold_by_weight',
+  'clover_order_too_large',
+  'clover_refund_mismatch',
+  'clover_unreadable_order',
+]);
+
 export type HeldReason =
+  | CloverPauseReason
   | 'unknown_item'
   | 'unknown_variation'
   | 'unknown_modifier'
@@ -80,6 +100,8 @@ export type SalesEventDraftV1 = {
       quantity: string;
     }>;
   }>;
+  /** Native Clover only: the order couldn't be read, so it is held with no lines. */
+  unreadable?: CloverPauseReason;
   /** Hashed and byte-limited, then discarded. It is never retained in the event store. */
   sourcePayload?: unknown;
 };
@@ -101,6 +123,7 @@ export type SalesEventV1 = {
   receivedAt: string;
   timeQuality: SalesTimeQuality;
   lines: SalesEventDraftV1['lines'];
+  unreadable?: CloverPauseReason;
   integrity: {
     sourcePayloadSha256: string;
     payloadExpiresAt: string | null;
@@ -502,6 +525,7 @@ export function canonicalSalesEvent(event: SalesEventV1): SalesEventV1 {
         quantity: modifier.quantity,
       })),
     })),
+    ...(event.unreadable ? { unreadable: event.unreadable } : {}),
     integrity: {
       sourcePayloadSha256: event.integrity.sourcePayloadSha256,
       payloadExpiresAt: event.integrity.payloadExpiresAt,

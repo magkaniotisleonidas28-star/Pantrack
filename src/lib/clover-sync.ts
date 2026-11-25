@@ -4,17 +4,32 @@ import { database } from '@/db/raw';
 import { cloverConfig, cloverJson, withClover } from '@/lib/clover';
 import {
   cloverSource,
-  normalizeCloverDeletedOrder,
-  normalizeCloverOrder,
+  pausedCloverOrder,
+  readCloverOrder,
   type CloverOrder,
+  type CloverOrderIdentity,
 } from '@/lib/clover-orders';
-import type { SalesEventDraftV1 } from '@/lib/sales-ingestion';
+import { SalesIngestionError, type SalesEventDraftV1 } from '@/lib/sales-ingestion';
 import { d1SalesService } from '@/lib/d1-sales-runtime';
 import { receivePosEvent } from '@/lib/pos-adapter';
 
 const PAGE_SIZE = 100;
 const MAX_PAGES = 20;
 const OVERLAP_MS = 60 * 60 * 1000;
+/**
+ * Intake refusals about an order's own details: that order is paused instead.
+ * A sale time slightly ahead of this clock is not here: the next sync reads it.
+ */
+const ORDER_DETAIL_ERRORS = new Set([
+  'invalid_revision',
+  'invalid_lines',
+  'invalid_line',
+  'invalid_quantity',
+  'invalid_modifiers',
+  'invalid_modifier',
+  'payload_too_large',
+  'retained_fragment_too_large',
+]);
 
 export function cloverSyncEnabled() {
   const settings = env as unknown as {
@@ -96,12 +111,39 @@ export async function syncClover(companyId: string) {
       let scanned = 0,
         created = 0,
         held = 0,
-        duplicates = 0;
+        duplicates = 0,
+        paused = 0;
       const deletedIds = new Set<string>();
-      const ingest = async (draft: SalesEventDraftV1 | null) => {
+      const receive = async (identity: CloverOrderIdentity, draft: SalesEventDraftV1) => {
+        try {
+          return {
+            receipt: await receivePosEvent(service, companyId, source, draft),
+            unreadable: Boolean(draft.unreadable),
+          };
+        } catch (error) {
+          // Details Clover sent that intake refuses pause this order, not the sync.
+          if (
+            draft.unreadable ||
+            !(error instanceof SalesIngestionError) ||
+            !ORDER_DETAIL_ERRORS.has(error.code)
+          )
+            throw error;
+          return {
+            receipt: await receivePosEvent(
+              service,
+              companyId,
+              source,
+              pausedCloverOrder(identity, 'clover_unreadable_order'),
+            ),
+            unreadable: true,
+          };
+        }
+      };
+      const ingest = async (identity: CloverOrderIdentity, draft: SalesEventDraftV1 | null) => {
         scanned++;
         if (!draft) return;
-        const receipt = await receivePosEvent(service, companyId, source, draft);
+        const { receipt, unreadable } = await receive(identity, draft);
+        if (receipt.kind === 'created' && unreadable) paused++;
         if (receipt.kind === 'created') {
           created++;
           const status = await service.process(companyId, receipt.eventKey);
@@ -160,7 +202,7 @@ export async function syncClover(companyId: string) {
             if (field === 'deletedTime') {
               if (deletedIds.has(item.id)) continue;
               deletedIds.add(item.id);
-              await ingest(normalizeCloverDeletedOrder(item, state.started_at));
+              await ingest(item, readCloverOrder(item, item, state.started_at, true));
               continue;
             }
             if (deletedIds.has(item.id)) continue;
@@ -174,10 +216,16 @@ export async function syncClover(companyId: string) {
             const order = (await cloverJson(detailUrl, {
               headers: { Authorization: 'Bearer ' + token },
             })) as CloverOrder;
-            if (order.id !== item.id)
-              throw new UserFacingError('Clover order identity changed during sync.');
-            if (order.modifiedTime > upper) continue;
-            await ingest(normalizeCloverOrder(order, state.started_at));
+            // A detail that doesn't match its list entry is paused under the list identity.
+            if (!order || order.id !== item.id) {
+              await ingest(item, pausedCloverOrder(item, 'clover_unreadable_order'));
+              continue;
+            }
+            if (Number.isSafeInteger(order.modifiedTime) && order.modifiedTime > upper) continue;
+            const identity = Number.isSafeInteger(order.modifiedTime)
+              ? { id: item.id, modifiedTime: Math.max(item.modifiedTime, order.modifiedTime) }
+              : item;
+            await ingest(identity, readCloverOrder(identity, order, state.started_at));
           }
           if (list.elements.length < PAGE_SIZE) {
             if (!ties) {
@@ -201,7 +249,14 @@ export async function syncClover(companyId: string) {
         )
         .bind(checkpoint, new Date().toISOString(), companyId, lease)
         .run();
-      return { scanned, created, held, duplicates, checkpoint: new Date(checkpoint).toISOString() };
+      return {
+        scanned,
+        created,
+        held,
+        duplicates,
+        paused,
+        checkpoint: new Date(checkpoint).toISOString(),
+      };
     });
     return result;
   } catch (e) {
