@@ -1274,3 +1274,33 @@ export const stockLevelIgnores=sqliteTable('stock_level_ignores',{
  ignoredAt:text('ignored_at').notNull(),
 },t=>[primaryKey({columns:[t.companyId,t.productId]}),
  check('stock_level_ignore_level',sql`${t.levelMinor} GLOB '[0-9]*' AND ${t.levelMinor} NOT GLOB '*[^0-9]*'`)]);
+
+// Clover pilot step P2 (decision 0012): a Clover item or option an owner or manager marked
+// Not tracked. Its sale lines take nothing from stock; the rest of the sale still does.
+// Unmarking deletes the row. Every mark and unmark is kept in clover_not_tracked_changes.
+export const cloverNotTracked=sqliteTable('clover_not_tracked',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ environment:text('environment').notNull(),
+ merchantId:text('merchant_id').notNull(),
+ kind:text('kind').notNull(),
+ externalId:text('external_id').notNull(),
+ name:text('name'),
+ markedBy:text('marked_by').notNull(),
+ markedAt:text('marked_at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.environment,t.merchantId,t.kind,t.externalId]}),
+ check('clover_not_tracked_kind',sql`${t.kind} IN ('item','option')`)]);
+
+export const cloverNotTrackedChanges=sqliteTable('clover_not_tracked_changes',{
+ companyId:text('company_id').notNull().references(()=>companies.id),
+ changeId:text('change_id').notNull(),
+ environment:text('environment').notNull(),
+ merchantId:text('merchant_id').notNull(),
+ kind:text('kind').notNull(),
+ externalId:text('external_id').notNull(),
+ action:text('action').notNull(),
+ actor:text('actor').notNull(),
+ at:text('at').notNull(),
+},t=>[primaryKey({columns:[t.companyId,t.changeId]}),
+ index('clover_not_tracked_change_history').on(t.companyId,t.environment,t.merchantId,t.at),
+ check('clover_not_tracked_change_kind',sql`${t.kind} IN ('item','option')`),
+ check('clover_not_tracked_change_action',sql`${t.action} IN ('mark','unmark')`)]);

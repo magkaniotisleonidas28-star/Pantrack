@@ -52,6 +52,22 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover P2: Not tracked items and options — 2026-11-25
+
+Step P2 of the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md)
+([evidence](CLOVER_P2_NOT_TRACKED_LOCAL_EVIDENCE_20261125.md)):
+- **Marking.** Owners and managers mark a Clover item or option **Not
+  tracked**, or undo it, from the Sales banner. Who and when are logged.
+- **What it does.** Marked lines take nothing; the rest of the sale still
+  comes off stock. A sale that is entirely Not tracked completes with nothing
+  taken.
+- **Unchanged.** New, unmarked items still pause sales, and linking a recipe
+  wins over a mark.
+- **Migration 0055** adds `clover_not_tracked` and its change log. The new
+  route `/api/clover/not-tracked` needs owner or manager.
+
+Local evidence only; no Clover account was contacted.
+
 ## Clover P1: one unusual order can't stop syncing — 2026-11-25
 
 Step P1 of the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md)

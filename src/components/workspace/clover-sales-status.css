@@ -100,6 +100,38 @@
   font: inherit;
   font-size: 13px;
 }
+.clover-messages .error,
+.clover-messages .notice {
+  margin: 0;
+}
+.clover-not-tracked {
+  padding: 4px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card, #fff);
+}
+.clover-not-tracked summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.clover-not-tracked ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.clover-not-tracked li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
 @media (max-width: 650px) {
   .clover-banner {
     flex-wrap: wrap;

@@ -505,6 +505,8 @@ export class SalesIngestionService {
         externalItemId: line.externalItemId,
         ...(line.externalVariationId ? { externalVariationId: line.externalVariationId } : {}),
       });
+      // A Not tracked line takes nothing, options included; the rest of the sale still does.
+      if (mapping.status === 'not_tracked') continue;
       if (mapping.status !== 'mapped') {
         held.add(mapping.status);
         continue;
@@ -518,6 +520,7 @@ export class SalesIngestionService {
           ...(line.externalVariationId ? { externalVariationId: line.externalVariationId } : {}),
           externalModifierId: modifier.externalModifierId,
         });
+        if (result.status === 'not_tracked') continue;
         if (result.status !== 'mapped') held.add(result.status);
         else
           modifierTotals.set(
@@ -751,6 +754,18 @@ export class SalesIngestionService {
         'held',
         complete.completedAt,
         mapping.held.join(','),
+      );
+      return this.statusForWorker(companyId, eventKey);
+    }
+    // Every line was Not tracked: the sale is complete and nothing comes off stock.
+    if (!mapping.mapped.length) {
+      const complete = { ...attempt, completedAt: this.now(), outcome: 'noop' as const };
+      await this.store.completeAttempt(
+        companyId,
+        complete,
+        'applied',
+        complete.completedAt,
+        'not_tracked_noop',
       );
       return this.statusForWorker(companyId, eventKey);
     }

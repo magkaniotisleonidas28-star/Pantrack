@@ -334,11 +334,16 @@ export class SalesIngestionError extends UserFacingError {
   }
 }
 
+/** `not_tracked`: marked Not tracked (decision 0012, P2), so the line takes nothing. */
 export type SalesMappingResult =
-  { status: 'mapped'; recipeId: string } | { status: 'unknown_item' | 'unknown_variation' };
+  | { status: 'mapped'; recipeId: string }
+  | { status: 'not_tracked' }
+  | { status: 'unknown_item' | 'unknown_variation' };
 
 export type SalesModifierMappingResult =
-  { status: 'mapped'; modifierId: string } | { status: 'unknown_modifier' };
+  | { status: 'mapped'; modifierId: string }
+  | { status: 'not_tracked' }
+  | { status: 'unknown_modifier' };
 
 export interface SalesMappingPort {
   resolveLine(input: {
