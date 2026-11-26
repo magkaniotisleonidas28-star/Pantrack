@@ -177,6 +177,9 @@ function reset(count, { ties = false, move = false } = {}) {
   }));
 }
 
+// This suite checks paging itself, so each run gets more than Cloudflare's per-run
+// budget; the budget is covered by tests/clover-sync-budget.mjs.
+const unlimited = () => ({ fetches: 100_000, newSales: 100_000 });
 globalThis.fetch = async (url) => {
   const u = new URL(String(url));
   assert.equal(u.origin, 'https://apisandbox.dev.clover.com', 'Fake transport only');
@@ -215,7 +218,7 @@ globalThis.fetch = async (url) => {
   return Response.json(order);
 };
 reset(101, { move: true });
-const result = await syncClover('a');
+const result = await syncClover('a', unlimited());
 const missed = fixtures.at(-1).id;
 assert.equal(
   sql.prepare('SELECT COUNT(*) AS n FROM sales_events WHERE external_order_id=?').get(missed).n,
@@ -236,19 +239,19 @@ assert.equal(
 reset(125, { ties: true });
 fixtures.forEach((f) => (f.id = 'T' + f.id));
 fixtures.push({ ...fixtures[0], id: 'A000000000000', modifiedTime: started + 3 * 3600_000 });
-const tied = await syncClover('a');
+const tied = await syncClover('a', unlimited());
 assert.equal(
   tied.created,
   126,
   'Timestamp ties and a later timestamp with a smaller ID are all ingested',
 );
 sql.prepare('UPDATE clover_sync_state SET checkpoint=?').run(started);
-const replay = await syncClover('a');
+const replay = await syncClover('a', unlimited());
 assert.equal(replay.created, 0);
 assert.equal(replay.duplicates, 126, 'Repeated scan remains idempotent');
 reset(2000, { ties: true });
 fixtures.forEach((f) => (f.id = 'MAX' + f.id));
-await assert.rejects(() => syncClover('a'), /page limit reached; checkpoint was not advanced/);
+await assert.rejects(() => syncClover('a', unlimited()), /page limit reached; checkpoint was not advanced/);
 assert.equal(
   sql.prepare('SELECT checkpoint FROM clover_sync_state').get().checkpoint,
   initial.checkpoint,
@@ -256,7 +259,7 @@ assert.equal(
 assert.equal(listCalls, 20, 'MAX_PAGES still bounds requests');
 reset(101);
 breakOrdering = true;
-await assert.rejects(() => syncClover('a'), /orders page/);
+await assert.rejects(() => syncClover('a', unlimited()), /orders page/);
 assert.equal(
   sql.prepare('SELECT checkpoint FROM clover_sync_state').get().checkpoint,
   initial.checkpoint,

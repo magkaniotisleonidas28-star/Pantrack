@@ -17,6 +17,38 @@ const PAGE_SIZE = 100;
 const MAX_PAGES = 20;
 const OVERLAP_MS = 60 * 60 * 1000;
 /**
+ * Clover requests one Worker run may make. Cloudflare's free plan allows 50
+ * subrequests per run; a token refresh and recovery can use two more, so 40
+ * leaves room. `PANTRACK_CLOVER_FETCH_BUDGET` can raise it on a paid plan.
+ */
+export const CLOVER_FETCH_BUDGET = 40;
+/** New sales one run records and applies; each uses many database queries. */
+export const CLOVER_NEW_SALES_BUDGET = 20;
+/**
+ * An order changed this recently is read again even if it was already
+ * received: a refund can become visible on the same modified time.
+ */
+const RECENT_REREAD_MS = 10 * 60 * 1000;
+
+/** What a run may still spend. Shared by every sync in one Worker invocation. */
+export type CloverSyncBudget = { fetches: number; newSales: number };
+
+export function cloverSyncBudget(): CloverSyncBudget {
+  const configured = Number(
+    (env as unknown as { PANTRACK_CLOVER_FETCH_BUDGET?: string }).PANTRACK_CLOVER_FETCH_BUDGET,
+  );
+  return {
+    fetches:
+      Number.isSafeInteger(configured) && configured >= 1 && configured <= 9_000
+        ? configured
+        : CLOVER_FETCH_BUDGET,
+    newSales: CLOVER_NEW_SALES_BUDGET,
+  };
+}
+
+/** The run's budget is spent; the sync records how far it got and stops. */
+class BudgetSpent extends Error {}
+/**
  * Intake refusals about an order's own details: that order is paused instead.
  * A sale time slightly ahead of this clock is not here: the next sync reads it.
  */
@@ -76,7 +108,7 @@ export async function cloverSyncStatus(companyId: string) {
   };
 }
 
-export async function syncClover(companyId: string) {
+export async function syncClover(companyId: string, budget: CloverSyncBudget = cloverSyncBudget()) {
   if (!cloverSyncEnabled()) throw new UserFacingError('Clover sales sync is disabled.');
   const db = database(),
     now = Date.now(),
@@ -106,8 +138,31 @@ export async function syncClover(companyId: string) {
           created: 0,
           held: 0,
           duplicates: 0,
+          partial: false,
           checkpoint: new Date(state.checkpoint).toISOString(),
         };
+      const fetchClover = (url: string) => {
+        if (budget.fetches <= 0) throw new BudgetSpent();
+        budget.fetches--;
+        return cloverJson(url, { headers: { Authorization: 'Bearer ' + token } });
+      };
+      // The latest revision Pantrack already holds for each order on a page.
+      const knownRevisions = async (ids: string[]) => {
+        const known = new Map<string, number>();
+        for (let i = 0; i < ids.length; i += 90) {
+          const chunk = ids.slice(i, i + 90);
+          const rows = await db
+            .prepare(
+              `SELECT external_order_id AS id,MAX(revision) AS revision FROM sales_events
+              WHERE company_id=? AND provider='clover' AND environment=? AND merchant_id=?
+              AND external_order_id IN (${chunk.map(() => '?').join(',')}) GROUP BY external_order_id`,
+            )
+            .bind(companyId, state.environment, state.merchant_id, ...chunk)
+            .all<{ id: string; revision: number }>();
+          for (const row of rows.results) known.set(row.id, row.revision);
+        }
+        return known;
+      };
       let scanned = 0,
         created = 0,
         held = 0,
@@ -146,6 +201,7 @@ export async function syncClover(companyId: string) {
         if (receipt.kind === 'created' && unreadable) paused++;
         if (receipt.kind === 'created') {
           created++;
+          budget.newSales--;
           const status = await service.process(companyId, receipt.eventKey);
           if (status?.state === 'held') held++;
           if (status?.state === 'failed')
@@ -154,7 +210,11 @@ export async function syncClover(companyId: string) {
       };
       // Clover omits deleted orders from modifiedTime results and returns 404 for
       // their detail URL. The deletedTime-filtered list is the provider evidence.
-      for (const field of ['deletedTime', 'modifiedTime'] as const) {
+      // When the budget runs out, the checkpoint moves to the first order not yet
+      // handled, so the next run carries on from there instead of starting over.
+      let partial = false,
+        resumeFrom = state.checkpoint;
+      passes: for (const field of ['deletedTime', 'modifiedTime'] as const) {
         let finished = false;
         let cursor: { time: number; id: string } | undefined,
           ties = false;
@@ -175,9 +235,15 @@ export async function syncClover(companyId: string) {
           url.searchParams.set('limit', String(PAGE_SIZE));
           if (field === 'deletedTime')
             url.searchParams.set('expand', 'lineItems,lineItems.modifications,payments');
-          const list = (await cloverJson(url.href, {
-            headers: { Authorization: 'Bearer ' + token },
-          })) as { elements?: CloverOrder[] };
+          let list: { elements?: CloverOrder[] };
+          try {
+            list = (await fetchClover(url.href)) as { elements?: CloverOrder[] };
+          } catch (error) {
+            if (!(error instanceof BudgetSpent)) throw error;
+            partial = true;
+            if (field === 'modifiedTime') resumeFrom = cursor ? cursor.time : lower;
+            break passes;
+          }
           if (!Array.isArray(list.elements) || list.elements.length > PAGE_SIZE)
             throw new UserFacingError('Clover returned an invalid orders page.');
           let previous = cursor;
@@ -195,10 +261,22 @@ export async function syncClover(companyId: string) {
               throw new UserFacingError('Clover returned an invalid orders page.');
             previous = { time: item.modifiedTime, id: item.id };
           }
+          const known = await knownRevisions(list.elements.map((item) => item.id));
           for (const item of list.elements) {
             if (seen.has(item.id)) continue;
             seen.add(item.id);
             if (item.modifiedTime > upper) continue;
+            // Already received at this modification, and not so recent that a refund
+            // may still appear on it: counted, not read again.
+            if (
+              (known.get(item.id) ?? -1) >= item.modifiedTime &&
+              (field === 'deletedTime' || item.modifiedTime < Date.now() - RECENT_REREAD_MS)
+            ) {
+              scanned++;
+              duplicates++;
+              if (field === 'deletedTime') deletedIds.add(item.id);
+              continue;
+            }
             if (field === 'deletedTime') {
               if (deletedIds.has(item.id)) continue;
               deletedIds.add(item.id);
@@ -213,9 +291,16 @@ export async function syncClover(companyId: string) {
               '/orders/' +
               encodeURIComponent(item.id) +
               '?expand=lineItems,lineItems.modifications,payments,refunds';
-            const order = (await cloverJson(detailUrl, {
-              headers: { Authorization: 'Bearer ' + token },
-            })) as CloverOrder;
+            let order: CloverOrder;
+            try {
+              if (budget.newSales <= 0) throw new BudgetSpent();
+              order = (await fetchClover(detailUrl)) as CloverOrder;
+            } catch (error) {
+              if (!(error instanceof BudgetSpent)) throw error;
+              partial = true;
+              resumeFrom = item.modifiedTime;
+              break passes;
+            }
             // A detail that doesn't match its list entry is paused under the list identity.
             if (!order || order.id !== item.id) {
               await ingest(item, pausedCloverOrder(item, 'clover_unreadable_order'));
@@ -242,7 +327,7 @@ export async function syncClover(companyId: string) {
             'Clover order page limit reached; checkpoint was not advanced.',
           );
       }
-      const checkpoint = Math.max(state.checkpoint, upper);
+      const checkpoint = Math.max(state.checkpoint, partial ? resumeFrom : upper);
       await db
         .prepare(
           'UPDATE clover_sync_state SET checkpoint=?,last_success=?,last_error=NULL WHERE company_id=? AND lease_until=?',
@@ -255,6 +340,7 @@ export async function syncClover(companyId: string) {
         held,
         duplicates,
         paused,
+        partial,
         checkpoint: new Date(checkpoint).toISOString(),
       };
     });

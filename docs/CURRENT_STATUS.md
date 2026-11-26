@@ -52,6 +52,24 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover sync within Cloudflare's per-run limits — 2026-11-26
+
+**The P5 finding.** In the P5 sandbox session, 105 orders in two minutes
+stalled the sync on the development site with "Too many subrequests". A sync
+re-read the last hour and fetched every order's details, and Cloudflare's free
+plan allows 50 outside requests per run.
+
+**The fix** ([evidence](CLOVER_SYNC_BUDGET_LOCAL_EVIDENCE_20261126.md)):
+- each run has a budget of 40 Clover requests and 20 new sales;
+- already-received orders older than 10 minutes aren't fetched again;
+- when the budget runs out, the checkpoint moves to the first order not yet
+  handled, and the next run carries on;
+- the 10-minute check and Clover notices share one budget per run.
+
+Locally, 105 orders caught up in 6 runs, each within limits, with every sale
+taken once. There is no migration. Repeating the busy-day test on the
+development site needs a release and the owner's go-ahead.
+
 ## Clover P4: Clover access removed — 2026-11-25
 
 Step P4 of the [Clover pilot roadmap](CLOVER_PILOT_CONNECTION_ROADMAP.md)

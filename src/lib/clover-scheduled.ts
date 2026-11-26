@@ -1,6 +1,11 @@
 import { database } from '@/db/raw';
 import { cloverConfig } from '@/lib/clover';
-import { cloverSyncEnabled, syncClover } from '@/lib/clover-sync';
+import {
+  cloverSyncBudget,
+  cloverSyncEnabled,
+  syncClover,
+  type CloverSyncBudget,
+} from '@/lib/clover-sync';
 
 /** Each sync reads at most 24 hours, so a café far behind gets several passes per run. */
 export const MAX_PASSES_PER_CAFE = 6;
@@ -19,7 +24,8 @@ export type ScheduledCafeResult = {
 
 type Sync = (
   companyId: string,
-) => Promise<{ created: number; paused?: number; checkpoint: string }>;
+  budget: CloverSyncBudget,
+) => Promise<{ created: number; paused?: number; checkpoint: string; partial?: boolean }>;
 
 /**
  * Pantrack's own Clover check, run by the Worker's 10-minute trigger (decision
@@ -30,13 +36,15 @@ type Sync = (
  * - One café's error is recorded on that café and doesn't stop the others.
  */
 export async function runScheduledCloverSync(
-  deps: { db?: D1Database; sync?: Sync; now?: () => number } = {},
+  deps: { db?: D1Database; sync?: Sync; now?: () => number; budget?: CloverSyncBudget } = {},
 ): Promise<{ skipped?: 'sync_disabled'; cafes: ScheduledCafeResult[] }> {
   if (!cloverSyncEnabled()) return { skipped: 'sync_disabled', cafes: [] };
   const db = deps.db ?? database(),
     sync = deps.sync ?? syncClover,
     now = deps.now ?? Date.now,
-    started = now();
+    started = now(),
+    // Cloudflare limits requests per run, so every café in this run shares one budget.
+    budget = deps.budget ?? cloverSyncBudget();
   const environment = cloverConfig().environment;
   const cafes = await db
     .prepare(
@@ -46,7 +54,7 @@ export async function runScheduledCloverSync(
     .all<{ company_id: string }>();
   const results: ScheduledCafeResult[] = [];
   for (const { company_id: companyId } of cafes.results) {
-    if (now() - started > RUN_BUDGET_MS) break;
+    if (now() - started > RUN_BUDGET_MS || budget.fetches <= 0 || budget.newSales <= 0) break;
     const result: ScheduledCafeResult = {
       companyId,
       outcome: 'synced',
@@ -56,10 +64,12 @@ export async function runScheduledCloverSync(
     };
     try {
       for (let pass = 0; pass < MAX_PASSES_PER_CAFE; pass++) {
-        const synced = await sync(companyId);
+        const synced = await sync(companyId, budget);
         result.passes++;
         result.created += synced.created;
         result.paused += synced.paused ?? 0;
+        // The run's budget ran out: the café carries on from its new checkpoint next time.
+        if (synced.partial) break;
         const checkpoint = Date.parse(synced.checkpoint);
         if (!Number.isFinite(checkpoint) || now() - checkpoint <= CAUGHT_UP_MS) break;
         if (now() - started > RUN_BUDGET_MS) break;

@@ -2,7 +2,7 @@ import { env } from 'cloudflare:workers';
 import { database } from '@/db/raw';
 import { readBoundedUtf8, BodyTooLargeError } from '@/lib/bounded-body';
 import { cloverConfig } from '@/lib/clover';
-import { cloverSyncEnabled, syncClover } from '@/lib/clover-sync';
+import { cloverSyncBudget, cloverSyncEnabled, syncClover } from '@/lib/clover-sync';
 import { captureChallenge } from '@/lib/clover-webhook-challenge';
 import { cloverAccessRemoval, recordCloverAccessRemoved } from '@/lib/clover-access';
 import { z } from 'zod';
@@ -70,7 +70,9 @@ export async function handleCloverWebhook(req: Request) {
     const data = notification.parse(body),
       config = cloverConfig();
     if (data.appId !== config.clientId) return new Response(null, { status: 403 });
-    const db = database();
+    const db = database(),
+      // One budget for this notice: Cloudflare limits requests per run.
+      budget = cloverSyncBudget();
     for (const [merchantId, updates] of Object.entries(data.merchants)) {
       const connection = await db
         .prepare('SELECT company_id FROM clover_connections WHERE environment=? AND merchant_id=?')
@@ -92,7 +94,7 @@ export async function handleCloverWebhook(req: Request) {
       if (!connection) return new Response(null, { status: 403 });
       // Clover refused access earlier: automatic reads wait until the owner reconnects.
       if (await cloverAccessRemoval(db, connection.company_id)) continue;
-      await syncClover(connection.company_id);
+      await syncClover(connection.company_id, budget);
     }
     return Response.json({ ok: true });
   } catch (error) {
