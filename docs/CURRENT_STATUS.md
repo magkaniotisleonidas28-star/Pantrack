@@ -52,6 +52,20 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover P5: sandbox session record — 2026-11-27
+
+The [P5 session record](CLOVER_P5_SANDBOX_SESSION_20261126.md) covers the
+2026-11-25/26 session on the development site with a Clover sandbox test
+merchant.
+- **Passed:** custom amount, linking and replay, two of an item, Not tracked
+  items and options, tip, an item voided before payment, a reopened order,
+  app removal and reconnecting.
+- **Fixed:** three findings, in PRs #89 to #91.
+- **Not testable in the sandbox web dashboard:** voided payment, exchange,
+  sizes and items sold by weight.
+- **Next:** release the fixes to the development site and repeat the
+  busy-period test, with the owner's go-ahead.
+
 ## Clover name lookups wait for a sales check — 2026-11-27
 
 **The P5 finding.** In the P5 sandbox session, **Sort them out** showed item

@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-27 for the Clover name lookup fix.
+Updated: 2026-11-27 for the Clover sandbox session record.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,12 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover sandbox test written up (2026-11-27).** The
+[record](CLOVER_P5_SANDBOX_SESSION_20261126.md) lists each sale you tried
+in Clover's test café, what Pantrack should have done and what it did. Most
+cases worked first time. The three problems found are fixed. The busy-period
+test is to be repeated on the development site when you give the go-ahead.
 
 **Clover item names (2026-11-27).** In the sandbox test, **Sort them out**
 once showed codes instead of item names, because Pantrack was busy checking
