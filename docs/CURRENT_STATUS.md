@@ -52,6 +52,19 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover name lookups wait for a sales check — 2026-11-27
+
+**The P5 finding.** In the P5 sandbox session, **Sort them out** showed item
+codes instead of names, because the lookup ran while the 10-minute check was
+reading Clover and gave up at once.
+
+**The fix** ([evidence](CLOVER_NAME_LOOKUP_WAIT_LOCAL_EVIDENCE_20261127.md)):
+- a name lookup now waits up to 20 seconds for the check to finish;
+- sales checks still don't wait;
+- if names still can't be fetched, a **Try again** button is shown.
+
+There is no migration.
+
 ## Clover refunds that include a tip — 2026-11-26
 
 **The P5 finding.** In the P5 sandbox session, a full refund of a $5 latte

@@ -1,6 +1,12 @@
 import { UserFacingError } from '@/lib/user-facing-error';
 import { z } from 'zod';
-import { cloverConfig, cloverConnection, cloverJson, withClover } from './clover';
+import {
+  CLOVER_NAME_LOOKUP_WAIT_MS,
+  cloverConfig,
+  cloverConnection,
+  cloverJson,
+  withClover,
+} from './clover';
 import { cloverSyncStatus, syncClover } from './clover-sync';
 import {
   cloverSource,
@@ -43,37 +49,41 @@ export const cloverPosAdapter: PosAdapter = {
       throw new UserFacingError('Invalid catalog offset.');
     const config = cloverConfig();
     return supported(
-      await withClover(companyId, async (connection, token) => {
-        const url =
-          config.api +
-          '/v3/merchants/' +
-          encodeURIComponent(connection.merchant_id) +
-          '/' +
-          kind +
-          '?limit=100&offset=' +
-          offset;
-        const data = z
-          .object({
-            elements: z
-              .array(
-                z.object({
-                  id: z.string().min(1),
-                  name: z.string().optional(),
-                  deleted: z.boolean().optional(),
-                  hidden: z.boolean().optional(),
-                }),
-              )
-              .max(100),
-          })
-          .parse(await cloverJson(url, { headers: { Authorization: 'Bearer ' + token } }));
-        return {
-          locationId: connection.merchant_id,
-          items: data.elements
-            .filter((item) => !item.deleted && !item.hidden)
-            .map((item) => ({ id: item.id, name: item.name || item.id })),
-          nextOffset: data.elements.length === 100 ? offset + 100 : null,
-        };
-      }),
+      await withClover(
+        companyId,
+        async (connection, token) => {
+          const url =
+            config.api +
+            '/v3/merchants/' +
+            encodeURIComponent(connection.merchant_id) +
+            '/' +
+            kind +
+            '?limit=100&offset=' +
+            offset;
+          const data = z
+            .object({
+              elements: z
+                .array(
+                  z.object({
+                    id: z.string().min(1),
+                    name: z.string().optional(),
+                    deleted: z.boolean().optional(),
+                    hidden: z.boolean().optional(),
+                  }),
+                )
+                .max(100),
+            })
+            .parse(await cloverJson(url, { headers: { Authorization: 'Bearer ' + token } }));
+          return {
+            locationId: connection.merchant_id,
+            items: data.elements
+              .filter((item) => !item.deleted && !item.hidden)
+              .map((item) => ({ id: item.id, name: item.name || item.id })),
+            nextOffset: data.elements.length === 100 ? offset + 100 : null,
+          };
+        },
+        { waitMs: CLOVER_NAME_LOOKUP_WAIT_MS },
+      ),
     );
   },
   async sync(companyId) {
