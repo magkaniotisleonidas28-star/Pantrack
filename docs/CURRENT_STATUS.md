@@ -52,6 +52,17 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover refunds that include a tip — 2026-11-26
+
+**The P5 finding.** In the P5 sandbox session, a full refund of a $5 latte
+with a $1 tip was paused as "Refund details don't add up": Clover's refund
+amount (600) includes the tip, while the order total (500) doesn't.
+
+**The fix** ([evidence](CLOVER_REFUND_TIP_LOCAL_EVIDENCE_20261126.md)): each
+refund's tip is taken out before it is compared with the order total. A
+refund of only the tip leaves the order as sold. Refunds that still don't add
+up stay paused for review. There is no migration.
+
 ## Clover sync within Cloudflare's per-run limits — 2026-11-26
 
 **The P5 finding.** In the P5 sandbox session, 105 orders in two minutes
