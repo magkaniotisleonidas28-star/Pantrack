@@ -25,8 +25,11 @@ P3 built locally on 2026-11-25
 migration.
 P4 built locally on 2026-11-25
 ([evidence](CLOVER_P4_ACCESS_REMOVED_LOCAL_EVIDENCE_20261125.md)) with
-migration 0056. That completes the local steps P1 to P4; P5 (sandbox
-session) needs a release to the development site and the owner's go-ahead.
+migration 0056. That completes the local steps P1 to P4.
+P5 sandbox session held on 2026-11-25/26 on the development site
+([record](CLOVER_P5_SANDBOX_SESSION_20261126.md)). Its three code findings
+were fixed locally in PRs #89 to #91. Still to do: release them to the
+development site and repeat the busy-period test, with the owner's go-ahead.
 
 | Step | Outcome | Schema? | Done when |
 | --- | --- | --- | --- |
