@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-26 for the Clover busy-period fix.
+Updated: 2026-11-26 for the Clover refund-with-tip fix.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,12 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover refunds with a tip (2026-11-26).** In the sandbox test, refunding
+a latte that had a tip asked you to review it, because Clover counts the tip
+in the refund. Pantrack now takes the tip out first, so ordinary refunds go
+through without asking
+([record](CLOVER_REFUND_TIP_LOCAL_EVIDENCE_20261126.md)).
 
 **Clover busy-period fix (2026-11-26).** In the test session with Clover's
 sandbox:

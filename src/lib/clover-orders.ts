@@ -41,7 +41,9 @@ export type CloverOrder = {
   deletedTime?: number;
   lineItems?: CloverCollection<CloverLine>;
   payments?: CloverCollection<{ id: string; createdTime?: number; clientCreatedTime?: number }>;
-  refunds?: CloverCollection<{ id: string; amount: number }>;
+  // Clover's refund amount includes any tip given back with it (seen in the
+  // sandbox, 2026-11-26: amount 600 with tipAmount 100 on a 500 order).
+  refunds?: CloverCollection<{ id: string; amount: number; tipAmount?: number | null }>;
 };
 
 export function cloverSource(
@@ -138,7 +140,14 @@ export function normalizeCloverOrder(
       !Number.isSafeInteger(order.total) ||
       Number(order.total) <= 0 ||
       refundEntries.some(
-        (refund) => !refund.id || !Number.isSafeInteger(refund.amount) || refund.amount <= 0,
+        (refund) =>
+          !refund.id ||
+          !Number.isSafeInteger(refund.amount) ||
+          refund.amount <= 0 ||
+          (refund.tipAmount != null &&
+            (!Number.isSafeInteger(refund.tipAmount) ||
+              refund.tipAmount < 0 ||
+              refund.tipAmount > refund.amount)),
       ) ||
       new Set(refundEntries.map((refund) => refund.id)).size !== refundEntries.length
     )
@@ -146,13 +155,20 @@ export function normalizeCloverOrder(
         'clover_refund_mismatch',
         'Clover refund details need review.',
       );
-    const refundedAmount = refundEntries.reduce((sum, refund) => sum + refund.amount, 0);
+    // The order total has no tip, so the tip given back is taken out first.
+    const refundedAmount = refundEntries.reduce(
+      (sum, refund) => sum + refund.amount - (refund.tipAmount ?? 0),
+      0,
+    );
     if (!Number.isSafeInteger(refundedAmount) || refundedAmount > order.total!)
       throw new CloverUnreadableOrder(
         'clover_refund_mismatch',
         'Clover refund amount needs review.',
       );
-    linkedRefundStatus = refundedAmount === order.total ? 'refunded' : 'partially_refunded';
+    // A refund of only the tip gives nothing back for the items, so the order
+    // stays as sold.
+    if (refundedAmount > 0)
+      linkedRefundStatus = refundedAmount === order.total ? 'refunded' : 'partially_refunded';
   }
   const refunded =
     Boolean(linkedRefundStatus) ||
