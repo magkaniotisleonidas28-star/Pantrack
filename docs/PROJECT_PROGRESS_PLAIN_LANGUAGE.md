@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-25 for Clover fixes P1 to P4.
+Updated: 2026-11-26 for the Clover busy-period fix.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,16 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover busy-period fix (2026-11-26).** In the test session with Clover's
+sandbox:
+- **The problem:** after about 46 sales in a burst, Pantrack's Clover check
+  hit a Cloudflare limit and got stuck at the same spot each time.
+- **The fix:** each check now does a safe amount and remembers how far it
+  got, and the next check carries on.
+- **Tested here:** a busy hour of 105 sales caught up in 6 checks, and each
+  sale was counted once
+  ([record](CLOVER_SYNC_BUDGET_LOCAL_EVIDENCE_20261126.md)).
 
 **Clover fix P4 (2026-11-25): you're told if Clover access ends.**
 - If the café removes Pantrack in Clover, or Clover stops letting Pantrack in,
