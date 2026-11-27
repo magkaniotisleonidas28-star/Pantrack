@@ -362,7 +362,12 @@ export function CloverUnlinkedBanner({
         <div className="clover-link-list">
           {namesState === 'loading' && <small role="status">Getting names from Clover…</small>}
           {namesState === 'failed' && (
-            <small role="status">Couldn’t get names from Clover, so item codes are shown.</small>
+            <small role="status">
+              Couldn’t get names from Clover, so item codes are shown.{' '}
+              <Button size="sm" variant="ghost" onClick={() => void loadNames()}>
+                Try again
+              </Button>
+            </small>
           )}
           <ul>
             {entries.map((entry) => {

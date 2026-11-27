@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-26 for the Clover refund-with-tip fix.
+Updated: 2026-11-27 for the Clover name lookup fix.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,12 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover item names (2026-11-27).** In the sandbox test, **Sort them out**
+once showed codes instead of item names, because Pantrack was busy checking
+Clover for sales at that moment. Now it waits a few seconds for the check to
+finish, and offers **Try again** if names still don't come
+([record](CLOVER_NAME_LOOKUP_WAIT_LOCAL_EVIDENCE_20261127.md)).
 
 **Clover refunds with a tip (2026-11-26).** In the sandbox test, refunding
 a latte that had a tip asked you to review it, because Clover counts the tip

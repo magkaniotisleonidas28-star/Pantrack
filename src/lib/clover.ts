@@ -135,21 +135,40 @@ export async function cloverTokenExpirations(connection: Connection) {
   };
 }
 
+/** How long a menu name lookup waits for a sales check to finish with Clover. */
+export const CLOVER_NAME_LOOKUP_WAIT_MS = 20_000;
+const LEASE_RETRY_MS = 500;
+
+/**
+ * Runs one piece of Clover work while holding the café's Clover lease, which
+ * keeps two requests from rotating the same tokens at once. When another
+ * request holds it, this waits up to `waitMs` for it to finish (P5 finding:
+ * a name lookup during the 10-minute check gave up at once and showed codes).
+ */
 export async function withClover<T>(
   companyId: string,
   fn: (c: Connection, token: string) => Promise<T>,
+  { waitMs = 0 }: { waitMs?: number } = {},
 ): Promise<T> {
   const db = database(),
-    now = Date.now(),
+    giveUpAt = Date.now() + waitMs;
+  let c: Connection | null = null,
+    lease = 0;
+  for (;;) {
+    const now = Date.now();
     lease = now + 120000;
-  const c = await db
-    .prepare(
-      'UPDATE clover_connections SET lease_until=? WHERE company_id=? AND lease_until<? RETURNING *',
-    )
-    .bind(lease, companyId, now)
-    .first<Connection>();
-  if (!c)
-    throw new UserFacingError('Connect Clover first, or wait for the current request to finish.');
+    c = await db
+      .prepare(
+        'UPDATE clover_connections SET lease_until=? WHERE company_id=? AND lease_until<? RETURNING *',
+      )
+      .bind(lease, companyId, now)
+      .first<Connection>();
+    if (c) break;
+    if (!(await cloverConnection(companyId))) throw new UserFacingError('Connect Clover first.');
+    if (Date.now() + LEASE_RETRY_MS > giveUpAt)
+      throw new UserFacingError('Clover is busy with another request. Try again in a moment.');
+    await new Promise((resolve) => setTimeout(resolve, LEASE_RETRY_MS));
+  }
   try {
     const config = cloverConfig();
     if (c.environment !== config.environment)
