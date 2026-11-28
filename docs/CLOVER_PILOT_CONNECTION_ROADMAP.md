@@ -28,8 +28,12 @@ P4 built locally on 2026-11-25
 migration 0056. That completes the local steps P1 to P4.
 P5 sandbox session held on 2026-11-25/26 on the development site
 ([record](CLOVER_P5_SANDBOX_SESSION_20261126.md)). Its three code findings
-were fixed locally in PRs #89 to #91. Still to do: release them to the
-development site and repeat the busy-period test, with the owner's go-ahead.
+were fixed locally in PRs #89 to #91. These were released on 2026-11-28 and
+the busy-period test repeated: the budget fix worked, but paging through a
+busy second stopped the sync
+([evidence](CLOVER_SAME_SECOND_PAGING_EVIDENCE_20261128.md)). That is fixed
+locally. Still to do: release it and repeat the test, with the owner's
+go-ahead.
 
 | Step | Outcome | Schema? | Done when |
 | --- | --- | --- | --- |

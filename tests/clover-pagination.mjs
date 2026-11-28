@@ -154,7 +154,8 @@ const upper = started + 24 * 3600_000;
 let fixtures = [],
   listCalls = 0,
   moveFirst = false,
-  breakOrdering = false;
+  breakOrdering = false,
+  onList = null;
 const initial = sql.prepare('SELECT * FROM clover_sync_state').get();
 
 function reset(count, { ties = false, move = false } = {}) {
@@ -164,6 +165,7 @@ function reset(count, { ties = false, move = false } = {}) {
   listCalls = 0;
   moveFirst = move;
   breakOrdering = false;
+  onList = null;
   fixtures = Array.from({ length: count }, (_, i) => ({
     id: String(i).padStart(13, '0'),
     createdTime: started + 1000,
@@ -187,9 +189,15 @@ globalThis.fetch = async (url) => {
     const filters = u.searchParams.getAll('filter');
     if (filters.some((f) => f.startsWith('deletedTime'))) return Response.json({ elements: [] });
     if (++listCalls === 2 && moveFirst) fixtures[0].modifiedTime = upper + 1;
+    if (onList) onList(listCalls, u);
+    // As seen in Clover's sandbox (2026-11-28): with an id filter, Clover ignores
+    // every modifiedTime filter.
+    const active = filters.some((f) => f.startsWith('id'))
+      ? filters.filter((f) => f.startsWith('id'))
+      : filters;
     const rows = fixtures
       .filter((row) =>
-        filters.every((f) => {
+        active.every((f) => {
           const match = /^(modifiedTime|id)(>=|<=|>|<|=)(.+)$/.exec(f);
           assert.ok(match, 'Supported filter: ' + f);
           const [, field, op, raw] = match,
@@ -249,9 +257,77 @@ sql.prepare('UPDATE clover_sync_state SET checkpoint=?').run(started);
 const replay = await syncClover('a', unlimited());
 assert.equal(replay.created, 0);
 assert.equal(replay.duplicates, 126, 'Repeated scan remains idempotent');
+
+// A busy second: Clover gives modifiedTime to the second. 40 orders a second
+// apart, then 230 in one second, then 30 more, as in the sandbox busy test.
+reset(300);
+const busy = started + 2 * 3600_000;
+fixtures.forEach((f, i) => {
+  f.id = 'B' + String(i).padStart(12, '0');
+  f.modifiedTime = i < 40 ? busy + i * 1000 : i < 270 ? busy + 40_000 : busy + 41_000 + i * 1000;
+});
+const listUrls = [];
+onList = (_, u) => listUrls.push(u);
+const second = await syncClover('a', unlimited());
+assert.equal(second.created, 300, 'every order in and around the busy second is received');
+assert.ok(
+  listUrls.every((u) => !u.searchParams.getAll('filter').some((f) => f.startsWith('id'))),
+  'no id filter is sent, since Clover then drops the time filters',
+);
+assert.ok(
+  listUrls.some((u) => u.searchParams.get('offset')),
+  'the busy second is paged with an offset',
+);
+assert.equal(
+  sql
+    .prepare(
+      "SELECT COUNT(*) AS n FROM (SELECT external_order_id FROM sales_events WHERE external_order_id LIKE 'B%' GROUP BY external_order_id HAVING COUNT(*)>1)",
+    )
+    .get().n,
+  0,
+  'no order is received twice',
+);
+
+// An order in the busy second changes while it is being paged: the offset
+// shifts, the anchor no longer matches, and the second is read again. Nothing
+// is skipped.
+reset(260, { ties: true });
+fixtures.forEach((f) => (f.id = 'S' + f.id));
+let moved = false;
+onList = (_, u) => {
+  if (!moved && u.searchParams.get('offset')) {
+    moved = true;
+    // An order already listed in this second is changed in Clover, so it now
+    // has a later time, after this sync's window.
+    fixtures[5].modifiedTime = upper + 1;
+  }
+};
+const shifted = await syncClover('a', unlimited());
+assert.ok(moved, 'the shift happened during paging');
+assert.equal(
+  sql
+    .prepare(
+      "SELECT COUNT(DISTINCT external_order_id) AS n FROM sales_events WHERE external_order_id LIKE 'S%'",
+    )
+    .get().n,
+  260,
+  'no order in the busy second is skipped',
+);
+assert.equal(shifted.created, 260);
+const later = await syncClover('a', unlimited());
+assert.equal(later.created, 1, 'the next sync receives the changed order as a new revision');
+assert.equal(
+  sql
+    .prepare('SELECT COUNT(*) AS n FROM sales_events WHERE external_order_id=?')
+    .get(fixtures[5].id).n,
+  2,
+);
 reset(2000, { ties: true });
 fixtures.forEach((f) => (f.id = 'MAX' + f.id));
-await assert.rejects(() => syncClover('a', unlimited()), /page limit reached; checkpoint was not advanced/);
+await assert.rejects(
+  () => syncClover('a', unlimited()),
+  /page limit reached; checkpoint was not advanced/,
+);
 assert.equal(
   sql.prepare('SELECT checkpoint FROM clover_sync_state').get().checkpoint,
   initial.checkpoint,

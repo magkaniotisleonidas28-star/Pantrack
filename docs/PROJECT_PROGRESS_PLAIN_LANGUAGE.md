@@ -1,6 +1,6 @@
 # Pantrack progress and milestone checklist
 
-Updated: 2026-11-27 for the Clover sandbox session record.
+Updated: 2026-11-28 for the Clover busy-second fix.
 
 **New look (2026-11-23):** you chose the Mercury-style design from the
 preview, and it is built in four steps:
@@ -15,6 +15,16 @@ preview, and it is built in four steps:
 4. **One Suppliers page:** the two supplier pages are joined into one, with a
    list, a card and tabs
    ([record](UI_SUPPLIERS_PAGE_LOCAL_EVIDENCE_20261123.md)).
+
+**Clover busy-period re-test (2026-11-28).** The earlier fixes are on the
+development site.
+- **What worked:** the Cloudflare limit problem is gone.
+- **What went wrong:** after 52 more test sales, Pantrack stopped reading,
+  because Clover groups orders by the second and answered one kind of request
+  wrongly. Nothing was counted twice, and sync is off again.
+- **The fix:** it is built and tested here
+  ([record](CLOVER_SAME_SECOND_PAGING_EVIDENCE_20261128.md)). The re-test
+  can be repeated when you give the go-ahead.
 
 **Clover sandbox test written up (2026-11-27).** The
 [record](CLOVER_P5_SANDBOX_SESSION_20261126.md) lists each sale you tried

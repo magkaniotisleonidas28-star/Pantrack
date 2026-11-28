@@ -52,6 +52,25 @@ menu item:
 The older supplier list is kept where the newer list is off. Moving its data
 is a separate decision.
 
+## Clover busy seconds: paging fix — 2026-11-28
+
+**Sandbox re-run.** With the owner's go-ahead, `0d794b2` (P5 fixes #89 to
+#91) was released to the development site, and the busy-period test was
+repeated with sync on.
+- The budget fix worked: there were no Cloudflare limit errors.
+- After 52 more sales, the sync stopped with "Clover returned an invalid
+  orders page". Nothing was counted twice.
+- Sync was turned off at 00:21 UTC (version `a34b0d1c`).
+
+**Cause and fix** ([evidence](CLOVER_SAME_SECOND_PAGING_EVIDENCE_20261128.md)):
+- Clover gives order times to the second.
+- With an order-ID filter, Clover ignores the time filters.
+- The sync now pages through a busy second with Clover's offset instead, and
+  checks each page against the last order read.
+
+This is tested locally only, with no migration. Releasing it and repeating
+the test need the owner's go-ahead.
+
 ## Clover P5: sandbox session record — 2026-11-27
 
 The [P5 session record](CLOVER_P5_SANDBOX_SESSION_20261126.md) covers the
