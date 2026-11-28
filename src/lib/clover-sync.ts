@@ -217,7 +217,9 @@ export async function syncClover(companyId: string, budget: CloverSyncBudget = c
       passes: for (const field of ['deletedTime', 'modifiedTime'] as const) {
         let finished = false;
         let cursor: { time: number; id: string } | undefined,
-          ties = false;
+          ties = false,
+          // Orders at cursor.time already listed, in Clover's id order.
+          tieSeen = 0;
         const seen = new Set<string>();
         for (let page = 0; page < MAX_PAGES; page++) {
           const url = new URL(
@@ -226,12 +228,15 @@ export async function syncClover(companyId: string, budget: CloverSyncBudget = c
           url.searchParams.set('filter', `${field}>=${lower}`);
           url.searchParams.append('filter', `${field}<=${upper}`);
           url.searchParams.set('orderBy', 'modifiedTime ASC,id ASC');
-          // Drain the boundary timestamp by ID, then seek later timestamps. Separate
-          // conjunctive queries avoid relying on an undocumented compound OR filter.
-          if (cursor) {
+          // Clover gives modifiedTime to the second, so a busy second can hold more
+          // orders than a page. Those are read with modifiedTime=T and an offset,
+          // starting one order back so a shift in that second is noticed. An `id>`
+          // filter can't be used: with it, Clover ignores every modifiedTime filter
+          // (seen in the sandbox, 2026-11-28).
+          const anchored = ties && tieSeen > 0;
+          if (cursor)
             url.searchParams.append('filter', `modifiedTime${ties ? '=' : '>'}${cursor.time}`);
-            if (ties) url.searchParams.append('filter', `id>${cursor.id}`);
-          }
+          if (anchored) url.searchParams.set('offset', String(tieSeen - 1));
           url.searchParams.set('limit', String(PAGE_SIZE));
           if (field === 'deletedTime')
             url.searchParams.set('expand', 'lineItems,lineItems.modifications,payments');
@@ -246,8 +251,19 @@ export async function syncClover(companyId: string, budget: CloverSyncBudget = c
           }
           if (!Array.isArray(list.elements) || list.elements.length > PAGE_SIZE)
             throw new UserFacingError('Clover returned an invalid orders page.');
-          let previous = cursor;
-          for (const item of list.elements) {
+          const full = list.elements.length === PAGE_SIZE;
+          let elements = list.elements;
+          if (anchored) {
+            if (elements[0]?.id !== cursor!.id || elements[0]?.modifiedTime !== cursor!.time) {
+              // An order in this second changed meanwhile: read the second again
+              // from its start. Orders already seen are skipped.
+              tieSeen = 0;
+              continue;
+            }
+            elements = elements.slice(1);
+          }
+          let previous = ties && !anchored ? undefined : cursor;
+          for (const item of elements) {
             if (
               typeof item.id !== 'string' ||
               !/^[A-Za-z0-9_-]{1,200}$/.test(item.id) ||
@@ -261,8 +277,8 @@ export async function syncClover(companyId: string, budget: CloverSyncBudget = c
               throw new UserFacingError('Clover returned an invalid orders page.');
             previous = { time: item.modifiedTime, id: item.id };
           }
-          const known = await knownRevisions(list.elements.map((item) => item.id));
-          for (const item of list.elements) {
+          const known = await knownRevisions(elements.map((item) => item.id));
+          for (const item of elements) {
             if (seen.has(item.id)) continue;
             seen.add(item.id);
             if (item.modifiedTime > upper) continue;
@@ -312,15 +328,21 @@ export async function syncClover(companyId: string, budget: CloverSyncBudget = c
               : item;
             await ingest(identity, readCloverOrder(identity, order, state.started_at));
           }
-          if (list.elements.length < PAGE_SIZE) {
+          if (!full) {
             if (!ties) {
               finished = true;
               break;
             }
-            // The boundary is exhausted; the next range starts strictly after it.
+            // The busy second is exhausted; the next range starts strictly after it.
             ties = false;
-          } else ties = true;
-          cursor = previous;
+            tieSeen = 0;
+          } else if (ties) tieSeen += elements.length;
+          else {
+            // A full page: more orders may share its last second.
+            ties = true;
+            tieSeen = elements.filter((item) => item.modifiedTime === previous!.time).length;
+          }
+          if (previous) cursor = previous;
         }
         if (!finished)
           throw new UserFacingError(
